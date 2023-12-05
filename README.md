@@ -9,7 +9,7 @@ Steamodded is a mod loader and injector for the game Balatro. It is developed us
 
 - **Mod Loader:** Loads mods into the game.
 
-It will load every mods located at the path `C:\Users\USER\AppData\Roaming\Balatro\Mods` (or `%appdata%\Balatro\Mods`) into the game.
+It will load every mods located at the path C:\Users\USER\AppData\Roaming\Balatro (or `%appdata%\Balatro\Mods`) into the game.
 If it's for now very simple, it will seach for an header at the top of the file that looks like this:
 ```
 --- STEAMODDED HEADER
@@ -41,25 +41,40 @@ The debug Socket is used to send debug informtions from the Game and the Mods ou
 
 The injector is coded in Python. It's used to inject every other parts of Steamodded into the base game.
 
-It use 2 external tools: [7zip](https://www.7-zip.org/) for is extreme capability in term of SFX ZIP, permiting Steamodded to modify the executable without breaking it, and [luajit-decompiler-v2](https://github.com/marsinator358/luajit-decompiler-v2) that is used for decompiling the code before reinjection.
+It use 2 external tools: [7zip](https://www.7-zip.org/) for is extreme capability in term of SFX ZIP, permiting Steamodded to modify the executable without breaking it, and [luajit-decompiler-v2](https://github.com/marsinator358/luajit-decompiler-v2) that is used for decompiling the code before reinjection. Big thanks to them, they made this project way easier to do.
 
 The code is NOT recompiled after injection. It might change in the future but it will stay like that for now.
 
 
 ## Installation
-[Provide detailed steps on how to install the mod loader.]
+### How to Install Steamodded
+- **CUT THE GAME !**
+- Go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the last release (Your aiming for the ".exe" download)
+- Drag and Drop your "Balatro.exe" to the executable
+- Wait for it to finish
+- And that's it! Balatro is now ready to be Modded.
 
-## Usage
-[Explain how to use the mod loader, including any commands or configurations.]
+### How to Install a Mod
+- Go to `C:\Users\USER\AppData\Roaming\Balatro\Mods` (Create the "Mods" directory if necessary)
+- Put the mod into the directory (only the Mod File, nothing else and not in a sub directory)
+- Launch the Game and enjoy!
 
 ## Dependencies
-[List any dependencies required to run the mod loader.]
+- [7zip](https://www.7-zip.org/) - Used by the Injector
+
+- [luajit-decompiler-v2](https://github.com/marsinator358/luajit-decompiler-v2) - Used by the Injector
+
+All the previous depencies are automaticaly downloade during the injection.
+
+- [pyinstaller](https://pyinstaller.org/en/stable/) - Used to compile the injector
 
 ## Contributing
-[Guidelines for contributing to the project, if applicable.]
+This project is open for contribution. Please, feel free to open a merge requeste to do so.
+
+Instruction to compile the injector are provided into is dedicated directory.
+
+[WIP: Explaining how to decompile source game code and decompress it]
 
 ## License
-[Information about the project's license.]
 
-## Acknowledgments
-[Credits or acknowledgments for any third-party resources or contributors.]
+This project is licensed under the GNU General Public License. This ensures that the software is free to use, modify, and distribute. For more details, see the LICENSE file in the repository.
