@@ -1,7 +1,9 @@
 # Steamodded - A Balatro ModLoader
 
 ## Introduction
-[Provide a brief introduction about what the mod loader is and its purpose.]
+
+Steamodded is a mod loader and injector for the game Balatro. It is developed using Lua for the injected code and Python for additional tools. Currently, Steamodded focuses on basic mod loading and injection functionalities and does not include a modding API.
+
 
 ## Features
 [List the key features of the mod loader.]
