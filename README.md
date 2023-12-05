@@ -1,2 +1,2 @@
-# steammoded
+# steamodded
 A Balatro ModLoader
