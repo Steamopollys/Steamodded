@@ -6,7 +6,11 @@ Steamodded is a mod loader and injector for the game Balatro. It is developed us
 
 
 ## Features
-[List the key features of the mod loader.]
+
+- **Mod Loader:** Loads mods into the game.
+- **Core Management:** Handles the overall management of mods.
+- **Debug Socket:** Provides a way to output debug data.
+- **Injector:** Injects Steamodded into Balatro.
 
 ## Installation
 [Provide detailed steps on how to install the mod loader.]
