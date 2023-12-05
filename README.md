@@ -49,7 +49,7 @@ The code is NOT recompiled after injection. It might change in the future but it
 ## Installation
 ### How to Install Steamodded
 - **CUT THE GAME !**
-- Go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the last release (Your aiming for the ".exe" download)
+- Go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the last release (Your aiming for the ".zip" download)
 - Drag and Drop your "Balatro.exe" to the executable
 - Wait for it to finish
 - And that's it! Balatro is now ready to be Modded.
