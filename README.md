@@ -64,7 +64,7 @@ The code is NOT recompiled after injection. It might change in the future but it
 
 - [luajit-decompiler-v2](https://github.com/marsinator358/luajit-decompiler-v2) - Used by the Injector
 
-All the previous depencies are automaticaly downloade during the injection.
+All the previous depencies are automaticaly downloaded during the injection.
 
 - [pyinstaller](https://pyinstaller.org/en/stable/) - Used to compile the injector
 
