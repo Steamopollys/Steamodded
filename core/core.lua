@@ -497,11 +497,12 @@ function create_UIBox_mods_button()
 	}))
 end
 
+function G.FUNCS.steamodded_github(arg_736_0)
+	love.system.openURL("https://github.com/Steamopollys/Steamodded")
+end
+
 function G.FUNCS.mods_button(arg_736_0)
 	G.SETTINGS.paused = true
-	love.filesystem.write("dump.txt", type(G) .. "\n" .. inspect(G))
-	love.filesystem.write("dump_ui.txt", type(G.C) .. "\n" .. inspectDepth(G.C, 0, 0))
-	love.filesystem.write("dump_mods.txt", type(G.MODS) .. "\n" .. inspectDepth(G.MODS, 0, 0))
 
 	G.FUNCS.overlay_menu({
 		definition = create_UIBox_mods_button()
