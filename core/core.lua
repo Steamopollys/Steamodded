@@ -1,7 +1,7 @@
 ----------------------------------------------
 ------------MOD CORE--------------------------
 
-MODDED_VERSION = "0.1.5-STEAMODDED"
+MODDED_VERSION = "0.1.6-STEAMODDED"
 
 function inspect(table)
 	if type(table) ~= 'table' then
