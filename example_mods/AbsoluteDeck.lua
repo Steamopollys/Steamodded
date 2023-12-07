@@ -61,7 +61,7 @@ function Back.apply_to_run(arg_56_0)
 					G.playing_cards[iter_57_0]:set_ability(G.P_CENTERS.m_glass)
 					G.playing_cards[iter_57_0]:set_edition({
 						polychrome = true
-					}, true)
+					}, true, true)
 				end
 
 				return true
