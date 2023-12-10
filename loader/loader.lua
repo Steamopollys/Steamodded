@@ -57,13 +57,15 @@ function loadMods(modsDirectory)
 end
 
 
-G.MODS = loadMods("Mods")
+SMODS.MODS = loadMods("Mods")
 
-sendDebugMessage(inspectDepth(G.MODS, 0, 0))
+sendDebugMessage(inspectDepth(SMODS.MODS, 0, 0))
 
-if G.MODS then
+if SMODS.MODS then
 	initializeModUIFunctions()
 end
+
+SMODS.injectDecks()
 
 ----------------------------------------------
 ------------MOD LOADER END--------------------
