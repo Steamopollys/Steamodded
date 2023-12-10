@@ -7,47 +7,6 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
-function loadAbsolute()
-	G.P_CENTERS.b_empt_bb = nil
-
-	G.BACKS.NAME_TO_POS.bb = nil
-
-	G.BACKS.ID_TO_POS.b_empt_bb = nil
-
-	G.P_CENTERS.b_absolute = {
-		discovered = true,
-		name = "Absolute Deck",
-		set = "Back",
-		unlocked = true,
-		order = 5,
-		pos = {
-			x = 0,
-			y = 3
-		},
-		config = {
-			polyglass = true
-		}
-	}
-
-	G.BACKS.IDS[5] = "b_absolute"
-
-	G.BACKS.NAMES[5] = "Absolute Deck"
-
-	G.BACKS.NAME_TO_POS["Absolute Deck"] = 5
-
-	G.BACKS.ID_TO_POS.b_absolute = 5
-
-	G.BACKS.UNLOCKED_NAMES[5] = "Absolute Deck"
-
-	G.BACKS.AVAILABLE_NAMES[5] = "Absolute Deck"
-end
-
-local Gameload_profileRef = Game.load_profile
-function Game.load_profile(arg_250_0, arg_250_1)
-	Gameload_profileRef(arg_250_0, arg_250_1)
-	loadAbsolute()
-end
-
 local Backapply_to_runRef = Back.apply_to_run
 function Back.apply_to_run(arg_56_0)
 	Backapply_to_runRef(arg_56_0)
@@ -151,8 +110,8 @@ function Back.generate_UI(arg_53_0, arg_53_1, arg_53_2, arg_53_3)
 	return deck
 end
 
-loadAbsolute()
+local absolute = SMODS.Deck:new("Absolute Deck", "absolute", {polyglass = true}, {x = 0, y = 3})
+absolute:register()
 
 ----------------------------------------------
 ------------MOD CODE END----------------------
-

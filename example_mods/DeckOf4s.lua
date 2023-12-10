@@ -7,40 +7,6 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
-G.P_CENTERS.b_empt_aa = nil
-
-G.BACKS.NAME_TO_POS.aa = nil
-
-G.BACKS.ID_TO_POS.b_empt_aa = nil
-
-G.P_CENTERS.b_fours = {
-	discovered = true,
-	name = "Deck of Fours",
-	set = "Back",
-	unlocked = true,
-	order = 4,
-	pos = {
-		x = 1,
-		y = 3
-	},
-	config = {
-		only_one_rank = 4
-	}
-}
-
-G.BACKS.IDS[4] = "b_fours"
-
-G.BACKS.NAMES[4] = "Deck of Fours"
-
-G.BACKS.NAME_TO_POS["Deck of Fours"] = 4
-
-G.BACKS.ID_TO_POS.b_fours = 4
-
-G.BACKS.UNLOCKED_NAMES[4] = "Deck of Fours"
-
-G.BACKS.AVAILABLE_NAMES[4] = "Deck of Fours"
-
-
 local Backapply_to_runRef = Back.apply_to_run
 function Back.apply_to_run(arg_56_0)
 	Backapply_to_runRef(arg_56_0)
@@ -69,7 +35,7 @@ function Back.generate_UI(arg_53_0, arg_53_1, arg_53_2, arg_53_3)
 	local deck = Backgenerate_UIRef(arg_53_0, arg_53_1, arg_53_2, arg_53_3)
 	local name = arg_53_1 or arg_53_0.name
 
-	if name == "Deck of Fours" then
+	if name == "Deck of fours" then
 		arg_53_3 = arg_53_3 or 0.7
 		arg_53_2 = arg_53_2 or 0.9
 
@@ -128,6 +94,9 @@ function Back.generate_UI(arg_53_0, arg_53_1, arg_53_2, arg_53_3)
 	end
 	return deck
 end
+
+local dfours = SMODS.Deck:new("Deck of fours", "fours", {only_one_rank = 4}, {x = 1, y = 3})
+dfours:register()
 
 ----------------------------------------------
 ------------MOD CODE END----------------------
