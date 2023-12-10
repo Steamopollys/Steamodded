@@ -17,6 +17,24 @@ def download_file(url, output_path):
 def decompile_lua(decompiler_path, lua_path, output_dir):
     subprocess.run([decompiler_path, lua_path, '--output', output_dir])
 
+def merge_directory_contents(directory_path):
+    directory_content = ""
+    if os.path.exists(directory_path):
+        print(f"Processing directory: {directory_path}")
+        for file_name in os.listdir(directory_path):
+            if file_name.endswith('.lua'):
+                file_path = os.path.join(directory_path, file_name)
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as file:
+                        file_content = file.read()
+                        directory_content += '\n' + file_content
+                        print(f"Appended {file_name} to the directory content")
+                except IOError as e:
+                    print(f"Error reading {file_path}: {e}")
+    else:
+        print(f"Directory not found: {directory_path}")
+    return directory_content
+
 def modify_main_lua(main_lua_path, base_dir, directories):
     print(f"Modifying {main_lua_path} with files from {directories} in {base_dir}")
 
@@ -29,20 +47,8 @@ def modify_main_lua(main_lua_path, base_dir, directories):
 
     for directory in directories:
         directory_path = os.path.join(base_dir, directory)
-        if os.path.exists(directory_path):
-            print(f"Processing directory: {directory_path}")
-            for file_name in os.listdir(directory_path):
-                if file_name.endswith('.lua'):
-                    file_path = os.path.join(directory_path, file_name)
-                    try:
-                        with open(file_path, 'r', encoding='utf-8') as file:
-                            file_content = file.read()
-                            main_lua_content += '\n' + file_content
-                            print(f"Appended {file_name} to main.lua")
-                    except IOError as e:
-                        print(f"Error reading {file_path}: {e}")
-        else:
-            print(f"Directory not found: {directory_path}")
+        directory_content = merge_directory_contents(directory_path)
+        main_lua_content += '\n' + directory_content
 
     try:
         with open(main_lua_path, 'w', encoding='utf-8') as file:
