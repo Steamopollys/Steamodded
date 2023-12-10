@@ -1,7 +1,9 @@
 ----------------------------------------------
 ------------MOD CORE--------------------------
 
-MODDED_VERSION = "0.1.6-STEAMODDED"
+SMODS = {}
+
+MODDED_VERSION = "0.2.1-STEAMODDED"
 
 function inspect(table)
 	if type(table) ~= 'table' then
@@ -280,7 +282,7 @@ local function createClickableModBox(modInfo, scale)
 end
 
 local function initializeModUIFunctions()
-	for id, modInfo in pairs(G.MODS) do
+	for id, modInfo in pairs(SMODS.MODS) do
 		G.FUNCS["openModUI_" .. modInfo.id] = function(arg_736_0)
 			G.ACTIVE_MOD_UI = modInfo
 			G.FUNCS.overlay_menu({
@@ -320,8 +322,8 @@ function create_UIBox_mods_button()
 								tab_definition_function = function()
 									local modNodes = {}
 
-									-- Iterate over each mod in G.MODS and create a clickable UI node for it
-									for id, modInfo in pairs(G.MODS) do
+									-- Iterate over each mod in S.MODS and create a clickable UI node for it
+									for id, modInfo in pairs(SMODS.MODS) do
 										table.insert(modNodes, createClickableModBox(modInfo, var_495_0 * 0.5))
 									end
 
