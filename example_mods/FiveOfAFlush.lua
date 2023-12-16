@@ -46,12 +46,12 @@ local ingameobjRef = Game.init_game_object;
 function Game.init_game_object(arg_291_0)
 	local gameObj = ingameobjRef(arg_291_0)
 	gameObj.hands["Five of a Flush"] = {
-		l_chips = 50,
-		chips = 300,
+		l_chips = 25,
+		chips = 250,
 		played = 0,
 		mult = 25,
 		visible = false,
-		l_mult = 5,
+		l_mult = 3,
 		level = 1,
 		description = {
 			"5 cards with the same rank and suit"
