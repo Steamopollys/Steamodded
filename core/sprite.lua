@@ -4,22 +4,43 @@
 
 -- Original Code by MathIsFun_
 -- A proper ressources handler will be created later
-function add_sprite_atlas(px, py, name, path)
-	local newAtlas = {
-		px = px,
-		name = name,
-		py = py,
-		path = path
-	}
-	G.ASSET_ATLAS[newAtlas.name] = {}
-	G.ASSET_ATLAS[newAtlas.name].name = newAtlas.name
-	G.ASSET_ATLAS[newAtlas.name].image = love.graphics.newImage(newAtlas.path, {
-		mipmaps = true,
-		dpiscale = G.SETTINGS.GRAPHICS.texture_scaling
-	})
-	G.ASSET_ATLAS[newAtlas.name].type = newAtlas.type
-	G.ASSET_ATLAS[newAtlas.name].px = newAtlas.px
-	G.ASSET_ATLAS[newAtlas.name].py = newAtlas.py
+SMODS.Sprites = {}
+SMODS.Sprite = {name = "", px = "", py = "", path = ""}
+
+function SMODS.Sprite:new(name, px, py, path)
+	o = {}
+	setmetatable(o, self)
+	self.__index = self
+
+	o.name = name
+	o.px = px
+	o.py = py
+	o.path = path
+
+	return o
+end
+
+function SMODS.Sprite:register()
+	if not SMODS.Sprites[self] then
+		table.insert(SMODS.Sprites, self)
+	end
+end
+
+-- Inspired by the Code of MathIsFun_
+function SMODS.injectSprites()
+	for i, sprite in ipairs(SMODS.Sprites) do
+		G.ASSET_ATLAS[sprite.name] = {}
+		G.ASSET_ATLAS[sprite.name].name = sprite.name
+		G.ASSET_ATLAS[sprite.name].image = love.graphics.newImage(sprite.path, {
+			mipmaps = true,
+			dpiscale = G.SETTINGS.GRAPHICS.texture_scaling
+		})
+		G.ASSET_ATLAS[sprite.name].type = sprite.type
+		G.ASSET_ATLAS[sprite.name].px = sprite.px
+		G.ASSET_ATLAS[sprite.name].py = sprite.py
+
+		sendDebugMessage("The Sprite named " .. sprite.name .. " have been registered.")
+	end
 end
 
 -- Original Code by MathIsFun_

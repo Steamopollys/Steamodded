@@ -532,5 +532,15 @@ function create_UIBox_main_menu_buttons()
 	return(menu)
 end
 
+-- Function to find a mod by its ID
+function SMODS.findModByID(modID)
+    for _, mod in pairs(SMODS.MODS) do
+        if mod.id == modID then
+            return mod
+        end
+    end
+    return nil  -- Return nil if no mod is found with the given ID
+end
+
 ----------------------------------------------
 ------------MOD CORE END----------------------
