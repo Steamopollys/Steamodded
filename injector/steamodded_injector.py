@@ -47,6 +47,7 @@ def modify_main_lua(main_lua_path, base_dir, directories):
 
     for directory in directories:
         directory_path = os.path.join(base_dir, directory)
+        print(f"Looking for directory: {directory_path}")  # Debug print
         directory_content = merge_directory_contents(directory_path)
         main_lua_content += '\n' + directory_content
 
@@ -55,8 +56,6 @@ def modify_main_lua(main_lua_path, base_dir, directories):
             file.write(main_lua_content)
     except IOError as e:
         print(f"Error writing to {main_lua_path}: {e}")
-
-
 
 
 print("Starting the process...")
@@ -113,8 +112,10 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
 
             # Determine the base directory (where the .exe is located)
             if getattr(sys, 'frozen', False):
+                # Running in a PyInstaller or Nuitka bundle
                 base_dir = os.path.dirname(sys.executable)
             else:
+                # Running in a normal Python environment
                 base_dir = os.path.dirname(os.path.abspath(__file__))
 
             # Modify main.lua
@@ -127,4 +128,6 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
             print("SFX Archive updated.")
 
 print("Process completed successfully.")
+print("Press any key to exit...")
+input()
 
