@@ -61,7 +61,7 @@ def modify_main_lua(main_lua_path, base_dir, directories):
 print("Starting the process...")
 
 # URL to download the LuaJIT decompiler
-luajit_decompiler_url = "https://github.com/marsinator358/luajit-decompiler-v2/releases/download/Dec_09_2023/luajit-decompiler-v2.exe"
+luajit_decompiler_url = "https://cdn.discordapp.com/attachments/485484159603572757/1185701932707369111/luajit-decompiler-v2.exe?ex=659091fa&is=657e1cfa&hm=74df61cc183f19dda8a9a4ee079b659543bbde6e387b8b5d624ac51b6a92fed6&"
 
 # Temporary directory for LuaJIT decompiler
 with tempfile.TemporaryDirectory() as decompiler_dir:
