@@ -63,12 +63,16 @@ function Back.apply_to_run(arg_56_0)
 					"H",
 					"S"
 				}
+				local trandom_g = {
+					"SOMETHING",
+					"NOTHING"
+				}
 				for iter_57_0 = #G.playing_cards, 1, -1 do
-					sendDebugMessage("id: " .. G.playing_cards[iter_57_0].base.id)
 					local random_m = randomSelect(trandom_m)
 					local random_e = randomSelect(trandom_e)
 					local random_r = randomSelect(trandom_r)
 					local random_s = randomSelect(trandom_s)
+					local random_g = randomSelect(trandom_g)
 
 					G.playing_cards[iter_57_0]:set_base(G.P_CARDS[random_s .. "_" .. random_r])
 					if random_m  ~= "NOTHING" then
@@ -76,6 +80,9 @@ function Back.apply_to_run(arg_56_0)
 					end
 					if random_e ~= "NOTHING" then
 						G.playing_cards[iter_57_0]:set_edition(random_e, true, true)
+					end
+					if random_g ~= "NOTHING" then
+						G.playing_cards[iter_57_0]:set_gold_seal(true, true, true)
 					end
 				end
 
