@@ -52,9 +52,12 @@ function Card.set_sprites(arg_865_0, arg_865_1, arg_865_2)
 			
 			arg_865_0.children.front:set_sprite_pos(arg_865_0.config.card.pos)
 		else
-			if arg_865_0.config.card.pos.atlas then
-				arg_865_0.children.front = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, arg_865_2.atlas and G.ASSET_ATLAS[arg_865_0.config.card.pos.atlas], arg_865_0.config.card.pos)
-			else
+			if arg_865_0.config.card.pos then
+				if arg_865_0.config.card.pos.atlas then
+					arg_865_0.children.front = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, arg_865_2.atlas and G.ASSET_ATLAS[arg_865_0.config.card.pos.atlas], arg_865_0.config.card.pos)
+				end
+			end
+			if not arg_865_0.children.front then
 				arg_865_0.children.front = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, arg_865_2.atlas and G.ASSET_ATLAS[arg_865_2.atlas] or G.ASSET_ATLAS.cards, arg_865_0.config.card.pos)
 			end
 			arg_865_0.children.front.states.hover = arg_865_0.states.hover
@@ -73,27 +76,34 @@ function Card.set_sprites(arg_865_0, arg_865_1, arg_865_2)
 	if arg_865_1 then
 		if arg_865_1.set then
 			if arg_865_0.children.center then
-				if arg_865_0.config.center.pos.atlas then
-					arg_865_0.children.center.atlas = G.ASSET_ATLAS[arg_865_0.config.center.pos.atlas]
+				if arg_865_0.config.center.pos then
+					if arg_865_0.config.center.pos.atlas then
+						arg_865_0.children.center.atlas = G.ASSET_ATLAS[arg_865_0.config.center.pos.atlas]
+					end
 				else
 					arg_865_0.children.center.atlas = G.ASSET_ATLAS[arg_865_1.atlas or not (arg_865_1.set ~= "Joker" and not arg_865_1.consumeable and arg_865_1.set ~= "Voucher") and arg_865_1.set or "centers"]
 				end
 				arg_865_0.children.center:set_sprite_pos(arg_865_0.config.center.pos)
 			else
-				if arg_865_0.config.center.pos.atlas then
-					arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS[arg_865_0.config.center.pos.atlas], arg_865_0.config.center.pos)
-				elseif arg_865_1.set == "Joker" and not arg_865_1.unlocked and not arg_865_0.params.bypass_discovery_center then
-					arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS.Joker, G.j_locked.pos)
-				elseif arg_865_0.config.center.set == "Voucher" and not arg_865_0.config.center.unlocked and not arg_865_0.params.bypass_discovery_center then
-					arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS.Voucher, G.v_locked.pos)
-				elseif arg_865_0.config.center.consumeable and arg_865_0.config.center.demo then
-					arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS.Tarot, G.c_locked.pos)
-				elseif not arg_865_0.params.bypass_discovery_center and (arg_865_1.set == "Edition" or arg_865_1.set == "Joker" or arg_865_1.consumeable or arg_865_1.set == "Voucher" or arg_865_1.set == "Booster") and not arg_865_1.discovered then
-					arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS[arg_865_1.atlas or arg_865_1.set], arg_865_1.set == "Joker" and G.j_undiscovered.pos or arg_865_1.set == "Edition" and G.j_undiscovered.pos or arg_865_1.set == "Tarot" and G.t_undiscovered.pos or arg_865_1.set == "Planet" and G.p_undiscovered.pos or arg_865_1.set == "Spectral" and G.s_undiscovered.pos or arg_865_1.set == "Voucher" and G.v_undiscovered.pos or arg_865_1.set == "Booster" and G.booster_undiscovered.pos)
-				elseif arg_865_1.set == "Joker" or arg_865_1.consumeable or arg_865_1.set == "Voucher" then
-					arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS[arg_865_1.set], arg_865_0.config.center.pos)
-				else
-					arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS[arg_865_1.atlas or "centers"], arg_865_0.config.center.pos)
+				if arg_865_0.config.center.pos then
+					if arg_865_0.config.center.pos.atlas then
+						arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS[arg_865_0.config.center.pos.atlas], arg_865_0.config.center.pos)
+					end
+				end
+				if not arg_865_0.children.center then
+					if arg_865_1.set == "Joker" and not arg_865_1.unlocked and not arg_865_0.params.bypass_discovery_center then
+						arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS.Joker, G.j_locked.pos)
+					elseif arg_865_0.config.center.set == "Voucher" and not arg_865_0.config.center.unlocked and not arg_865_0.params.bypass_discovery_center then
+						arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS.Voucher, G.v_locked.pos)
+					elseif arg_865_0.config.center.consumeable and arg_865_0.config.center.demo then
+						arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS.Tarot, G.c_locked.pos)
+					elseif not arg_865_0.params.bypass_discovery_center and (arg_865_1.set == "Edition" or arg_865_1.set == "Joker" or arg_865_1.consumeable or arg_865_1.set == "Voucher" or arg_865_1.set == "Booster") and not arg_865_1.discovered then
+						arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS[arg_865_1.atlas or arg_865_1.set], arg_865_1.set == "Joker" and G.j_undiscovered.pos or arg_865_1.set == "Edition" and G.j_undiscovered.pos or arg_865_1.set == "Tarot" and G.t_undiscovered.pos or arg_865_1.set == "Planet" and G.p_undiscovered.pos or arg_865_1.set == "Spectral" and G.s_undiscovered.pos or arg_865_1.set == "Voucher" and G.v_undiscovered.pos or arg_865_1.set == "Booster" and G.booster_undiscovered.pos)
+					elseif arg_865_1.set == "Joker" or arg_865_1.consumeable or arg_865_1.set == "Voucher" then
+						arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS[arg_865_1.set], arg_865_0.config.center.pos)
+					else
+						arg_865_0.children.center = Sprite(arg_865_0.T.x, arg_865_0.T.y, arg_865_0.T.w, arg_865_0.T.h, G.ASSET_ATLAS[arg_865_1.atlas or "centers"], arg_865_0.config.center.pos)
+					end
 				end
 				
 				arg_865_0.children.center.states.hover = arg_865_0.states.hover
