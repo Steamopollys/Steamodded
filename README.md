@@ -49,7 +49,7 @@ The code is NOT recompiled after injection. It might change in the future but it
 ## Installation
 ### How to Install Steamodded
 - **CUT THE GAME !**
-- Go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the last release (Your aiming for the ".zip" download)
+- Go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the last release (Your aiming for the ".exe" download)
 - Unzip the downloaded file
 - Drag and Drop your "Balatro.exe" to the executable
 - Wait for it to finish
@@ -57,7 +57,7 @@ The code is NOT recompiled after injection. It might change in the future but it
 
 ### How to Install a Mod
 - Go to `C:\Users\USER\AppData\Roaming\Balatro\Mods` (Create the "Mods" directory if necessary)
-- Put the mod into the directory (only the Mod File, nothing else and not in a sub directory)
+- Put the mod into the directory (only the Mod File if there is only one file provided or all the files in a subdirectory)
 - Launch the Game and enjoy!
 
 ## Dependencies
