@@ -74,6 +74,10 @@ This project is open for contribution. Please, feel free to open a merge request
 
 Instruction to compile the injector are provided into is dedicated directory.
 
+## Contributors
+
+Steamo, MathIsFun_ and 00001H
+
 ## License
 
 This project is licensed under the GNU General Public License. This ensures that the software is free to use, modify, and distribute. For more details, see the LICENSE file in the repository.
