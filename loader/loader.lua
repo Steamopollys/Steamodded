@@ -90,7 +90,7 @@ if SMODS.MODS then
 end
 
 SMODS.injectDecks()
-SMODS.injectSprites()
+-- SMODS.injectSprites()
 
 ----------------------------------------------
 ------------MOD LOADER END--------------------

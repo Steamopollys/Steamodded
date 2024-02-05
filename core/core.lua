@@ -3,7 +3,7 @@
 
 SMODS = {}
 
-MODDED_VERSION = "0.3.3-STEAMODDED"
+MODDED_VERSION = "0.4.0-STEAMODDED"
 
 function inspect(table)
 	if type(table) ~= 'table' then
@@ -168,6 +168,8 @@ function create_UIBox_mods(arg_736_0)
 
 	local wrappedDescription = wrapText(G.ACTIVE_MOD_UI.description, maxCharsPerLine)
 
+	local authors = "Author" .. (#G.ACTIVE_MOD_UI.author > 1 and "s: " or ": ") .. concatAuthors(G.ACTIVE_MOD_UI.author)
+
 	return (create_UIBox_generic_options({
 		back_func = "mods_button",
 		contents = {
@@ -204,7 +206,7 @@ function create_UIBox_mods(arg_736_0)
 											{
 												n = G.UIT.T,
 												config = {
-													text = "Authors: " .. concatAuthors(G.ACTIVE_MOD_UI.author),
+													text = authors,
 													shadow = true,
 													scale = var_495_0 * 0.65,
 													colour = G.C.BLUE,
@@ -339,7 +341,7 @@ function create_UIBox_mods_button()
 												{
 													n = G.UIT.T,
 													config = {
-														text = "No mod have been detected...",
+														text = "No mods have been detected...",
 														shadow = true,
 														scale = var_495_0 * 0.5,
 														colour = G.C.UI.TEXT_DARK
@@ -371,7 +373,7 @@ function create_UIBox_mods_button()
 													{
 														n = G.UIT.T,
 														config = {
-															text = "List of activated Mods",
+															text = "List of Activated Mods",
 															shadow = true,
 															scale = var_495_0 * 0.6,
 															colour = G.C.UI.TEXT_LIGHT
@@ -436,7 +438,7 @@ function create_UIBox_mods_button()
 													{
 														n = G.UIT.T,
 														config = {
-															text = "develloped by ",
+															text = "developed by ",
 															shadow = true,
 															scale = var_495_0 * 0.8,
 															colour = G.C.UI.TEXT_LIGHT
@@ -479,7 +481,7 @@ function create_UIBox_mods_button()
 													{
 														n = G.UIT.T,
 														config = {
-															text = "You can report any bug there !",
+															text = "You can report any bugs there !",
 															shadow = true,
 															scale = var_495_0 * 0.5,
 															colour = G.C.UI.TEXT_LIGHT
@@ -524,12 +526,16 @@ function create_UIBox_main_menu_buttons()
 		scale = 0.45 * 1.2
 	})
 	local menu = create_UIBox_main_menu_buttonsRef()
-	table.insert(menu.nodes[1].nodes, #menu.nodes[1].nodes + 1, modsButton)
-	menu.nodes[2].config = {
-		padding = 0.15,
-		colour = G.C.CLEAR
-	}
+	table.insert(menu.nodes[1].nodes[2].nodes, #menu.nodes[1].nodes[2].nodes + 1, modsButton)
+	menu.nodes[1].nodes[2].config = {align = "cm", padding = 0.15, r = 0.1, emboss = 0.1, colour = G.C.L_BLACK, mid = true}
 	return(menu)
+end
+
+local create_UIBox_profile_buttonRef = create_UIBox_profile_button
+function create_UIBox_profile_button()
+	local profile_menu = create_UIBox_profile_buttonRef()
+	profile_menu.nodes[1].config = {align = "cm", padding = 0.11, r = 0.1, emboss = 0.1, colour = G.C.L_BLACK}
+	return(profile_menu)
 end
 
 -- Function to find a mod by its ID
