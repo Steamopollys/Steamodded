@@ -14,8 +14,8 @@ def download_file(url, output_path):
         return True
     return False
 
-def decompile_lua(decompiler_path, lua_path, output_dir):
-    subprocess.run([decompiler_path, lua_path, '--output', output_dir])
+# def decompile_lua(decompiler_path, lua_path, output_dir):
+#     subprocess.run([decompiler_path, lua_path, '--output', output_dir])
 
 def merge_directory_contents(directory_path):
     directory_content = ""
@@ -63,16 +63,17 @@ print("Starting the process...")
 # URL to download the LuaJIT decompiler
 luajit_decompiler_url = "https://cdn.discordapp.com/attachments/485484159603572757/1185701932707369111/luajit-decompiler-v2.exe?ex=659091fa&is=657e1cfa&hm=74df61cc183f19dda8a9a4ee079b659543bbde6e387b8b5d624ac51b6a92fed6&"
 
-# Temporary directory for LuaJIT decompiler
+# Temporary directory for operations
 with tempfile.TemporaryDirectory() as decompiler_dir:
-    luajit_decompiler_path = os.path.join(decompiler_dir, 'luajit-decompiler-v2.exe')
+    # This part was used to download the LuaJit decompiler
+    # luajit_decompiler_path = os.path.join(decompiler_dir, 'luajit-decompiler-v2.exe')
 
-    # Download LuaJIT decompiler
-    if not download_file(luajit_decompiler_url, luajit_decompiler_path):
-        print("Failed to download LuaJIT decompiler.")
-        sys.exit(1)
+    # # Download LuaJIT decompiler
+    # if not download_file(luajit_decompiler_url, luajit_decompiler_path):
+    #     print("Failed to download LuaJIT decompiler.")
+    #     sys.exit(1)
 
-    print("LuaJIT Decompiler downloaded.")
+    # print("LuaJIT Decompiler downloaded.")
 
     # URL to download the 7-Zip suite
     seven_zip_url = "https://cdn.discordapp.com/attachments/485484159603572757/1181530870029504514/7-Zip.zip?ex=6581655f&is=656ef05f&hm=3dfd3e5a4936b0a50d7a5b3f2dd36c30032940b6fb6715e2399602d3be68ce0e"
@@ -104,11 +105,13 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
             decompile_output_path = os.path.join(tempdir, 'output')
             os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
 
-            # Decompile main.lua
-            decompile_lua(luajit_decompiler_path, main_lua_path, decompile_output_path)
-            print("Decompilation of main.lua complete.")
 
-            main_lua_output_path = os.path.join(decompile_output_path, 'main.lua')
+            # This part was used to decompile to game data
+            # No longer needed
+            # decompile_lua(luajit_decompiler_path, main_lua_path, decompile_output_path)
+            # print("Decompilation of main.lua complete.")
+
+            main_lua_output_path = os.path.join(tempdir, 'main.lua')
 
             # Determine the base directory (where the .exe is located)
             if getattr(sys, 'frozen', False):
