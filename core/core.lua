@@ -3,7 +3,7 @@
 
 SMODS = {}
 
-MODDED_VERSION = "0.4.0-STEAMODDED"
+MODDED_VERSION = "0.5.0-STEAMODDED"
 
 function inspect(table)
 	if type(table) ~= 'table' then
@@ -113,7 +113,7 @@ function Game.update(arg_298_0, arg_298_1)
 		if var_298_0 and not var_298_0.children.alert then
 			var_298_0.children.alert = UIBox({
 				definition = create_UIBox_card_alert({
-					text = "Demo Modded Version!",
+					text = "Modded Version!",
 					no_bg = true,
 					scale = 0.4,
 					text_rot = -0.2
@@ -526,8 +526,8 @@ function create_UIBox_main_menu_buttons()
 		scale = 0.45 * 1.2
 	})
 	local menu = create_UIBox_main_menu_buttonsRef()
-	table.insert(menu.nodes[1].nodes[2].nodes, #menu.nodes[1].nodes[2].nodes + 1, modsButton)
-	menu.nodes[1].nodes[2].config = {align = "cm", padding = 0.15, r = 0.1, emboss = 0.1, colour = G.C.L_BLACK, mid = true}
+	table.insert(menu.nodes[1].nodes[1].nodes, #menu.nodes[1].nodes[1].nodes + 1, modsButton)
+	menu.nodes[1].nodes[1].config = {align = "cm", padding = 0.15, r = 0.1, emboss = 0.1, colour = G.C.L_BLACK, mid = true}
 	return(menu)
 end
 
