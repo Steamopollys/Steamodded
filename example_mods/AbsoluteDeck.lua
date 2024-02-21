@@ -29,31 +29,6 @@ function Back.apply_to_run(arg_56_0)
 	end
 end
 
-local Backgenerate_UIRef = Back.generate_UI
-function Back.generate_UI(other, ui_scale, min_dims, challenge)
-	local deck = Backgenerate_UIRef(other, ui_scale, min_dims, challenge)
-	local name = other.name
-
-	sendDebugMessage(inspectDepth(deck))
-
-	if name == "Absolute Deck" then
-		min_dims = min_dims or 0.7
-
-		local loc_args, loc_nodes = nil, {}
-
-		localize{type = 'descriptions', key = "b_absolute", set = 'Back', nodes = loc_nodes, vars = loc_args}
-
-		return {
-			n=G.UIT.ROOT, config={align = "cm", minw = min_dims*5, minh = min_dims*2.5, id = name, colour = G.C.CLEAR}, nodes={
-				desc_from_rows(loc_nodes, true, min_dims*5)
-			}
-		}
-	end
-	return deck
-end
-
--- G.localization.descriptions[args.set][args.key]
-
 local loc_def = {
 	["name"]="Absolute Deck",
 	["text"]={
