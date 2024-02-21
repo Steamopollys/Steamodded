@@ -81,8 +81,8 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
     # Temporary directory for 7-Zip suite
     with tempfile.TemporaryDirectory() as seven_zip_dir:
         print("Downloading and extracting 7-Zip suite...")
-        download_file(seven_zip_url, os.path.join(seven_zip_dir, "7z2301-x64.zip"))
-        with zipfile.ZipFile(os.path.join(seven_zip_dir, "7z2301-x64.zip"), 'r') as zip_ref:
+        download_file(seven_zip_url, os.path.join(seven_zip_dir, "7z2301-x64.exe"))
+        with zipfile.ZipFile(os.path.join(seven_zip_dir, "7z2301-x64.exe"), 'r') as zip_ref:
             zip_ref.extractall(seven_zip_dir)
         seven_zip_path = os.path.join(seven_zip_dir, '7z.exe')
 
