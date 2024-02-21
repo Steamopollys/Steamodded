@@ -101,8 +101,8 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
     # print("LuaJIT Decompiler downloaded.")
 
     # URL to download the 7-Zip suite
-    seven_zip_url = "https://7-zip.org/a/7z2401-x64.msi"
-    seven_zip_installer_name = "7z2401-x64.msi"
+    seven_zip_url = "https://7-zip.org/a/7z2401-x64.exe"
+    seven_zip_installer_name = "7z2401-x64.exe"
 
     # Temporary directory for 7-Zip suite
     with tempfile.TemporaryDirectory() as seven_zip_dir:
@@ -111,7 +111,7 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
         installer_path = f"{seven_zip_dir}/{seven_zip_installer_name}"
 
     try:
-        subprocess.run(["msiexec", "/i", installer_path, "/q", f"INSTALLDIR={seven_zip_dir}"], check=True)
+        subprocess.run([installer_path, "/S", f"/D={seven_zip_dir}"], check=True)
         seven_zip_path = f"{seven_zip_dir}/7z.exe"
         print("7-Zip installed successfully.")
     except subprocess.CalledProcessError as e:
