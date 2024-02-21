@@ -2,7 +2,7 @@
 --- MOD_NAME: Absolute Deck
 --- MOD_ID: AbsoluteDeck
 --- MOD_AUTHOR: [Steamo]
---- MOD_DESCRIPTION: Ans Absolute Deck of PolyGlass!
+--- MOD_DESCRIPTION: Absolute Deck of PolyGlass!
 
 ----------------------------------------------
 ------------MOD CODE -------------------------
@@ -30,87 +30,40 @@ function Back.apply_to_run(arg_56_0)
 end
 
 local Backgenerate_UIRef = Back.generate_UI
-function Back.generate_UI(arg_53_0, arg_53_1, arg_53_2, arg_53_3)
-	local deck = Backgenerate_UIRef(arg_53_0, arg_53_1, arg_53_2, arg_53_3)
-	local name = arg_53_1 or arg_53_0.name
+function Back.generate_UI(other, ui_scale, min_dims, challenge)
+	local deck = Backgenerate_UIRef(other, ui_scale, min_dims, challenge)
+	local name = other.name
+
+	sendDebugMessage(inspectDepth(deck))
 
 	if name == "Absolute Deck" then
-		arg_53_3 = arg_53_3 or 0.7
-		arg_53_2 = arg_53_2 or 0.9
+		min_dims = min_dims or 0.7
+
+		local loc_args, loc_nodes = nil, {}
+
+		localize{type = 'descriptions', key = "b_absolute", set = 'Back', nodes = loc_nodes, vars = loc_args}
 
 		return {
-			n = G.UIT.ROOT,
-			config = {
-				align = "cm",
-				minw = arg_53_3 * 3,
-				minh = arg_53_3 * 2.5,
-				id = arg_53_0.name,
-				colour = G.C.CLEAR
-			},
-			nodes = {
-				{
-					n = G.UIT.R,
-					config = {
-						align = "cm"
-					},
-					nodes = {
-						{
-							n = G.UIT.T,
-							config = {
-								text = "Start with a Deck",
-								scale = arg_53_2 * 0.5,
-								colour = G.C.UI.TEXT_DARK
-							}
-						}
-					}
-				},
-				{
-					n = G.UIT.R,
-					config = {
-						align = "cm"
-					},
-					nodes = {
-						{
-							n = G.UIT.T,
-							config = {
-								text = "full of",
-								scale = arg_53_2 * 0.5,
-								colour = G.C.UI.TEXT_DARK
-							}
-						}
-					}
-				},
-				{
-					n = G.UIT.R,
-					config = {
-						align = "cm"
-					},
-					nodes = {
-						{
-							n = G.UIT.T,
-							config = {
-								text = "Polyglass ",
-								scale = arg_53_2 * 0.5,
-								colour = G.C.SECONDARY_SET.Planet
-							}
-						},
-						{
-							n = G.UIT.T,
-							config = {
-								text = "cards",
-								scale = arg_53_2 * 0.5,
-								colour = G.C.UI.TEXT_DARK
-							}
-						}
-					}
-				}
+			n=G.UIT.ROOT, config={align = "cm", minw = min_dims*5, minh = min_dims*2.5, id = name, colour = G.C.CLEAR}, nodes={
+				desc_from_rows(loc_nodes, true, min_dims*5)
 			}
 		}
 	end
 	return deck
 end
 
-local absolute = SMODS.Deck:new("Absolute Deck", "absolute", {polyglass = true}, {x = 0, y = 3})
+-- G.localization.descriptions[args.set][args.key]
+
+local loc_def = {
+	["name"]="Absolute Deck",
+	["text"]={
+		[1]="Start with a Deck",
+		[2]="full of",
+		[3]="{C:attention}Polyglass{} cards"
+	},
+}
+
+local absolute = SMODS.Deck:new("Absolute Deck", "absolute", {polyglass = true}, {x = 0, y = 3}, loc_def)
 absolute:register()
 
 ----------------------------------------------
