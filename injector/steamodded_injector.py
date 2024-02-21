@@ -14,11 +14,6 @@ def extract_exe_with_py7zr(exe_path, output_dir):
     except Exception as e:
         print(f"Failed to extract {exe_path}. Error: {e}")
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: script.py <path_to_exe>")
-        sys.exit(1)
-
     exe_path = sys.argv[1]
     output_directory = sys.argv[2]
 
