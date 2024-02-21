@@ -30,72 +30,16 @@ function Back.apply_to_run(arg_56_0)
 	end
 end
 
-local Backgenerate_UIRef = Back.generate_UI
-function Back.generate_UI(arg_53_0, arg_53_1, arg_53_2, arg_53_3)
-	local deck = Backgenerate_UIRef(arg_53_0, arg_53_1, arg_53_2, arg_53_3)
-	local name = arg_53_1 or arg_53_0.name
+local loc_def = {
+	["name"]="Deck of fours",
+	["text"]={
+		[1]="Start with a Deck",
+		[2]="full of",
+		[3]="{C:attention}Fours{}"
+	},
+}
 
-	if name == "Deck of fours" then
-		arg_53_3 = arg_53_3 or 0.7
-		arg_53_2 = arg_53_2 or 0.9
-
-		return {
-			n = G.UIT.ROOT,
-			config = {
-				align = "cm",
-				minw = arg_53_3 * 3,
-				minh = arg_53_3 * 2.5,
-				id = arg_53_0.name,
-				colour = G.C.CLEAR
-			},
-			nodes = {
-				{
-					n = G.UIT.R,
-					config = {
-						align = "cm"
-					},
-					nodes = {
-						{
-							n = G.UIT.T,
-							config = {
-								text = "Start with a Deck",
-								scale = arg_53_2 * 0.5,
-								colour = G.C.UI.TEXT_DARK
-							}
-						}
-					}
-				},
-				{
-					n = G.UIT.R,
-					config = {
-						align = "cm"
-					},
-					nodes = {
-						{
-							n = G.UIT.T,
-							config = {
-								text = "full of ",
-								scale = arg_53_2 * 0.5,
-								colour = G.C.UI.TEXT_DARK
-							}
-						},
-						{
-							n = G.UIT.T,
-							config = {
-								text = "Fours",
-								scale = arg_53_2 * 0.5,
-								colour = G.C.SECONDARY_SET.Planet
-							}
-						}
-					}
-				}
-			}
-		}
-	end
-	return deck
-end
-
-local dfours = SMODS.Deck:new("Deck of fours", "fours", {only_one_rank = 4}, {x = 1, y = 3})
+local dfours = SMODS.Deck:new("Deck of fours", "fours", {only_one_rank = 4}, {x = 1, y = 3}, loc_def)
 dfours:register()
 
 ----------------------------------------------
