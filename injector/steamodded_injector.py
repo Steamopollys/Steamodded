@@ -85,7 +85,7 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
         download_file(seven_zip_url, os.path.join(seven_zip_dir, seven_zip_installer_name))
         installer_path = f"{seven_zip_dir}/{seven_zip_installer_name}"
 
-try:
+    try:
         subprocess.run(["msiexec", "/i", installer_path, "/qn", f"INSTALLDIR={seven_zip_dir}"], check=True)
         print("7-Zip installed successfully.")
     except subprocess.CalledProcessError as e:
