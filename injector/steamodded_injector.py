@@ -4,6 +4,27 @@ import os
 import sys
 import tempfile
 import zipfile
+import py7zr
+
+def extract_exe_with_py7zr(exe_path, output_dir):
+    try:
+        with py7zr.SevenZipFile(exe_path, mode='r') as z:
+            z.extractall(path=output_dir)
+        print(f"Extraction complete. Contents extracted to: {output_dir}")
+    except Exception as e:
+        print(f"Failed to extract {exe_path}. Error: {e}")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: script.py <path_to_exe>")
+        sys.exit(1)
+
+    exe_path = sys.argv[1]
+    output_directory = sys.argv[2]
+
+    # Ensure the output directory exists
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
 
 def download_file(url, output_path):
     response = requests.get(url, stream=True)
@@ -76,14 +97,15 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
     # print("LuaJIT Decompiler downloaded.")
 
     # URL to download the 7-Zip suite
-    seven_zip_url = "https://7-zip.org/a/7z2301-x64.exe"
+    seven_zip_url = "https://7-zip.org/a/7z2401-x64.exe"
 
     # Temporary directory for 7-Zip suite
     with tempfile.TemporaryDirectory() as seven_zip_dir:
         print("Downloading and extracting 7-Zip suite...")
-        download_file(seven_zip_url, os.path.join(seven_zip_dir, "7z2301-x64.exe"))
-        with zipfile.ZipFile(os.path.join(seven_zip_dir, "7z2301-x64.exe"), 'r') as zip_ref:
-            zip_ref.extractall(seven_zip_dir)
+        download_file(seven_zip_url, os.path.join(seven_zip_dir, "7z2401-x64.exe"))
+        extract_exe_with_py7zr(os.path.join(seven_zip_dir, "7z2401-x64.exe"), seven_zip_dir)
+        #with zipfile.ZipFile(os.path.join(seven_zip_dir, "7z2401-x64.exe"), 'r') as zip_ref:
+        #    zip_ref.extractall(seven_zip_dir)
         seven_zip_path = os.path.join(seven_zip_dir, '7z.exe')
 
         # Check if the SFX archive path is provided
