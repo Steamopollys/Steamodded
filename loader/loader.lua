@@ -80,17 +80,20 @@ function initMods()
     end
 end
 
-SMODS.MODS = loadMods("Mods")
+function initSteamodded()
+	SMODS.MODS = loadMods("Mods")
 
-sendDebugMessage(inspectDepth(SMODS.MODS, 0, 0))
+	sendDebugMessage(inspectDepth(SMODS.MODS, 0, 0))
 
-if SMODS.MODS then
-	initializeModUIFunctions()
-	initMods()
+	if SMODS.MODS then
+		initializeModUIFunctions()
+		initMods()
+	end
+
+	SMODS.injectDecks()
+	-- SMODS.injectSprites()
+	sendDebugMessage(inspectDepth(G.P_CENTER_POOLS.Back))
 end
-
-SMODS.injectDecks()
--- SMODS.injectSprites()
 
 ----------------------------------------------
 ------------MOD LOADER END--------------------
