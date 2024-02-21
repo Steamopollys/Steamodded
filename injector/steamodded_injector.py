@@ -100,12 +100,11 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
 
     # print("LuaJIT Decompiler downloaded.")
 
-    # URL to download the 7-Zip suite
-    seven_zip_url = "https://7-zip.org/a/7z2401-x64.exe"
-    seven_zip_installer_name = "7z2401-x64.exe"
-
     # Temporary directory for 7-Zip suite
     with tempfile.TemporaryDirectory() as seven_zip_dir:
+        # URL to download the 7-Zip suite
+        seven_zip_url = "https://7-zip.org/a/7z2401-x64.exe"
+        seven_zip_installer_name = "7z2401-x64.exe"
         print("Downloading and extracting 7-Zip suite...")
         download_file(seven_zip_url, os.path.join(seven_zip_dir, seven_zip_installer_name))
         installer_path = f"{seven_zip_dir}/{seven_zip_installer_name}"
@@ -127,6 +126,7 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
 
         # Temporary directory for extraction and modification
         with tempfile.TemporaryDirectory() as tempdir:
+            seven_zip_path = f"{seven_zip_dir}/7z.exe"
             # Extract the SFX archive
             subprocess.run([seven_zip_path, 'x', '-o' + tempdir, sfx_archive_path])
             print("Extraction complete.")
