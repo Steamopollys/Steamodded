@@ -57,6 +57,31 @@ def modify_main_lua(main_lua_path, base_dir, directories):
     except IOError as e:
         print(f"Error writing to {main_lua_path}: {e}")
 
+def modify_game_lua(game_lua_path):
+    try:
+        with open(game_lua_path, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+        
+        target_line = "    self.SPEEDFACTOR = 1\n"
+        insert_line = "    initSteamodded()\n"  # Ensure proper indentation
+        target_index = None
+        
+        for i, line in enumerate(lines):
+            if target_line in line:
+                target_index = i
+                break  # Find the first occurrence and stop
+        
+        if target_index is not None:
+            print("Target line found. Inserting new line.")
+            lines.insert(target_index + 1, insert_line)
+            with open(game_lua_path, 'w', encoding='utf-8') as file:
+                file.writelines(lines)
+            print("Successfully modified game.lua.")
+        else:
+            print("Target line not found in game.lua.")
+            
+    except IOError as e:
+        print(f"Error modifying game.lua: {e}")
 
 print("Starting the process...")
 
@@ -100,8 +125,9 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
             subprocess.run([seven_zip_path, 'x', '-o' + tempdir, sfx_archive_path])
             print("Extraction complete.")
 
-            # Path to main.lua within the extracted files
+            # Path to main.lua and game.lua within the extracted files
             main_lua_path = os.path.join(tempdir, 'main.lua')
+            game_lua_path = os.path.join(tempdir, 'game.lua')
             decompile_output_path = os.path.join(tempdir, 'output')
             os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
 
@@ -126,8 +152,14 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
             modify_main_lua(main_lua_output_path, base_dir, directories)
             print("Modification of main.lua complete.")
 
+            # Modify main.lua
+            modify_game_lua(game_lua_path)
+            print("Modification of game.lua complete.")
+
             # Update the SFX archive with the modified main.lua
             subprocess.run([seven_zip_path, 'a', sfx_archive_path, main_lua_output_path])
+            # Update the SFX archive with the modified game.lua
+            subprocess.run([seven_zip_path, 'a', sfx_archive_path, game_lua_path])
             print("SFX Archive updated.")
 
 print("Process completed successfully.")
