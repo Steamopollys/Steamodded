@@ -160,7 +160,7 @@ print(f"SFX Archive received: {sfx_archive_path}")
 temp_dir = tempfile.TemporaryDirectory()
 print(temp_dir.name)
 # Extract the SFX archive
-subprocess.run([seven_zip_path, "x", "-o" + temp_dir.name, sfx_archive_path])
+subprocess.run([command, "x", "-o" + temp_dir.name, sfx_archive_path])
 print("Extraction complete.")
 
 # Path to main.lua and game.lua within the extracted files
