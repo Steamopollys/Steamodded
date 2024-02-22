@@ -110,8 +110,8 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
         installer_path = f"{seven_zip_dir}/{seven_zip_installer_name}"
 
     try:
-        subprocess.run([installer_path, "/S", f"/D={seven_zip_dir}"], check=True)
-        seven_zip_path = f"{seven_zip_dir}/7z.exe"
+        subprocess.run([installer_path, "/S", f"/D=%tmp%/7-Zip"], check=True)
+        seven_zip_path = "%tmp%/7-Zip/7z.exe"
         print("7-Zip installed successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Installation failed: {e}")
@@ -126,7 +126,7 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
 
         # Temporary directory for extraction and modification
         with tempfile.TemporaryDirectory() as tempdir:
-            #seven_zip_path = f"{seven_zip_dir}/7z.exe"
+            #seven_zip_path = "%tmp%/7-Zip/7z.exe"
             # Extract the SFX archive
             subprocess.run([seven_zip_path, 'x', '-o' + tempdir, sfx_archive_path])
             print("Extraction complete.")
