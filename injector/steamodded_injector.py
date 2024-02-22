@@ -124,21 +124,22 @@ seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
 # Check if the SFX archive path is provided
 if len(sys.argv) < 2:
     print("Please drag and drop the SFX archive onto this executable.")
+    seven_zip_dir.cleanup()
     sys.exit(1)
 
 sfx_archive_path = sys.argv[1]
 print(f"SFX Archive received: {sfx_archive_path}")
 
 # Temporary directory for extraction and modification
-tempdir = tempfile.TemporaryDirectory()
+temp_dir = tempfile.TemporaryDirectory()
 # Extract the SFX archive
-subprocess.run([seven_zip_path.name, "x", "-o" + tempdir.name, sfx_archive_path])
+subprocess.run([seven_zip_path.name, "x", "-o" + temp_dir.name, sfx_archive_path])
 print("Extraction complete.")
 
 # Path to main.lua and game.lua within the extracted files
-main_lua_path = os.path.join(tempdir.name, "main.lua")
-game_lua_path = os.path.join(tempdir.name, "game.lua")
-decompile_output_path = os.path.join(tempdir.name, "output")
+main_lua_path = os.path.join(temp_dir.name, "main.lua")
+game_lua_path = os.path.join(temp_dir.name, "game.lua")
+decompile_output_path = os.path.join(temp_dir.name, "output")
 os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
 
 
@@ -147,7 +148,7 @@ os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
 # decompile_lua(luajit_decompiler_path, main_lua_path, decompile_output_path)
 # print("Decompilation of main.lua complete.")
 
-main_lua_output_path = os.path.join(tempdir.name, "main.lua")
+main_lua_output_path = os.path.join(temp_dir.name, "main.lua")
 
 # Determine the base directory (where the .exe is located)
 if getattr(sys, "frozen", False):
@@ -171,6 +172,9 @@ subprocess.run([seven_zip_path, "a", sfx_archive_path, main_lua_output_path])
 # Update the SFX archive with the modified game.lua
 subprocess.run([seven_zip_path, "a", sfx_archive_path, game_lua_path])
 print("SFX Archive updated.")
+
+seven_zip_dir.cleanup()
+temp_dir.cleanup()
 
 print("Process completed successfully.")
 print("Press any key to exit...")
