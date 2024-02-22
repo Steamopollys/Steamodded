@@ -126,7 +126,7 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
 
         # Temporary directory for extraction and modification
         with tempfile.TemporaryDirectory() as tempdir:
-            seven_zip_path = f"{seven_zip_dir}/7z.exe"
+            #seven_zip_path = f"{seven_zip_dir}/7z.exe"
             # Extract the SFX archive
             subprocess.run([seven_zip_path, 'x', '-o' + tempdir, sfx_archive_path])
             print("Extraction complete.")
