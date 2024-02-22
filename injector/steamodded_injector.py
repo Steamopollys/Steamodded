@@ -163,7 +163,7 @@ temp_dir = tempfile.TemporaryDirectory()
 print(temp_dir.name)
 # Extract the SFX archive
 #subprocess.run([command, "x", "-o" + temp_dir.name, sfx_archive_path])
-subprocess.run(command + ["x -o" + temp_dir.name, sfx_archive_path], check=True)
+subprocess.run(command + ["x", "-o" + temp_dir.name, sfx_archive_path], check=True)
 print("Extraction complete.")
 
 # Path to main.lua and game.lua within the extracted files
