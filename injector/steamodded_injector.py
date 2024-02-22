@@ -1,9 +1,10 @@
-import requests
 import subprocess
 import os
 import sys
 import tempfile
 import zipfile
+import shutil
+import requests
 
 
 def download_file(url, output_path):
@@ -120,7 +121,19 @@ with zipfile.ZipFile(
     os.path.join(seven_zip_dir.name, "7z2401x64-repack.zip"), "r"
 ) as zip_ref:
     zip_ref.extractall(seven_zip_dir.name)
-seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
+
+# Check the operating system
+if platform.system() == 'Linux':
+    seven_zip_path = ['wine', os.path.join(seven_zip_dir.name, "7z.exe")]
+elif os.name == 'nt':
+    seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
+else:
+    # Handle other operating systems or raise an error
+    raise NotImplementedError("This script only supports Windows and Linux.")
+
+command = seven_zip_path + ["x", "-o" + temp_dir.name, sfx_archive_path]
+
+# seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
 
 # Check if the SFX archive path is provided
 if len(sys.argv) < 2:
