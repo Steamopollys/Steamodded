@@ -138,12 +138,12 @@ if os.name == 'posix':
     if not wine_path:
         raise EnvironmentError("Wine is not installed. Please install Wine to run Windows executables on Linux.")
     # Set the command to use Wine and the Windows executable
-    seven_zip_command = [wine_path, seven_zip_dir.name, '7z.exe']
+    command = [wine_path, seven_zip_dir.name, '7z.exe']
 else:
     # On other operating systems, use the native 7z command directly
-    seven_zip_command = [seven_zip_dir.name, '7z.exe']
+    command = [seven_zip_dir.name, '7z.exe']
 
-command = seven_zip_path + ["x", "-o" + temp_dir.name, sfx_archive_path]
+#command = seven_zip_dir + ["x", "-o" + temp_dir.name, sfx_archive_path]
 
 # seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
 
