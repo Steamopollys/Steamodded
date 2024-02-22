@@ -47,10 +47,10 @@ jobs:
           standalone: true
           # access-token: ${{ secrets.NUITKA_COMMERCIAL_ACCESS_TOKEN }}
           # macos-create-app-bundle: ${{ runner.os == 'macOS' }}
-          include-data-dir:
-          - "--include-data-dir=core=injector/core"
-          - "--include-data-dir=debug=injector/debug"
-          - "--include-data-dir=loader=injector/loader"
+          include-data-dir: |
+            injector/core=core
+            injector/debug=debug
+            injector/loader=loader
           
       # Uploads artifacts
       - name: "Upload Artifacts"
