@@ -94,7 +94,7 @@ print("Starting the process...")
 # luajit_decompiler_url = ""
 
 # Temporary directory for operations
-# with tempfile.TemporaryDirectory() as decompiler_dir:
+# with tempfile.mkdtemp() as decompiler_dir:
 #    print('created temporary directory', decompiler_dir)
 # This part was used to download the LuaJit decompiler
 # luajit_decompiler_path = os.path.join(decompiler_dir, 'luajit-decompiler-v2.exe')
@@ -108,7 +108,7 @@ print("Starting the process...")
 
 # Temporary directory for 7-Zip suite
 try:
-    with tempfile.TemporaryDirectory() as seven_zip_dir:
+    with tempfile.mkdtemp() as seven_zip_dir:
         print("created temporary directory", seven_zip_dir)
         # URL to download the 7-Zip suite
         seven_zip_url = "https://github.com/ip7z/7zip/releases/download/23.01/7zr.exe"
@@ -123,13 +123,14 @@ except subprocess.CalledProcessError as e:
     # Check if the SFX archive path is provided
     if len(sys.argv) < 2:
         print("Please drag and drop the SFX archive onto this executable.")
+        os.rmdir(tempdir, seven_zip_dir)
         sys.exit(1)
 
     sfx_archive_path = sys.argv[1]
     print(f"SFX Archive received: {sfx_archive_path}")
 
 # Temporary directory for extraction and modification
-with tempfile.TemporaryDirectory() as tempdir:
+with tempfile.mkdtemp() as tempdir:
     print("created temporary directory", tempdir)
     # Extract the SFX archive
     print(f"running {seven_zip_path, 'x', '-o', tempdir, sfx_archive_path}")
@@ -173,6 +174,8 @@ with tempfile.TemporaryDirectory() as tempdir:
     # Update the SFX archive with the modified game.lua
     subprocess.run([seven_zip_path, "a", sfx_archive_path, game_lua_path], check=True)
     print("SFX Archive updated.")
+
+os.rmdir(tempdir, seven_zip_dir)
 
 print("Process completed successfully.")
 print("Press any key to exit...")
