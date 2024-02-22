@@ -113,7 +113,7 @@ with tempfile.TemporaryDirectory() as seven_zip_dir:
 
 try:
         print(f"running {installer_path}, /S, f/D\={seven_zip_dir}/7-Zip")
-        subprocess.run([installer_path, "/S", f"/D={seven_zip_dir}/7-Zip"], check=True)
+        subprocess.run(f"{installer_path} /S /D={seven_zip_dir}/7-Zip", check=True)
         seven_zip_path = "%temp%/7-Zip/7z.exe"
         print("7-Zip installed successfully.")
 except subprocess.CalledProcessError as e:
