@@ -132,8 +132,8 @@ except subprocess.CalledProcessError as e:
 with tempfile.TemporaryDirectory() as tempdir:
     print("created temporary directory", tempdir)
     # Extract the SFX archive
-    print(f"running {seven_zip_path, 'x', '-o' + tempdir, sfx_archive_path}")
-    subprocess.run([seven_zip_path, "x", "-o" + tempdir, sfx_archive_path], check=True)
+    print(f"running {seven_zip_path, 'x', '-o', tempdir, sfx_archive_path}")
+    subprocess.run([seven_zip_path, "x", "-o", tempdir, sfx_archive_path], check=True)
     print("Extraction complete.")
 
     # Path to main.lua and game.lua within the extracted files
@@ -167,7 +167,9 @@ with tempfile.TemporaryDirectory() as tempdir:
     print("Modification of game.lua complete.")
 
     # Update the SFX archive with the modified main.lua
-    subprocess.run([seven_zip_path, "a", sfx_archive_path, main_lua_output_path], check=True)
+    subprocess.run(
+        [seven_zip_path, "a", sfx_archive_path, main_lua_output_path], check=True
+    )
     # Update the SFX archive with the modified game.lua
     subprocess.run([seven_zip_path, "a", sfx_archive_path, game_lua_path], check=True)
     print("SFX Archive updated.")
