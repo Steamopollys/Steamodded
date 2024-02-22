@@ -56,7 +56,7 @@ jobs:
       - name: "Upload Artifacts"
         uses: actions/upload-artifact@v4.3.1
         with:
-          name: Steamodded-${{runner.os}}-Build-${{github.run_id}}
+          name: Steamodded-${{runner.os}}-${{github.run_id}}
           path: |
             build/*.exe
             build/*.bin
