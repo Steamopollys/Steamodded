@@ -108,14 +108,14 @@ print("Starting the process...")
 
 # Temporary directory for 7-Zip suite
 try:
-    with tempfile.mkdtemp() as seven_zip_dir:
-        print("created temporary directory", seven_zip_dir)
-        # URL to download the 7-Zip suite
-        seven_zip_url = "https://github.com/ip7z/7zip/releases/download/23.01/7zr.exe"
-        seven_zip_exe_name = "7zr.exe"
-        seven_zip_path = os.path.join(seven_zip_dir, seven_zip_exe_name)
-        print(f"Downloading 7-Zip suite to {seven_zip_path}...")
-        download_file(seven_zip_url, seven_zip_path)
+    seven_zip_dir = tempfile.TemporaryDirectory()
+    print("created temporary directory", seven_zip_dir)
+    # URL to download the 7-Zip suite
+    seven_zip_url = "https://github.com/ip7z/7zip/releases/download/23.01/7zr.exe"
+    seven_zip_exe_name = "7zr.exe"
+    seven_zip_path = os.path.join(seven_zip_dir, seven_zip_exe_name)
+    print(f"Downloading 7-Zip suite to {seven_zip_path}...")
+    download_file(seven_zip_url, seven_zip_path)
 
 except subprocess.CalledProcessError as e:
     print(f"Download failed: {e}")
@@ -123,24 +123,24 @@ except subprocess.CalledProcessError as e:
     # Check if the SFX archive path is provided
     if len(sys.argv) < 2:
         print("Please drag and drop the SFX archive onto this executable.")
-        #os.rmdir(tempdir, seven_zip_dir)
+        seven_zip_dir.cleanup()
         sys.exit(1)
 
     sfx_archive_path = sys.argv[1]
     print(f"SFX Archive received: {sfx_archive_path}")
 
-# Temporary directory for extraction and modification
-with tempfile.mkdtemp() as tempdir:
-    print("created temporary directory", tempdir)
+    # Temporary directory for extraction and modification
+    temp_dir = tempfile.TemporaryDirectory()
+    print("created temporary directory", temp_dir.name)
     # Extract the SFX archive
-    print(f"running {seven_zip_path, 'x', '-o', tempdir, sfx_archive_path}")
-    subprocess.run([seven_zip_path, "x", "-o", tempdir, sfx_archive_path], check=True)
+    print(f"running {seven_zip_path, 'x', '-o', temp_dir, sfx_archive_path}")
+    subprocess.run([seven_zip_path, "x", "-o", temp_dir, sfx_archive_path], check=True)
     print("Extraction complete.")
 
     # Path to main.lua and game.lua within the extracted files
-    main_lua_path = os.path.join(tempdir, "main.lua")
-    game_lua_path = os.path.join(tempdir, "game.lua")
-    decompile_output_path = os.path.join(tempdir, "output")
+    main_lua_path = os.path.join(temp_dir, "main.lua")
+    game_lua_path = os.path.join(temp_dir, "game.lua")
+    decompile_output_path = os.path.join(temp_dir, "output")
     os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
 
     # This part was used to decompile to game data
@@ -148,7 +148,7 @@ with tempfile.mkdtemp() as tempdir:
     # decompile_lua(luajit_decompiler_path, main_lua_path, decompile_output_path)
     # print("Decompilation of main.lua complete.")
 
-    main_lua_output_path = os.path.join(tempdir, "main.lua")
+    main_lua_output_path = os.path.join(temp_dir, "main.lua")
 
     # Determine the base directory (where the .exe is located)
     if getattr(sys, "frozen", False):
@@ -175,7 +175,8 @@ with tempfile.mkdtemp() as tempdir:
     subprocess.run([seven_zip_path, "a", sfx_archive_path, game_lua_path], check=True)
     print("SFX Archive updated.")
 
-#os.rmdir(tempdir, seven_zip_dir)
+temp_dir.cleanup()
+seven_zip_dir.cleanup()
 
 print("Process completed successfully.")
 print("Press any key to exit...")
