@@ -57,6 +57,7 @@ The code is NOT recompiled after injection. It might change in the future but it
 
 ### How to Install a Mod
 - Go to `C:\Users\USER\AppData\Roaming\Balatro\Mods` (Create the "Mods" directory if necessary)
+- On Linux it is typically `~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods`
 - Put the mod into the directory (only the Mod File if there is only one file provided or all the files in a subdirectory)
 - Launch the Game and enjoy!
 
