@@ -123,7 +123,7 @@ except subprocess.CalledProcessError as e:
     # Check if the SFX archive path is provided
     if len(sys.argv) < 2:
         print("Please drag and drop the SFX archive onto this executable.")
-        os.rmdir(tempdir, seven_zip_dir)
+        #os.rmdir(tempdir, seven_zip_dir)
         sys.exit(1)
 
     sfx_archive_path = sys.argv[1]
@@ -175,7 +175,7 @@ with tempfile.mkdtemp() as tempdir:
     subprocess.run([seven_zip_path, "a", sfx_archive_path, game_lua_path], check=True)
     print("SFX Archive updated.")
 
-os.rmdir(tempdir, seven_zip_dir)
+#os.rmdir(tempdir, seven_zip_dir)
 
 print("Process completed successfully.")
 print("Press any key to exit...")
