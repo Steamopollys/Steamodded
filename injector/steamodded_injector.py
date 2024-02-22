@@ -89,8 +89,8 @@ print("Starting the process...")
 #luajit_decompiler_url = "https://cdn.discordapp.com/attachments/485484159603572757/1185701932707369111/luajit-decompiler-v2.exe?ex=659091fa&is=657e1cfa&hm=74df61cc183f19dda8a9a4ee079b659543bbde6e387b8b5d624ac51b6a92fed6&"
 
 # Temporary directory for operations
-with tempfile.TemporaryDirectory() as decompiler_dir:
-    print('created temporary directory', decompiler_dir)
+#with tempfile.TemporaryDirectory() as decompiler_dir:
+#    print('created temporary directory', decompiler_dir)
     # This part was used to download the LuaJit decompiler
     # luajit_decompiler_path = os.path.join(decompiler_dir, 'luajit-decompiler-v2.exe')
 
@@ -107,13 +107,13 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
         # URL to download the 7-Zip suite
         seven_zip_url = "https://7-zip.org/a/7z2401-x64.exe"
         seven_zip_installer_name = "7z2401-x64.exe"
-        print(f"Downloading and extracting 7-Zip suite to {os.path.join(seven_zip_dir, seven_zip_installer_name)}...")
+        print(f"Downloading 7-Zip suite to {os.path.join(seven_zip_dir, seven_zip_installer_name)}...")
         download_file(seven_zip_url, os.path.join(seven_zip_dir, seven_zip_installer_name))
         installer_path = f"{seven_zip_dir}/{seven_zip_installer_name}"
 
     try:
-        print(f"running {installer_path, "/S", f"/D=%temp%/7-Zip}")
-        subprocess.run([installer_path, "/S", f"/D=%temp%/7-Zip"], check=True)
+        print(f"running {installer_path, "/S", f"/D=seven_zip_dir/7-Zip"}")
+        subprocess.run([installer_path, "/S", f"/D={seven_zip_dir)/7-Zip"], check=True)
         seven_zip_path = "%temp%/7-Zip/7z.exe"
         print("7-Zip installed successfully.")
     except subprocess.CalledProcessError as e:
