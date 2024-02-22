@@ -109,7 +109,7 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
 
     # URL to download the 7-Zip suite
     seven_zip_url = (
-        "https://github.com/NanashiTheNameless/Steamodded/7-zip/raw/main/7z2401x64-repack.zip"
+        "https://github.com/NanashiTheNameless/Steamodded/raw/main/7-zip/7z-repack.zip"
     )
 
     # Temporary directory for 7-Zip suite
