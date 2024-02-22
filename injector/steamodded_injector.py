@@ -133,13 +133,13 @@ print(f"SFX Archive received: {sfx_archive_path}")
 # Temporary directory for extraction and modification
 temp_dir = tempfile.TemporaryDirectory()
 # Extract the SFX archive
-subprocess.run([seven_zip_path.name, "x", "-o" + temp_dir.name, sfx_archive_path])
+subprocess.run([seven_zip_path.name, "x", "-o" + temp_dir, sfx_archive_path])
 print("Extraction complete.")
 
 # Path to main.lua and game.lua within the extracted files
-main_lua_path = os.path.join(temp_dir.name, "main.lua")
-game_lua_path = os.path.join(temp_dir.name, "game.lua")
-decompile_output_path = os.path.join(temp_dir.name, "output")
+main_lua_path = os.path.join(temp_dir, "main.lua")
+game_lua_path = os.path.join(temp_dir, "game.lua")
+decompile_output_path = os.path.join(temp_dir, "output")
 os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
 
 
@@ -148,7 +148,7 @@ os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
 # decompile_lua(luajit_decompiler_path, main_lua_path, decompile_output_path)
 # print("Decompilation of main.lua complete.")
 
-main_lua_output_path = os.path.join(temp_dir.name, "main.lua")
+main_lua_output_path = os.path.join(temp_dir, "main.lua")
 
 # Determine the base directory (where the .exe is located)
 if getattr(sys, "frozen", False):
