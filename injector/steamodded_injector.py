@@ -123,13 +123,25 @@ with zipfile.ZipFile(
     zip_ref.extractall(seven_zip_dir.name)
 
 # Check the operating system
-if os.name() == 'Linux':
-    seven_zip_path = ['wine', os.path.join(seven_zip_dir.name, "7z.exe")]
-elif os.name == 'nt':
-    seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
+#if os.name() == 'Linux':
+#    seven_zip_path = ['wine', os.path.join(seven_zip_dir.name, "7z.exe")]
+#elif os.name == 'nt':
+#    seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
+#else:
+#    # Handle other operating systems or raise an error
+#    raise NotImplementedError("This script only supports Windows and Linux.")
+
+# Determine if the operating system is Linux
+if os.name == 'posix':
+    # Check if Wine is installed by trying to locate its executable
+    wine_path = shutil.which('wine')
+    if not wine_path:
+        raise EnvironmentError("Wine is not installed. Please install Wine to run Windows executables on Linux.")
+    # Set the command to use Wine and the Windows executable
+    seven_zip_command = [wine_path, seven_zip_dir.name, '7z.exe']
 else:
-    # Handle other operating systems or raise an error
-    raise NotImplementedError("This script only supports Windows and Linux.")
+    # On other operating systems, use the native 7z command directly
+    seven_zip_command = [seven_zip_dir.name, '7z.exe']
 
 command = seven_zip_path + ["x", "-o" + temp_dir.name, sfx_archive_path]
 
