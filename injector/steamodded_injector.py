@@ -114,12 +114,12 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
     # Temporary directory for 7-Zip suite
 seven_zip_dir = tempfile.TemporaryDirectory()
 print("Downloading and extracting 7-Zip suite...")
-download_file(seven_zip_url, os.path.join(seven_zip_dir.name, "7z2401x64-repack.zip"))
+download_file(seven_zip_url, os.path.join(seven_zip_dir, "7z2401x64-repack.zip"))
 with zipfile.ZipFile(
-    os.path.join(seven_zip_dir.name, "7z2401x64-repack.zip"), "r"
+    os.path.join(seven_zip_dir, "7z2401x64-repack.zip"), "r"
 ) as zip_ref:
-    zip_ref.extractall(seven_zip_dir.name)
-seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
+    zip_ref.extractall(seven_zip_dir)
+seven_zip_path = os.path.join(seven_zip_dir, "7z.exe")
 
 # Check if the SFX archive path is provided
 if len(sys.argv) < 2:
