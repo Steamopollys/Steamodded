@@ -123,7 +123,7 @@ with zipfile.ZipFile(
     zip_ref.extractall(seven_zip_dir.name)
 
 # Check the operating system
-if platform.system() == 'Linux':
+if os.name() == 'Linux':
     seven_zip_path = ['wine', os.path.join(seven_zip_dir.name, "7z.exe")]
 elif os.name == 'nt':
     seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
