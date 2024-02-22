@@ -118,7 +118,7 @@ try:
         download_file(seven_zip_url, seven_zip_path)
 
 except subprocess.CalledProcessError as e:
-    print(f"Installation failed: {e}")
+    print(f"Download failed: {e}")
 
     # Check if the SFX archive path is provided
     if len(sys.argv) < 2:
