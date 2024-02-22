@@ -101,7 +101,7 @@ print("Starting the process...")
 
     # print("LuaJIT Decompiler downloaded.")
 
-    # Temporary directory for 7-Zip suite
+# Temporary directory for 7-Zip suite
 try:
     with tempfile.TemporaryDirectory() as seven_zip_dir:
         print('created temporary directory', seven_zip_dir)
@@ -114,8 +114,9 @@ try:
 
         installation_dir = os.path.join(seven_zip_dir, "7-Zip")
         command = [installer_path, '/S', f'/D={installation_dir}']
-        print(f"running {' '.join(command)}")
-        subprocess.run(command, check=True)
+        command_UAC = ["start powershell -command \"&{start-process -filepath", command, "-verb RunAs}\""]
+        print(f"running {' '.join(command_UAC)}")
+        subprocess.run(command_UAC, check=True)
         seven_zip_path = os.path.join(installation_dir, "7z.exe")
         print("7-Zip installed successfully.")
 except subprocess.CalledProcessError as e:
