@@ -114,7 +114,7 @@ with tempfile.TemporaryDirectory() as seven_zip_dir:
 try:
         print(f"running {installer_path}, /S, f/D\={seven_zip_dir}/7-Zip")
         subprocess.run(f"{installer_path} /S /D={seven_zip_dir}/7-Zip", check=True)
-        seven_zip_path = "%temp%/7-Zip/7z.exe"
+        seven_zip_path = f"{seven_zip_dir}/7-Zip/7z.exe"
         print("7-Zip installed successfully.")
 except subprocess.CalledProcessError as e:
     print(f"Installation failed: {e}")
@@ -130,7 +130,7 @@ except subprocess.CalledProcessError as e:
 # Temporary directory for extraction and modification
 with tempfile.TemporaryDirectory() as tempdir:
             print('created temporary directory', tempdir)
-            #seven_zip_path = "%temp%/7-Zip/7z.exe"
+            seven_zip_path = f"{seven_zip_dir}/7-Zip/7z.exe"
             # Extract the SFX archive
             print(f"running {seven_zip_path, 'x', '-o' + tempdir, sfx_archive_path}")
             subprocess.run([seven_zip_path, 'x', '-o' + tempdir, sfx_archive_path])
