@@ -183,9 +183,9 @@ modify_game_lua(game_lua_path)
 print("Modification of game.lua complete.")
 
 # Update the SFX archive with the modified main.lua
-subprocess.run([seven_zip_path, "a", sfx_archive_path, main_lua_output_path])
+subprocess.run([command, "a", sfx_archive_path, main_lua_output_path])
 # Update the SFX archive with the modified game.lua
-subprocess.run([seven_zip_path, "a", sfx_archive_path, game_lua_path])
+subprocess.run([command, "a", sfx_archive_path, game_lua_path])
 print("SFX Archive updated.")
 
 seven_zip_dir.cleanup()
