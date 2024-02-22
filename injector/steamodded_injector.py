@@ -112,7 +112,7 @@ try:
         print("created temporary directory", seven_zip_dir)
         # URL to download the 7-Zip suite
         seven_zip_url = "https://github.com/ip7z/7zip/releases/download/23.01/7zr.exe"
-        seven_zip_exe_name = "7zr.exe""
+        seven_zip_exe_name = "7zr.exe"
         seven_zip_path = os.path.join(seven_zip_dir, seven_zip_exe_name)
         print(f"Downloading 7-Zip suite to {seven_zip_path}...")
         download_file(seven_zip_url, seven_zip_path)
