@@ -102,7 +102,7 @@ print("Starting the process...")
     # print("LuaJIT Decompiler downloaded.")
 
     # Temporary directory for 7-Zip suite
-    with tempfile.TemporaryDirectory() as seven_zip_dir:
+with tempfile.TemporaryDirectory() as seven_zip_dir:
         print('created temporary directory', seven_zip_dir)
         # URL to download the 7-Zip suite
         seven_zip_url = "https://7-zip.org/a/7z2401-x64.exe"
@@ -111,24 +111,24 @@ print("Starting the process...")
         download_file(seven_zip_url, os.path.join(seven_zip_dir, seven_zip_installer_name))
         installer_path = f"{seven_zip_dir}/{seven_zip_installer_name}"
 
-    try:
-        print(f"running {installer_path, "/S", f"/D=seven_zip_dir/7-Zip"}")
-        subprocess.run([installer_path, "/S", f"/D={seven_zip_dir)/7-Zip"], check=True)
+try:
+        print(f"running {installer_path}, /S, f/D\={seven_zip_dir}/7-Zip")
+        subprocess.run([installer_path, "/S", f"/D={seven_zip_dir}/7-Zip"], check=True)
         seven_zip_path = "%temp%/7-Zip/7z.exe"
         print("7-Zip installed successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"Installation failed: {e}")
+except subprocess.CalledProcessError as e:
+    print(f"Installation failed: {e}")
 
-        # Check if the SFX archive path is provided
-        if len(sys.argv) < 2:
+    # Check if the SFX archive path is provided
+    if len(sys.argv) < 2:
             print("Please drag and drop the SFX archive onto this executable.")
             sys.exit(1)
 
-        sfx_archive_path = sys.argv[1]
-        print(f"SFX Archive received: {sfx_archive_path}")
+    sfx_archive_path = sys.argv[1]
+    print(f"SFX Archive received: {sfx_archive_path}")
 
-        # Temporary directory for extraction and modification
-        with tempfile.TemporaryDirectory() as tempdir:
+# Temporary directory for extraction and modification
+with tempfile.TemporaryDirectory() as tempdir:
             print('created temporary directory', tempdir)
             #seven_zip_path = "%temp%/7-Zip/7z.exe"
             # Extract the SFX archive
