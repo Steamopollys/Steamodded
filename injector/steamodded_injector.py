@@ -111,19 +111,12 @@ try:
     with tempfile.TemporaryDirectory() as seven_zip_dir:
         print("created temporary directory", seven_zip_dir)
         # URL to download the 7-Zip suite
-        seven_zip_url = "https://7-zip.org/a/7z2401-x64.exe"
-        seven_zip_installer_name = "7z2401-x64.exe"
-        installer_path = os.path.join(seven_zip_dir, seven_zip_installer_name)
-        print(f"Downloading 7-Zip suite to {installer_path}...")
-        download_file(seven_zip_url, installer_path)
+        seven_zip_url = "https://github.com/ip7z/7zip/releases/download/23.01/7zr.exe"
+        seven_zip_exe_name = "7zr.exe""
+        seven_zip_path = os.path.join(seven_zip_dir, seven_zip_exe_name)
+        print(f"Downloading 7-Zip suite to {seven_zip_path}...")
+        download_file(seven_zip_url, seven_zip_path)
 
-        installation_dir = os.path.join(seven_zip_dir, "7-Zip")
-        command = [installer_path, "/S", f"/D={installation_dir}"]
-        command_UAC = ['start powershell -command "&{start-process -filepath', command, '-verb RunAs}"']
-        print(f"running {command_UAC}")
-        subprocess.run(command_UAC, check=True)
-        seven_zip_path = os.path.join(installation_dir, "7z.exe")
-        print("7-Zip installed successfully.")
 except subprocess.CalledProcessError as e:
     print(f"Installation failed: {e}")
 
@@ -138,7 +131,6 @@ except subprocess.CalledProcessError as e:
 # Temporary directory for extraction and modification
 with tempfile.TemporaryDirectory() as tempdir:
     print("created temporary directory", tempdir)
-    seven_zip_path = f"{seven_zip_dir}/7-Zip/7z.exe"
     # Extract the SFX archive
     print(f"running {seven_zip_path, 'x', '-o' + tempdir, sfx_archive_path}")
     subprocess.run([seven_zip_path, "x", "-o" + tempdir, sfx_archive_path], check=True)
