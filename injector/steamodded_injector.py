@@ -113,18 +113,19 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
 
     # Temporary directory for 7-Zip suite
 seven_zip_dir = tempfile.TemporaryDirectory()
+print(seven_zip_dir.name)
 print("Downloading and extracting 7-Zip suite...")
-download_file(seven_zip_url, os.path.join(seven_zip_dir, "7z2401x64-repack.zip"))
+download_file(seven_zip_url, os.path.join(seven_zip_dir.name, "7z2401x64-repack.zip"))
 with zipfile.ZipFile(
-    os.path.join(seven_zip_dir, "7z2401x64-repack.zip"), "r"
+    os.path.join(seven_zip_dir.name, "7z2401x64-repack.zip"), "r"
 ) as zip_ref:
-    zip_ref.extractall(seven_zip_dir)
-seven_zip_path = os.path.join(seven_zip_dir, "7z.exe")
+    zip_ref.extractall(seven_zip_dir.name)
+seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
 
 # Check if the SFX archive path is provided
 if len(sys.argv) < 2:
     print("Please drag and drop the SFX archive onto this executable.")
-    seven_zip_dir.cleanup()
+    seven_zip_dir.name.cleanup()
     sys.exit(1)
 
 sfx_archive_path = sys.argv[1]
@@ -132,14 +133,15 @@ print(f"SFX Archive received: {sfx_archive_path}")
 
 # Temporary directory for extraction and modification
 temp_dir = tempfile.TemporaryDirectory()
+print(temp_dir.name)
 # Extract the SFX archive
-subprocess.run([seven_zip_path.name, "x", "-o" + temp_dir, sfx_archive_path])
+subprocess.run([seven_zip_path, "x", "-o" + temp_dir.name, sfx_archive_path])
 print("Extraction complete.")
 
 # Path to main.lua and game.lua within the extracted files
-main_lua_path = os.path.join(temp_dir, "main.lua")
-game_lua_path = os.path.join(temp_dir, "game.lua")
-decompile_output_path = os.path.join(temp_dir, "output")
+main_lua_path = os.path.join(temp_dir.name, "main.lua")
+game_lua_path = os.path.join(temp_dir.name, "game.lua")
+decompile_output_path = os.path.join(temp_dir.name, "output")
 os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
 
 
@@ -148,7 +150,7 @@ os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
 # decompile_lua(luajit_decompiler_path, main_lua_path, decompile_output_path)
 # print("Decompilation of main.lua complete.")
 
-main_lua_output_path = os.path.join(temp_dir, "main.lua")
+main_lua_output_path = os.path.join(temp_dir.name, "main.lua")
 
 # Determine the base directory (where the .exe is located)
 if getattr(sys, "frozen", False):
