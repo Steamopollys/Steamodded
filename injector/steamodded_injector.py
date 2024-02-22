@@ -1,9 +1,8 @@
-import requests
 import subprocess
 import os
 import sys
 import tempfile
-import zipfile
+import requests
 
 
 def download_file(url, output_path):
@@ -92,7 +91,7 @@ def modify_game_lua(game_lua_path):
 print("Starting the process...")
 
 # URL to download the LuaJIT decompiler
-# luajit_decompiler_url = "https://cdn.discordapp.com/attachments/485484159603572757/1185701932707369111/luajit-decompiler-v2.exe?ex=659091fa&is=657e1cfa&hm=74df61cc183f19dda8a9a4ee079b659543bbde6e387b8b5d624ac51b6a92fed6&"
+# luajit_decompiler_url = ""
 
 # Temporary directory for operations
 # with tempfile.TemporaryDirectory() as decompiler_dir:
@@ -146,7 +145,7 @@ with tempfile.TemporaryDirectory() as tempdir:
     seven_zip_path = f"{seven_zip_dir}/7-Zip/7z.exe"
     # Extract the SFX archive
     print(f"running {seven_zip_path, 'x', '-o' + tempdir, sfx_archive_path}")
-    subprocess.run([seven_zip_path, "x", "-o" + tempdir, sfx_archive_path])
+    subprocess.run([seven_zip_path, "x", "-o" + tempdir, sfx_archive_path], check=True)
     print("Extraction complete.")
 
     # Path to main.lua and game.lua within the extracted files
@@ -180,9 +179,9 @@ with tempfile.TemporaryDirectory() as tempdir:
     print("Modification of game.lua complete.")
 
     # Update the SFX archive with the modified main.lua
-    subprocess.run([seven_zip_path, "a", sfx_archive_path, main_lua_output_path])
+    subprocess.run([seven_zip_path, "a", sfx_archive_path, main_lua_output_path], check=True)
     # Update the SFX archive with the modified game.lua
-    subprocess.run([seven_zip_path, "a", sfx_archive_path, game_lua_path])
+    subprocess.run([seven_zip_path, "a", sfx_archive_path, game_lua_path], check=True)
     print("SFX Archive updated.")
 
 print("Process completed successfully.")
