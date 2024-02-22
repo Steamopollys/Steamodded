@@ -139,10 +139,10 @@ if os.name == 'posix':
         raise EnvironmentError("Wine is not installed. Please install Wine to run Windows executables on Linux.")
     # Prepare the command to run 7z.exe with Wine
     seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
-    command = ["wine", seven_zip_path]
+    command = "/bin/7z"
 else:
     # Directly use the 7z command on other operating systems
-    seven_zip_path = os.path.join(seven_zip_dir.name, "7z")
+    seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
     command = [seven_zip_path]
 
 #command = seven_zip_dir + ["x", "-o" + temp_dir.name, sfx_archive_path]
@@ -163,7 +163,7 @@ temp_dir = tempfile.TemporaryDirectory()
 print(temp_dir.name)
 # Extract the SFX archive
 #subprocess.run([command, "x", "-o" + temp_dir.name, sfx_archive_path])
-subprocess.run(command + ["x", "-o" + temp_dir.name, sfx_archive_path], check=True)
+subprocess.run([command, "x", f"-o{temp_dir.name}", sfx_archive_path], check=True)
 print("Extraction complete.")
 
 # Path to main.lua and game.lua within the extracted files
@@ -199,10 +199,10 @@ print("Modification of game.lua complete.")
 
 # Update the SFX archive with the modified main.lua
 #subprocess.run([command, "a", sfx_archive_path, main_lua_output_path])
-subprocess.run(command + ["a" + sfx_archive_path, main_lua_output_path], check=True)
+subprocess.run([command, "a", sfx_archive_path, main_lua_output_path], check=True)
 # Update the SFX archive with the modified game.lua
 #subprocess.run([command, "a", sfx_archive_path, game_lua_path])
-subprocess.run(command + ["a" + sfx_archive_path, game_lua_path], check=True)
+subprocess.run([command, "a", sfx_archive_path, game_lua_path], check=True)
 print("SFX Archive updated.")
 
 seven_zip_dir.cleanup()
