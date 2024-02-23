@@ -9,7 +9,8 @@ Steamodded is a mod loader and injector for the game Balatro. It is developed us
 
 - **Mod Loader:** Loads mods into the game.
 
-It will load every mods located at the path C:\Users\USER\AppData\Roaming\Balatro (or `%appdata%\Balatro\Mods`) into the game.
+It will load every mods located at the path `C:\Users\<USER>\AppData\Roaming\Balatro` (or `%appdata%\Balatro\Mods`) into the game.
+On linux the mods folder should be in `/home/$USER/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods` or somewhere there about.
 If it's for now very simple, it will seach for an header at the top of the file that looks like this:
 ```
 --- STEAMODDED HEADER
@@ -47,22 +48,33 @@ The code is NOT recompiled after injection. It might change in the future but it
 
 
 ## Installation
+
 ### How to Install Steamodded
+
+#### Windows
 - **CUT THE GAME !**
 - Go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the latest or nightly release (Your aiming for the ".exe" download)
-- Unzip the downloaded file
 - Drag and Drop your "Balatro.exe" to the executable
 - Wait for it to finish
 - And that's it! Balatro is now ready to be Modded.
 
+#### Linux
+- **CLOSE THE GAME !**
+- Install dependencies, Python3, Mlocate/PLocate, Pip3, and Python3-Requests (`pip3 install requests`)
+- Run `git clone https://github.com/Steamopollys/Steamodded.git && cd Steamodded/injector && python3 steamodded_injector.py $(locate steamapps/common/Balatro/Balatro.exe | head -n 1)`
+- (Optional) Make the mod folder using `mkdir -p /home/$USER/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods`
+- Wait for it to finish
+- And that's it! Balatro is now ready to be Modded.
+
+
 ### How to Install a Mod
-- Go to `C:\Users\USER\AppData\Roaming\Balatro\Mods` (or `%appdata%\Balatro\Mods`) (Create the "Mods" directory if necessary)
-- On Linux it is typically `~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods`
+- Go to `C:\Users\<USER>\AppData\Roaming\Balatro\Mods` (or `%appdata%\Balatro\Mods`) (Create the "Mods" directory if necessary)
+- On Linux it is typically `/home/$USER/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods`
 - Put the mod into the directory (only the Mod File if there is only one file provided or all the files in a subdirectory)
 - Launch the Game and enjoy!
 
 ## Dependencies
-- [7zip](https://www.7-zip.org/) - Used by the Injector (A gpg pubkey signed repack from NamelessNanashi is used as a better alternative has not been found yet. You can get the pubkey with `gpg --keyserver hkp://keys.openpgp.org --recv-keys B7D76FACB1665D40`)
+- [7zip](https://www.7-zip.org/) - Used by the Injector (A gpg pubkey signed repack from NanashiTheNameless is used as a better alternative has not been found yet. You can get the pubkey for verification with `gpg --keyserver hkp://keys.openpgp.org --recv-keys B7D76FACB1665D40`)
 
 - [luajit-decompiler-v2](https://github.com/marsinator358/luajit-decompiler-v2) - Used by the Injector
 
@@ -77,7 +89,7 @@ Instruction to compile the injector are provided into is dedicated directory.
 
 ## Contributors
 
-Steamo, MathIsFun_ and 00001H
+Steamo, MathIsFun_, 00001H, and NanashiTheNameless
 
 ## License
 
