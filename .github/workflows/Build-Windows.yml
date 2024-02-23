@@ -86,8 +86,8 @@ jobs:
           #GITHUB_REPOSITORY: ${{ github.repository }}
         with:
           prerelease: true
-          tag_name: Nightly
-          name: Nightly
+          tag_name: Nightly-${{github.run_id}}
+          name: Nightly-${{github.run_id}}
           token: ${{ secrets.GITHUB_TOKEN }}
           #body_path: ${{ github.workspace }}-CHANGELOG.txt
           #upload_url: ${{ steps.update_nightly.outputs.upload_url }}
