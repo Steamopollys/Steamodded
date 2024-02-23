@@ -3,7 +3,7 @@
 
 SMODS = {}
 
-MODDED_VERSION = "0.5.2-STEAMODDED"
+MODDED_VERSION = "0.6.0-STEAMODDED"
 
 function inspect(table)
 	if type(table) ~= 'table' then
