@@ -4,8 +4,8 @@ name: Build-Windows
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: ["main"]
+#  push:
+#    branches: ["main"]
 
 
   # Allows you to run this workflow manually from the Actions tab
@@ -66,21 +66,31 @@ jobs:
           path: build/steamodded_injector.exe
 
 
-      - name: Check and Update Nightly Release
-        id: update_nightly
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO_NAME: ${{ github.repository }}
-        run: |
-          echo "::set-output name=upload_url::$(python .github/scripts/update_nightly_release.py)"
+#      - name: Generate Changelog
+#        run: echo "# Good things have arrived" > ${{ github.workspace }}-CHANGELOG.txt
+
+
+#      - name: Check and Update Nightly Release
+#        id: update_nightly
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          REPO_NAME: ${{ github.repository }}
+#        run: |
+#          echo "::set-output name=upload_url::$(python .github/scripts/update_nightly_release.py)"
 
 
       - name: Upload Artifact to Release
         uses: softprops/action-gh-release@v0.1.15
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        #env:
+          #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          #GITHUB_REPOSITORY: ${{ github.repository }}
         with:
-          upload_url: ${{ steps.update_nightly.outputs.upload_url }}
-          asset_path: build/steamodded_injector.exe
+          prerelease: true
+          tag_name: Nightly
+          name: Nightly
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
+          #upload_url: ${{ steps.update_nightly.outputs.upload_url }}
+          files: build/steamodded_injector.exe
           asset_name: Steamodded-Windows-${{github.run_id}}.exe
           asset_content_type: application/exe
