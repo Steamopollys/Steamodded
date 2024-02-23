@@ -93,4 +93,4 @@ jobs:
           #upload_url: ${{ steps.update_nightly.outputs.upload_url }}
           files: build/steamodded_injector.exe
           asset_name: Steamodded-Windows-${{github.run_id}}.exe
-          asset_content_type: application/exe
+          asset_content_type: application/octet-stream
