@@ -85,6 +85,8 @@ function initSteamodded()
 
 	sendDebugMessage(inspectDepth(SMODS.MODS, 0, 0))
 
+    initGlobals()
+
 	if SMODS.MODS then
 		initializeModUIFunctions()
 		initMods()
