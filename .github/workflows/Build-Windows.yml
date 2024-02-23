@@ -1,20 +1,25 @@
 name: Build-Windows
 
+
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: ["main"]
 
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
 
 jobs:
   build:
     strategy:
       fail-fast: false
+
       
     runs-on: windows-latest
+
     
     steps:
       # Check-out repository
@@ -29,10 +34,13 @@ jobs:
           cache-dependency-path: |
             **/requirements*.txt
 
+
       # Install dependencies
       - name: Install Dependencies
         run: |
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          pip install requests
+
 
       # Build python script into a stand-alone exe
       # - uses: jimkring/python-script-to-exe@v0.2.0
@@ -48,10 +56,31 @@ jobs:
             injector/core=core
             injector/debug=debug
             injector/loader=loader
-          
+
+
       # Uploads artifacts
       - name: "Upload Artifacts"
         uses: actions/upload-artifact@v4.3.1
         with:
           name: Steamodded-Windows-${{github.run_id}}
           path: build/steamodded_injector.exe
+
+
+      - name: Check and Update Nightly Release
+        id: update_nightly
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          echo "::set-output name=upload_url::$(python .github/scripts/update_nightly_release.py)"
+
+
+      - name: Upload Artifact to Release
+        uses: softprops/action-gh-release@v0.1.15
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.update_nightly.outputs.upload_url }}
+          asset_path: build/steamodded_injector.exe
+          asset_name: Steamodded-Windows-${{github.run_id}}.exe
+          asset_content_type: application/exe
