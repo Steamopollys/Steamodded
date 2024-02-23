@@ -80,7 +80,7 @@ jobs:
 
 
       - name: Upload Artifact to Release
-        uses: softprops/action-gh-release@v0.1.15
+        uses: softprops/action-gh-release@master
         #env:
           #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           #GITHUB_REPOSITORY: ${{ github.repository }}
@@ -89,8 +89,8 @@ jobs:
           tag_name: Nightly
           name: Nightly
           token: ${{ secrets.GITHUB_TOKEN }}
-          body_path: ${{ github.workspace }}-CHANGELOG.txt
+          #body_path: ${{ github.workspace }}-CHANGELOG.txt
           #upload_url: ${{ steps.update_nightly.outputs.upload_url }}
           files: build/steamodded_injector.exe
-          asset_name: Steamodded-Windows-${{github.run_id}}.exe
-          asset_content_type: application/octet-stream
+          #asset_name: Steamodded-Windows-${{github.run_id}}.exe
+          #asset_content_type: application/octet-stream
