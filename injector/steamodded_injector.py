@@ -101,13 +101,13 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
     # print("LuaJIT Decompiler downloaded.")
 
     # URL to download the 7-Zip suite
-    seven_zip_url = "https://cdn.discordapp.com/attachments/485484159603572757/1181530870029504514/7-Zip.zip?ex=6581655f&is=656ef05f&hm=3dfd3e5a4936b0a50d7a5b3f2dd36c30032940b6fb6715e2399602d3be68ce0e"
+    seven_zip_url = "https://github.com/NanashiTheNameless/Steamodded/raw/main/7-zip/7z-repack.zip"
 
     # Temporary directory for 7-Zip suite
     with tempfile.TemporaryDirectory() as seven_zip_dir:
         print("Downloading and extracting 7-Zip suite...")
-        download_file(seven_zip_url, os.path.join(seven_zip_dir, "7-Zip.zip"))
-        with zipfile.ZipFile(os.path.join(seven_zip_dir, "7-Zip.zip"), 'r') as zip_ref:
+        download_file(seven_zip_url, os.path.join(seven_zip_dir, "7z-repack.zip"))
+        with zipfile.ZipFile(os.path.join(seven_zip_dir, "7z-repack.zip"), 'r') as zip_ref:
             zip_ref.extractall(seven_zip_dir)
         seven_zip_path = os.path.join(seven_zip_dir, '7z.exe')
 
