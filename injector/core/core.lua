@@ -3,7 +3,7 @@
 
 SMODS = {}
 
-MODDED_VERSION = "0.5.0-STEAMODDED"
+MODDED_VERSION = "0.5.2-STEAMODDED"
 
 function inspect(table)
 	if type(table) ~= 'table' then
@@ -546,6 +546,12 @@ function SMODS.findModByID(modID)
         end
     end
     return nil  -- Return nil if no mod is found with the given ID
+end
+
+-- Disable achievments and crash report upload
+function initGlobals()
+	G.F_NO_ACHIEVEMENTS = true
+	G.F_CRASH_REPORTS = false
 end
 
 ----------------------------------------------
