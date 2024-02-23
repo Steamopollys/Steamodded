@@ -92,8 +92,8 @@ function initSteamodded()
 		initMods()
 	end
 
+    SMODS.injectSprites()
 	SMODS.injectDecks()
-	-- SMODS.injectSprites()
 	sendDebugMessage(inspectDepth(G.P_CENTER_POOLS.Back))
 end
 
