@@ -4,8 +4,8 @@ import sys
 import tempfile
 import zipfile
 import shutil
+import platform
 import requests
-
 
 def download_file(url, output_path):
     response = requests.get(url, stream=True)
@@ -108,7 +108,7 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
     # print("LuaJIT Decompiler downloaded.")
 
     # URL to download the 7-Zip suite
-    seven_zip_url = "https://github.com/Steamopollys/Steamodded/raw/main/7-zip/7z-repack.zip"
+    seven_zip_url = "https://github.com/NanashiTheNameless/Steamodded/raw/main/7-zip/7z-repack.zip"
 
     # Temporary directory for 7-Zip suite
 seven_zip_dir = tempfile.TemporaryDirectory()
@@ -133,10 +133,14 @@ seven_zip_path = f"{seven_zip_dir.name}/7z.exe"
 
 # Determine the operating system and prepare the 7-Zip command accordingly
 if os.name == 'posix':
-    # Prepare the command to run 7z.exe with Wine
-    command = "/bin/7zz"
+    if platform.system() == 'Darwin':
+        # This is macOS
+        command = "7zz"  # Update this path as necessary for macOS
+    else:
+        # This is Linux or another POSIX-compliant OS
+        command = "7zz"
 else:
-    # Directly use the 7z command on other operating systems
+    # This is for Windows
     command = f"{seven_zip_dir.name}/7z.exe"
 
 #command = seven_zip_dir + ["x", "-o" + temp_dir.name, sfx_archive_path]
