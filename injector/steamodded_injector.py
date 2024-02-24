@@ -129,19 +129,15 @@ with zipfile.ZipFile(
 #    # Handle other operating systems or raise an error
 #    raise NotImplementedError("This script only supports Windows and Linux.")
 
+seven_zip_path = f"{seven_zip_dir.name}/7z.exe"
+
 # Determine the operating system and prepare the 7-Zip command accordingly
 if os.name == 'posix':
-    # Check if Wine is installed
-    wine_path = shutil.which('wine')
-    if not wine_path:
-        raise EnvironmentError("Wine is not installed. Please install Wine to run Windows executables on Linux.")
     # Prepare the command to run 7z.exe with Wine
-    seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
-    command = "/bin/7z"
+    command = "/bin/7zz"
 else:
     # Directly use the 7z command on other operating systems
-    seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
-    command = [seven_zip_path]
+    command = f"{seven_zip_dir.name}/7z.exe"
 
 #command = seven_zip_dir + ["x", "-o" + temp_dir.name, sfx_archive_path]
 
