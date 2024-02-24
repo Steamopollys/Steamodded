@@ -17,18 +17,18 @@ jobs:
     strategy:
       fail-fast: false
 
-      
     runs-on: windows-latest
 
-    
     steps:
+
       # Check-out repository
       - uses: actions/checkout@v4.1.1
+
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          python-version: '3.12' # Version range or exact version of a Python version to use, using SemVer's version range syntax
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
           cache: 'pip'
           cache-dependency-path: |
@@ -39,23 +39,20 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests
+          python3 -m pip install --upgrade pip3
 
 
       # Build python script into a stand-alone exe
-      # - uses: jimkring/python-script-to-exe@v0.2.0
       - uses: Nuitka/Nuitka-Action@main
         with:
           nuitka-version: main
           script-name: injector/steamodded_injector.py
           onefile: true
           standalone: true
-          # access-token: ${{ secrets.NUITKA_COMMERCIAL_ACCESS_TOKEN }}
-          # macos-create-app-bundle: ${{ runner.os == 'macOS' }}
           include-data-dir: |
-            injector/core=core
-            injector/debug=debug
-            injector/loader=loader
+            core=core
+            debug=debug
+            loader=loader
 
 
       # Uploads artifacts
@@ -66,31 +63,11 @@ jobs:
           path: build/steamodded_injector.exe
 
 
-#      - name: Generate Changelog
-#        run: echo "# Good things have arrived" > ${{ github.workspace }}-CHANGELOG.txt
-
-
-#      - name: Check and Update Nightly Release
-#        id: update_nightly
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          REPO_NAME: ${{ github.repository }}
-#        run: |
-#          echo "::set-output name=upload_url::$(python .github/scripts/update_nightly_release.py)"
-
-
       - name: Upload Artifact to Release
         uses: softprops/action-gh-release@master
-        #env:
-          #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          #GITHUB_REPOSITORY: ${{ github.repository }}
         with:
           prerelease: true
           tag_name: Nightly-${{github.run_id}}
           name: Nightly-${{github.run_id}}
           token: ${{ secrets.GITHUB_TOKEN }}
-          #body_path: ${{ github.workspace }}-CHANGELOG.txt
-          #upload_url: ${{ steps.update_nightly.outputs.upload_url }}
           files: build/steamodded_injector.exe
-          #asset_name: Steamodded-Windows-${{github.run_id}}.exe
-          #asset_content_type: application/octet-stream
