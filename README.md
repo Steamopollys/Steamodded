@@ -49,7 +49,7 @@ The code is NOT recompiled after injection. It might change in the future but it
 ## Installation
 ### How to Install Steamodded
 #### Windows
-- **CUT THE GAME !**
+- **CLOSE THE GAME !**
 - Go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the latest or nightly release (Your aiming for the ".exe" download)
 - Drag and Drop your "Balatro.exe" to the executable
 - Wait for it to finish
