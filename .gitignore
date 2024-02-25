@@ -185,3 +185,5 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
+/injector/steamodded_injector.dist/
+/injector/steamodded_injector.exe
