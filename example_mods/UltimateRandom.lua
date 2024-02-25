@@ -97,7 +97,7 @@ end
 
 function SMODS.INIT.UltimateRandomDeck()
 	local loc_def = {
-		["name"]="Ultime Random",
+		["name"]="Ultimate Random",
 		["text"]={
 			[1]="Start with a Deck",
 			[2]="full of",
