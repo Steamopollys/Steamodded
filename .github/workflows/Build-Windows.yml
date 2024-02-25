@@ -1,0 +1,73 @@
+name: Build-Windows
+
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: ["main"]
+
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+
+    runs-on: windows-latest
+
+    steps:
+
+      # Check-out repository
+      - uses: actions/checkout@v4.1.1
+
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+          cache: 'pip'
+          cache-dependency-path: |
+            **/requirements*.txt
+
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python3 -m pip install --upgrade pip3
+
+
+      # Build python script into a stand-alone exe
+      - uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: injector/steamodded_injector.py
+          onefile: true
+          standalone: true
+          include-data-dir: |
+            core=core
+            debug=debug
+            loader=loader
+
+
+      # Uploads artifacts
+      - name: "Upload Artifacts"
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: Steamodded-Windows-${{github.run_id}}
+          path: build/steamodded_injector.exe
+
+
+      - name: Upload Artifact to Release
+        uses: softprops/action-gh-release@master
+        with:
+          prerelease: true
+          tag_name: Nightly-${{github.run_id}}
+          name: Nightly-${{github.run_id}}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: build/steamodded_injector.exe
