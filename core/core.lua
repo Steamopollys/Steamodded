@@ -294,12 +294,18 @@ local function initializeModUIFunctions()
 	end
 end
 
+function G.FUNCS.openModsDirectory(options)
+    if not love.filesystem.exists("Mods") then
+        love.filesystem.createDirectory("Mods")
+    end
+
+    love.system.openURL("file://"..love.filesystem.getSaveDirectory().."/Mods")
+end
+
 function G.FUNCS.mods_buttons_page(options)
 	if not options or not options.cycle_config then
 		return
 	end
-
-
 end
 
 function create_UIBox_mods_button()
@@ -349,6 +355,24 @@ function create_UIBox_mods_button()
 												}
 											}
 										})
+                                        table.insert(modNodes, {
+                                            n = G.UIT.R,
+                                            config = {
+                                                padding = 0,
+                                                align = "cm",
+                                            },
+                                            nodes = {
+                                                UIBox_button({
+                                                    label = {"Open Mods directory"},
+                                                    shadow = true,
+                                                    scale = scale,
+                                                    colour = G.C.BOOSTER,
+                                                    button = "openModsDirectory",
+                                                    minh = 0.8,
+                                                    minw = 8
+                                                })
+                                            }
+                                        })
 									end
 
 									return {
