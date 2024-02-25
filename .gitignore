@@ -1,0 +1,15 @@
+## Project
+/injector/steamodded_injector.build/
+/injector/steamodded_injector.dist/
+/injector/steamodded_injector.onefile-build/
+/injector/steamodded_injector.exe
+
+## IntelliJ
+/.idea/
+/shelf/
+/workspace.xml
+/httpRequests/
+/dataSources/
+/dataSources.local.xml
+
+

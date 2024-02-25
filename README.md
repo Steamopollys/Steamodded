@@ -67,10 +67,10 @@ The code is NOT recompiled after injection. It might change in the future but it
 
 All the previous depencies are automaticaly downloaded during the injection.
 
-- [pyinstaller](https://pyinstaller.org/en/stable/) - Used to compile the injector
+- [Nuitka](https://pypi.org/project/Nuitka/) - Used to compile the injector
 
 ## Contributing
-This project is open for contribution. Please, feel free to open a merge requeste to do so.
+This project is open for contribution. Please, feel free to open a merge request to do so.
 
 Instruction to compile the injector are provided into is dedicated directory.
 

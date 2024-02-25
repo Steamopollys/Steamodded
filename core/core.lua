@@ -159,8 +159,11 @@ local function concatAuthors(authors)
 	return authors or "Unknown"
 end
 
+SMODS.customUIElements = {}
 
-
+function SMODS.registerUIElement(modID, uiElements)
+	SMODS.customUIElements[modID] = uiElements
+end
 
 function create_UIBox_mods(arg_736_0)
 	local var_495_0 = 0.75  -- Scale factor for text
@@ -234,6 +237,13 @@ function create_UIBox_mods(arg_736_0)
 											}
 										}
 									})
+
+									local customUI = SMODS.customUIElements[G.ACTIVE_MOD_UI.id]
+									if customUI then
+										for _, uiElement in ipairs(customUI) do
+											table.insert(modNodes, uiElement)
+										end
+									end
 
 									return {
 										n = G.UIT.ROOT,
