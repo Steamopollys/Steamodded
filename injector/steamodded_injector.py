@@ -108,7 +108,7 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
     # print("LuaJIT Decompiler downloaded.")
 
     # URL to download the 7-Zip suite
-    seven_zip_url = "https://github.com/NanashiTheNameless/Steamodded/raw/main/7-zip/7z-repack.zip"
+    seven_zip_url = "https://github.com/Steamopollys/Steamodded/raw/main/7-zip/7z-repack.zip"
 
     # Temporary directory for 7-Zip suite
 seven_zip_dir = tempfile.TemporaryDirectory()
