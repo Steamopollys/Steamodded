@@ -25,7 +25,7 @@ def merge_directory_contents(directory_path):
     directory_content = ""
     if os.path.exists(directory_path):
         print(f"Processing directory: {directory_path}")
-        for file_name in os.listdir(directory_path):
+        for file_name in sorted(os.listdir(directory_path)):
             if file_name.endswith(".lua"):
                 file_path = os.path.join(directory_path, file_name)
                 try:
