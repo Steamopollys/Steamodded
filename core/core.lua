@@ -3,7 +3,26 @@
 
 SMODS = {}
 
-MODDED_VERSION = "0.6.1-STEAMODDED"
+MODDED_VERSION = "0.6.2-STEAMODDED"
+
+function STR_UNPACK(str)
+	local chunk, err = loadstring(str)
+	if chunk then
+	  setfenv(chunk, {})  -- Use an empty environment to prevent access to potentially harmful functions
+	  local success, result = pcall(chunk)
+	  if success then
+		return result
+	  else
+		print("Error unpacking string: " .. result)
+		return nil
+	  end
+	else
+	  print("Error loading string: " .. err)
+	  return nil
+	end
+  end
+end
+
 
 function inspect(table)
 	if type(table) ~= 'table' then
