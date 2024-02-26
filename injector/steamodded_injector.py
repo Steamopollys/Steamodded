@@ -150,7 +150,7 @@ else:
 # Check if the SFX archive path is provided
 if len(sys.argv) < 2:
     print("Please drag and drop the SFX archive onto this executable.")
-    seven_zip_dir.name.cleanup()
+    seven_zip_dir.cleanup()
     sys.exit(1)
 
 sfx_archive_path = sys.argv[1]
