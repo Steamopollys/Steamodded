@@ -23,6 +23,9 @@ function loadMods(modsDirectory)
             elseif filename:match("%.lua$") then  -- Check if the file is a .lua file
                 local fileContent = love.filesystem.read(filePath)
 
+                -- Convert CRLF in LF
+                fileContent = fileContent:gsub("\r\n", "\n")
+
                 -- Check the header lines using string.match
                 local headerLine, secondaryLine = fileContent:match("^(.-)\n(.-)\n")
                 if headerLine == "--- STEAMODDED HEADER" and secondaryLine == "--- SECONDARY MOD FILE" then
