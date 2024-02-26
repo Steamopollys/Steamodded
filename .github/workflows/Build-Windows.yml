@@ -45,7 +45,7 @@ jobs:
       - uses: Nuitka/Nuitka-Action@main
         with:
           nuitka-version: main
-          script-name: injector/steamodded_injector.py
+          script-name: steamodded_injector.py
           onefile: true
           standalone: true
           include-data-dir: |
