@@ -175,5 +175,15 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
+## IntelliJ
+/.idea/
+/shelf/
+/workspace.xml
+/httpRequests/
+/dataSources/
+/dataSources.local.xml
+
 # End of https://www.toptal.com/developers/gitignore/api/python
 
+/injector/steamodded_injector.dist/
+/injector/steamodded_injector.exe

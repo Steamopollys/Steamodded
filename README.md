@@ -58,7 +58,7 @@ The code is NOT recompiled after injection. It might change in the future but it
 #### Linux
 
 - **CLOSE THE GAME !**
-- Make sure you have python3, pip3, MPocate/PLocate, p7zip, nd the python requests library.
+- Make sure you have python3, pip3, MPocate/PLocate, 7zip-full, and the python requests library.
 - run `git clone https://github.com/Steamopollys/Steamodded.git && cd Steamodded/injector && python3 steamodded_injector.py $(/common/Balatro/Balatro.exe | head -n 1)`
 - Wait for it to finish
 - And that's it! Balatro is now ready to be Modded.
@@ -66,7 +66,7 @@ The code is NOT recompiled after injection. It might change in the future but it
 #### Mac
 
 - **CLOSE THE GAME !**
-- Make sure you have python3, pip3, MPocate/PLocate, p7zip and the python requests library.
+- Make sure you have python3, pip3, MPocate/PLocate, 7zip-full, and the python requests library.
 - run `git clone https://github.com/Steamopollys/Steamodded.git && cd Steamodded/injector && python3 steamodded_injector.py` and drag in the Balatro.exe before hitting enter!
 - Wait for it to finish
 - And that's it! Balatro is now ready to be Modded.
@@ -86,11 +86,11 @@ The code is NOT recompiled after injection. It might change in the future but it
 
 All the previous depencies are automaticaly downloaded during the injection.
 
-- [pyinstaller](https://pyinstaller.org/en/stable/) - Used to compile the injector
+- [Nuitka](https://pypi.org/project/Nuitka/) - Used to compile the injector
 
 ## Contributing
 
-This project is open for contribution. Please, feel free to open a merge requeste to do so.
+This project is open for contribution. Please, feel free to open a merge request to do so.
 
 Instruction to compile the injector are provided into is dedicated directory.
 
