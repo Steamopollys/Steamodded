@@ -21,7 +21,7 @@ function STR_UNPACK(str)
 	  return nil
 	end
   end
-end
+
 
 
 function inspect(table)
