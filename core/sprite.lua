@@ -161,5 +161,18 @@ function Game:set_render_settings()
     SMODS.injectSprites()
 end
 
+-- Allows Jokers to have custom atlases
+local set_spritesref = Card.set_sprites
+function Card:set_sprites(_center, _front)
+    if _center then 
+        if _center.set then
+            if _center.set == 'Joker' and _center.atlas then
+                self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[_center.atlas or 'centers'], self.config.center.pos)
+            end
+        end
+    end
+    set_spritesref(self, _center, _front);
+end
+
 -- ----------------------------------------------
 -- ------------MOD CORE API SPRITE END-----------
