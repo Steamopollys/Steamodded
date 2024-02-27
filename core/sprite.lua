@@ -166,7 +166,7 @@ local set_spritesref = Card.set_sprites
 function Card:set_sprites(_center, _front)
     if _center then 
         if _center.set then
-            if _center.set == 'Joker' and _center.atlas then
+            if (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.atlas then
                 self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[_center.atlas or 'centers'], self.config.center.pos)
             end
         end
