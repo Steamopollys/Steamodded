@@ -80,7 +80,7 @@ The code is NOT recompiled after injection. It might change in the future but it
 
 ## Dependencies
 
-- [7zip](https://www.7-zip.org/) - Used by the Injector (A gpg pubkey signed repack from NanashiTheNameless is used as a better alternative has not been found yet. You can get the pubkey with `gpg --keyserver hkp://keys.openpgp.org --recv-keys B7D76FACB1665D40`)
+- [7zip](https://www.7-zip.org/) - Used by the Injector (A gpg pubkey signed repack is used as a better alternative has not been found yet. You can get the pubkey with `gpg --keyserver hkp://keys.openpgp.org --recv-keys 77317C3B9C73D835B9312414D5C9523EBB5CC15B`)
 
 - [luajit-decompiler-v2](https://github.com/marsinator358/luajit-decompiler-v2) - Used by the Injector
 
