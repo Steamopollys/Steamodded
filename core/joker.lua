@@ -74,6 +74,7 @@ function SMODS.injectJokers()
         -- Now we replace the others
         G.P_CENTERS[joker.slug] = joker_obj
         table.insert(G.P_CENTER_POOLS['Joker'], joker_obj)
+        table.insert(G.P_JOKER_RARITY_POOLS[joker_obj.rarity], joker_obj)
 
         -- Setup Localize text
         G.localization.descriptions["Joker"][k] = joker.loc_txt

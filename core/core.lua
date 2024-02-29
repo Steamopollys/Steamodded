@@ -3,7 +3,7 @@
 
 SMODS = {}
 
-MODDED_VERSION = "0.6.2-STEAMODDED"
+MODDED_VERSION = "0.7.0-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
