@@ -2,6 +2,8 @@
 ------------MOD CORE--------------------------
 
 SMODS = {}
+SMODS.GUI = {}
+SMODS.GUI.DynamicUIManager = {}
 
 MODDED_VERSION = "0.7.0-STEAMODDED"
 
@@ -338,8 +340,7 @@ function G.FUNCS.mods_buttons_page(options)
 end
 
 function create_UIBox_mods_button()
-	local var_495_0 = 0.75
-
+	local scale = 0.75
 	return (create_UIBox_generic_options({
 		contents = {
 			{
@@ -357,94 +358,12 @@ function create_UIBox_mods_button()
 								label = "Mods",
 								chosen = true,
 								tab_definition_function = function()
-									local modNodes = {}
-
-									-- Iterate over each mod in S.MODS and create a clickable UI node for it
-									for id, modInfo in pairs(SMODS.MODS) do
-										table.insert(modNodes, createClickableModBox(modInfo, var_495_0 * 0.5))
-									end
-
-									-- If no mods are loaded, show a default message
-									if #modNodes == 0 then
-										table.insert(modNodes, {
-											n = G.UIT.R,
-											config = {
-												padding = 0,
-												align = "cm"
-											},
-											nodes = {
-												{
-													n = G.UIT.T,
-													config = {
-														text = "No mods have been detected...",
-														shadow = true,
-														scale = var_495_0 * 0.5,
-														colour = G.C.UI.TEXT_DARK
-													}
-												}
-											}
-										})
-                                        table.insert(modNodes, {
-                                            n = G.UIT.R,
-                                            config = {
-                                                padding = 0,
-                                                align = "cm",
-                                            },
-                                            nodes = {
-                                                UIBox_button({
-                                                    label = {"Open Mods directory"},
-                                                    shadow = true,
-                                                    scale = scale,
-                                                    colour = G.C.BOOSTER,
-                                                    button = "openModsDirectory",
-                                                    minh = 0.8,
-                                                    minw = 8
-                                                })
-                                            }
-                                        })
-									end
-
-									return {
-										n = G.UIT.ROOT,
-										config = {
-											emboss = 0.05,
-											minh = 6,
-											r = 0.1,
-											minw = 10,
-											align = "tm",
-											padding = 0.2,
-											colour = G.C.BLACK
+									return SMODS.GUI.DynamicUIManager.initTab({
+										updateFunctions = {
+											modsList = G.FUNCS.update_mod_list,
 										},
-										nodes = {
-											{
-												n = G.UIT.R,
-												config = {
-													padding = 0,
-													align = "cm"
-												},
-												nodes = {
-													{
-														n = G.UIT.T,
-														config = {
-															text = "List of Activated Mods",
-															shadow = true,
-															scale = var_495_0 * 0.6,
-															colour = G.C.UI.TEXT_LIGHT
-														}
-													}
-												}
-											},
-											{
-												n = G.UIT.R,
-												config = {
-													r = 0.1,
-													align = "cm",
-													padding = 0.2,
-												},
-												nodes = modNodes
-											},
-										}
-									}
+										staticPageDefinition = SMODS.GUI.staticModListContent()
+									})
 								end
 							},
 							{
@@ -475,7 +394,7 @@ function create_UIBox_mods_button()
 														config = {
 															text = "Mod Loader",
 															shadow = true,
-															scale = var_495_0 * 0.8,
+															scale = scale * 0.8,
 															colour = G.C.UI.TEXT_LIGHT
 														}
 													}
@@ -493,7 +412,7 @@ function create_UIBox_mods_button()
 														config = {
 															text = "developed by ",
 															shadow = true,
-															scale = var_495_0 * 0.8,
+															scale = scale * 0.8,
 															colour = G.C.UI.TEXT_LIGHT
 														}
 													},
@@ -502,7 +421,7 @@ function create_UIBox_mods_button()
 														config = {
 															text = "Steamo",
 															shadow = true,
-															scale = var_495_0 * 0.8,
+															scale = scale * 0.8,
 															colour = G.C.BLUE
 														}
 													}
@@ -536,7 +455,7 @@ function create_UIBox_mods_button()
 														config = {
 															text = "You can report any bugs there !",
 															shadow = true,
-															scale = var_495_0 * 0.5,
+															scale = scale * 0.5,
 															colour = G.C.UI.TEXT_LIGHT
 														}
 													}
@@ -605,6 +524,347 @@ end
 function initGlobals()
 	G.F_NO_ACHIEVEMENTS = true
 	G.F_CRASH_REPORTS = false
+end
+
+function G.FUNCS.update_mod_list(args)
+	if not args or not args.cycle_config then return end
+	SMODS.GUI.DynamicUIManager.updateDynamicAreas({
+		["modsList"] = SMODS.GUI.dynamicModListContent(args.cycle_config.current_option)
+	})
+end
+
+-- Same as Balatro base game code, but accepts a value to match against (rather than the index in the option list)
+-- e.g. create_option_cycle({ current_option = 1 })  vs. SMODS.GUID.createOptionSelector({ current_option = "Page 1/2" })
+function SMODS.GUI.createOptionSelector(args)
+	args = args or {}
+	args.colour = args.colour or G.C.RED
+	args.options = args.options or {
+		'Option 1',
+		'Option 2'
+	}
+
+	local current_option_index = 1
+	for i, option in ipairs(args.options) do
+		if option == args.current_option then
+			current_option_index = i
+			break
+		end
+	end
+	args.current_option_val = args.options[current_option_index]
+	args.current_option = current_option_index
+	args.opt_callback = args.opt_callback or nil
+	args.scale = args.scale or 1
+	args.ref_table = args.ref_table or nil
+	args.ref_value = args.ref_value or nil
+	args.w = (args.w or 2.5)*args.scale
+	args.h = (args.h or 0.8)*args.scale
+	args.text_scale = (args.text_scale or 0.5)*args.scale
+	args.l = '<'
+	args.r = '>'
+	args.focus_args = args.focus_args or {}
+	args.focus_args.type = 'cycle'
+
+	local info = nil
+	if args.info then
+		info = {}
+		for k, v in ipairs(args.info) do
+			table.insert(info, {n=G.UIT.R, config={align = "cm", minh = 0.05}, nodes={
+				{n=G.UIT.T, config={text = v, scale = 0.3*args.scale, colour = G.C.UI.TEXT_LIGHT}}
+			}})
+		end
+		info =  {n=G.UIT.R, config={align = "cm", minh = 0.05}, nodes=info}
+	end
+
+	local disabled = #args.options < 2
+	local pips = {}
+	for i = 1, #args.options do
+		pips[#pips+1] = {n=G.UIT.B, config={w = 0.1*args.scale, h = 0.1*args.scale, r = 0.05, id = 'pip_'..i, colour = args.current_option == i and G.C.WHITE or G.C.BLACK}}
+	end
+
+	local choice_pips = not args.no_pips and {n=G.UIT.R, config={align = "cm", padding = (0.05 - (#args.options > 15 and 0.03 or 0))*args.scale}, nodes=pips} or nil
+
+	local t =
+	{n=G.UIT.C, config={align = "cm", padding = 0.1, r = 0.1, colour = G.C.CLEAR, id = args.id and (not args.label and args.id or nil) or nil, focus_args = args.focus_args}, nodes={
+		{n=G.UIT.C, config={align = "cm",r = 0.1, minw = 0.6*args.scale, hover = not disabled, colour = not disabled and args.colour or G.C.BLACK,shadow = not disabled, button = not disabled and 'option_cycle' or nil, ref_table = args, ref_value = 'l', focus_args = {type = 'none'}}, nodes={
+			{n=G.UIT.T, config={ref_table = args, ref_value = 'l', scale = args.text_scale, colour = not disabled and G.C.UI.TEXT_LIGHT or G.C.UI.TEXT_INACTIVE}}
+		}},
+		args.mid and
+				{n=G.UIT.C, config={id = 'cycle_main'}, nodes={
+					{n=G.UIT.R, config={align = "cm", minh = 0.05}, nodes={
+						args.mid
+					}},
+					not disabled and choice_pips or nil
+				}}
+				or {n=G.UIT.C, config={id = 'cycle_main', align = "cm", minw = args.w, minh = args.h, r = 0.1, padding = 0.05, colour = args.colour,emboss = 0.1, hover = true, can_collide = true, on_demand_tooltip = args.on_demand_tooltip}, nodes={
+			{n=G.UIT.R, config={align = "cm"}, nodes={
+				{n=G.UIT.R, config={align = "cm"}, nodes={
+					{n=G.UIT.O, config={object = DynaText({string = {{ref_table = args, ref_value = "current_option_val"}}, colours = {G.C.UI.TEXT_LIGHT},pop_in = 0, pop_in_rate = 8, reset_pop_in = true,shadow = true, float = true, silent = true, bump = true, scale = args.text_scale, non_recalc = true})}},
+				}},
+				{n=G.UIT.R, config={align = "cm", minh = 0.05}, nodes={
+				}},
+				not disabled and choice_pips or nil
+			}}
+		}},
+		{n=G.UIT.C, config={align = "cm",r = 0.1, minw = 0.6*args.scale, hover = not disabled, colour = not disabled and args.colour or G.C.BLACK,shadow = not disabled, button = not disabled and 'option_cycle' or nil, ref_table = args, ref_value = 'r', focus_args = {type = 'none'}}, nodes={
+			{n=G.UIT.T, config={ref_table = args, ref_value = 'r', scale = args.text_scale, colour = not disabled and G.C.UI.TEXT_LIGHT or G.C.UI.TEXT_INACTIVE}}
+		}},
+	}}
+
+	if args.cycle_shoulders then
+		t =
+		{n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR}, nodes = {
+			{n=G.UIT.C, config={minw = 0.7,align = "cm", colour = G.C.CLEAR,func = 'set_button_pip', focus_args = {button = 'leftshoulder', type = 'none', orientation = 'cm', scale = 0.7, offset = {x = -0.1, y = 0}}}, nodes = {}},
+			{n=G.UIT.C, config={id = 'cycle_shoulders', padding = 0.1}, nodes={t}},
+			{n=G.UIT.C, config={minw = 0.7,align = "cm", colour = G.C.CLEAR,func = 'set_button_pip', focus_args = {button = 'rightshoulder', type = 'none', orientation = 'cm', scale = 0.7, offset = {x = 0.1, y = 0}}}, nodes = {}},
+		}}
+	else
+		t =
+		{n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.0}, nodes = {
+			t
+		}}
+	end
+	if args.label or args.info then
+		t = {n=G.UIT.R, config={align = "cm", padding = 0.05, id = args.id or nil}, nodes={
+			args.label and {n=G.UIT.R, config={align = "cm"}, nodes={
+				{n=G.UIT.T, config={text = args.label, scale = 0.5*args.scale, colour = G.C.UI.TEXT_LIGHT}}
+			}} or nil,
+			t,
+			info,
+		}}
+	end
+	return t
+end
+
+local function generateBaseNode(staticPageDefinition)
+	return {
+		n = G.UIT.ROOT,
+		config = {
+			emboss = 0.05,
+			minh = 6,
+			r = 0.1,
+			minw = 8,
+			align = "cm",
+			padding = 0.2,
+			colour = G.C.BLACK
+		},
+		nodes = {
+			staticPageDefinition
+		}
+	}
+end
+
+-- Initialize a tab with sections that can be updated dynamically (e.g. modifying text labels, showing additional UI elements after toggling buttons, etc.)
+function SMODS.GUI.DynamicUIManager.initTab(args)
+	local updateFunctions = args.updateFunctions
+	local staticPageDefinition = args.staticPageDefinition
+
+	for _, updateFunction in pairs(updateFunctions) do
+		G.E_MANAGER:add_event(Event({func = function()
+			updateFunction{cycle_config = {current_option = 1}}
+			return true
+		end}))
+	end
+	return generateBaseNode(staticPageDefinition)
+end
+
+-- Call this to trigger an update for a list of dynamic content areas
+function SMODS.GUI.DynamicUIManager.updateDynamicAreas(uiDefinitions)
+	for id, uiDefinition in pairs(uiDefinitions) do
+		local dynamicArea = G.OVERLAY_MENU:get_UIE_by_ID(id)
+		if dynamicArea and dynamicArea.config.object then
+			dynamicArea.config.object:remove()
+			dynamicArea.config.object = UIBox{
+				definition = uiDefinition,
+				config = {offset = {x=0, y=0}, align = 'cm', parent = dynamicArea}
+			}
+		end
+	end
+end
+
+local function recalculateModsList(page)
+	local modsPerPage = 4
+	local startIndex = (page - 1) * modsPerPage + 1
+	local endIndex = startIndex + modsPerPage - 1
+	local totalPages = math.ceil(#SMODS.MODS / modsPerPage)
+	local currentPage = "Page " .. page .. "/" .. totalPages
+	local pageOptions = {}
+	for i = 1, totalPages do
+		table.insert(pageOptions, ("Page " .. i .. "/" .. totalPages))
+	end
+	local showingList = #SMODS.MODS > 0
+
+	return currentPage, pageOptions, showingList, startIndex, endIndex, modsPerPage
+end
+
+-- Define the content in the pane that does not need to update
+-- Should include OBJECT nodes that indicate where the dynamic content sections will be populated
+-- EX: in this pane the 'modsList' node will contain the dynamic content which is defined in the function below
+function SMODS.GUI.staticModListContent()
+	local scale = 0.75
+	local currentPage, pageOptions, showingList = recalculateModsList(1)
+	return {
+		n = G.UIT.ROOT,
+		config = {
+			minh = 6,
+			r = 0.1,
+			minw = 10,
+			align = "tm",
+			padding = 0.2,
+			colour = G.C.BLACK
+		},
+		nodes = {
+			-- row container
+			{
+				n = G.UIT.R,
+				config = { align = "cm", padding = 0.05 },
+				nodes = {
+					-- column container
+					{
+						n = G.UIT.C,
+						config = { align = "cm", minw = 3, padding = 0.2, r = 0.1, colour = G.C.CLEAR },
+						nodes = {
+							-- title row
+							{
+								n = G.UIT.R,
+								config = {
+									padding = 0.05,
+									align = "cm"
+								},
+								nodes = {
+									{
+										n = G.UIT.T,
+										config = {
+											text = "List of Activated Mods",
+											shadow = true,
+											scale = scale * 0.6,
+											colour = G.C.UI.TEXT_LIGHT
+										}
+									}
+								}
+							},
+
+							-- add some empty rows for spacing
+							{
+								n = G.UIT.R,
+								config = { align = "cm", padding = 0.05 },
+								nodes = {}
+							},
+							{
+								n = G.UIT.R,
+								config = { align = "cm", padding = 0.05 },
+								nodes = {}
+							},
+							{
+								n = G.UIT.R,
+								config = { align = "cm", padding = 0.05 },
+								nodes = {}
+							},
+							{
+								n = G.UIT.R,
+								config = { align = "cm", padding = 0.05 },
+								nodes = {}
+							},
+
+							-- dynamic content rendered in this row container
+							-- list of 4 mods on the current page
+							{
+								n = G.UIT.R,
+								config = {
+									padding = 0.05,
+									align = "cm",
+									minh = 2,
+									minw = 4
+								},
+								nodes = {
+									{n=G.UIT.O, config={id = 'modsList', object = Moveable()}},
+								}
+							},
+
+							-- another empty row for spacing
+							{
+								n = G.UIT.R,
+								config = { align = "cm", padding = 0.3 },
+								nodes = {}
+							},
+
+							-- page selector
+							-- does not appear when list of mods is empty
+							showingList and SMODS.GUI.createOptionSelector({label = "", scale = 0.8, options = pageOptions, opt_callback = 'update_mod_list', no_pips = true, current_option = (
+									currentPage
+							)}) or nil
+						}
+					},
+				}
+			},
+		}
+	}
+end
+
+function SMODS.GUI.dynamicModListContent(page)
+
+	local scale = 0.75
+	local _, __, showingList, startIndex, endIndex, modsPerPage = recalculateModsList(page)
+
+	local modNodes = {}
+
+	-- If no mods are loaded, show a default message
+	if showingList == false then
+		table.insert(modNodes, {
+			n = G.UIT.R,
+			config = {
+				padding = 0,
+				align = "cm"
+			},
+			nodes = {
+				{
+					n = G.UIT.T,
+					config = {
+						text = "No mods have been detected...",
+						shadow = true,
+						scale = scale * 0.5,
+						colour = G.C.UI.TEXT_DARK
+					}
+				}
+			}
+		})
+		table.insert(modNodes, {
+			n = G.UIT.R,
+			config = {
+				padding = 0,
+				align = "cm",
+			},
+			nodes = {
+				UIBox_button({
+					label = {"Open Mods directory"},
+					shadow = true,
+					scale = scale,
+					colour = G.C.BOOSTER,
+					button = "openModsDirectory",
+					minh = 0.8,
+					minw = 8
+				})
+			}
+		})
+	else
+		local modCount = 0
+		for id, modInfo in ipairs(SMODS.MODS) do
+			if id >= startIndex and id <= endIndex then
+				table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
+				modCount = modCount + 1
+				if modCount >= modsPerPage then break end
+			end
+		end
+	end
+
+	return {
+		n = G.UIT.R,
+		config = {
+			r = 0.1,
+			align = "cm",
+			padding = 0.2,
+		},
+		nodes = modNodes
+	}
 end
 
 ----------------------------------------------
