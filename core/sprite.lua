@@ -165,13 +165,20 @@ end
 local set_spritesref = Card.set_sprites
 function Card:set_sprites(_center, _front)
     set_spritesref(self, _center, _front);
-    if _center then 
+    if _center then
         if _center.set then
             if (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.atlas then
-                self.children.center.atlas = G.ASSET_ATLAS[(_center.atlas or (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.set) or 'centers']
+                self.children.center.atlas = G.ASSET_ATLAS
+                [(_center.atlas or (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.set) or 'centers']
                 self.children.center:set_sprite_pos(_center.pos)
             end
         end
+    end
+    if _front then
+        self.children.front.atlas = G.ASSET_ATLAS[_front.atlas] or
+        G.ASSET_ATLAS[G.SETTINGS.colourblind_option and _front.card_atlas_high_contrast or _front.card_atlas_low_contrast] or
+        G.ASSET_ATLAS["cards_" .. (G.SETTINGS.colourblind_option and 2 or 1)]
+        self.children.front:set_sprite_pos(self.config.card.pos)
     end
 end
 
