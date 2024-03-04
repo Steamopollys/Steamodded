@@ -582,13 +582,16 @@ function SMODS.Card:_extend()
 		end
 
 		for k, v in pairs(SUITS) do
-			for i = 1, 14 do
+			for i = 1, SMODS.Card.MAX_ID do
 				SUITS[k][#SUITS[k] + 1] = {}
 			end
 		end
 
 		local stones = nil
-		local rank_name_mapping = { 'A', 'K', 'Q', 'J', '10', 9, 8, 7, 6, 5, 4, 3, 2 }
+        local rank_name_mapping = {}
+		for i = #SMODS.Card.RANK_LIST, 1, -1 do
+			rank_name_mapping[#rank_name_mapping+1] = SMODS.Card.RANK_LIST[i]
+		end
 
 		for k, v in ipairs(G.playing_cards) do
 			if v.ability.effect == 'Stone Card' then
@@ -669,7 +672,7 @@ function SMODS.Card:_extend()
 		for j = 1, #suit_list do
 			_row = {}
 			_bg_col = mix_colours(G.C.SUITS[suit_list[j]], G.C.L_BLACK, 0.7)
-			for i = 14, 2, -1 do
+			for i = SMODS.Card.MAX_ID, 2, -1 do
 				local _tscale = #SUITS[suit_list[j]][i] > 0 and 0.3 or 0.25
 				local _colour = #SUITS[suit_list[j]][i] > 0 and flip_col or G.C.UI.TRANSPARENT_LIGHT
 
@@ -815,7 +818,7 @@ function SMODS.Card:_extend()
 
 		if initial then self.base.original_value = self.base.value end
 
-		self.base.suit_nominal = suit_data.suit_nominal
+		self.base.suit_nominal = suit_data.suit_nominal or 0
 		self.base.suit_nominal_original = suit_base_nominal_original or
 			suit_data.suit_nominal and suit_data.suit_nominal / 10 or nil
 
@@ -824,9 +827,9 @@ function SMODS.Card:_extend()
 	end
 
 	function Card:change_suit(new_suit)
-		local new_code = SMODS.Card.SUITS[new_suit].prefix
-		local new_val = SMODS.Card.RANKS[self.base.value].suffix
-		local new_card = G.P_CARDS[new_code .. '_' .. new_val]
+		local new_code = SMODS.Card.SUITS[new_suit].prefix or ''
+		local new_val = SMODS.Card.RANKS[self.base.value].suffix or SMODS.Card.RANKS[self.base.value].value
+		local new_card = G.P_CARDS[new_code .. '_' .. new_val] or nil
 		self:set_base(new_card)
 		G.GAME.blind:debuff_card(self)
 	end
