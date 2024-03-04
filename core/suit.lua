@@ -30,153 +30,157 @@ SMODS.Card.SUITS = {
 }
 SMODS.Card.MAX_SUIT_NOMINAL = 0.04
 SMODS.Card.RANKS = {
-	['2'] = { value = '2', pos = { x = 0 }, id = 2, nominal = 2 },
-	['3'] = { value = '3', pos = { x = 1 }, id = 3, nominal = 3 },
-	['4'] = { value = '4', pos = { x = 2 }, id = 4, nominal = 4 },
-	['5'] = { value = '5', pos = { x = 3 }, id = 5, nominal = 5 },
-	['6'] = { value = '6', pos = { x = 4 }, id = 6, nominal = 6 },
-	['7'] = { value = '7', pos = { x = 5 }, id = 7, nominal = 7 },
-	['8'] = { value = '8', pos = { x = 6 }, id = 8, nominal = 8 },
-	['9'] = { value = '9', pos = { x = 7 }, id = 9, nominal = 9 },
-	['10'] = { suffix = 'T', value = '10', pos = { x = 8 }, id = 10, nominal = 10 },
-	['Jack'] = { suffix = 'J', value = 'Jack', pos = { x = 9 }, id = 11, nominal = 10, face_nominal = 0.1, face = true },
-	['Queen'] = { suffix = 'Q', value = 'Queen', pos = { x = 10 }, id = 12, nominal = 10, face_nominal = 0.2, face = true },
-	['King'] = { suffix = 'K', value = 'King', pos = { x = 11 }, id = 13, nominal = 10, face_nominal = 0.3, face = true },
-	['Ace'] = { suffix = 'A', value = 'Ace', pos = { x = 12 }, id = 14, nominal = 11, face_nominal = 0.4 }
+	['2'] = { value = '2', pos = { x = 0 }, id = 2, nominal = 2, next = { '3' } },
+	['3'] = { value = '3', pos = { x = 1 }, id = 3, nominal = 3, next = { '4' } },
+	['4'] = { value = '4', pos = { x = 2 }, id = 4, nominal = 4, next = { '5' } },
+	['5'] = { value = '5', pos = { x = 3 }, id = 5, nominal = 5, next = { '6' } },
+	['6'] = { value = '6', pos = { x = 4 }, id = 6, nominal = 6, next = { '7' } },
+	['7'] = { value = '7', pos = { x = 5 }, id = 7, nominal = 7, next = { '8' } },
+	['8'] = { value = '8', pos = { x = 6 }, id = 8, nominal = 8, next = { '9' } },
+	['9'] = { value = '9', pos = { x = 7 }, id = 9, nominal = 9, next = { '10' } },
+	['10'] = { suffix = 'T', value = '10', pos = { x = 8 }, id = 10, nominal = 10, next = { 'Jack' } },
+	['Jack'] = { suffix = 'J', value = 'Jack', pos = { x = 9 }, id = 11, nominal = 10, face_nominal = 0.1, face = true, next = { 'Queen' } },
+	['Queen'] = { suffix = 'Q', value = 'Queen', pos = { x = 10 }, id = 12, nominal = 10, face_nominal = 0.2, face = true, next = { 'King' } },
+	['King'] = { suffix = 'K', value = 'King', pos = { x = 11 }, id = 13, nominal = 10, face_nominal = 0.3, face = true, next = { 'Ace' } },
+	['Ace'] = { suffix = 'A', value = 'Ace', pos = { x = 12 }, id = 14, nominal = 11, face_nominal = 0.4, next = { '2' } }
 }
-SMODS.Card.RANK_LIST = {'2', '3', '4', '5', '6', '7','8', '9', '10', 'J', 'Q', 'K', 'A'}
+SMODS.Card.RANK_LIST = { '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A' }
 SMODS.Card.MAX_ID = 14
 function SMODS.Card.generate_prefix()
-    local possible_prefixes = { 'A', 'B', 'E', 'F', 'G', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'T', 'U', 'V',
-        'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
-        't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9' }
-    for _, v in pairs(SMODS.Card.SUITS) do
-        for i, vv in ipairs(possible_prefixes) do
-            if v.prefix == vv then
-                table.remove(possible_prefixes, i)
-            end
-        end
-    end
-    return possible_prefixes[1]
+	local possible_prefixes = { 'A', 'B', 'E', 'F', 'G', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'T', 'U', 'V',
+		'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+		't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9' }
+	for _, v in pairs(SMODS.Card.SUITS) do
+		for i, vv in ipairs(possible_prefixes) do
+			if v.prefix == vv then
+				table.remove(possible_prefixes, i)
+			end
+		end
+	end
+	return possible_prefixes[1]
 end
+
 function SMODS.Card.generate_suffix()
-    local possible_suffixes = { 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V',
-        'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
-        't', 'u', 'v', 'w', 'x', 'y', 'z' }
-    for _, v in pairs(SMODS.Card.RANKS) do
-        for i, vv in ipairs(possible_suffixes) do
-            if v.suffix == vv then
-                table.remove(possible_suffixes, i)
-            end
-        end
-    end
+	local possible_suffixes = { 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V',
+		'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+		't', 'u', 'v', 'w', 'x', 'y', 'z' }
+	for _, v in pairs(SMODS.Card.RANKS) do
+		for i, vv in ipairs(possible_suffixes) do
+			if v.suffix == vv then
+				table.remove(possible_suffixes, i)
+			end
+		end
+	end
 	return possible_suffixes[1]
 end
 
-function SMODS.Card:new_suit(name, card_atlas_low_contrast, card_atlas_high_contrast, card_pos, ui_atlas_low_contrast, ui_atlas_high_contrast, ui_pos, colour_low_contrast, colour_high_contrast)
-    if SMODS.Card.SUITS[name] then
-        sendDebugMessage('Failed to register duplicate suit:' .. name)
-        return nil
-    end
-    local prefix = SMODS.Card.generate_prefix()
-    if not prefix then
-        sendDebugMessage('Too many suits! Failed to assign valid prefix to:' .. name)
-    end
-    SMODS.Card.MAX_SUIT_NOMINAL = SMODS.Card.MAX_SUIT_NOMINAL + 0.01
-    SMODS.Card.SUITS[name] = {
-        name = name,
-        prefix = prefix,
-        suit_nominal = SMODS.Card.MAX_SUIT_NOMINAL,
-        card_atlas_low_contrast = card_atlas_low_contrast,
-        card_atlas_high_contrast = card_atlas_high_contrast,
-        card_pos = { y = card_pos.y },
-        ui_atlas_low_contrast = ui_atlas_low_contrast,
-        ui_atlas_high_contrast = ui_atlas_high_contrast,
-        ui_pos = ui_pos
-    }
-    SMODS.Card.SUIT_LIST[#SMODS.Card.SUIT_LIST + 1] = name
-    colour_low_contrast = colour_low_contrast or '000000'
-    colour_high_contrast = colour_high_contrast or '000000'
-    if not (type(colour_low_contrast) == 'table') then colour_low_contrast = HEX(colour_low_contrast) end
-    if not (type(colour_high_contrast) == 'table') then colour_high_contrast = HEX(colour_high_contrast) end
-    G.C.SO_1[name] = colour_low_contrast
-    G.C.SO_2[name] = colour_high_contrast
-    G.C.SUITS[name] = G.C["SO_" .. (G.SETTINGS.colourblind_option and 2 or 1)][name]
-    for _, v in pairs(SMODS.Card.RANKS) do
-        G.P_CARDS[prefix .. '_' .. (v.suffix or v.value)] = {
-            name = v.value .. ' of ' .. name,
-            value = v.value,
-            suit = name,
-            pos = { x = v.pos.x, y = card_pos.y },
-            card_atlas_low_contrast = (v.atlas_low_contrast and v.suit_map and v.suit_map[name]) and v.atlas_low_contrast or card_atlas_low_contrast,
-            card_atlas_high_contrast = (v.atlas_low_contrast and v.suit_map and v.suit_map[name]) and v.atlas_high_contrast or card_atlas_high_contrast,
-        }
-    end
-    G.localization.misc['suits_plural'][name] = name
-    G.localization.misc['suits_singular'][name] = name
-    return SMODS.Card.SUITS[name]
+function SMODS.Card:new_suit(name, card_atlas_low_contrast, card_atlas_high_contrast, card_pos, ui_atlas_low_contrast,
+							 ui_atlas_high_contrast, ui_pos, colour_low_contrast, colour_high_contrast)
+	if SMODS.Card.SUITS[name] then
+		sendDebugMessage('Failed to register duplicate suit:' .. name)
+		return nil
+	end
+	local prefix = SMODS.Card.generate_prefix()
+	if not prefix then
+		sendDebugMessage('Too many suits! Failed to assign valid prefix to:' .. name)
+	end
+	SMODS.Card.MAX_SUIT_NOMINAL = SMODS.Card.MAX_SUIT_NOMINAL + 0.01
+	SMODS.Card.SUITS[name] = {
+		name = name,
+		prefix = prefix,
+		suit_nominal = SMODS.Card.MAX_SUIT_NOMINAL,
+		card_atlas_low_contrast = card_atlas_low_contrast,
+		card_atlas_high_contrast = card_atlas_high_contrast,
+		card_pos = { y = card_pos.y },
+		ui_atlas_low_contrast = ui_atlas_low_contrast,
+		ui_atlas_high_contrast = ui_atlas_high_contrast,
+		ui_pos = ui_pos
+	}
+	SMODS.Card.SUIT_LIST[#SMODS.Card.SUIT_LIST + 1] = name
+	colour_low_contrast = colour_low_contrast or '000000'
+	colour_high_contrast = colour_high_contrast or '000000'
+	if not (type(colour_low_contrast) == 'table') then colour_low_contrast = HEX(colour_low_contrast) end
+	if not (type(colour_high_contrast) == 'table') then colour_high_contrast = HEX(colour_high_contrast) end
+	G.C.SO_1[name] = colour_low_contrast
+	G.C.SO_2[name] = colour_high_contrast
+	G.C.SUITS[name] = G.C["SO_" .. (G.SETTINGS.colourblind_option and 2 or 1)][name]
+	for _, v in pairs(SMODS.Card.RANKS) do
+		G.P_CARDS[prefix .. '_' .. (v.suffix or v.value)] = {
+			name = v.value .. ' of ' .. name,
+			value = v.value,
+			suit = name,
+			pos = { x = v.pos.x, y = card_pos.y },
+			card_atlas_low_contrast = (v.atlas_low_contrast and v.suit_map and v.suit_map[name]) and v
+				.atlas_low_contrast or card_atlas_low_contrast,
+			card_atlas_high_contrast = (v.atlas_low_contrast and v.suit_map and v.suit_map[name]) and
+				v.atlas_high_contrast or card_atlas_high_contrast,
+		}
+	end
+	G.localization.misc['suits_plural'][name] = name
+	G.localization.misc['suits_singular'][name] = name
+	return SMODS.Card.SUITS[name]
 end
 
 function SMODS.Card:new_rank(value, nominal, atlas_low_contrast, atlas_high_contrast, pos, suit_map, options)
 	options = options or {}
-    if SMODS.Card.RANKS[value] then
-        sendDebugMessage('Failed to register duplicate rank: ' .. value)
-        return nil
-    end
-    local suffix = SMODS.Card:generate_suffix()
-    if not suffix then
-        sendDebugMessage('Too many ranks! Failed to assign valid suffix to: ' .. value)
+	if SMODS.Card.RANKS[value] then
+		sendDebugMessage('Failed to register duplicate rank: ' .. value)
 		return nil
-    end
+	end
+	local suffix = SMODS.Card:generate_suffix()
+	if not suffix then
+		sendDebugMessage('Too many ranks! Failed to assign valid suffix to: ' .. value)
+		return nil
+	end
 	SMODS.Card.MAX_ID = SMODS.Card.MAX_ID + 1
-    SMODS.Card.RANKS[value] = {
-        value = value,
-        suffix = suffix,
-        pos = { x = pos.x },
-        id = SMODS.Card.MAX_ID,
-        nominal = nominal,
-        atlas_low_contrast = atlas_low_contrast,
-        atlas_high_contrast = atlas_high_contrast,
-        suit_map = suit_map,
-        face = options.face,
+	SMODS.Card.RANKS[value] = {
+		value = value,
+		suffix = suffix,
+		pos = { x = pos.x },
+		id = SMODS.Card.MAX_ID,
+		nominal = nominal,
+		atlas_low_contrast = atlas_low_contrast,
+		atlas_high_contrast = atlas_high_contrast,
+		suit_map = suit_map,
+		face = options.face,
 		face_nominal = options.face_nominal,
-        strength_from = options.strength_from,
-		strength_to = options.strength_to
-    }
-	SMODS.Card.RANK_LIST[#SMODS.Card.RANK_LIST+1] = string.sub(value,1,1)
-    for k, v in pairs(SMODS.Card.SUITS) do
-        if suit_map[k] then
-            G.P_CARDS[v.prefix .. '_' .. suffix] = {
-                name = value .. ' of ' .. v.name,
-                value = value,
-                pos = { x = pos.x, y = suit_map[k].y },
-                suit = v.name,
-                card_atlas_low_contrast = atlas_low_contrast,
-                card_atlas_high_contrast = atlas_high_contrast
-            }
-        else
-            -- blank sprite
-            G.P_CARDS[v.prefix .. '_' .. suffix] = {
-                name = value .. ' of ' .. v.name,
-                value = value,
-                suit = v.name,
-                pos = { x = 0, y = 5 }
-            }
-        end
-    end
+		--prev = options.prev,
+		next = options.next
+	}
+	SMODS.Card.RANK_LIST[#SMODS.Card.RANK_LIST + 1] = string.sub(value, 1, 1)
+	for k, v in pairs(SMODS.Card.SUITS) do
+		if suit_map[k] then
+			G.P_CARDS[v.prefix .. '_' .. suffix] = {
+				name = value .. ' of ' .. v.name,
+				value = value,
+				pos = { x = pos.x, y = suit_map[k].y },
+				suit = v.name,
+				card_atlas_low_contrast = atlas_low_contrast,
+				card_atlas_high_contrast = atlas_high_contrast
+			}
+		else
+			-- blank sprite
+			G.P_CARDS[v.prefix .. '_' .. suffix] = {
+				name = value .. ' of ' .. v.name,
+				value = value,
+				suit = v.name,
+				pos = { x = 0, y = 5 }
+			}
+		end
+	end
 	G.localization.misc['ranks'][value] = value
 end
 
 function SMODS.Card:_extend()
 	local Game_init_game_object = Game.init_game_object
-    function Game:init_game_object()
-        local t = Game_init_game_object(self)
-        t.cards_played = {}
-        for k, v in pairs(SMODS.Card.RANKS) do
-            t.cards_played[k] = { suits = {}, total = 0 }
-        end
+	function Game:init_game_object()
+		local t = Game_init_game_object(self)
+		t.cards_played = {}
+		for k, v in pairs(SMODS.Card.RANKS) do
+			t.cards_played[k] = { suits = {}, total = 0 }
+		end
 		return t
-    end
+	end
 
 	function get_flush(hand)
 		local ret = {}
@@ -202,6 +206,71 @@ function SMODS.Card:_extend()
 			end
 			return {}
 		end
+	end
+
+	function get_straight(hand)
+		local ret = {}
+		local four_fingers = next(find_joker('Four Fingers'))
+		local can_skip = next(find_joker('Shortcut'))
+		if #hand > 5 or #hand < (5 - (four_fingers and 1 or 0)) then return ret end
+		local t = {}
+		local RANKS = {}
+		for i = 1, #hand do
+			local rank = hand[i].base.value
+			if RANKS[rank] then
+				RANKS[rank][#RANKS[rank] + 1] = hand[i]
+			else
+				RANKS[rank] = { hand[i] }
+			end
+		end
+		local straight_length = 0
+		local straight = false
+		local skipped_rank = false
+		local vals = { 'Ace' }
+		local initial = true
+		local br = false
+		local end_iter = false
+		while initial or not br do
+			end_iter = false
+            if straight_length >= (5 - (four_fingers and 1 or 0)) then
+                straight = true
+                break
+            end
+			for _, val in ipairs(vals) do
+				if (val == 'Ace') and not initial then br = true end
+				if RANKS[val] then
+					straight_length = straight_length + 1
+					skipped_rank = false
+					for _, vv in ipairs(RANKS[val]) do
+						t[#t + 1] = vv
+					end
+					vals = SMODS.Card.RANKS[val].next
+					initial = false
+                    end_iter = true
+					break
+				end
+			end
+            if not end_iter then
+				local new_vals = {}
+					for _, val in ipairs(vals) do
+						for _, r in ipairs(SMODS.Card.RANKS[val].next) do
+							table.insert(new_vals, r)
+						end
+					end
+					vals = new_vals
+				if can_skip and not skipped_rank then
+					skipped_rank = true
+				else
+					straight_length = 0
+                    skipped_rank = false
+					if not straight then t = {} end
+					if straight then break end
+				end
+			end
+		end
+		if not straight then return ret end
+		table.insert(ret, t)
+		return ret
 	end
 
 	function G.UIDEF.view_deck(unplayed_only)
@@ -271,12 +340,12 @@ function SMODS.Card:_extend()
 			suit_tallies[v] = 0
 			mod_suit_tallies[v] = 0
 		end
-        local rank_tallies = {}
+		local rank_tallies = {}
 		local mod_rank_tallies = {}
-        local rank_name_mapping = SMODS.Card.RANK_LIST
-		for _,v in ipairs(SMODS.Card.RANK_LIST) do
-            rank_tallies[#rank_tallies + 1] = 0
-            mod_rank_tallies[#mod_rank_tallies + 1] = 0
+		local rank_name_mapping = SMODS.Card.RANK_LIST
+		for _, v in ipairs(SMODS.Card.RANK_LIST) do
+			rank_tallies[#rank_tallies + 1] = 0
+			mod_rank_tallies[#mod_rank_tallies + 1] = 0
 		end
 		local face_tally = 0
 		local mod_face_tally = 0
@@ -387,7 +456,7 @@ function SMODS.Card:_extend()
 					suit_list[i + 1] and tally_sprite(SMODS.Card.SUITS[suit_list[i + 1]].ui_pos,
 						{ { string = '' .. suit_tallies[suit_list[i + 1]], colour = flip_col }, { string = '' .. mod_suit_tallies[suit_list[i + 1]], colour = G.C.BLUE } },
 						{ localize(suit_list[i + 1], 'suits_plural') },
-						suit_list[i+1]) or nil,
+						suit_list[i + 1]) or nil,
 				}
 			}
 			table.insert(tally_ui, n)
@@ -748,23 +817,23 @@ function SMODS.Card:_extend()
 
 		self.base.suit_nominal = suit_data.suit_nominal
 		self.base.suit_nominal_original = suit_base_nominal_original or
-		suit_data.suit_nominal and suit_data.suit_nominal / 10 or nil
+			suit_data.suit_nominal and suit_data.suit_nominal / 10 or nil
 
 		if not initial then G.GAME.blind:debuff_card(self) end
 		if self.playing_card and not initial then check_for_unlock({ type = 'modify_deck' }) end
 	end
 
-    function Card:change_suit(new_suit)
-        local new_code = SMODS.Card.SUITS[new_suit].prefix
-        local new_val = SMODS.Card.RANKS[self.base.value].suffix
-        local new_card = G.P_CARDS[new_code .. '_' .. new_val]
-        self:set_base(new_card)
-        G.GAME.blind:debuff_card(self)
-    end
-	
+	function Card:change_suit(new_suit)
+		local new_code = SMODS.Card.SUITS[new_suit].prefix
+		local new_val = SMODS.Card.RANKS[self.base.value].suffix
+		local new_card = G.P_CARDS[new_code .. '_' .. new_val]
+		self:set_base(new_card)
+		G.GAME.blind:debuff_card(self)
+	end
+
 	function Card:is_face(from_boss)
-        if self.debuff and not from_boss then return end
-        local val = self.base.value
+		if self.debuff and not from_boss then return end
+		local val = self.base.value
 		if next(find_joker('Pareidolia')) or (val and SMODS.Card.RANKS[val] and SMODS.Card.RANKS[val].face) then return true end
 	end
 
@@ -780,12 +849,13 @@ function SMODS.Card:_extend()
 
 	local tally_sprite_ref = tally_sprite
 	function tally_sprite(pos, value, tooltip, suit)
-        local node = tally_sprite_ref(pos, value, tooltip)
+		local node = tally_sprite_ref(pos, value, tooltip)
 		if not suit then return node end
 		local suit_data = SMODS.Card.SUITS[suit]
 		if suit_data.ui_atlas_low_contrast or suit_data.ui_atlas_high_contrast then
 			local t_s = Sprite(0, 0, 0.5, 0.5,
-				G.ASSET_ATLAS[G.SETTINGS.colourblind_option and suit_data.ui_atlas_high_contrast or suit_data.ui_atlas_low_contrast],
+				G.ASSET_ATLAS
+				[G.SETTINGS.colourblind_option and suit_data.ui_atlas_high_contrast or suit_data.ui_atlas_low_contrast],
 				{ x = suit_data.ui_pos.x or 0, y = suit_data.ui_pos.y or 0 })
 			t_s.states.drag.can = false
 			t_s.states.hover.can = false
