@@ -230,12 +230,14 @@ function SMODS.Card:_extend()
 		local initial = true
 		local br = false
 		local end_iter = false
-		while initial or not br do
+		while 1 do
 			end_iter = false
             if straight_length >= (5 - (four_fingers and 1 or 0)) then
                 straight = true
                 break
             end
+            if br then break end
+			if not next(vals) then break end
 			for _, val in ipairs(vals) do
 				if (val == 'Ace') and not initial then br = true end
 				if RANKS[val] then
@@ -814,7 +816,7 @@ function SMODS.Card:_extend()
 		local suit_data = SMODS.Card.SUITS[self.base.suit] or {}
 		self.base.nominal = rank_data.nominal or 0
 		self.base.id = rank_data.id or 0
-		self.base_face_nominal = rank_data.face_nominal or nil
+		self.base.face_nominal = rank_data.face_nominal or 0
 
 		if initial then self.base.original_value = self.base.value end
 
