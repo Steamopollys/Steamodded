@@ -1,7 +1,7 @@
 -- ----------------------------------------------
 -- ------------MOD CORE API CARDS----------------
 SMODS.Card = {}
-SMODS.Card.SUIT_LIST = { "Hearts", "Diamonds", "Clubs", "Spades" }
+SMODS.Card.SUIT_LIST = { 'Spades', 'Hearts', 'Clubs', 'Diamonds' }
 SMODS.Card.SUITS = {
 	["Hearts"] = {
 		name = 'Hearts',
@@ -144,7 +144,11 @@ function SMODS.Card:new_rank(value, nominal, atlas_low_contrast, atlas_high_cont
 		suit_map = suit_map,
 		face = options.face,
 		face_nominal = options.face_nominal,
-		--prev = options.prev,
+		strength_effect = options.strength_effect or {
+			fixed = 1,
+			random = false,
+			ignore = false
+		},
 		next = options.next
 	}
 	SMODS.Card.RANK_LIST[#SMODS.Card.RANK_LIST + 1] = string.sub(value, 1, 1)
@@ -232,11 +236,11 @@ function SMODS.Card:_extend()
 		local end_iter = false
 		while 1 do
 			end_iter = false
-            if straight_length >= (5 - (four_fingers and 1 or 0)) then
-                straight = true
-                break
-            end
-            if br then break end
+			if straight_length >= (5 - (four_fingers and 1 or 0)) then
+				straight = true
+				break
+			end
+			if br then break end
 			if not next(vals) then break end
 			for _, val in ipairs(vals) do
 				if (val == 'Ace') and not initial then br = true end
@@ -248,23 +252,23 @@ function SMODS.Card:_extend()
 					end
 					vals = SMODS.Card.RANKS[val].next
 					initial = false
-                    end_iter = true
+					end_iter = true
 					break
 				end
 			end
-            if not end_iter then
+			if not end_iter then
 				local new_vals = {}
-					for _, val in ipairs(vals) do
-						for _, r in ipairs(SMODS.Card.RANKS[val].next) do
-							table.insert(new_vals, r)
-						end
+				for _, val in ipairs(vals) do
+					for _, r in ipairs(SMODS.Card.RANKS[val].next) do
+						table.insert(new_vals, r)
 					end
-					vals = new_vals
+				end
+				vals = new_vals
 				if can_skip and not skipped_rank then
 					skipped_rank = true
 				else
 					straight_length = 0
-                    skipped_rank = false
+					skipped_rank = false
 					if not straight then t = {} end
 					if straight then break end
 				end
@@ -561,6 +565,90 @@ function SMODS.Card:_extend()
 		return t
 	end
 
+	local UIDEF_challenge_description_tab_ref = G.UIDEF.challenge_description_tab
+	function G.UIDEF.challenge_description_tab(args)
+		if args._tab == 'Deck' then
+			local challenge = G.CHALLENGES[args._id]
+			local deck_tables = {}
+            local SUITS = {}
+			for _, v in pairs(SMODS.Card.SUITS) do
+				SUITS[v.prefix] = {}
+			end
+			local suit_map = {}
+			for i, v in ipairs(SMODS.Card.SUIT_LIST) do
+				table.insert(suit_map, SMODS.Card.SUITS[v].prefix)
+			end
+			local card_protos = nil
+			local _de = nil
+			if challenge then
+				_de = challenge.deck
+			end
+
+			if _de and _de.cards then
+				card_protos = _de.cards
+			end
+
+			if not card_protos then
+				card_protos = {}
+				for k, v in pairs(G.P_CARDS) do
+					local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)
+					local keep, _e, _d, _g = true, nil, nil, nil
+					if _de then
+						if _de.yes_ranks and not _de.yes_ranks[_r] then keep = false end
+						if _de.no_ranks and _de.no_ranks[_r] then keep = false end
+						if _de.yes_suits and not _de.yes_suits[_s] then keep = false end
+						if _de.no_suits and _de.no_suits[_s] then keep = false end
+						if _de.enhancement then _e = _de.enhancement end
+						if _de.edition then _d = _de.edition end
+						if _de.seal then _g = _de.seal end
+					end
+
+					if keep then card_protos[#card_protos + 1] = { s = _s, r = _r, e = _e, d = _d, g = _g } end
+				end
+			end
+			for k, v in ipairs(card_protos) do
+				local _card = Card(0, 0, G.CARD_W * 0.45, G.CARD_H * 0.45, G.P_CARDS[v.s .. '_' .. v.r],
+					G.P_CENTERS[v.e or 'c_base'])
+				if v.d then _card:set_edition({ [v.d] = true }, true, true) end
+				if v.g then _card:set_seal(v.g, true, true) end
+				SUITS[v.s][#SUITS[v.s] + 1] = _card
+			end
+            local num_suits = 0
+			for j = 1, #suit_map do
+				if SUITS[suit_map[j]][1] then num_suits = num_suits + 1 end
+			end
+			for j = 1, #suit_map do
+				if SUITS[suit_map[j]][1] then
+					table.sort(SUITS[suit_map[j]], function(a, b) return a:get_nominal() > b:get_nominal() end)
+					local view_deck = CardArea(
+						0, 0,
+						5.5 * G.CARD_W,
+						(0.42 - (num_suits <= 4 and 0 or num_suits >= 8 and 0.28 or 0.07*(num_suits-4))) * G.CARD_H,
+						{ card_limit = #SUITS[suit_map[j]], type = 'title_2', view_deck = true, highlight_limit = 0, card_w =
+						G.CARD_W * 0.5, draw_layers = { 'card' } })
+					table.insert(deck_tables,
+						{
+							n = G.UIT.R,
+							config = { align = "cm", padding = 0 },
+							nodes = {
+								{ n = G.UIT.O, config = { object = view_deck } }
+							}
+						}
+					)
+
+					for i = 1, #SUITS[suit_map[j]] do
+						if SUITS[suit_map[j]][i] then
+							view_deck:emplace(SUITS[suit_map[j]][i])
+						end
+					end
+				end
+			end
+			return { n = G.UIT.ROOT, config = { align = "cm", padding = 0, colour = G.C.BLACK, r = 0.1, minw = 11.4, minh = 4.2 }, nodes = deck_tables }
+		else
+			return UIDEF_challenge_description_tab_ref(args)
+		end
+	end
+
 	function G.UIDEF.deck_preview(args)
 		local _minh, _minw = 0.35, 0.5
 		local suit_list = SMODS.Card.SUIT_LIST
@@ -590,9 +678,9 @@ function SMODS.Card:_extend()
 		end
 
 		local stones = nil
-        local rank_name_mapping = {}
+		local rank_name_mapping = {}
 		for i = #SMODS.Card.RANK_LIST, 1, -1 do
-			rank_name_mapping[#rank_name_mapping+1] = SMODS.Card.RANK_LIST[i]
+			rank_name_mapping[#rank_name_mapping + 1] = SMODS.Card.RANK_LIST[i]
 		end
 
 		for k, v in ipairs(G.playing_cards) do
@@ -840,6 +928,237 @@ function SMODS.Card:_extend()
 		if self.debuff and not from_boss then return end
 		local val = self.base.value
 		if next(find_joker('Pareidolia')) or (val and SMODS.Card.RANKS[val] and SMODS.Card.RANKS[val].face) then return true end
+	end
+
+	local Card_use_consumeable_ref = Card.use_consumeable
+	function Card:use_consumeable(area, copier)
+		if self.ability.name == 'Strength' or self.ability.name == 'Sigil' or self.ability.name == 'Ouija' or self.ability.name == 'Familiar' or self.ability.name == 'Grim' or self.ability.name == 'Incantation' then
+			stop_use()
+			if not copier then set_consumeable_usage(self) end
+			if self.debuff then return nil end
+			local used_tarot = copier or self
+
+			if self.ability.consumeable.max_highlighted then
+				update_hand_text({ immediate = true, nopulse = true, delay = 0 },
+					{ mult = 0, chips = 0, level = '', handname = '' })
+			end
+			if self.ability.name == 'Strength' then
+				G.E_MANAGER:add_event(Event({
+					trigger = 'after',
+					delay = 0.4,
+					func = function()
+						play_sound('tarot1')
+						used_tarot:juice_up(0.3, 0.5)
+						return true
+					end
+				}))
+				for i = 1, #G.hand.highlighted do
+					local percent = 1.15 - (i - 0.999) / (#G.hand.highlighted - 0.998) * 0.3
+					G.E_MANAGER:add_event(Event({
+						trigger = 'after',
+						delay = 0.15,
+						func = function()
+							G.hand.highlighted[i]:flip(); play_sound('card1', percent); G.hand.highlighted[i]:juice_up(
+								0.3,
+								0.3); return true
+						end
+					}))
+				end
+				delay(0.2)
+				for i = 1, #G.hand.highlighted do
+					G.E_MANAGER:add_event(Event({
+						trigger = 'after',
+						delay = 0.1,
+						func = function()
+							local card = G.hand.highlighted[i]
+							local suit_data = SMODS.Card.SUITS[card.base.suit]
+							local suit_prefix = suit_data.prefix .. '_'
+							local rank_data = SMODS.Card.RANKS[card.base.value]
+							local behavior = rank_data.strength_effect or { fixed = 1, ignore = false, random = false }
+							local rank_suffix = ''
+							if behavior.ignore or not next(rank_data.next) then
+								return true
+							elseif behavior.random then
+								local r = pseudorandom_element(rank_data.next, pseudoseed('strength'))
+								rank_suffix = SMODS.Card.RANKS[r].suffix or SMODS.Card.RANKS[r].value
+							else
+								local ii = (behavior.fixed and rank_data.next[behavior.fixed]) and behavior.fixed or 1
+								rank_suffix = SMODS.Card.RANKS[rank_data.next[ii]].suffix or
+									SMODS.Card.RANKS[rank_data.next[ii]].value
+							end
+							card:set_base(G.P_CARDS[suit_prefix .. rank_suffix])
+							return true
+						end
+					}))
+				end
+				for i = 1, #G.hand.highlighted do
+					local percent = 0.85 + (i - 0.999) / (#G.hand.highlighted - 0.998) * 0.3
+					G.E_MANAGER:add_event(Event({
+						trigger = 'after',
+						delay = 0.15,
+						func = function()
+							G.hand.highlighted[i]:flip(); play_sound('tarot2', percent, 0.6); G.hand.highlighted[i]
+								:juice_up(
+									0.3, 0.3); return true
+						end
+					}))
+				end
+				G.E_MANAGER:add_event(Event({
+					trigger = 'after',
+					delay = 0.2,
+					func = function()
+						G.hand:unhighlight_all(); return true
+					end
+				}))
+				delay(0.5)
+			elseif self.ability.name == 'Sigil' or self.ability.name == 'Ouija' then
+				G.E_MANAGER:add_event(Event({
+					trigger = 'after',
+					delay = 0.4,
+					func = function()
+						play_sound('tarot1')
+						used_tarot:juice_up(0.3, 0.5)
+						return true
+					end
+				}))
+				for i = 1, #G.hand.cards do
+					local percent = 1.15 - (i - 0.999) / (#G.hand.cards - 0.998) * 0.3
+					G.E_MANAGER:add_event(Event({
+						trigger = 'after',
+						delay = 0.15,
+						func = function()
+							G.hand.cards[i]:flip(); play_sound('card1', percent); G.hand.cards[i]:juice_up(0.3, 0.3); return true
+						end
+					}))
+				end
+				delay(0.2)
+				if self.ability.name == 'Sigil' then
+					local _suit = SMODS.Card.SUITS[pseudorandom_element(SMODS.Card.SUIT_LIST, pseudoseed('sigil'))]
+						.prefix
+					for i = 1, #G.hand.cards do
+						G.E_MANAGER:add_event(Event({
+							func = function()
+								local card = G.hand.cards[i]
+								local suit_prefix = _suit .. '_'
+								local rank_data = SMODS.Card.RANKS[card.base.value]
+								local rank_suffix = rank_data.suffix or rank_data.value
+								card:set_base(G.P_CARDS[suit_prefix .. rank_suffix])
+								return true
+							end
+						}))
+					end
+				end
+				if self.ability.name == 'Ouija' then
+					local rank_data = pseudorandom_element(SMODS.Card.RANKS, pseudoseed('ouija'))
+					local _rank = rank_data.suffix or rank_data.value
+					for i = 1, #G.hand.cards do
+						G.E_MANAGER:add_event(Event({
+							func = function()
+								local card = G.hand.cards[i]
+								local suit_data = SMODS.Card.SUITS[card.base.suit]
+								local suit_prefix = suit_data.prefix .. '_'
+								local rank_suffix = _rank
+								card:set_base(G.P_CARDS[suit_prefix .. rank_suffix])
+								return true
+							end
+						}))
+					end
+					G.hand:change_size(-1)
+				end
+				for i = 1, #G.hand.cards do
+					local percent = 0.85 + (i - 0.999) / (#G.hand.cards - 0.998) * 0.3
+					G.E_MANAGER:add_event(Event({
+						trigger = 'after',
+						delay = 0.15,
+						func = function()
+							G.hand.cards[i]:flip(); play_sound('tarot2', percent, 0.6); G.hand.cards[i]:juice_up(0.3, 0.3); return true
+						end
+					}))
+				end
+				delay(0.5)
+			elseif self.ability.name == 'Familiar' or self.ability.name == 'Grim' or self.ability.name == 'Incantation' then
+				local destroyed_cards = {}
+				destroyed_cards[#destroyed_cards + 1] = pseudorandom_element(G.hand.cards, pseudoseed('random_destroy'))
+				G.E_MANAGER:add_event(Event({
+					trigger = 'after',
+					delay = 0.4,
+					func = function()
+						play_sound('tarot1')
+						used_tarot:juice_up(0.3, 0.5)
+						return true
+					end
+				}))
+				G.E_MANAGER:add_event(Event({
+					trigger = 'after',
+					delay = 0.1,
+					func = function()
+						for i = #destroyed_cards, 1, -1 do
+							local card = destroyed_cards[i]
+							if card.ability.name == 'Glass Card' then
+								card:shatter()
+							else
+								card:start_dissolve(nil, i ~= #destroyed_cards)
+							end
+						end
+						return true
+					end
+				}))
+				G.E_MANAGER:add_event(Event({
+					trigger = 'after',
+					delay = 0.7,
+					func = function()
+						local cards = {}
+						for i = 1, self.ability.extra do
+							cards[i] = true
+							local _suit, _rank = nil, nil
+							if self.ability.name == 'Familiar' then
+								local faces = {}
+								for _, v in pairs(SMODS.Card.RANKS) do
+									if v.face then table.insert(faces, v.suffix or v.value) end
+								end
+								_rank = pseudorandom_element(faces, pseudoseed('familiar_create'))
+								_suit = SMODS.Card.SUITS
+									[pseudorandom_element(SMODS.Card.SUIT_LIST, pseudoseed('familiar_create'))].prefix
+							elseif self.ability.name == 'Grim' then
+								_rank = 'A'
+								_suit = SMODS.Card.SUITS
+									[pseudorandom_element(SMODS.Card.SUIT_LIST, pseudoseed('grim_create'))].prefix
+							elseif self.ability.name == 'Incantation' then
+								local numbers = {}
+								for k, v in pairs(SMODS.Card.RANKS) do
+									if k ~= 'Ace' and not v.face then table.insert(numbers, v.suffix or v.value) end
+								end
+								_rank = pseudorandom_element(numbers, pseudoseed('incantation_create'))
+								_suit = SMODS.Card.SUITS
+									[pseudorandom_element(SMODS.Card.SUIT_LIST, pseudoseed('incantation_create'))]
+									.prefix
+							end
+							_suit = _suit or 'S'; _rank = _rank or 'A'
+							local cen_pool = {}
+							for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
+								if v.key ~= 'm_stone' then
+									cen_pool[#cen_pool + 1] = v
+								end
+							end
+							create_playing_card(
+								{
+									front = G.P_CARDS[_suit .. '_' .. _rank],
+									center = pseudorandom_element(cen_pool,
+										pseudoseed('spe_card'))
+								}, G.hand, nil, i ~= 1, { G.C.SECONDARY_SET.Spectral })
+						end
+						playing_card_joker_effects(cards)
+						return true
+					end
+				}))
+				delay(0.3)
+				for i = 1, #G.jokers.cards do
+					G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
+				end
+			end
+		else
+			Card_use_consumeable_ref(self, area, copier)
+		end
 	end
 
 	local Blind_set_blind_ref = Blind.set_blind
