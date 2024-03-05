@@ -109,7 +109,7 @@ function SMODS.Card:new_suit(name, card_atlas_low_contrast, card_atlas_high_cont
 			name = v.value .. ' of ' .. name,
 			value = v.value,
 			suit = name,
-			pos = { x = v.pos.x, y = card_pos.y },
+			pos = { x = v.pos.x, y = (v.suit_map and v.suit_map[name]) and v.suit_map[name].y or card_pos.y },
 			card_atlas_low_contrast = (v.atlas_low_contrast and v.suit_map and v.suit_map[name]) and v
 				.atlas_low_contrast or card_atlas_low_contrast,
 			card_atlas_high_contrast = (v.atlas_low_contrast and v.suit_map and v.suit_map[name]) and
