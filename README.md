@@ -80,7 +80,7 @@ You can check it out on this link, you wont regret it: https://github.com/ethang
 
 It's a little bit more complicated to use than the 2 previous options, but it can spare you from a lot of troubles. Every informations on how to use Steamodded with it can be found directly on the project link.
 
-For this one, go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the latest release (Your aiming for the "Source Code (zip)" download). Then, follow the instructions provided by the Lovely Github.
+For this one, go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the latest release (Your aiming for the "Source Code (zip)" download and the "lovely.toml" file). Then, follow the instructions provided by the Lovely Github.
 
 ### Linux
 
