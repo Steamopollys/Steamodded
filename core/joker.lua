@@ -71,6 +71,14 @@ function SMODS.injectJokers()
             cost_mult = 1.0
         }
 
+        for _i, sprite in ipairs(SMODS.Sprites) do
+            sendDebugMessage(sprite.name)
+            sendDebugMessage(joker_obj.key)
+            if sprite.name == joker_obj.key then
+                joker_obj.atlas = sprite.name
+            end
+        end
+
         -- Now we replace the others
         G.P_CENTERS[joker.slug] = joker_obj
         table.insert(G.P_CENTER_POOLS['Joker'], joker_obj)

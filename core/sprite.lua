@@ -79,8 +79,6 @@ function SMODS.injectSprites()
         elseif sprite.type == "asset_atli" then
             for i, asset in ipairs(G.asset_atli) do
                 if asset.name == sprite.name then
-                    sendDebugMessage(inspectDepth(G.asset_atli[i]))
-                    sendDebugMessage(inspectDepth({name = sprite.name, path = sprite.top_lpath .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. sprite.path, px = sprite.px, py = sprite.py}))
                     G.asset_atli[i] = {name = sprite.name, path = sprite.top_lpath .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. sprite.path, px = sprite.px, py = sprite.py}
                     foundAndReplaced = true
                     break
@@ -136,6 +134,7 @@ function SMODS.injectSprites()
         G.ASSET_ATLAS[G.asset_atli[i].name].px = G.asset_atli[i].px
         G.ASSET_ATLAS[G.asset_atli[i].name].py = G.asset_atli[i].py
     end
+
     for i=1, #G.asset_images do
         G.ASSET_ATLAS[G.asset_images[i].name] = {}
         G.ASSET_ATLAS[G.asset_images[i].name].name = G.asset_images[i].name
@@ -165,15 +164,17 @@ end
 local set_spritesref = Card.set_sprites
 function Card:set_sprites(_center, _front)
     set_spritesref(self, _center, _front);
-    if _center then 
+    if _center then
         if _center.set then
             if (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.atlas then
-                self.children.center.atlas = G.ASSET_ATLAS[(_center.atlas or (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.set) or 'centers']
+                self.children.center.atlas = G.ASSET_ATLAS
+                [(_center.atlas or (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.set) or 'centers']
                 self.children.center:set_sprite_pos(_center.pos)
             end
         end
     end
 end
+
 
 -- ----------------------------------------------
 -- ------------MOD CORE API SPRITE END-----------
