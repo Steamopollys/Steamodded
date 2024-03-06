@@ -92,6 +92,8 @@ For this one, go to the [release page](https://github.com/Steamopollys/steamodde
 
 ### Mac
 
+**THIS IS LEGACY MAC SUPPORT, FORMAL ONE WILL COME LATER**
+
 - **CLOSE THE GAME !**
 - Make sure you have python3, pip3, MPocate/PLocate, 7zip-full, and the python requests library.
 - run `git clone https://github.com/Steamopollys/Steamodded.git && cd Steamodded && python3 steamodded_injector.py` and drag in the Balatro.exe before hitting enter!
