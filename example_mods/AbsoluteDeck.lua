@@ -34,7 +34,7 @@ local loc_def = {
 	["text"]={
 		[1]="Start with a Deck",
 		[2]="full of",
-		[3]="{C:attention}Polyglass{} cards"
+		[3]="{C:attention,T:e_polychrome}Poly{}{C:red,T:m_glass}glass{} cards"
 	},
 }
 
