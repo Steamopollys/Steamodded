@@ -23,10 +23,24 @@ def download_file(url, output_path):
 
 def merge_directory_contents(directory_path):
     directory_content = ""
+    core_file_name = "core.lua"
+    
     if os.path.exists(directory_path):
         print(f"Processing directory: {directory_path}")
+        
+        # Process core.lua first if it exists
+        core_file_path = os.path.join(directory_path, core_file_name)
+        if os.path.isfile(core_file_path):
+            try:
+                with open(core_file_path, "r", encoding="utf-8") as file:
+                    directory_content += file.read() + "\n"  # Append the core file content first
+                    print(f"Appended {core_file_name} to the directory content")
+            except IOError as e:
+                print(f"Error reading {core_file_path}: {e}")
+        
+        # Process the rest of the .lua files
         for file_name in os.listdir(directory_path):
-            if file_name.endswith(".lua"):
+            if file_name.endswith(".lua") and file_name != core_file_name:  # Skip the core.lua file
                 file_path = os.path.join(directory_path, file_name)
                 try:
                     with open(file_path, "r", encoding="utf-8") as file:
