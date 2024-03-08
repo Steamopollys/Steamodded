@@ -52,7 +52,32 @@ function SMODS.injectJokers()
     local id = 0
     local i = 0
 
+    local sorted_jokers = {}
+
     for k, joker in pairs(SMODS.Jokers) do
+        local j = joker
+        j.l_slug = k
+        if j.mod == nil then
+            j.mod = "ZZZZZZZ_NO_MOD" -- if we have no mod, go last
+        end
+        if j.order == nil then
+            j.order = math.huge -- if we have no order, go last
+        end
+        sendDebugMessage(j.name .. " " .. j.mod .. " " .. j.order)
+        table.insert(sorted_jokers, joker)
+    end
+
+    table.sort(sorted_jokers, function(a, b)
+        if a.mod ~= b.mod then
+            return a.mod < b.mod
+        end
+        if a.order ~= b.order then
+            return a.order < b.order
+        end
+        return a.name < b.name
+    end)
+
+    for k, joker in ipairs(sorted_jokers) do
         i = i + 1
         -- Prepare some Datas
         id = i + minId
@@ -85,7 +110,7 @@ function SMODS.injectJokers()
         table.insert(G.P_JOKER_RARITY_POOLS[joker_obj.rarity], joker_obj)
 
         -- Setup Localize text
-        G.localization.descriptions["Joker"][k] = joker.loc_txt
+        G.localization.descriptions["Joker"][joker.l_slug] = joker.loc_txt
 
         -- Load it
         for g_k, group in pairs(G.localization) do
