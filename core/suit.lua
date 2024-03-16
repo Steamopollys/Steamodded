@@ -238,7 +238,6 @@ function SMODS.Card:_extend()
 			end_iter = false
 			if straight_length >= (5 - (four_fingers and 1 or 0)) then
 				straight = true
-				break
 			end
 			if br then break end
 			if not next(vals) then break end
