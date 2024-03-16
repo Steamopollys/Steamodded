@@ -927,6 +927,9 @@ function SMODS.Card:_extend()
 	function Card:is_face(from_boss)
 		if self.debuff and not from_boss then return end
 		local val = self.base.value
+		if self.ability.effect == 'Stone Card' and not self.vampired then
+			val = -math.random(100, 1000000)
+		end
 		if next(find_joker('Pareidolia')) or (val and SMODS.Card.RANKS[val] and SMODS.Card.RANKS[val].face) then return true end
 	end
 
