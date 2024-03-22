@@ -158,5 +158,52 @@ function SMODS.end_calculate_context(c)
     return false
 end
 
+local generate_UIBox_ability_tableref = Card.generate_UIBox_ability_table;
+function Card:generate_UIBox_ability_table()
+    local ret_val = generate_UIBox_ability_tableref(self);
+
+    if self.ability.set == 'Joker' then
+        for _k, obj in pairs(SMODS.Jokers) do
+            local card_type, hide_desc = self.ability.set or "None", nil
+            local main_start, main_end = nil, nil
+            local no_badge = nil
+            -- Check if the object's name matches self.ability.name and if it has a UIBox_info function. Also checks if the text should be debuffed/undiscovered
+            if obj.name == self.ability.name and type(obj.UIBox_info) == "function" and not self.debuff and not (self.config.center.unlocked == false and not self.bypass_lock) and not (card_type == 'Undiscovered' and not self.bypass_discovery_ui) then
+                local loc_vars = obj.UIBox_info(self)
+                local badges = {}
+
+                if (card_type ~= 'Locked' and card_type ~= 'Undiscovered' and card_type ~= 'Default') or self.debuff then
+                    badges.card_type = card_type
+                end
+                if self.bypass_discovery_ui and (not no_badge) then
+                    badges.force_rarity = true
+                end
+                if self.edition then
+                    badges[#badges + 1] = (self.edition.type == 'holo' and 'holographic' or self.edition.type)
+                end
+                if self.seal then
+                    badges[#badges + 1] = string.lower(self.seal) .. '_seal'
+                end
+                if self.ability.eternal then
+                    badges[#badges + 1] = 'eternal'
+                end
+                if self.pinned then
+                    badges[#badges + 1] = 'pinned_left'
+                end
+        
+                if self.sticker then
+                    loc_vars = loc_vars or {};
+                    loc_vars.sticker = self.sticker
+                end
+        
+                local center = self.config.center
+                return generate_card_ui(center, nil, loc_vars, card_type, badges, hide_desc, main_start, main_end)
+            end
+        end
+    end
+
+    return ret_val;
+end
+
 -- ----------------------------------------------
 -- ------------MOD CORE API JOKER END------------
