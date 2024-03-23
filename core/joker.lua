@@ -18,7 +18,7 @@ SMODS.Joker = {
 }
 
 function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, unlocked, discovered, blueprint_compat,
-    eternal_compat)
+    eternal_compat, effect)
     o = {}
     setmetatable(o, self)
     self.__index = self
@@ -37,7 +37,7 @@ function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, u
     o.discovered = discovered or true
     o.blueprint_compat = blueprint_compat or false
     o.eternal_compat = eternal_compat or true
-    o.effect = nil
+    o.effect = effect or ""
     return o
 end
 
@@ -68,7 +68,10 @@ function SMODS.injectJokers()
             config = joker.config,
             rarity = joker.rarity,
             cost = joker.cost,
-            cost_mult = 1.0
+            cost_mult = 1.0,
+            blueprint_compat = joker.blueprint_compat,
+            eternal_compat = joker.eternal_compat,
+            effect = joker.effect
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
