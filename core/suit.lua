@@ -190,7 +190,7 @@ function SMODS.Card:_extend()
 		local ret = {}
 		local four_fingers = next(find_joker('Four Fingers'))
 		local suits = SMODS.Card.SUIT_LIST
-		if #hand > 5 or #hand < (5 - (four_fingers and 1 or 0)) then
+		if #hand < (5 - (four_fingers and 1 or 0)) then
 			return ret
 		else
 			for j = 1, #suits do
@@ -216,7 +216,7 @@ function SMODS.Card:_extend()
 		local ret = {}
 		local four_fingers = next(find_joker('Four Fingers'))
 		local can_skip = next(find_joker('Shortcut'))
-		if #hand > 5 or #hand < (5 - (four_fingers and 1 or 0)) then return ret end
+		if #hand < (5 - (four_fingers and 1 or 0)) then return ret end
 		local t = {}
 		local RANKS = {}
 		for i = 1, #hand do
@@ -231,19 +231,30 @@ function SMODS.Card:_extend()
 		local straight = false
 		local skipped_rank = false
 		local vals = { 'Ace' }
+        for k, v in pairs(SMODS.Card.RANKS) do
+            if v.id > 14 then
+                table.insert(vals, k)
+            end
+        end
+        local init_vals = {}
+        for _, v in ipairs(vals) do
+			init_vals[v] = true
+		end
 		local initial = true
 		local br = false
-		local end_iter = false
+        local end_iter = false
+		local i = 0
 		while 1 do
 			end_iter = false
-			if straight_length >= (5 - (four_fingers and 1 or 0)) then
-				straight = true
-				break
-			end
-			if br then break end
+            if straight_length >= (5 - (four_fingers and 1 or 0)) then
+                straight = true
+                break
+            end
+			i = i+1
+			if br or i > #SMODS.Card.RANKS then break end
 			if not next(vals) then break end
 			for _, val in ipairs(vals) do
-				if (val == 'Ace') and not initial then br = true end
+				if init_vals[val] and not initial then br = true end
 				if RANKS[val] then
 					straight_length = straight_length + 1
 					skipped_rank = false
