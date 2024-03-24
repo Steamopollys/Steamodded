@@ -67,6 +67,8 @@ function SMODS.injectJokers()
             pos = joker.spritePos,
             config = joker.config,
             rarity = joker.rarity,
+            blueprint_compat = joker.blueprint_compat,
+            eternal_compat = joker.eternal_compat,
             cost = joker.cost,
             cost_mult = 1.0
         }
