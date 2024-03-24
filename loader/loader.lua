@@ -117,6 +117,7 @@ function initMods()
 end
 
 function initSteamodded()
+    injectStackTrace()
 	SMODS.MODS = loadMods("Mods")
 
 	sendDebugMessage(inspectDepth(SMODS.MODS, 0, 0))
