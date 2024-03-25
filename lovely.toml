@@ -21,7 +21,8 @@ sources = [
     "core/deck.lua",
     "core/joker.lua",
     "core/sprite.lua",
-	  "core/suit.lua",
+    "core/StackTracePlus.lua",
+    "core/suit.lua",
     "debug/debug.lua",
     "loader/loader.lua",
 ]
