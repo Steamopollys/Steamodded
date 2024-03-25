@@ -801,70 +801,113 @@ function SMODS.GUI.staticModListContent()
 end
 
 function SMODS.GUI.dynamicModListContent(page)
+    local scale = 0.75
+    local _, __, showingList, startIndex, endIndex, modsPerPage = recalculateModsList(page)
 
-	local scale = 0.75
-	local _, __, showingList, startIndex, endIndex, modsPerPage = recalculateModsList(page)
+    local modNodes = {}
 
-	local modNodes = {}
+    -- If no mods are loaded, show a default message
+    if showingList == false then
+        table.insert(modNodes, {
+            n = G.UIT.R,
+            config = {
+                padding = 0,
+                align = "cm"
+            },
+            nodes = {
+                {
+                    n = G.UIT.T,
+                    config = {
+                        text = "No mods have been detected...",
+                        shadow = true,
+                        scale = scale * 0.5,
+                        colour = G.C.UI.TEXT_DARK
+                    }
+                }
+            }
+        })
+        table.insert(modNodes, {
+            n = G.UIT.R,
+            config = {
+                padding = 0,
+                align = "cm",
+            },
+            nodes = {
+                UIBox_button({
+                    label = { "Open Mods directory" },
+                    shadow = true,
+                    scale = scale,
+                    colour = G.C.BOOSTER,
+                    button = "openModsDirectory",
+                    minh = 0.8,
+                    minw = 8
+                })
+            }
+        })
+    else
+        local modCount = 0
+        for id, modInfo in ipairs(SMODS.MODS) do
+            if id >= startIndex and id <= endIndex then
+                table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
+                modCount = modCount + 1
+                if modCount >= modsPerPage then break end
+            end
+        end
+    end
 
-	-- If no mods are loaded, show a default message
-	if showingList == false then
-		table.insert(modNodes, {
-			n = G.UIT.R,
-			config = {
-				padding = 0,
-				align = "cm"
-			},
-			nodes = {
-				{
-					n = G.UIT.T,
-					config = {
-						text = "No mods have been detected...",
-						shadow = true,
-						scale = scale * 0.5,
-						colour = G.C.UI.TEXT_DARK
-					}
-				}
-			}
-		})
-		table.insert(modNodes, {
-			n = G.UIT.R,
-			config = {
-				padding = 0,
-				align = "cm",
-			},
-			nodes = {
-				UIBox_button({
-					label = {"Open Mods directory"},
-					shadow = true,
-					scale = scale,
-					colour = G.C.BOOSTER,
-					button = "openModsDirectory",
-					minh = 0.8,
-					minw = 8
-				})
-			}
-		})
-	else
-		local modCount = 0
-		for id, modInfo in ipairs(SMODS.MODS) do
-			if id >= startIndex and id <= endIndex then
-				table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
-				modCount = modCount + 1
-				if modCount >= modsPerPage then break end
+    return {
+        n = G.UIT.R,
+        config = {
+            r = 0.1,
+            align = "cm",
+            padding = 0.2,
+        },
+        nodes = modNodes
+    }
+end
+
+function SMODS.SAVE_UNLOCKS()
+	-------------------------------------
+	local TESTHELPER_unlocks = false and not _RELEASE_MODE
+	-------------------------------------
+	if not love.filesystem.getInfo(G.SETTINGS.profile .. '') then
+		love.filesystem.createDirectory(G.SETTINGS.profile ..
+			'')
+	end
+	if not love.filesystem.getInfo(G.SETTINGS.profile .. '/' .. 'meta.jkr') then
+		love.filesystem.append(
+			G.SETTINGS.profile .. '/' .. 'meta.jkr', 'return {}')
+	end
+
+	convert_save_to_meta()
+
+	local meta = STR_UNPACK(get_compressed(G.SETTINGS.profile .. '/' .. 'meta.jkr') or 'return {}')
+	meta.unlocked = meta.unlocked or {}
+	meta.discovered = meta.discovered or {}
+	meta.alerted = meta.alerted or {}
+
+	for k, v in pairs(G.P_CENTERS) do
+		if not v.wip and not v.demo then
+			if TESTHELPER_unlocks then
+				v.unlocked = true; v.discovered = true; v.alerted = true
+			end --REMOVE THIS
+			if not v.unlocked and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^v_')) and meta.unlocked[k] then
+				v.unlocked = true
+			end
+			if not v.unlocked and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^v_')) then
+				G.P_LOCKED[#G.P_LOCKED + 1] =
+					v
+			end
+			if not v.discovered and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^e_') or string.find(k, '^c_') or string.find(k, '^p_') or string.find(k, '^v_')) and meta.discovered[k] then
+				v.discovered = true
+			end
+			if v.discovered and meta.alerted[k] or v.set == 'Back' or v.start_alerted then
+				v.alerted = true
+			elseif v.discovered then
+				v.alerted = false
 			end
 		end
 	end
-
-	return {
-		n = G.UIT.R,
-		config = {
-			r = 0.1,
-			align = "cm",
-			padding = 0.2,
-		},
-		nodes = modNodes
-	}
 end
 
 ----------------------------------------------

@@ -18,7 +18,7 @@ SMODS.Joker = {
 }
 
 function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, unlocked, discovered, blueprint_compat,
-    eternal_compat)
+                         eternal_compat, effect, atlas)
     o = {}
     setmetatable(o, self)
     self.__index = self
@@ -33,11 +33,12 @@ function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, u
     }
     o.rarity = rarity or 1
     o.cost = cost
-    o.unlocked = unlocked or true
-    o.discovered = discovered or true
+    o.unlocked = (unlocked == nil) and true or unlocked
+    o.discovered = (discovered == nil) and true or discovered
     o.blueprint_compat = blueprint_compat or false
-    o.eternal_compat = eternal_compat or true
-    o.effect = nil
+    o.eternal_compat = (eternal_compat == nil) and true or eternal_compat
+    o.effect = effect or ''
+    o.atlas = atlas or nil
     return o
 end
 
@@ -69,8 +70,10 @@ function SMODS.injectJokers()
             rarity = joker.rarity,
             blueprint_compat = joker.blueprint_compat,
             eternal_compat = joker.eternal_compat,
+            effect = joker.effect,
             cost = joker.cost,
-            cost_mult = 1.0
+            cost_mult = 1.0,
+            atlas = joker.atlas or nil
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
@@ -99,7 +102,7 @@ function SMODS.injectJokers()
                             center.text_parsed[#center.text_parsed + 1] = loc_parse_string(line)
                         end
                         center.name_parsed = {}
-                        for _, line in ipairs(type(center.name) == 'table' and center.name or {center.name}) do
+                        for _, line in ipairs(type(center.name) == 'table' and center.name or { center.name }) do
                             center.name_parsed[#center.name_parsed + 1] = loc_parse_string(line)
                         end
                         if center.unlock then
@@ -114,8 +117,9 @@ function SMODS.injectJokers()
         end
 
         sendDebugMessage("The Joker named " .. joker.name .. " with the slug " .. joker.slug ..
-                             " have been registered at the id " .. id .. ".")
+            " have been registered at the id " .. id .. ".")
     end
+    SMODS.SAVE_UNLOCKS()
 end
 
 local carfset_abilityRef = Card.set_ability
@@ -124,9 +128,10 @@ function Card.set_ability(self, center, initial, delay_sprites)
 
     -- Iterate over each object in SMODS.JKR_EFFECT
     for _k, obj in pairs(SMODS.Jokers) do
-        -- Check if the object's name matches self.ability.name and if it has an effect function
-        if obj.name == self.ability.name and type(obj.effect) == "function" then
-            obj.effect(self, context)
+        --! CHANGED from effect due to overlap
+        -- Check if the object's name matches self.ability.name and if it has an ability function
+        if obj.name == self.ability.name and type(obj.set_ability) == "function" then
+            obj.set_ability(self, center, initial, delay_sprites)
         end
     end
 end
@@ -139,14 +144,81 @@ function Card:calculate_joker(context)
         for _k, obj in pairs(SMODS.Jokers) do
             -- Check if the object's name matches self.ability.name and if it has a calculate function
             if obj.name == self.ability.name and type(obj.calculate) == "function" then
-                return obj.calculate(self, context)
+                local o = obj.calculate(self, context)
+                if o then return o end
             end
         end
-
     end
 
     return ret_val;
 end
+
+local ability_table_ref = Card.generate_UIBox_ability_table
+function Card:generate_UIBox_ability_table()
+    local card_type, hide_desc = self.ability.set or "None", nil
+    local loc_vars = nil
+    local main_start, main_end = nil, nil
+    local no_badge = nil
+    if not self.bypass_lock and self.config.center.unlocked ~= false and
+    self.ability.set == 'Joker' and
+    not self.config.center.discovered and 
+    ((self.area ~= G.jokers and self.area ~= G.consumeables and self.area) or not self.area) then
+        card_type = 'Undiscovered'
+    end    
+
+    if self.config.center.unlocked == false and not self.bypass_lock then    -- For everyting that is locked
+    elseif card_type == 'Undiscovered' and not self.bypass_discovery_ui then -- Any Joker or tarot/planet/voucher that is not yet discovered
+    elseif self.debuff then
+    elseif card_type == 'Default' or card_type == 'Enhanced' then
+    elseif self.ability.set == 'Joker' then
+        for _, v in pairs(SMODS.Jokers) do
+            if v.loc_def and type(v.loc_def) == 'function' then
+                loc_vars = v:loc_def(self) or loc_vars
+            end
+        end
+    end
+    if loc_vars then
+        local badges = {}
+          if (card_type ~= 'Locked' and card_type ~= 'Undiscovered' and card_type ~= 'Default') or self.debuff then
+              badges.card_type = card_type
+          end
+          if self.ability.set == 'Joker' and self.bypass_discovery_ui and (not no_badge) then
+              badges.force_rarity = true
+          end
+          if self.edition then
+              if self.edition.type == 'negative' and self.ability.consumeable then
+                  badges[#badges + 1] = 'negative_consumable'
+              else
+                  badges[#badges + 1] = (self.edition.type == 'holo' and 'holographic' or self.edition.type)
+              end
+          end
+          if self.seal then
+              badges[#badges + 1] = string.lower(self.seal) .. '_seal'
+          end
+          if self.ability.eternal then
+              badges[#badges + 1] = 'eternal'
+          end
+          if self.pinned then
+              badges[#badges + 1] = 'pinned_left'
+          end
+
+          if self.sticker then
+              loc_vars = loc_vars or {};
+              loc_vars.sticker = self.sticker
+          end
+
+          local center = self.config.center
+          return generate_card_ui(center, nil, loc_vars, card_type, badges, hide_desc, main_start, main_end)
+    end
+    return ability_table_ref(self)
+end
+--[[
+    function SMODS.Joker.j_example:loc_def(card)
+        if card.ability.name == 'Example Joker' then
+            return {card.ability.extra.mult}
+        end
+    end
+]]
 
 function SMODS.end_calculate_context(c)
     if not c.after and not c.before and not c.other_joker and not c.repetition and not c.individual and

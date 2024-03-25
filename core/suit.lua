@@ -103,7 +103,7 @@ function SMODS.Card:new_suit(name, card_atlas_low_contrast, card_atlas_high_cont
 	if not (type(colour_high_contrast) == 'table') then colour_high_contrast = HEX(colour_high_contrast) end
 	G.C.SO_1[name] = colour_low_contrast
 	G.C.SO_2[name] = colour_high_contrast
-	G.C.SUITS[name] = G.C["SO_" .. (G.SETTINGS.colourblind_option and 2 or 1)][name]
+    G.C.SUITS[name] = G.C["SO_" .. (G.SETTINGS.colourblind_option and 2 or 1)][name]
 	for _, v in pairs(SMODS.Card.RANKS) do
 		G.P_CARDS[prefix .. '_' .. (v.suffix or v.value)] = {
 			name = v.value .. ' of ' .. name,
@@ -117,7 +117,7 @@ function SMODS.Card:new_suit(name, card_atlas_low_contrast, card_atlas_high_cont
 		}
 	end
 	G.localization.misc['suits_plural'][name] = name
-	G.localization.misc['suits_singular'][name] = name
+	G.localization.misc['suits_singular'][name] = name:match("(.+)s$")
 	return SMODS.Card.SUITS[name]
 end
 
@@ -177,14 +177,23 @@ end
 
 function SMODS.Card:_extend()
 	local Game_init_game_object = Game.init_game_object
-	function Game:init_game_object()
-		local t = Game_init_game_object(self)
-		t.cards_played = {}
-		for k, v in pairs(SMODS.Card.RANKS) do
-			t.cards_played[k] = { suits = {}, total = 0 }
+    function Game:init_game_object()
+        local t = Game_init_game_object(self)
+        t.cards_played = {}
+        for k, v in pairs(SMODS.Card.RANKS) do
+            t.cards_played[k] = { suits = {}, total = 0 }
+        end
+        return t
+    end
+	
+	local loc_colour_ref = loc_colour
+	function loc_colour(_c, _default)
+        loc_colour_ref(_c, _default)
+		for k,_ in pairs(SMODS.Card.SUITS) do
+			G.ARGS.LOC_COLOURS[k:lower()] = G.ARGS.LOC_COLOURS[k:lower()] or G.C.SUITS[k]
 		end
-		return t
-	end
+		return G.ARGS.LOC_COLOURS[_c] or _default or G.C.UI.TEXT_DARK
+	  end
 
 	function get_flush(hand)
 		local ret = {}
