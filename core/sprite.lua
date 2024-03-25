@@ -167,9 +167,21 @@ function Card:set_sprites(_center, _front)
     if _center then
         if _center.set then
             if (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.atlas then
-                self.children.center.atlas = G.ASSET_ATLAS
-                [(_center.atlas or (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.set) or 'centers']
-                self.children.center:set_sprite_pos(_center.pos)
+                if self.params.bypass_discovery_center or (_center.unlocked and _center.discovered) then
+                    self.children.center.atlas = G.ASSET_ATLAS
+                    [(_center.atlas or (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.set) or 'centers']
+                    self.children.center:set_sprite_pos(_center.pos)
+                elseif not _center.discovered then
+                    self.children.center.atlas = G.ASSET_ATLAS[_center.set]
+                    self.children.center:set_sprite_pos(
+                    (_center.set == 'Joker' and G.j_undiscovered.pos) or 
+                    (_center.set == 'Edition' and G.j_undiscovered.pos) or 
+                    (_center.set == 'Tarot' and G.t_undiscovered.pos) or 
+                    (_center.set == 'Planet' and G.p_undiscovered.pos) or 
+                    (_center.set == 'Spectral' and G.s_undiscovered.pos) or 
+                    (_center.set == 'Voucher' and G.v_undiscovered.pos) or 
+                    (_center.set == 'Booster' and G.booster_undiscovered.pos))
+                end
             end
         end
     end
