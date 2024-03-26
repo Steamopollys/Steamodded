@@ -6,6 +6,25 @@ SMODS._MOD_PRIO_MAP = {}
 SMODS._INIT_PRIO_MAP = {}
 SMODS._INIT_KEYS = {}
 
+-- Attempt to require nativefs
+local nfs_success, nativefs = pcall(require, "nativefs")
+local lovely_success, lovely = pcall(require, "lovely")
+
+if nfs_success then
+    if lovely_success then
+        SMODS.MODS_DIR = lovely.mod_dir
+    else
+        sendDebugMessage("Error loading lovely library!")
+        SMODS.MODS_DIR = "Mods"
+    end
+else
+    sendDebugMessage("Error loading nativefs library!")
+    SMODS.MODS_DIR = "Mods"
+    nativefs = love.filesystem
+end
+
+NFS = nativefs
+
 function loadMods(modsDirectory)
     local mods = {}
     local modIDs = {}
@@ -16,15 +35,15 @@ function loadMods(modsDirectory)
             return  -- Stop processing if the depth is greater than 2
         end
 
-        for _, filename in ipairs(love.filesystem.getDirectoryItems(directory)) do
+        for _, filename in ipairs(NFS.getDirectoryItems(directory)) do
             local filePath = directory .. "/" .. filename
 
             -- Check if the current file is a directory
-            if love.filesystem.getInfo(filePath).type == "directory" then
+            if NFS.getInfo(filePath).type == "directory" then
                 -- If it's a directory and depth is within limit, recursively process it
                 processDirectory(filePath, depth + 1)
             elseif filename:match("%.lua$") then  -- Check if the file is a .lua file
-                local fileContent = love.filesystem.read(filePath)
+                local fileContent = NFS.read(filePath)
 
                 -- Convert CRLF in LF
                 fileContent = fileContent:gsub("\r\n", "\n")
@@ -118,7 +137,7 @@ end
 
 function initSteamodded()
     injectStackTrace()
-	SMODS.MODS = loadMods("Mods")
+	SMODS.MODS = loadMods(SMODS.MODS_DIR)
 
 	sendDebugMessage(inspectDepth(SMODS.MODS, 0, 0))
 
