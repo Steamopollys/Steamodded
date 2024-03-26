@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "0.8.1-STEAMODDED"
+MODDED_VERSION = "0.8.2-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
