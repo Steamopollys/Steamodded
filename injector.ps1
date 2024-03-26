@@ -1,5 +1,5 @@
 # Define the URL of the GitHub repository ZIP
-$repoUrl = "https://codeload.github.com/Steamopollys/Steamodded/zip/refs/tags/0.7.2" # Update this URL
+$repoUrl = "https://codeload.github.com/Steamopollys/Steamodded/zip/refs/tags/0.8.0" # Update this URL
 $directories = @("core", "debug", "loader")
 
 function Find-7Zip {
