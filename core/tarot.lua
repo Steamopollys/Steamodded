@@ -29,7 +29,7 @@ function SMODS.Tarot:new(name, slug, config, pos, loc_txt, cost, cost_mult, effe
     o.discovered = discovered or false
     o.consumeable = consumeable or true
 	o.effect = effect or ""
-	o.cost_mult = cost_mult or 0.0
+	o.cost_mult = cost_mult or 1.0
 	return o
 end
 

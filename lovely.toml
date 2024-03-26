@@ -1,0 +1,34 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "self.SPEEDFACTOR = 1"
+position = "after"
+payload = "initSteamodded()"
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.copy]
+target = "main.lua"
+position = "append"
+sources = [
+    "core/core.lua",
+    "core/deck.lua",
+    "core/joker.lua",
+    "core/r_blind.lua",
+    "core/sound.lua",
+    "core/sprite.lua",
+    "core/suit.lua",
+    "core/tarot.lua",
+    "core/voucher.lua",
+    "core/planet.lua",
+    "core/spectral.lua",
+    "core/seal.lua",
+    "debug/debug.lua",
+    "loader/loader.lua",
+]
