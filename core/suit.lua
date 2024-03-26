@@ -259,7 +259,7 @@ function SMODS.Card:_extend()
                 straight = true
             end
             i = i + 1
-            if br or (i > #SMODS.Card.RANK_LIST) then break end
+            if br or (i > #SMODS.Card.RANK_LIST+1) then break end
             if not next(vals) then break end
             for _, val in ipairs(vals) do
                 if init_vals[val] and not initial then br = true end
