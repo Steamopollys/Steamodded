@@ -106,9 +106,8 @@ function Card.set_ability(self, center, initial, delay_sprites)
     -- Iterate over each object in SMODS.JKR_EFFECT
     for _k, obj in pairs(SMODS.Jokers) do
         --! CHANGED from effect due to overlap
-        -- Check if the object's name matches self.ability.name and if it has an ability function
-        if obj.name == self.ability.name and type(obj.set_ability) == "function" then
-            obj.set_ability(self, center, initial, delay_sprites)
+        if obj.set_ability and type(obj.set_ability) == "function" then
+            obj:set_ability(self, center, initial, delay_sprites)
         end
     end
 end
@@ -119,9 +118,8 @@ function Card:calculate_joker(context)
 
     if self.ability.set == "Joker" and not self.debuff then
         for _k, obj in pairs(SMODS.Jokers) do
-            -- Check if the object's name matches self.ability.name and if it has a calculate function
-            if obj.name == self.ability.name and type(obj.calculate) == "function" then
-                local o = obj.calculate(self, context)
+            if obj.calculate and type(obj.calculate) == "function" then
+                local o = obj:calculate(self, context)
                 if o then return o end
             end
         end
