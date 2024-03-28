@@ -1,16 +1,16 @@
 SMODS.Spectrals = {}
 SMODS.Spectral = {
-  	name = "",
-  	slug = "",
-	cost = 4,
-	config = {},
-  	pos = {},
-	loc_txt = {},
-	discovered = false, 
-	consumeable = true
+    name = "",
+    slug = "",
+    cost = 4,
+    config = {},
+    pos = {},
+    loc_txt = {},
+    discovered = false,
+    consumeable = true
 }
 
-function SMODS.Spectral:new(name, slug, config, pos, loc_txt, cost, consumeable, discovered)
+function SMODS.Spectral:new(name, slug, config, pos, loc_txt, cost, consumeable, discovered, atlas)
     o = {}
     setmetatable(o, self)
     self.__index = self
@@ -25,74 +25,61 @@ function SMODS.Spectral:new(name, slug, config, pos, loc_txt, cost, consumeable,
     }
     o.cost = cost
     o.discovered = discovered or false
+    o.unlocked = true
     o.consumeable = consumeable or true
-	return o
+    o.atlas = atlas
+    return o
 end
 
 function SMODS.Spectral:register()
-	SMODS.Spectrals[self.slug] = self
-
-	local minId = table_length(G.P_CENTER_POOLS['Spectral']) + 1
-    local id = 0
-    local i = 0
-	i = i + 1
-	-- Prepare some Datas
-	id = i + minId
-
-	local tarot_obj = {
-		discovered = self.discovered,
-		consumeable = self.consumeable,
-		name = self.name,
-		set = "Spectral",
-		order = id,
-		key = self.slug,
-		pos = self.pos,
-		config = self.config
-	}
-
-	for _i, sprite in ipairs(SMODS.Sprites) do
-		sendDebugMessage(sprite.name)
-		sendDebugMessage(tarot_obj.key)
-		if sprite.name == tarot_obj.key then
-			tarot_obj.atlas = sprite.name
-		end
-	end
-
-	-- Now we replace the others
-	G.P_CENTERS[self.slug] = tarot_obj
-	table.insert(G.P_CENTER_POOLS['Spectral'], tarot_obj)
-
-	-- Setup Localize text
-	G.localization.descriptions["Spectral"][self.slug] = self.loc_txt
-
-	-- Load it
-	for g_k, group in pairs(G.localization) do
-		if g_k == 'descriptions' then
-			for _, set in pairs(group) do
-				for _, center in pairs(set) do
-					center.text_parsed = {}
-					for _, line in ipairs(center.text) do
-						center.text_parsed[#center.text_parsed + 1] = loc_parse_string(line)
-					end
-					center.name_parsed = {}
-					for _, line in ipairs(type(center.name) == 'table' and center.name or {center.name}) do
-						center.name_parsed[#center.name_parsed + 1] = loc_parse_string(line)
-					end
-					if center.unlock then
-						center.unlock_parsed = {}
-						for _, line in ipairs(center.unlock) do
-							center.unlock_parsed[#center.unlock_parsed + 1] = loc_parse_string(line)
-						end
-					end
-				end
-			end
-		end
-	end
-
-	sendDebugMessage("The Spectral named " .. self.name .. " with the slug " .. self.slug ..
-						 " have been registered at the id " .. id .. ".")
+    if not SMODS.Spectrals[self.slug] then
+        SMODS.Spectrals[self.slug] = self
+        SMODS.BUFFERS.Spectrals[#SMODS.BUFFERS.Spectrals + 1] = self.slug
+    end
 end
 
+function SMODS.injectSpectrals()
+    local minId = table_length(G.P_CENTER_POOLS['Spectral']) + 1
+    local id = 0
+    local i = 0
+    local spectral = nil
+    for _, slug in ipairs(SMODS.BUFFERS.Spectrals) do
+        i = i + 1
+        id = i + minId
+        spectral = SMODS.Spectrals[slug]
+        local tarot_obj = {
+            unlocked = spectral.unlocked,
+            discovered = spectral.discovered,
+            consumeable = spectral.consumeable,
+            name = spectral.name,
+            set = "Spectral",
+            order = id,
+            key = spectral.slug,
+            pos = spectral.pos,
+            config = spectral.config,
+            atlas = spectral.atlas,
+        }
+
+        for _i, sprite in ipairs(SMODS.Sprites) do
+            sendDebugMessage(sprite.name)
+            sendDebugMessage(tarot_obj.key)
+            if sprite.name == tarot_obj.key then
+                tarot_obj.atlas = sprite.name
+            end
+        end
+
+        -- Now we replace the others
+        G.P_CENTERS[spectral.slug] = tarot_obj
+        table.insert(G.P_CENTER_POOLS['Spectral'], tarot_obj)
+
+        -- Setup Localize text
+        G.localization.descriptions["Spectral"][spectral.slug] = spectral.loc_txt
+
+        sendDebugMessage("The Spectral named " .. spectral.name .. " with the slug " .. spectral.slug ..
+            " have been registered at the id " .. id .. ".")
+    end
+    SMODS.BUFFERS.Spectrals = {}
+end
 
 function create_UIBox_your_collection_spectrals()
     local deck_tables = {}
