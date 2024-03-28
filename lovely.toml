@@ -30,7 +30,6 @@ sources = [
     "core/spectral.lua",
     "core/seal.lua",
     "core/StackTracePlus.lua",
-    "core/suit.lua",
     "debug/debug.lua",
     "loader/loader.lua",
 ]
