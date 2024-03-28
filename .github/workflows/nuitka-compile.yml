@@ -14,7 +14,7 @@ jobs:
     - name: Install Nuitka
       run: pip install nuitka
     - name: Compile Python script to EXE
-      run: python -m nuitka --standalone --onefile --include-data-dir=core=./core --include-data-dir=debug=./debug --include-data-dir=loader=./loader steamodded_injector.py
+      run: python -m nuitka --mingw64 --standalone --onefile --include-data-dir=core=./core --include-data-dir=debug=./debug --include-data-dir=loader=./loader steamodded_injector.py
     - name: Upload EXE to Artifacts
       uses: actions/upload-artifact@v3
       with:
