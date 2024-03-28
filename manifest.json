@@ -1,0 +1,10 @@
+{
+    "name": "Steamodded",
+    "version_number": "0.8.2",
+    "website_url": "https://github.com/Steamopollys/Steamodded",
+    "description": "A Balatro ModLoader",
+    "dependencies": [
+        "Thunderstore-lovely-0.3.0",
+        "metherul-nativefs-1.0.0"
+    ]
+}

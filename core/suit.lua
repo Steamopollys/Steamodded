@@ -103,7 +103,7 @@ function SMODS.Card:new_suit(name, card_atlas_low_contrast, card_atlas_high_cont
 	if not (type(colour_high_contrast) == 'table') then colour_high_contrast = HEX(colour_high_contrast) end
 	G.C.SO_1[name] = colour_low_contrast
 	G.C.SO_2[name] = colour_high_contrast
-	G.C.SUITS[name] = G.C["SO_" .. (G.SETTINGS.colourblind_option and 2 or 1)][name]
+    G.C.SUITS[name] = G.C["SO_" .. (G.SETTINGS.colourblind_option and 2 or 1)][name]
 	for _, v in pairs(SMODS.Card.RANKS) do
 		G.P_CARDS[prefix .. '_' .. (v.suffix or v.value)] = {
 			name = v.value .. ' of ' .. name,
@@ -117,7 +117,7 @@ function SMODS.Card:new_suit(name, card_atlas_low_contrast, card_atlas_high_cont
 		}
 	end
 	G.localization.misc['suits_plural'][name] = name
-	G.localization.misc['suits_singular'][name] = name
+	G.localization.misc['suits_singular'][name] = name:match("(.+)s$")
 	return SMODS.Card.SUITS[name]
 end
 
@@ -177,20 +177,29 @@ end
 
 function SMODS.Card:_extend()
 	local Game_init_game_object = Game.init_game_object
-	function Game:init_game_object()
-		local t = Game_init_game_object(self)
-		t.cards_played = {}
-		for k, v in pairs(SMODS.Card.RANKS) do
-			t.cards_played[k] = { suits = {}, total = 0 }
+    function Game:init_game_object()
+        local t = Game_init_game_object(self)
+        t.cards_played = {}
+        for k, v in pairs(SMODS.Card.RANKS) do
+            t.cards_played[k] = { suits = {}, total = 0 }
+        end
+        return t
+    end
+	
+	local loc_colour_ref = loc_colour
+	function loc_colour(_c, _default)
+        loc_colour_ref(_c, _default)
+		for k,_ in pairs(SMODS.Card.SUITS) do
+			G.ARGS.LOC_COLOURS[k:lower()] = G.ARGS.LOC_COLOURS[k:lower()] or G.C.SUITS[k]
 		end
-		return t
-	end
+		return G.ARGS.LOC_COLOURS[_c] or _default or G.C.UI.TEXT_DARK
+	  end
 
 	function get_flush(hand)
 		local ret = {}
 		local four_fingers = next(find_joker('Four Fingers'))
 		local suits = SMODS.Card.SUIT_LIST
-		if #hand > 5 or #hand < (5 - (four_fingers and 1 or 0)) then
+		if #hand < (5 - (four_fingers and 1 or 0)) then
 			return ret
 		else
 			for j = 1, #suits do
@@ -216,7 +225,7 @@ function SMODS.Card:_extend()
 		local ret = {}
 		local four_fingers = next(find_joker('Four Fingers'))
 		local can_skip = next(find_joker('Shortcut'))
-		if #hand > 5 or #hand < (5 - (four_fingers and 1 or 0)) then return ret end
+		if #hand < (5 - (four_fingers and 1 or 0)) then return ret end
 		local t = {}
 		local RANKS = {}
 		for i = 1, #hand do
@@ -231,49 +240,59 @@ function SMODS.Card:_extend()
 		local straight = false
 		local skipped_rank = false
 		local vals = { 'Ace' }
+        for k, v in pairs(SMODS.Card.RANKS) do
+            if v.id > 14 then
+                table.insert(vals, k)
+            end
+        end
+        local init_vals = {}
+        for _, v in ipairs(vals) do
+			init_vals[v] = true
+		end
 		local initial = true
 		local br = false
-		local end_iter = false
-		while 1 do
-			end_iter = false
-			if straight_length >= (5 - (four_fingers and 1 or 0)) then
-				straight = true
-				break
-			end
-			if br then break end
-			if not next(vals) then break end
-			for _, val in ipairs(vals) do
-				if (val == 'Ace') and not initial then br = true end
-				if RANKS[val] then
-					straight_length = straight_length + 1
-					skipped_rank = false
-					for _, vv in ipairs(RANKS[val]) do
-						t[#t + 1] = vv
-					end
-					vals = SMODS.Card.RANKS[val].next
-					initial = false
-					end_iter = true
-					break
-				end
-			end
-			if not end_iter then
-				local new_vals = {}
-				for _, val in ipairs(vals) do
-					for _, r in ipairs(SMODS.Card.RANKS[val].next) do
-						table.insert(new_vals, r)
-					end
-				end
-				vals = new_vals
-				if can_skip and not skipped_rank then
-					skipped_rank = true
-				else
-					straight_length = 0
-					skipped_rank = false
-					if not straight then t = {} end
-					if straight then break end
-				end
-			end
-		end
+        local end_iter = false
+		local i = 0
+        while 1 do
+            end_iter = false
+            if straight_length >= (5 - (four_fingers and 1 or 0)) then
+                straight = true
+            end
+            i = i + 1
+            if br or (i > #SMODS.Card.RANK_LIST+1) then break end
+            if not next(vals) then break end
+            for _, val in ipairs(vals) do
+                if init_vals[val] and not initial then br = true end
+                if RANKS[val] then
+                    straight_length = straight_length + 1
+                    skipped_rank = false
+                    for _, vv in ipairs(RANKS[val]) do
+                        t[#t + 1] = vv
+                    end
+                    vals = SMODS.Card.RANKS[val].next
+                    initial = false
+                    end_iter = true
+                    break
+                end
+            end
+            if not end_iter then
+                local new_vals = {}
+                for _, val in ipairs(vals) do
+                    for _, r in ipairs(SMODS.Card.RANKS[val].next) do
+                        table.insert(new_vals, r)
+                    end
+                end
+                vals = new_vals
+                if can_skip and not skipped_rank then
+                    skipped_rank = true
+                else
+                    straight_length = 0
+                    skipped_rank = false
+                    if not straight then t = {} end
+                    if straight then break end
+                end
+            end
+        end
 		if not straight then return ret end
 		table.insert(ret, t)
 		return ret

@@ -1,5 +1,5 @@
 # Define the URL of the GitHub repository ZIP
-$repoUrl = "https://codeload.github.com/Steamopollys/Steamodded/zip/refs/tags/0.7.2" # Update this URL
+$repoUrl = "https://codeload.github.com/Steamopollys/Steamodded/zip/refs/tags/0.8.2" # Update this URL
 $directories = @("core", "debug", "loader")
 
 function Find-7Zip {
@@ -72,17 +72,38 @@ function Download-And-Extract-Repo {
 }
 
 function Find-GameExe {
-    $gameName = "Balatro"
-    $steamPaths = @(
-        "${env:ProgramFiles(x86)}\Steam\steamapps\common\Balatro",
-        "${env:UserProfile}\SteamLibrary\steamapps\common\Balatro"
-    )
+    $steamInstallPath = Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Valve\Steam" | Select-Object -ExpandProperty InstallPath
 
-    foreach ($path in $steamPaths) {
-        $exePath = Join-Path -Path $path -ChildPath "$gameName.exe"
+    # Check if the Steam installation path exists
+    if (-not(Test-Path $steamInstallPath))
+    {
+        return ""
+    }
+    Write-Host "Found steam installation path: $steamInstallPath"
+    
+    # Construct the path to the vdf file that contains the game library information
+    $vdfPath = Join-Path $steamInstallPath 'steamapps\libraryfolders.vdf'
+    
+    # Read the vdf file and convert it to a hashtable
+    $vdfContent = Get-Content $vdfPath -Raw
+    $paths = [Regex]::Matches($vdfContent, '"path"\s+"([^"]+)"') | ForEach-Object { $_.Groups[1].Value -replace '\\\\', '\' }
+    
+    # Construct the full game path for each library folder and check if it exists
+    $gameFolder = 'steamapps\common\Balatro'
+    foreach ($path in $paths) {
+        $gamePath = Join-Path $path $gameFolder
+        $exePath = Join-Path $gamePath "Balatro.exe"
         if (Test-Path $exePath) {
             return $exePath
         }
+    }
+    return ""
+}
+
+function Find-Or-Prompt-GameExe {
+    $foundPath = Find-GameExe
+    if ($foundPath) {
+        return $foundPath
     }
 
     # If not found, prompt the user
@@ -99,7 +120,7 @@ $7ZipPath = Find-7Zip
 
 $mergedContent = Download-And-Extract-Repo -url $repoUrl -downloadPath $downloadPath -extractPath $extractPath -mergedContent $mergedContent -directories $directories
 
-$balatroExePath = Find-GameExe # Make sure to define Find-GameExe function as shown earlier
+$balatroExePath = Find-Or-Prompt-GameExe
 
 $tempDirForExtraction = Join-Path -Path $env:TEMP -ChildPath ([System.IO.Path]::GetRandomFileName())
 Write-Host "Temporary directory for extraction: $tempDirForExtraction"
