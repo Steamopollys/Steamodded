@@ -222,16 +222,7 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
     if main_end then
         desc_nodes[#desc_nodes + 1] = main_end
     end
-	
-	if not ((specific_vars and not specific_vars.sticker) and (card_type == 'Default' or card_type == 'Enhanced')) then
-        if desc_nodes == full_UI_table.main and not full_UI_table.name then
-            localize{type = 'name', key = _c.key, set = _c.set, nodes = full_UI_table.name} 
-            if not full_UI_table.name then full_UI_table.name = {} end
-        elseif desc_nodes ~= full_UI_table.main then 
-            desc_nodes.name = localize{type = 'name_text', key = name_override or _c.key, set = name_override and 'Other' or _c.set} 
-        end
-    end
-	
+
 	for _, v in ipairs(info_queue) do
 		sendDebugMessage(inspect(v))
 		generate_card_ui(v, full_UI_table)

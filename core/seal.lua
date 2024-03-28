@@ -74,28 +74,3 @@ function get_badge_colour(key)
 	end
     return fromRef
 end
-
--- UI code for seal
-local generate_card_ui_ref = generate_card_ui
-function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)
-    local fromRef = generate_card_ui_ref(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start,
-        main_end)
-
-    local info_queue = {}
-
-
-    if not (_c.set == 'Edition') and badges then
-        for k, v in ipairs(badges) do
-			for k1, v1 in pairs(SMODS.Seals) do
-				if v == k1 then info_queue[#info_queue + 1] = { key = k1, set = 'Other' } end
-			end
-           
-        end
-    end
-
-    for _, v in ipairs(info_queue) do
-        generate_card_ui(v, fromRef)
-    end
-
-    return fromRef
-end
