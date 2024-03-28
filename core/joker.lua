@@ -17,8 +17,7 @@ SMODS.Joker = {
     effect = ""
 }
 
-function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, unlocked, discovered, blueprint_compat,
-                         eternal_compat, effect, atlas)
+function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, unlocked, discovered, blueprint_compat, eternal_compat, effect, atlas)
     o = {}
     setmetatable(o, self)
     self.__index = self
@@ -73,6 +72,9 @@ function SMODS.injectJokers()
             effect = joker.effect,
             cost = joker.cost,
             cost_mult = 1.0,
+            blueprint_compat = joker.blueprint_compat,
+            eternal_compat = joker.eternal_compat,
+            effect = joker.effect
             atlas = joker.atlas or nil
         }
 
