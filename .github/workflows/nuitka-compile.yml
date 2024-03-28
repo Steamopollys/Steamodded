@@ -1,0 +1,22 @@
+name: Compile Python to EXE with Nuitka
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - name: Install Nuitka
+      run: pip install nuitka
+    - name: Compile Python script to EXE
+      run: python -m nuitka --standalone --onefile --include-data-dir=core=./core --include-data-dir=debug=./debug --include-data-dir=loader=./loader steamodded_injector.py
+    - name: Upload EXE to Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: steamodded_injector
+        path: ./steamodded_injector.dist/steamodded_injector.exe
