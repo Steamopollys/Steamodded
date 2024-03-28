@@ -120,7 +120,17 @@ function SMODS.injectSprites()
     for i=1, #G.animation_atli do
         G.ANIMATION_ATLAS[G.animation_atli[i].name] = {}
         G.ANIMATION_ATLAS[G.animation_atli[i].name].name = G.animation_atli[i].name
-        G.ANIMATION_ATLAS[G.animation_atli[i].name].image = love.graphics.newImage(G.animation_atli[i].path, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+        local file_data = NFS.newFileData( G.animation_atli[i].path )
+        if file_data then
+            local image_data = love.image.newImageData(file_data)
+            if image_data then
+                G.ANIMATION_ATLAS[G.animation_atli[i].name].image = love.graphics.newImage(image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+            else
+                G.ANIMATION_ATLAS[G.animation_atli[i].name].image = love.graphics.newImage(G.animation_atli[i].path, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+            end
+        else
+            G.ANIMATION_ATLAS[G.animation_atli[i].name].image = love.graphics.newImage(G.animation_atli[i].path, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+        end
         G.ANIMATION_ATLAS[G.animation_atli[i].name].px = G.animation_atli[i].px
         G.ANIMATION_ATLAS[G.animation_atli[i].name].py = G.animation_atli[i].py
         G.ANIMATION_ATLAS[G.animation_atli[i].name].frames = G.animation_atli[i].frames
@@ -129,7 +139,17 @@ function SMODS.injectSprites()
     for i=1, #G.asset_atli do
         G.ASSET_ATLAS[G.asset_atli[i].name] = {}
         G.ASSET_ATLAS[G.asset_atli[i].name].name = G.asset_atli[i].name
-        G.ASSET_ATLAS[G.asset_atli[i].name].image = love.graphics.newImage(G.asset_atli[i].path, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+        local file_data = NFS.newFileData( G.asset_atli[i].path )
+        if file_data then
+            local image_data = love.image.newImageData(file_data)
+            if image_data then
+                G.ASSET_ATLAS[G.asset_atli[i].name].image = love.graphics.newImage(image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+            else
+                G.ASSET_ATLAS[G.asset_atli[i].name].image = love.graphics.newImage(G.asset_atli[i].path, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+            end
+        else
+            G.ASSET_ATLAS[G.asset_atli[i].name].image = love.graphics.newImage(G.asset_atli[i].path, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+        end
         G.ASSET_ATLAS[G.asset_atli[i].name].type = G.asset_atli[i].type
         G.ASSET_ATLAS[G.asset_atli[i].name].px = G.asset_atli[i].px
         G.ASSET_ATLAS[G.asset_atli[i].name].py = G.asset_atli[i].py
@@ -138,7 +158,17 @@ function SMODS.injectSprites()
     for i=1, #G.asset_images do
         G.ASSET_ATLAS[G.asset_images[i].name] = {}
         G.ASSET_ATLAS[G.asset_images[i].name].name = G.asset_images[i].name
-        G.ASSET_ATLAS[G.asset_images[i].name].image = love.graphics.newImage(G.asset_images[i].path, {mipmaps = true, dpiscale = 1})
+        local file_data = NFS.newFileData( G.asset_images[i].path )
+        if file_data then
+            local image_data = love.image.newImageData(file_data)
+            if image_data then
+                G.ASSET_ATLAS[G.asset_images[i].name].image = love.graphics.newImage(image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+            else
+                G.ASSET_ATLAS[G.asset_images[i].name].image = love.graphics.newImage(G.asset_images[i].path, {mipmaps = true, dpiscale = 1})
+            end
+        else
+            G.ASSET_ATLAS[G.asset_images[i].name].image = love.graphics.newImage(G.asset_images[i].path, {mipmaps = true, dpiscale = 1})
+        end
         G.ASSET_ATLAS[G.asset_images[i].name].type = G.asset_images[i].type
         G.ASSET_ATLAS[G.asset_images[i].name].px = G.asset_images[i].px
         G.ASSET_ATLAS[G.asset_images[i].name].py = G.asset_images[i].py
