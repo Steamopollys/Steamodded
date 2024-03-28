@@ -17,7 +17,8 @@ SMODS.Joker = {
     effect = ""
 }
 
-function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, unlocked, discovered, blueprint_compat, eternal_compat, effect, atlas)
+function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, unlocked, discovered, blueprint_compat,
+                         eternal_compat, effect, atlas)
     o = {}
     setmetatable(o, self)
     self.__index = self
@@ -44,6 +45,7 @@ end
 function SMODS.Joker:register()
     if not SMODS.Jokers[self.slug] then
         SMODS.Jokers[self.slug] = self
+        SMODS.BUFFERS.Jokers[#SMODS.BUFFERS.Jokers+1] = self.slug
     end
 end
 
@@ -51,10 +53,10 @@ function SMODS.injectJokers()
     local minId = table_length(G.P_CENTER_POOLS['Joker']) + 1
     local id = 0
     local i = 0
-
-    for k, joker in pairs(SMODS.Jokers) do
+    local joker = nil
+    for k, slug in ipairs(SMODS.BUFFERS.Jokers) do
+        joker = SMODS.Jokers[slug]
         i = i + 1
-        -- Prepare some Datas
         id = i + minId
 
         local joker_obj = {
@@ -72,9 +74,6 @@ function SMODS.injectJokers()
             effect = joker.effect,
             cost = joker.cost,
             cost_mult = 1.0,
-            blueprint_compat = joker.blueprint_compat,
-            eternal_compat = joker.eternal_compat,
-            effect = joker.effect
             atlas = joker.atlas or nil
         }
 
@@ -92,41 +91,17 @@ function SMODS.injectJokers()
         table.insert(G.P_JOKER_RARITY_POOLS[joker_obj.rarity], joker_obj)
 
         -- Setup Localize text
-        G.localization.descriptions["Joker"][k] = joker.loc_txt
-
-        -- Load it
-        for g_k, group in pairs(G.localization) do
-            if g_k == 'descriptions' then
-                for _, set in pairs(group) do
-                    for _, center in pairs(set) do
-                        center.text_parsed = {}
-                        for _, line in ipairs(center.text) do
-                            center.text_parsed[#center.text_parsed + 1] = loc_parse_string(line)
-                        end
-                        center.name_parsed = {}
-                        for _, line in ipairs(type(center.name) == 'table' and center.name or { center.name }) do
-                            center.name_parsed[#center.name_parsed + 1] = loc_parse_string(line)
-                        end
-                        if center.unlock then
-                            center.unlock_parsed = {}
-                            for _, line in ipairs(center.unlock) do
-                                center.unlock_parsed[#center.unlock_parsed + 1] = loc_parse_string(line)
-                            end
-                        end
-                    end
-                end
-            end
-        end
+        G.localization.descriptions["Joker"][slug] = joker.loc_txt
 
         sendDebugMessage("The Joker named " .. joker.name .. " with the slug " .. joker.slug ..
             " have been registered at the id " .. id .. ".")
     end
-    SMODS.SAVE_UNLOCKS()
+    SMODS.BUFFERS.Jokers = {}
 end
 
-local carfset_abilityRef = Card.set_ability
+local cardset_abilityRef = Card.set_ability
 function Card.set_ability(self, center, initial, delay_sprites)
-    carfset_abilityRef(self, center, initial, delay_sprites)
+    cardset_abilityRef(self, center, initial, delay_sprites)
 
     -- Iterate over each object in SMODS.JKR_EFFECT
     for _k, obj in pairs(SMODS.Jokers) do
@@ -175,7 +150,9 @@ function Card:generate_UIBox_ability_table()
     elseif self.ability.set == 'Joker' then
         for _, v in pairs(SMODS.Jokers) do
             if v.loc_def and type(v.loc_def) == 'function' then
-                loc_vars = v:loc_def(self) or loc_vars
+                local o, m = v:loc_def(self)
+                if o and next(o) then loc_def = o end
+                if m and next(m) then main_end = m end
             end
         end
     end
@@ -215,7 +192,7 @@ function Card:generate_UIBox_ability_table()
     return ability_table_ref(self)
 end
 --[[
-    function SMODS.Joker.j_example:loc_def(card)
+    function SMODS.Jokers.j_example:loc_def(card)
         if card.ability.name == 'Example Joker' then
             return {card.ability.extra.mult}
         end

@@ -17,64 +17,50 @@ function SMODS.Seal:new(name, label, full_name, pos, loc_txt, atlas, discovered,
 
     o.loc_txt = loc_txt
     o.name = name
-	o.label = label
-	o.full_name = full_name
+    o.label = label
+    o.full_name = full_name
     o.pos = pos or {
         x = 0,
         y = 0
     }
     o.discovered = discovered or false
     o.atlas = atlas or "centers"
-	o.color = color or HEX("FFFFFF")
-	return o
+    o.color = color or HEX("FFFFFF")
+    return o
 end
 
 function SMODS.Seal:register()
-	SMODS.Seals[self.label] = self
-
-	local seal_obj = {
-		discovered = self.discovered,
-		set = "Seal",
-		order = #G.P_CENTER_POOLS.Seal + 1,
-		key = self.name
-	}
-
-	G.shared_seals[self.name] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)
-
-	-- Now we replace the others
-	G.P_SEALS[self.name] = seal_obj
-	table.insert(G.P_CENTER_POOLS.Seal, seal_obj)
-
-	-- Setup Localize text
-	G.localization.descriptions.Other[self.label] = self.loc_txt
-	G.localization.misc.labels[self.label] = self.full_name
-
-	-- Load it
-
-    for g_k, group in pairs(G.localization) do
-        if g_k == 'descriptions' then
-            for _, set in pairs(group) do
-                for _, center in pairs(set) do
-                    center.text_parsed = {}
-                    for _, line in ipairs(center.text) do
-                        center.text_parsed[#center.text_parsed + 1] = loc_parse_string(line)
-                    end
-                    center.name_parsed = {}
-                    for _, line in ipairs(type(center.name) == 'table' and center.name or { center.name }) do
-                        center.name_parsed[#center.name_parsed + 1] = loc_parse_string(line)
-                    end
-                    if center.unlock then
-                        center.unlock_parsed = {}
-                        for _, line in ipairs(center.unlock) do
-                            center.unlock_parsed[#center.unlock_parsed + 1] = loc_parse_string(line)
-                        end
-                    end
-                end
-            end
-        end
+    if not SMODS.Seals[self.label] then
+        SMODS.Seals[self.label] = self
+        SMODS.BUFFERS.Seals[#SMODS.BUFFERS.Seals+1] = self.label
     end
+end
 
-	sendDebugMessage("The Seal named " .. self.name .. " have been registered at the id " .. #G.P_CENTER_POOLS.Seal .. ".")
+function SMODS.injectSeals()
+    local seal = nil
+    for _, label in ipairs(SMODS.BUFFERS.Seals) do
+        seal = SMODS.Seals[label]
+        local seal_obj = {
+            discovered = seal.discovered,
+            set = "Seal",
+            order = #G.P_CENTER_POOLS.Seal + 1,
+            key = seal.name
+        }
+
+        G.shared_seals[seal.name] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[seal.atlas], seal.pos)
+
+        -- Now we replace the others
+        G.P_SEALS[seal.name] = seal_obj
+        table.insert(G.P_CENTER_POOLS.Seal, seal_obj)
+
+        -- Setup Localize text
+        G.localization.descriptions.Other[seal.label] = seal.loc_txt
+        G.localization.misc.labels[seal.label] = seal.full_name
+
+        sendDebugMessage("The Seal named " ..
+        seal.name .. " have been registered at the id " .. #G.P_CENTER_POOLS.Seal .. ".")
+    end
+    SMODS.BUFFERS.Seals = {}
 end
 
 local get_badge_colourref = get_badge_colour
