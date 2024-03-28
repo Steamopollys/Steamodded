@@ -31,8 +31,8 @@ function loadMods(modsDirectory)
 
     -- Function to process each directory (including subdirectories) with depth tracking
     local function processDirectory(directory, depth)
-        if depth > 2 then
-            return  -- Stop processing if the depth is greater than 2
+        if depth > 3 then
+            return  -- Stop processing if the depth is greater than 3
         end
 
         for _, filename in ipairs(NFS.getDirectoryItems(directory)) do
