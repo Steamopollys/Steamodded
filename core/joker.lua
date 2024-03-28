@@ -149,7 +149,7 @@ function Card:generate_UIBox_ability_table()
         for _, v in pairs(SMODS.Jokers) do
             if v.loc_def and type(v.loc_def) == 'function' then
                 local o, m = v:loc_def(self)
-                if o and next(o) then loc_def = o end
+                if o and next(o) then loc_vars = o end
                 if m and next(m) then main_end = m end
             end
         end
