@@ -58,6 +58,7 @@ function SMODS.injectSpectrals()
             pos = spectral.pos,
             config = spectral.config,
             atlas = spectral.atlas,
+            cost = spectral.cost
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
