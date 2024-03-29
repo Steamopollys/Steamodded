@@ -80,8 +80,8 @@ function SMODS.injectPlanets()
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
-            sendDebugMessage(sprite.name, "SteamoddedPlanet")
-            sendDebugMessage(planet_obj.key, "SteamoddedPlanet")
+            sendDebugMessage(sprite.name)
+            sendDebugMessage(planet_obj.key)
             if sprite.name == planet_obj.key then
                 planet_obj.atlas = sprite.name
             end
@@ -94,8 +94,8 @@ function SMODS.injectPlanets()
         -- Setup Localize text
         G.localization.descriptions["Planet"][planet.slug] = planet.loc_txt
 
-        sendInfoMessage("The Planet named " .. planet.name .. " with the slug " .. planet.slug ..
-            " have been registered at the id " .. id .. ".", "SteamoddedPlanet")
+        sendDebugMessage("The Planet named " .. planet.name .. " with the slug " .. planet.slug ..
+            " have been registered at the id " .. id .. ".")
     end
     SMODS.BUFFERS.Planets = {}
 end
@@ -124,8 +124,8 @@ function create_UIBox_your_collection_planets()
     for j = 1, #G.your_collection do
         for i = 1, 3 do
             local center = G.P_CENTER_POOLS["Planet"][i + (j - 1) * (3)]
-            sendDebugMessage(tostring(i + (j - 1) * (4)), "SteamoddedPlanet")
-            sendDebugMessage(inspect(center), "SteamoddedPlanet")
+            sendDebugMessage(tostring(i + (j - 1) * (4)))
+            sendDebugMessage(inspect(center))
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y, G
                 .CARD_W,
                 G.CARD_H, nil, center)

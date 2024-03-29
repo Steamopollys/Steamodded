@@ -62,8 +62,8 @@ function SMODS.injectSpectrals()
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
-            sendDebugMessage(sprite.name, "SteamoddedSpectral")
-            sendDebugMessage(tarot_obj.key, "SteamoddedSpectral")
+            sendDebugMessage(sprite.name)
+            sendDebugMessage(tarot_obj.key)
             if sprite.name == tarot_obj.key then
                 tarot_obj.atlas = sprite.name
             end
@@ -76,8 +76,8 @@ function SMODS.injectSpectrals()
         -- Setup Localize text
         G.localization.descriptions["Spectral"][spectral.slug] = spectral.loc_txt
 
-        sendInfoMessage("The Spectral named " .. spectral.name .. " with the slug " .. spectral.slug ..
-            " have been registered at the id " .. id .. ".", "SteamoddedSpectral")
+        sendDebugMessage("The Spectral named " .. spectral.name .. " with the slug " .. spectral.slug ..
+            " have been registered at the id " .. id .. ".")
     end
     SMODS.BUFFERS.Spectrals = {}
 end

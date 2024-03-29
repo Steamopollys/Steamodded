@@ -72,8 +72,8 @@ function SMODS.injectBlinds()
         -- Setup Localize text
         G.localization.descriptions["Blind"][blind.slug] = blind.loc_txt
 
-        sendInfoMessage("The Blind named " ..
-            blind.name .. " with the slug " .. blind.slug .. " have been registered at the id " .. id .. ".", "SteamoddedR_BLIND")
+        sendDebugMessage("The Blind named " ..
+            blind.name .. " with the slug " .. blind.slug .. " have been registered at the id " .. id .. ".")
     end
     SMODS.BUFFERS.Blinds = {}
 end
@@ -369,7 +369,7 @@ function create_UIBox_your_collection_blinds(exit)
     end
 
     local blinds_per_row = math.ceil(#blind_tab / 6)
-    sendDebugMessage("Blinds per row:" .. tostring(blinds_per_row), "SteamoddedR_Blind")
+    sendDebugMessage("Blinds per row:" .. tostring(blinds_per_row))
 
     table.sort(blind_tab, function(a, b) return a.order < b.order end)
 
@@ -426,7 +426,7 @@ function create_UIBox_your_collection_blinds(exit)
             end
         end
         local row = math.ceil((k - 1) / blinds_per_row + 0.001)
-        sendDebugMessage("Y:" .. tostring(row) .. " X:" .. tostring(1 + ((k - 1) % 6)), "SteamoddedR_Blind")
+        sendDebugMessage("Y:" .. tostring(row) .. " X:" .. tostring(1 + ((k - 1) % 6)))
         table.insert(blind_matrix[row], {
             n = G.UIT.C,
             config = { align = "cm", padding = 0.1 },

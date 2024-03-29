@@ -8,7 +8,7 @@
 ------------MOD CODE -------------------------
 
 function SMODS.INIT.AchievementsEnabler()
-    sendInfoMessage("AchievementsEnabler Activated!", "SteamoddedAchievementsEnabler")
+    sendDebugMessage("AchievementsEnabler Activated!")
     G.F_NO_ACHIEVEMENTS = false
 end
 

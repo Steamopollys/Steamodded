@@ -8,7 +8,7 @@
 ------------MOD CODE -------------------------
 
 function SMODS.INIT.NegateTexturePack()
-    sendInfoMessage("Launching Negate Texture Pack!", "SteamoddedNegateTexturePack")
+    sendDebugMessage("Launching Negate Texture Pack!")
 
     local negate_mod = SMODS.findModByID("NegateTexturePack")
     local sprite_jkr = SMODS.Sprite:new("Joker", negate_mod.path, "Jokers-negate.png", 71, 95, "asset_atli")

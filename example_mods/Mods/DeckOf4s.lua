@@ -15,7 +15,7 @@ function Back.apply_to_run(arg_56_0)
 		G.E_MANAGER:add_event(Event({
 			func = function()
 				for iter_57_0 = #G.playing_cards, 1, -1 do
-					sendDebugMessage(G.playing_cards[iter_57_0].base.id, "SteamoddedDecksOf4s")
+					sendDebugMessage(G.playing_cards[iter_57_0].base.id)
 					if G.playing_cards[iter_57_0].base.id ~= 4 then
 						local suit = string.sub(G.playing_cards[iter_57_0].base.suit, 1, 1) .. "_"
 						local rank = "4"

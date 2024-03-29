@@ -62,7 +62,7 @@ function SMODS.injectDecks()
         -- Setup Localize text
         G.localization.descriptions["Back"][deck.slug] = deck.loc_txt
 
-        sendInfoMessage("The Deck named " ..
+        sendDebugMessage("The Deck named " ..
         deck.name .. " with the slug " .. deck.slug .. " have been registered at the id " .. id .. ".")
     end
 end
