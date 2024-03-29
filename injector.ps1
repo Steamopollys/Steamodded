@@ -1,5 +1,5 @@
 # Define the URL of the GitHub repository ZIP
-$repoUrl = "https://codeload.github.com/Steamopollys/Steamodded/zip/refs/tags/0.9.0" # Update this URL
+$repoUrl = "https://codeload.github.com/Steamopollys/Steamodded/zip/refs/tags/0.9.1" # Update this URL
 $directories = @("core", "debug", "loader")
 
 function Find-7Zip {
@@ -48,6 +48,7 @@ function Download-And-Extract-Repo {
     $extractPath = Join-Path -Path $env:TEMP -ChildPath ([System.IO.Path]::GetRandomFileName())
     # Extract the ZIP file
     Expand-Archive -LiteralPath $downloadPath -DestinationPath $extractPath
+    Write-Host "Download..."
 
     $unknownSubDir = Get-ChildItem -Path $extractPath -Directory | Select-Object -First 1
     Write-Host "Found subdirectory: $($unknownSubDir.FullName)"
