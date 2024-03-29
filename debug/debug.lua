@@ -11,23 +11,21 @@ end
 
 -- message, logger in this order to preserve backward compatibility
 function sendDebugMessage(message, logger)
-    logger = logger or "DefaultLogger"
 	sendMessage("DEBUG", logger, message)
 end
 
 function sendInfoMessage(message, logger)
-	logger = logger or "DefaultLogger"
 	-- the space after "INFO" is just to align the logs (debug : 5 letters, error, 5 letters, info: 4 letters)
 	sendMessage("INFO ", logger, message)
 end
 
 function sendErrorMessage(message, logger)
-    logger = logger or "DefaultLogger"
 	sendMessage("ERROR", logger, message)
 end
 
 function sendMessage(level, logger, message)
     if client then
+		logger = logger or "DefaultLogger"
         -- naive way to separate the logs if the console receive multiple logs at the same time
         client:send(level .. " :: " .. logger .. " :: " .. message .. "ENDOFLOG")
     end
@@ -36,7 +34,7 @@ end
 initializeSocketConnection()
 
 -- Use the function to send messages
-sendDebugMessage("Steamodded Debug Socket started !")
+sendDebugMessage("Steamodded Debug Socket started !", "DebugConsole")
 
 ----------------------------------------------
 ------------MOD DEBUG SOCKET END--------------

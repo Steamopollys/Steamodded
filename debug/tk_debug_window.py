@@ -27,7 +27,7 @@ def listen_for_clients():
         threading.Thread(target=client_handler, args=(client,)).start()
 
 
-def on_search_entry_change(varName, index, mode):
+def on_search_entry_change(var_name, index, mode):
     global search_after_id
     if search_after_id:
         root.after_cancel(search_after_id)

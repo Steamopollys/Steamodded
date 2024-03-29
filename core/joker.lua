@@ -78,8 +78,8 @@ function SMODS.injectJokers()
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
-            sendInfoMessage(sprite.name)
-            sendInfoMessage(joker_obj.key)
+            sendDebugMessage(sprite.name, "SteamoddedJoker")
+            sendDebugMessage(joker_obj.key, "SteamoddedJoker")
             if sprite.name == joker_obj.key then
                 joker_obj.atlas = sprite.name
             end
