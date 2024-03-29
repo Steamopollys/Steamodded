@@ -17,7 +17,8 @@ end
 
 function sendInfoMessage(message, logger)
 	logger = logger or "DefaultLogger"
-	sendMessage("INFO", logger, message)
+	-- the space after "INFO" is just to align the logs (debug : 5 letters, error, 5 letters, info: 4 letters)
+	sendMessage("INFO ", logger, message)
 end
 
 function sendErrorMessage(message, logger)
