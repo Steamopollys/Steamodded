@@ -62,7 +62,7 @@ function loadMods(modsDirectory)
                     if modID and string.find(modID, " ") then
                         sendErrorMessage("Invalid mod ID: " .. modID, "SteamoddedLoader")
                     elseif modIDs[modID] then
-                        sendErrorMessage("Duplicate mod ID: " .. modID, "SteamoddedLoader")
+                        sendWarnMessage("Duplicate mod ID: " .. modID, "SteamoddedLoader")
                     else
                         if modName and modID and modAuthorString and modDescription then
                             -- Parse MOD_AUTHOR array

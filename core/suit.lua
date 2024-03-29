@@ -77,7 +77,7 @@ end
 function SMODS.Card:new_suit(name, card_atlas_low_contrast, card_atlas_high_contrast, card_pos, ui_atlas_low_contrast,
 							 ui_atlas_high_contrast, ui_pos, colour_low_contrast, colour_high_contrast)
 	if SMODS.Card.SUITS[name] then
-		sendErrorMessage('Failed to register duplicate suit:' .. name, "SteamoddedSuit")
+		sendWarnMessage('Failed to register duplicate suit:' .. name, "SteamoddedSuit")
 		return nil
 	end
 	local prefix = SMODS.Card.generate_prefix()
@@ -124,7 +124,7 @@ end
 function SMODS.Card:new_rank(value, nominal, atlas_low_contrast, atlas_high_contrast, pos, suit_map, options)
 	options = options or {}
 	if SMODS.Card.RANKS[value] then
-		sendErrorMessage('Failed to register duplicate rank: ' .. value, "SteamoddedSuit")
+		sendWarnMessage('Failed to register duplicate rank: ' .. value, "SteamoddedSuit")
 		return nil
 	end
 	local suffix = SMODS.Card:generate_suffix()
