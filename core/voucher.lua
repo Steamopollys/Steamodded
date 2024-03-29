@@ -92,8 +92,8 @@ function Card:apply_to_run(center)
         name = center and center.name or self and self.ability.name,
         extra = center and center.config.extra or self and self.ability.extra
     }
-    for _, v in pairs(SMODS.Vouchers) do
-        if v.redeem and type(v.redeem) == 'function' and self.center.key == v.key then
+    for _k, v in pairs(SMODS.Vouchers) do
+        if v.redeem and type(v.redeem) == 'function' and self.config.center.key == _k then
             v.redeem(center_table)
         end
     end
