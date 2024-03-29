@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: pip install -r requirements.txt
     - name: Compile Python script to EXE
-      run: python -m nuitka --mingw64 --assume-yes-for-downloads --standalone --onefile --recurse-all --include-data-dir=core=./core --include-data-dir=debug=./debug --include-data-dir=loader=./loader steamodded_injector.py
+      run: python -m nuitka --mingw64 --assume-yes-for-downloads --standalone --onefile --follow-imports --include-data-dir=core=./core --include-data-dir=debug=./debug --include-data-dir=loader=./loader steamodded_injector.py
     - name: Upload EXE to Artifacts
       uses: actions/upload-artifact@v3
       with:
