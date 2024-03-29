@@ -153,8 +153,6 @@ end
 
 local generate_card_ui_ref = generate_card_ui
 function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)
-	sendDebugMessage(inspect(_c))
-    sendDebugMessage(inspect(full_UI_table))
 	local original_full_UI_table = full_UI_table
 	local original_main_end = main_end
 	local first_pass = nil
@@ -173,15 +171,20 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
 	local name_override = nil
 	local info_queue = {}
 	local loc_vars = {}
-	if main_start then
-		desc_nodes[#desc_nodes + 1] = main_start
+    if main_start then
+        desc_nodes[#desc_nodes + 1] = main_start
+    end
+	
+    if not full_UI_table.name then
+        full_UI_table.name = localize{type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name}
+		full_UI_table.card_type = card_type or _c.set
 	end
 	
     if not (card_type == 'Locked') and not hide_desc then
         if _c.set == 'Tarot' then
             for _k, v in pairs(SMODS.Tarots) do
                 if v.loc_def and type(v.loc_def) == 'function' and _c.key == _k then
-                    local o, m = v:loc_def(_c, info_queue)
+                    local o, m = v.loc_def(_c, info_queue)
                     if o and next(o) then loc_vars = o end
                     if m then main_end = m end
                 end
@@ -190,7 +193,7 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
         if _c.set == 'Spectral' then
             for _k, v in pairs(SMODS.Spectrals) do
                 if v.loc_def and type(v.loc_def) == 'function' and _c.key == _k then
-                    local o, m = v:loc_def(_c, info_queue)
+                    local o, m = v.loc_def(_c, info_queue)
                     if o and next(o) then loc_vars = o end
                     if m then main_end = m end
                 end
@@ -199,7 +202,7 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
         if _c.set == 'Voucher' then
             for _k, v in pairs(SMODS.Vouchers) do
                 if v.loc_def and type(v.loc_def) == 'function' and _c.key == _k then
-                    local o, m = v:loc_def(_c, info_queue)
+                    local o, m = v.loc_def(_c, info_queue)
                     if o and next(o) then loc_vars = o end
                     if m then main_end = m end
                 end

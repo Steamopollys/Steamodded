@@ -191,7 +191,7 @@ function Card:generate_UIBox_ability_table()
     return ability_table_ref(self)
 end
 --[[
-    function SMODS.Jokers.j_example:loc_def(card)
+    function SMODS.Jokers.j_example.loc_def(card)
         if card.ability.name == 'Example Joker' then
             return {card.ability.extra.mult}
         end
