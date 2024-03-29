@@ -455,7 +455,7 @@ function injectStackTrace()
 
     local crashHandler = love.errhand
     function love.errhand(msg)
-        sendErrorMessage("Oops! The game crashed\n" .. STP.stacktrace(msg))
+        sendFatalMessage("Oops! The game crashed\n" .. STP.stacktrace(msg))
         if _RELEASE_MODE then
             msg = STP.stacktrace(msg .. "\n", 3) -- The game shows the stack for me if release mode is false
         end

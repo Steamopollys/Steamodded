@@ -2,30 +2,45 @@
 ------------MOD DEBUG SOCKET------------------
 
 function initializeSocketConnection()
-	local socket = require("socket")
-	client = socket.connect("localhost", 12345)
-	if not client then
-		print("Failed to connect to the debug server")
-	end
+    local socket = require("socket")
+    client = socket.connect("localhost", 12345)
+    if not client then
+        print("Failed to connect to the debug server")
+    end
 end
 
 -- message, logger in this order to preserve backward compatibility
+function sendTraceMessage(message, logger)
+	sendMessageToConsole("TRACE", logger, message)
+end
+
 function sendDebugMessage(message, logger)
-	sendMessage("DEBUG", logger, message)
+    sendMessageToConsole("DEBUG", logger, message)
 end
 
 function sendInfoMessage(message, logger)
-	-- the space after "INFO" is just to align the logs (debug : 5 letters, error, 5 letters, info: 4 letters)
-	sendMessage("INFO ", logger, message)
+	-- space in info string to align the logs in console
+    sendMessageToConsole("INFO ", logger, message)
+end
+
+function sendWarnMessage(message, logger)
+	-- space in warn string to align the logs in console
+	sendMessageToConsole("WARN ", logger, message)
 end
 
 function sendErrorMessage(message, logger)
-	sendMessage("ERROR", logger, message)
+    sendMessageToConsole("ERROR", logger, message)
 end
 
-function sendMessage(level, logger, message)
+function sendFatalMessage(message, logger)
+    sendMessageToConsole("FATAL", logger, message)
+end
+
+function sendMessageToConsole(level, logger, message)
     if client then
-		logger = logger or "DefaultLogger"
+        level = level or "DEBUG"
+        logger = logger or "DefaultLogger"
+        message = message or "Default log message"
         -- naive way to separate the logs if the console receive multiple logs at the same time
         client:send(level .. " :: " .. logger .. " :: " .. message .. "ENDOFLOG")
     end
