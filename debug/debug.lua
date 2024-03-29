@@ -28,7 +28,8 @@ end
 
 function sendMessage(level, logger, message)
     if client then
-        client:send(level .. " :: " .. logger .. " :: " .. message)
+        -- naive way to separate the logs if the console receive multiple logs at the same time
+        client:send(level .. " :: " .. logger .. " :: " .. message .. "ENDOFLOG")
     end
 end
 

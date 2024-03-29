@@ -9,8 +9,12 @@ def client_handler(client_socket):
         data = client_socket.recv(1024)
         if not data:
             break
-        text_widget.insert(tk.END, datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " :: " + data.decode() + '\n')
-        text_widget.see(tk.END)
+
+        decoded_data = data.decode()
+        logs = decoded_data.split("ENDOFLOG")
+        for log in logs:
+            text_widget.insert(tk.END, datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " :: " + log + '\n')
+            text_widget.see(tk.END)
 
 
 def listen_for_clients():
