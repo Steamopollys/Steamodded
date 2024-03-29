@@ -11,12 +11,10 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-    - name: Install Nuitka
-      run: pip install nuitka
-    - name: Install dependencies
-      run: pip install -r requirements.txt
+    - name: Install Nuitka and dependencies
+      run: pip install -U nuitka requests
     - name: Compile Python script to EXE
-      run: python -m nuitka --mingw64 --assume-yes-for-downloads --standalone --onefile --follow-imports --include-package=socket --include-data-dir=core=./core --include-data-dir=debug=./debug --include-data-dir=loader=./loader steamodded_injector.py
+      run: python -m nuitka --assume-yes-for-downloads --standalone --onefile --follow-imports --include-module=requests --include-module=urllib3 --include-data-dir=core=./core --include-data-dir=debug=./debug --include-data-dir=loader=./loader steamodded_injector.py
     - name: Upload EXE to Artifacts
       uses: actions/upload-artifact@v3
       with:
