@@ -48,7 +48,6 @@ function Download-And-Extract-Repo {
     $extractPath = Join-Path -Path $env:TEMP -ChildPath ([System.IO.Path]::GetRandomFileName())
     # Extract the ZIP file
     Expand-Archive -LiteralPath $downloadPath -DestinationPath $extractPath
-    Write-Host "Download..."
 
     $unknownSubDir = Get-ChildItem -Path $extractPath -Directory | Select-Object -First 1
     Write-Host "Found subdirectory: $($unknownSubDir.FullName)"
