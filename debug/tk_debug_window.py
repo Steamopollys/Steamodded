@@ -1,6 +1,7 @@
 import tkinter as tk
 import socket
 import threading
+from datetime import datetime
 
 
 def client_handler(client_socket):
@@ -8,7 +9,7 @@ def client_handler(client_socket):
         data = client_socket.recv(1024)
         if not data:
             break
-        text_widget.insert(tk.END, data.decode() + '\n')
+        text_widget.insert(tk.END, datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " :: " + data.decode() + '\n')
         text_widget.see(tk.END)
 
 

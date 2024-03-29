@@ -15,7 +15,7 @@ function Back.apply_to_run(arg_56_0)
 		G.E_MANAGER:add_event(Event({
 			func = function()
 				for iter_57_0 = #G.playing_cards, 1, -1 do
-					sendDebugMessage(G.playing_cards[iter_57_0].base.id)
+					sendDebugMessage(G.playing_cards[iter_57_0].base.id, "SteamoddedAbsoluteDeck")
 
 					G.playing_cards[iter_57_0]:set_ability(G.P_CENTERS.m_glass)
 					G.playing_cards[iter_57_0]:set_edition({

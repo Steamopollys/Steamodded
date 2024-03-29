@@ -79,8 +79,8 @@ function SMODS.injectTarots()
 
 		-- Setup Localize text
 		G.localization.descriptions["Tarot"][tarot.slug] = tarot.loc_txt
-		sendDebugMessage("The Tarot named " .. tarot.name .. " with the slug " .. tarot.slug ..
-			" have been registered at the id " .. id .. ".")
+		sendInfoMessage("The Tarot named " .. tarot.name .. " with the slug " .. tarot.slug ..
+			" have been registered at the id " .. id .. ".", "SteamoddedTarot")
 	end
 	SMODS.BUFFERS.Tarots = {}
 end
@@ -153,8 +153,8 @@ end
 
 local generate_card_ui_ref = generate_card_ui
 function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)
-	sendDebugMessage(inspect(_c))
-    sendDebugMessage(inspect(full_UI_table))
+	sendDebugMessage(inspect(_c), "SteamoddedTarot")
+    sendDebugMessage(inspect(full_UI_table), "SteamoddedTarot")
 	local original_full_UI_table = full_UI_table
 	local original_main_end = main_end
 	local first_pass = nil
@@ -224,7 +224,7 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
     end
 
 	for _, v in ipairs(info_queue) do
-		sendDebugMessage(inspect(v))
+		sendDebugMessage(inspect(v), "SteamoddedTarot")
 		generate_card_ui(v, full_UI_table)
 	end
 	if next(loc_vars) or next(info_queue) then return full_UI_table end

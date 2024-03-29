@@ -10,7 +10,7 @@ function register_sound(name, path, filename)
 	s.original_volume = 0.75
 	s.sound_code = name
 
-	sendDebugMessage("Registered sound " .. name .. " from file " .. filename)
+	sendInfoMessage("Registered sound " .. name .. " from file " .. filename, "SteamoddedSound")
 	SMODS.SOUND_SOURCES[name] = s
 end
 
@@ -30,7 +30,7 @@ function modded_play_sound(sound_code, stop_previous_instance, volume, pitch)
             else
                 s.original_pitch = 1
             end
-            sendDebugMessage("found sound code: " .. sound_code)
+            sendDebugMessage("found sound code: " .. sound_code, "SteamoddedSound")
             s.sound:setPitch(pitch)
             local sound_vol = s.original_volume*(G.SETTINGS.SOUND.volume/100.0)*(G.SETTINGS.SOUND.game_sounds_volume/100.0)
             if sound_vol <= 0 then

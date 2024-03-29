@@ -77,12 +77,12 @@ end
 function SMODS.Card:new_suit(name, card_atlas_low_contrast, card_atlas_high_contrast, card_pos, ui_atlas_low_contrast,
 							 ui_atlas_high_contrast, ui_pos, colour_low_contrast, colour_high_contrast)
 	if SMODS.Card.SUITS[name] then
-		sendDebugMessage('Failed to register duplicate suit:' .. name)
+		sendErrorMessage('Failed to register duplicate suit:' .. name, "SteamoddedSuit")
 		return nil
 	end
 	local prefix = SMODS.Card.generate_prefix()
 	if not prefix then
-		sendDebugMessage('Too many suits! Failed to assign valid prefix to:' .. name)
+		sendErrorMessage('Too many suits! Failed to assign valid prefix to:' .. name, "SteamoddedSuit")
 	end
 	SMODS.Card.MAX_SUIT_NOMINAL = SMODS.Card.MAX_SUIT_NOMINAL + 0.01
 	SMODS.Card.SUITS[name] = {
@@ -124,12 +124,12 @@ end
 function SMODS.Card:new_rank(value, nominal, atlas_low_contrast, atlas_high_contrast, pos, suit_map, options)
 	options = options or {}
 	if SMODS.Card.RANKS[value] then
-		sendDebugMessage('Failed to register duplicate rank: ' .. value)
+		sendErrorMessage('Failed to register duplicate rank: ' .. value, "SteamoddedSuit")
 		return nil
 	end
 	local suffix = SMODS.Card:generate_suffix()
 	if not suffix then
-		sendDebugMessage('Too many ranks! Failed to assign valid suffix to: ' .. value)
+		sendErrorMessage('Too many ranks! Failed to assign valid suffix to: ' .. value, "SteamoddedSuit")
 		return nil
 	end
 	SMODS.Card.MAX_ID = SMODS.Card.MAX_ID + 1

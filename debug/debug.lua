@@ -9,10 +9,26 @@ function initializeSocketConnection()
 	end
 end
 
-function sendDebugMessage(message)
-	if client then
-		client:send(message .. "\n")
-	end
+-- message, logger in this order to preserve backward compatibility
+function sendDebugMessage(message, logger)
+    logger = logger or "DefaultLogger"
+	sendMessage("DEBUG", logger, message)
+end
+
+function sendInfoMessage(message, logger)
+	logger = logger or "DefaultLogger"
+	sendMessage("INFO", logger, message)
+end
+
+function sendErrorMessage(message, logger)
+    logger = logger or "DefaultLogger"
+	sendMessage("ERROR", logger, message)
+end
+
+function sendMessage(level, logger, message)
+    if client then
+        client:send(level .. " :: " .. logger .. " :: " .. message)
+    end
 end
 
 initializeSocketConnection()

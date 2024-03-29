@@ -14,11 +14,11 @@ if nfs_success then
     if lovely_success then
         SMODS.MODS_DIR = lovely.mod_dir
     else
-        sendDebugMessage("Error loading lovely library!")
+        sendErrorMessage("Error loading lovely library!", "SteamoddedLoader")
         SMODS.MODS_DIR = "Mods"
     end
 else
-    sendDebugMessage("Error loading nativefs library!")
+    sendErrorMessage("Error loading nativefs library!", "SteamoddedLoader")
     SMODS.MODS_DIR = "Mods"
     nativefs = love.filesystem
 end
@@ -51,7 +51,7 @@ function loadMods(modsDirectory)
                 -- Check the header lines using string.match
                 local headerLine, secondaryLine = fileContent:match("^(.-)\n(.-)\n")
                 if headerLine == "--- STEAMODDED HEADER" and secondaryLine == "--- SECONDARY MOD FILE" then
-                    sendDebugMessage("Skipping secondary mod file: " .. filename)
+                    sendInfoMessage("Skipping secondary mod file: " .. filename, "SteamoddedLoader")
                 elseif headerLine == "--- STEAMODDED HEADER" then
                     -- Extract individual components from the header
                     local modName, modID, modAuthorString, modDescription = fileContent:match("%-%-%- MOD_NAME: ([^\n]+)\n%-%-%- MOD_ID: ([^\n]+)\n%-%-%- MOD_AUTHOR: %[(.-)%]\n%-%-%- MOD_DESCRIPTION: ([^\n]+)")
@@ -60,9 +60,9 @@ function loadMods(modsDirectory)
 
                     -- Validate MOD_ID to ensure it doesn't contain spaces
                     if modID and string.find(modID, " ") then
-                        sendDebugMessage("Invalid mod ID: " .. modID)
+                        sendErrorMessage("Invalid mod ID: " .. modID, "SteamoddedLoader")
                     elseif modIDs[modID] then
-                        sendDebugMessage("Duplicate mod ID: " .. modID)
+                        sendErrorMessage("Duplicate mod ID: " .. modID, "SteamoddedLoader")
                     else
                         if modName and modID and modAuthorString and modDescription then
                             -- Parse MOD_AUTHOR array
@@ -87,7 +87,7 @@ function loadMods(modsDirectory)
                         end
                     end
                 else
-                    sendDebugMessage("Skipping non-Lua file or invalid header: " .. filename)
+                    sendInfoMessage("Skipping non-Lua file or invalid header: " .. filename, "SteamoddedLoader")
                 end
             end
         end
@@ -129,7 +129,7 @@ function initMods()
     table.sort(keyset)
     for _,k in ipairs(keyset) do
         for _, modName in ipairs(SMODS._INIT_PRIO_MAP[k]) do
-            sendDebugMessage("Launch Init Function for: " .. modName .. ".")
+            sendInfoMessage("Launch Init Function for: " .. modName .. ".", "SteamoddedLoader")
             SMODS.INIT[modName]()
         end
     end
@@ -139,7 +139,7 @@ function initSteamodded()
     injectStackTrace()
 	SMODS.MODS = loadMods(SMODS.MODS_DIR)
 
-	sendDebugMessage(inspectDepth(SMODS.MODS, 0, 0))
+	sendDebugMessage(inspectDepth(SMODS.MODS, 0, 0), "SteamoddedLoader")
 
     initGlobals()
 
@@ -159,7 +159,7 @@ function initSteamodded()
     SMODS.injectSeals()
     SMODS.LOAD_LOC()
     SMODS.SAVE_UNLOCKS()
-	sendDebugMessage(inspectDepth(G.P_CENTER_POOLS.Back))
+	sendDebugMessage(inspectDepth(G.P_CENTER_POOLS.Back), "SteamoddedLoader")
 end
 
 ----------------------------------------------

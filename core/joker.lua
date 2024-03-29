@@ -78,8 +78,8 @@ function SMODS.injectJokers()
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
-            sendDebugMessage(sprite.name)
-            sendDebugMessage(joker_obj.key)
+            sendInfoMessage(sprite.name)
+            sendInfoMessage(joker_obj.key)
             if sprite.name == joker_obj.key then
                 joker_obj.atlas = sprite.name
             end
@@ -93,8 +93,8 @@ function SMODS.injectJokers()
         -- Setup Localize text
         G.localization.descriptions["Joker"][slug] = joker.loc_txt
 
-        sendDebugMessage("The Joker named " .. joker.name .. " with the slug " .. joker.slug ..
-            " have been registered at the id " .. id .. ".")
+        sendInfoMessage("The Joker named " .. joker.name .. " with the slug " .. joker.slug ..
+            " have been registered at the id " .. id .. ".", "SteamoddedJoker")
     end
     SMODS.BUFFERS.Jokers = {}
 end

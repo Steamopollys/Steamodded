@@ -57,8 +57,8 @@ function SMODS.injectSeals()
         G.localization.descriptions.Other[seal.label] = seal.loc_txt
         G.localization.misc.labels[seal.label] = seal.full_name
 
-        sendDebugMessage("The Seal named " ..
-        seal.name .. " have been registered at the id " .. #G.P_CENTER_POOLS.Seal .. ".")
+        sendInfoMessage("The Seal named " ..
+        seal.name .. " have been registered at the id " .. #G.P_CENTER_POOLS.Seal .. ".", "SteamoddedSeal")
     end
     SMODS.BUFFERS.Seals = {}
 end

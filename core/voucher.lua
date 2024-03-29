@@ -66,8 +66,8 @@ function SMODS.injectVouchers()
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
-            sendDebugMessage(sprite.name)
-            sendDebugMessage(voucher_obj.key)
+            sendDebugMessage(sprite.name, "SteamoddedVoucher")
+            sendDebugMessage(voucher_obj.key, "SteamoddedVoucher")
             if sprite.name == voucher_obj.key then
                 voucher_obj.atlas = sprite.name
             end
@@ -80,8 +80,8 @@ function SMODS.injectVouchers()
         -- Setup Localize text
         G.localization.descriptions["Voucher"][voucher.slug] = voucher.loc_txt
 
-        sendDebugMessage("The Voucher named " .. voucher.name .. " with the slug " .. voucher.slug ..
-            " have been registered at the id " .. id .. ".")
+        sendInfoMessage("The Voucher named " .. voucher.name .. " with the slug " .. voucher.slug ..
+            " have been registered at the id " .. id .. ".", "SteamoddedVoucher")
     end
     SMODS.BUFFERS.Vouchers = {}
 end

@@ -29,7 +29,7 @@ function SMODS.INIT.JAPI()
     joker_test:register()
 
     SMODS.Jokers.j_test.effect = function(self, context)
-        sendDebugMessage("Hello !")
+        sendDebugMessage("Hello !", "SteamoddedJockerAPI.lua")
     end
 
     SMODS.Jokers.j_test.calculate = function(self, context)
