@@ -176,7 +176,14 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
     end
 	
     if not full_UI_table.name then
-        full_UI_table.name = localize{type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name}
+        if specific_vars and specific_vars.no_name then
+        elseif card_type == 'Locked' then
+        elseif card_type == 'Undiscovered' then 
+        elseif specific_vars and (card_type == 'Default' or card_type == 'Enhanced') then
+        elseif card_type == 'Booster' then
+        else
+            full_UI_table.name = localize{type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name}
+        end
 		full_UI_table.card_type = card_type or _c.set
 	end
 	
