@@ -19,7 +19,7 @@ jobs:
     - name: Install Nuitka and dependencies
       run: pip install -U nuitka==1.9.4 requests
     - name: Compile Python script to EXE
-      run: python -m nuitka --assume-yes-for-downloads --standalone --onefile --include-package=urllib3 --include-package=requests --include-data-dir=core=./core --include-data-dir=debug=./debug --include-data-dir=loader=./loader steamodded_injector.py
+      run: python -m nuitka --assume-yes-for-downloads --standalone --onefile --embed --include-package=urllib3 --include-package=requests --include-data-dir=core=./core --include-data-dir=debug=./debug --include-data-dir=loader=./loader steamodded_injector.py
     - name: Upload EXE to Artifacts
       uses: actions/upload-artifact@v3
       with:
