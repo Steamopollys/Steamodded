@@ -1,0 +1,27 @@
+name: Compile PS1 to EXE
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up PowerShell for Windows
+      uses: actions/setup-powershell@v1
+    - name: Install PS2EXE
+      run: |
+        Install-Module -Name ps2exe -Scope CurrentUser -Force
+        Import-Module ps2exe
+    - name: Compile PS1 script to EXE
+      run: |
+        Invoke-ps2exe -inputFile injector.ps1 -outputFile steamodded_PS_injector.exe
+    - name: Rename Files
+      run: Rename-Item -Path ./injector.ps1 -NewName steamodded_PS_injector.ps1
+    - name: Upload EXE to Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: compiled-exe
+        path: |
+          ./steamodded_PS_injector.exe
+          ./steamodded_PS_injector.ps1
