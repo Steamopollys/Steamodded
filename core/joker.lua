@@ -106,8 +106,8 @@ function Card.set_ability(self, center, initial, delay_sprites)
     -- Iterate over each object in SMODS.JKR_EFFECT
     for _k, obj in pairs(SMODS.Jokers) do
         --! CHANGED from effect due to overlap
-        if obj.set_ability and type(obj.set_ability) == "function" then
-            obj:set_ability(self, center, initial, delay_sprites)
+        if obj.set_ability and type(obj.set_ability) == "function" and obj.key == self.center.key then
+            obj.set_ability(self, center, initial, delay_sprites)
         end
     end
 end
@@ -118,8 +118,8 @@ function Card:calculate_joker(context)
 
     if self.ability.set == "Joker" and not self.debuff then
         for _k, obj in pairs(SMODS.Jokers) do
-            if obj.calculate and type(obj.calculate) == "function" then
-                local o = obj:calculate(self, context)
+            if obj.calculate and type(obj.calculate) == "function" and obj.key == self.center.key then
+                local o = obj.calculate(self, context)
                 if o then return o end
             end
         end
@@ -147,8 +147,8 @@ function Card:generate_UIBox_ability_table()
     elseif card_type == 'Default' or card_type == 'Enhanced' then
     elseif self.ability.set == 'Joker' then
         for _, v in pairs(SMODS.Jokers) do
-            if v.loc_def and type(v.loc_def) == 'function' then
-                local o, m = v:loc_def(self)
+            if v.loc_def and type(v.loc_def) == 'function' and v.key == self.center.key then
+                local o, m = v.loc_def(self)
                 if o and next(o) then loc_vars = o end
                 if m and next(m) then main_end = m end
             end

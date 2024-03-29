@@ -180,7 +180,7 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
     if not (card_type == 'Locked') and not hide_desc then
         if _c.set == 'Tarot' then
             for _, v in pairs(SMODS.Tarots) do
-                if v.loc_def and type(v.loc_def) == 'function' then
+                if v.loc_def and type(v.loc_def) == 'function' and _c.key == v.key then
                     local o, m = v:loc_def(_c, info_queue)
                     if o and next(o) then loc_vars = o end
                     if m then main_end = m end
@@ -189,7 +189,7 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
         end
         if _c.set == 'Spectral' then
             for _, v in pairs(SMODS.Spectrals) do
-                if v.loc_def and type(v.loc_def) == 'function' then
+                if v.loc_def and type(v.loc_def) == 'function' and _c.key == v.key then
                     local o, m = v:loc_def(_c, info_queue)
                     if o and next(o) then loc_vars = o end
                     if m then main_end = m end
@@ -198,7 +198,7 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
         end
         if _c.set == 'Voucher' then
             for _, v in pairs(SMODS.Vouchers) do
-                if v.loc_def and type(v.loc_def) == 'function' then
+                if v.loc_def and type(v.loc_def) == 'function' and _c.key == v.key then
                     local o, m = v:loc_def(_c, info_queue)
                     if o and next(o) then loc_vars = o end
                     if m then main_end = m end
