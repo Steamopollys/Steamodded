@@ -94,8 +94,8 @@ function Blind:set_blind(blind, reset, silent)
         self.children.animatedSprite.states = prev_anim.states
         self.children.animatedSprite.states.visible = prev_anim.states.visible
         self.children.animatedSprite.states.drag.can = prev_anim.states.drag.can
-        for _, v in pairs(SMODS.Blinds) do
-            if v.set and type(v.set) == 'function' and self.config.blind.key == v.key then
+        for _k, v in pairs(SMODS.Blinds) do
+            if v.set and type(v.set) == 'function' and self.config.blind.key == _k then
                 v.set(self, blind, reset, silent)
             end
         end
@@ -110,8 +110,8 @@ end
 
 local blind_disable_ref = Blind.disable
 function Blind:disable()
-    for _,v in pairs(SMODS.Blinds) do
-        if v.disable and type(v.disable) == 'function' and self.config.blind.key == v.key then
+    for _k,v in pairs(SMODS.Blinds) do
+        if v.disable and type(v.disable) == 'function' and self.config.blind.key == _k then
             v.disable(self)
         end
     end
@@ -120,8 +120,8 @@ end
 
 local blind_defeat_ref = Blind.defeat
 function Blind:defeat(silent)
-    for _,v in pairs(SMODS.Blinds) do
-        if v.defeat and type(v.defeat) == 'function' and self.config.blind.key == v.key then
+    for _k,v in pairs(SMODS.Blinds) do
+        if v.defeat and type(v.defeat) == 'function' and self.config.blind.key == _k then
             v.defeat(self, silent)
         end
     end
