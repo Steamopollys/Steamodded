@@ -14,6 +14,59 @@ log_levels = {
 }
 
 
+# might or might not be a copy paste from https://stackoverflow.com/a/16375233
+class TextLineNumbers(tk.Canvas):
+    def __init__(self, *args, **kwargs):
+        tk.Canvas.__init__(self, *args, **kwargs, highlightthickness=0)
+        self.textwidget = None
+
+    def attach(self, text_widget):
+        self.textwidget = text_widget
+
+    def redraw(self, *args):
+        '''redraw line numbers'''
+        self.delete("all")
+
+        i = self.textwidget.index("@0,0")
+        while True:
+            dline = self.textwidget.dlineinfo(i)
+            if dline is None:
+                break
+            y = dline[1]
+            linenum = str(i).split(".")[0]
+            self.create_text(2, y, anchor="nw", text=linenum, fill="#606366")
+            i = self.textwidget.index("%s+1line" % i)
+
+
+class CustomText(tk.Text):
+    def __init__(self, *args, **kwargs):
+        tk.Text.__init__(self, *args, **kwargs)
+
+        # create a proxy for the underlying widget
+        self._orig = self._w + "_orig"
+        self.tk.call("rename", self._w, self._orig)
+        self.tk.createcommand(self._w, self._proxy)
+
+    def _proxy(self, *args):
+        # let the actual widget perform the requested action
+        cmd = (self._orig,) + args
+        result = self.tk.call(cmd)
+
+        # generate an event if something was added or deleted,
+        # or the cursor position changed
+        if (args[0] in ("insert", "replace", "delete") or
+                args[0:3] == ("mark", "set", "insert") or
+                args[0:2] == ("xview", "moveto") or
+                args[0:2] == ("xview", "scroll") or
+                args[0:2] == ("yview", "moveto") or
+                args[0:2] == ("yview", "scroll")
+        ):
+            self.event_generate("<<Change>>", when="tail")
+
+        # return what the actual widget returned
+        return result
+
+
 class Log:
     def __init__(self, log: str):
         self.timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
@@ -156,7 +209,11 @@ class Console(tk.Frame):
         self.all_logs = []
         self.shown_logs = []
         self.option_frame = option_frame
-        self.text_widget = tk.Text(self)
+        self.text_widget = CustomText(self)
+        self.linenumbers = TextLineNumbers(self, width=30)
+        self.linenumbers.attach(self.text_widget)
+        self.text_widget.bind("<<Change>>", self._on_change)
+        self.text_widget.bind("<Configure>", self._on_change)
         self.scrollbar = tk.Scrollbar(self, command=self.text_widget.yview)
         self.global_search_str = ""
         self.logger_name = ""
@@ -164,9 +221,13 @@ class Console(tk.Frame):
         self.and_above = True
         self.create_widgets()
 
+    def _on_change(self, event):
+        self.linenumbers.redraw()
+
     def create_widgets(self):
-        self.text_widget.pack(side=tk.LEFT, expand=True, fill='both')
         self.scrollbar.pack(side=tk.RIGHT, fill='y')
+        self.linenumbers.pack(side=tk.LEFT, fill="y")
+        self.text_widget.pack(side=tk.LEFT, expand=True, fill='both')
         self.text_widget.config(yscrollcommand=self.scrollbar.set)
 
     def set_filter(
@@ -208,6 +269,7 @@ class Console(tk.Frame):
             self.text_widget.insert(tk.END, str(log_obj))
             if at_end:
                 self.text_widget.see(tk.END)
+        self.apply_filters()
 
     def clear_logs(self):
         self.text_widget.delete('1.0', tk.END)
@@ -268,7 +330,8 @@ class Console(tk.Frame):
             start = match_end
 
         self.text_widget.tag_config('found', background='yellow')
-        if at_end := self.text_widget.yview()[1] == 1.0:
+        at_end = self.text_widget.yview()[1] == 1.0
+        if at_end:
             first_occurrence = self.text_widget.tag_ranges('found')
             if first_occurrence:
                 self.text_widget.see(first_occurrence[0])
