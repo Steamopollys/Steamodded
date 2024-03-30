@@ -94,8 +94,8 @@ class OptionsFrame(tk.Frame):
         self.specific_search_frame.inject_console(console)
 
     def create_widgets(self):
-        self.global_search_frame.pack()
-        self.specific_search_frame.pack()
+        self.global_search_frame.pack(side=tk.TOP, fill='x', expand=True)
+        self.specific_search_frame.pack(side=tk.BOTTOM, fill='x', expand=True)
 
 
 class GlobalSearchFrame(tk.Frame):
@@ -118,13 +118,24 @@ class GlobalSearchFrame(tk.Frame):
         self.search_entry.bind('<Escape>', lambda event: self.console.text_widget.focus())
         self.search_entry.config(fg='grey')
 
+        self.search_modes = []
+        self.search_mode_var = tk.StringVar(value='normal')
+        self.search_mode_var.trace("w", self.apply_search_mode)
+        for mode, text in [('normal', 'normal'), ('match_case', 'match case'), ('regex', 'regex')]:
+            self.search_modes.append(tk.Radiobutton(self, text=text, variable=self.search_mode_var, value=mode))
+
         self.create_widgets()
+
+    def apply_search_mode(self, *args):
+        self.console.set_filter(global_search_mode=self.search_mode_var.get())
 
     def inject_console(self, console):
         self.console = console
 
     def create_widgets(self):
-        self.search_entry.pack()
+        self.search_entry.pack(side=tk.LEFT, fill='x', expand=True, padx=(5, 0))
+        for mode in self.search_modes:
+            mode.pack(side=tk.LEFT, padx=(5, 0))
 
     def on_entry_changed(self, *args):
         if self.after_id:
@@ -139,6 +150,7 @@ class GlobalSearchFrame(tk.Frame):
 class Console(tk.Frame):
     def __init__(self, parent, option_frame: OptionsFrame):
         super().__init__(parent)
+        self.global_search_mode = "normal"
         self.all_logs = []
         self.shown_logs = []
         self.option_frame = option_frame
@@ -158,6 +170,7 @@ class Console(tk.Frame):
     def set_filter(
             self,
             global_search_str: str = None,
+            global_search_mode: str = None,
             logger_name: str = None,
             log_level: str = None,
             and_above: bool = None
@@ -171,6 +184,9 @@ class Console(tk.Frame):
             self.logger_name = logger_name
         elif logger_name is None or not self.option_frame.specific_search_frame.logger_entry.user_has_interacted:
             self.logger_name = ""
+
+        if global_search_mode is not None:
+            self.global_search_mode = global_search_mode
 
         if log_level is not None:
             self.log_level = log_level
@@ -223,6 +239,12 @@ class Console(tk.Frame):
             self.text_widget.insert(tk.END, str(log))
         if at_end:
             self.text_widget.see(tk.END)
+
+        if self.global_search_str:
+            self.search_text()
+
+    def search_text(self):
+        pass
 
 
 class SpecificSearchFrame(tk.Frame):
@@ -280,12 +302,12 @@ class SpecificSearchFrame(tk.Frame):
             text="Clear Logs",
             command=self.console.clear_logs
         )
-        self.clear_log_button.pack()
+        self.clear_log_button.pack(side=tk.RIGHT, padx=(5, 0), fill='x', expand=True)
 
     def create_widgets(self):
-        self.logger_entry.pack()
-        self.log_level_dropdown.pack()
-        self.and_above_checkbox.pack()
+        self.logger_entry.pack(side=tk.LEFT, fill='x', expand=True, padx=(5, 0))
+        self.log_level_dropdown.pack(side=tk.LEFT, padx=(5, 0), fill='x', expand=True)
+        self.and_above_checkbox.pack(side=tk.LEFT, padx=(5, 0), fill='x', expand=True)
 
     def on_entry_changed(self, *args):
         if self.after_id:
@@ -310,8 +332,8 @@ class MainWindow(tk.Tk):
         self.bind('<Control-F>', self.focus_search)
 
     def create_widgets(self):
-        self.console.pack(expand=True, fill='both')
-        self.options_frame.pack()
+        self.console.pack(side=tk.TOP,expand=True, fill='both')
+        self.options_frame.pack(side=tk.BOTTOM, fill='x', expand=False)
 
     def get_console(self):
         return self.console
