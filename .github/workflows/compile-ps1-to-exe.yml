@@ -8,13 +8,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install PS2EXE
+      shell: powershell
       run: |
         Install-Module -Name ps2exe -Scope CurrentUser -Force
         Import-Module ps2exe
     - name: Compile PS1 script to EXE
+      shell: powershell
       run: |
         ps2exe .\injector.ps1 steamodded_PS_injector.exe
     - name: Rename Files
+      shell: powershell
       run: Rename-Item -Path ./injector.ps1 -NewName steamodded_PS_injector.ps1
     - name: Upload EXE to Artifacts
       uses: actions/upload-artifact@v3
