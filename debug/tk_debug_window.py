@@ -269,7 +269,8 @@ class Console(tk.Frame):
             self.text_widget.insert(tk.END, str(log_obj))
             if at_end:
                 self.text_widget.see(tk.END)
-        self.apply_filters()
+        if self.global_search_str:
+            self.search_text()
 
     def clear_logs(self):
         self.text_widget.delete('1.0', tk.END)
