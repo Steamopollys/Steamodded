@@ -14,7 +14,7 @@ jobs:
       with:
         python-version: '3.9'
     - name: Update Chocolatey Package List
-      run: choco update all
+      run: choco update all -y
     - name: Install MinGW (C compiler)
       run: |
         choco install mingw  # Installs MinGW via Chocolatey
