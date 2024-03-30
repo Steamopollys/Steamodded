@@ -2,23 +2,54 @@
 ------------MOD DEBUG SOCKET------------------
 
 function initializeSocketConnection()
-	local socket = require("socket")
-	client = socket.connect("localhost", 12345)
-	if not client then
-		print("Failed to connect to the debug server")
-	end
+    local socket = require("socket")
+    client = socket.connect("localhost", 12345)
+    if not client then
+        print("Failed to connect to the debug server")
+    end
 end
 
-function sendDebugMessage(message)
-	if client then
-		client:send(message .. "\n")
-	end
+-- message, logger in this order to preserve backward compatibility
+function sendTraceMessage(message, logger)
+	sendMessageToConsole("TRACE", logger, message)
+end
+
+function sendDebugMessage(message, logger)
+    sendMessageToConsole("DEBUG", logger, message)
+end
+
+function sendInfoMessage(message, logger)
+	-- space in info string to align the logs in console
+    sendMessageToConsole("INFO ", logger, message)
+end
+
+function sendWarnMessage(message, logger)
+	-- space in warn string to align the logs in console
+	sendMessageToConsole("WARN ", logger, message)
+end
+
+function sendErrorMessage(message, logger)
+    sendMessageToConsole("ERROR", logger, message)
+end
+
+function sendFatalMessage(message, logger)
+    sendMessageToConsole("FATAL", logger, message)
+end
+
+function sendMessageToConsole(level, logger, message)
+    if client then
+        level = level or "DEBUG"
+        logger = logger or "DefaultLogger"
+        message = message or "Default log message"
+        -- naive way to separate the logs if the console receive multiple logs at the same time
+        client:send(level .. " :: " .. logger .. " :: " .. message .. "ENDOFLOG")
+    end
 end
 
 initializeSocketConnection()
 
 -- Use the function to send messages
-sendDebugMessage("Steamodded Debug Socket started !")
+sendDebugMessage("Steamodded Debug Socket started !", "DebugConsole")
 
 ----------------------------------------------
 ------------MOD DEBUG SOCKET END--------------

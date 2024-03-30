@@ -101,8 +101,8 @@ function SMODS.injectSprites()
         else
             error("Bad Sprite type")
         end
-		
-		sendDebugMessage("The Sprite named " .. sprite.name .. " with path " .. sprite.path .. " have been registered.")
+
+        sendDebugMessage("The Sprite named " .. sprite.name .. " with path " .. sprite.path .. " have been registered.")
 	end
 
     --Reload Textures

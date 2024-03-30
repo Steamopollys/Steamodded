@@ -10,7 +10,7 @@ function register_sound(name, path, filename)
 	s.original_volume = 0.75
 	s.sound_code = name
 
-	sendDebugMessage("Registered sound " .. name .. " from file " .. filename)
+    sendDebugMessage("Registered sound " .. name .. " from file " .. filename)
 	SMODS.SOUND_SOURCES[name] = s
 end
 

@@ -1,6 +1,7 @@
 import tkinter as tk
 import socket
 import threading
+from datetime import datetime
 
 
 def client_handler(client_socket):
@@ -8,8 +9,13 @@ def client_handler(client_socket):
         data = client_socket.recv(1024)
         if not data:
             break
-        text_widget.insert(tk.END, data.decode() + '\n')
-        text_widget.see(tk.END)
+
+        decoded_data = data.decode()
+        logs = decoded_data.split("ENDOFLOG")
+        for log in logs:
+            if log:
+                text_widget.insert(tk.END, datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " :: " + log + '\n')
+                text_widget.see(tk.END)
 
 
 def listen_for_clients():
@@ -21,7 +27,7 @@ def listen_for_clients():
         threading.Thread(target=client_handler, args=(client,)).start()
 
 
-def on_search_entry_change(varName, index, mode):
+def on_search_entry_change(var_name, index, mode):
     global search_after_id
     if search_after_id:
         root.after_cancel(search_after_id)
