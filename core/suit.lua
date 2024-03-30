@@ -47,9 +47,26 @@ SMODS.Card.RANKS = {
 SMODS.Card.RANK_LIST = { '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A' }
 SMODS.Card.MAX_ID = 14
 function SMODS.Card.generate_prefix()
+	local permutations
+    permutations = function(list, len)
+		len = len or 2
+        if len <= 1 then return list end
+		local t = permutations(list, len-1)
+        local o = {}
+		for _,a in ipairs(list) do
+			for _,b in ipairs(t) do
+				table.insert(o, a..b)
+			end
+		end
+		return o
+	end
 	local possible_prefixes = { 'A', 'B', 'E', 'F', 'G', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'T', 'U', 'V',
 		'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
 		't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9' }
+	local perm = permutations(possible_prefixes, 2)
+	for _,a in ipairs(perm) do
+		table.insert(possible_prefixes, a)
+	end
 	for _, v in pairs(SMODS.Card.SUITS) do
 		for i, vv in ipairs(possible_prefixes) do
 			if v.prefix == vv then
@@ -61,9 +78,25 @@ function SMODS.Card.generate_prefix()
 end
 
 function SMODS.Card.generate_suffix()
+	local permutations
+    permutations = function(list, len)
+		len = len or 2
+        if len <= 1 then return list end
+		local t = permutations(list, len-1)
+        local o = {}
+		for _,a in ipairs(list) do
+			for _,b in ipairs(t) do
+				table.insert(o, a..b)
+			end
+		end
+		return o
+	end
 	local possible_suffixes = { 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V',
 		'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
-		't', 'u', 'v', 'w', 'x', 'y', 'z' }
+        't', 'u', 'v', 'w', 'x', 'y', 'z' }
+		for _,a in permutations(possible_suffixes, 2) do
+			table.insert(possible_suffixes, a)
+		end
 	for _, v in pairs(SMODS.Card.RANKS) do
 		for i, vv in ipairs(possible_suffixes) do
 			if v.suffix == vv then
@@ -201,8 +234,8 @@ function SMODS.Card:new(suit, value, name, pos, atlas_low_contrast, atlas_high_c
         suit = suit,
         value = value,
         pos = pos or { x = rank_data.pos.x, y = suit_data.card_pos.y },
-        atlas_low_contrast = atlas_low_contrast or rank_data.atlas_low_contrast or suit_data.atlas_low_contrast,
-        atlas_high_contrast = atlas_high_contrast or rank_data.atlas_high_contrast or suit_data.atlas_high_contrast
+        card_atlas_low_contrast = atlas_low_contrast or rank_data.atlas_low_contrast or suit_data.atlas_low_contrast,
+        card_atlas_high_contrast = atlas_high_contrast or rank_data.atlas_high_contrast or suit_data.atlas_high_contrast
     }
     return G.P_CARDS[suit_data.prefix .. '_' .. (rank_data.suffix or rank_data.value)]
 end
@@ -683,8 +716,10 @@ function SMODS.Card:_extend()
 
 			if not card_protos then
 				card_protos = {}
-				for k, v in pairs(G.P_CARDS) do
-					local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)
+                for k, v in pairs(G.P_CARDS) do
+					local rank_data = SMODS.Card.RANKS[v.value]
+					local suit_data = SMODS.Card.SUITS[v.suit]
+					local _r, _s = (rank_data.suffix or rank_data.value), suit_data.prefix
 					local keep, _e, _d, _g = true, nil, nil, nil
 					if _de then
 						if _de.yes_ranks and not _de.yes_ranks[_r] then keep = false end

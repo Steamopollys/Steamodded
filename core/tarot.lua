@@ -153,40 +153,28 @@ end
 
 local generate_card_ui_ref = generate_card_ui
 function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)
-	local original_full_UI_table = full_UI_table
-	local original_main_end = main_end
-	local first_pass = nil
-	if not full_UI_table then
-		first_pass = true
-		full_UI_table = {
-			main = {},
-			info = {},
-			type = {},
-			name = nil,
-			badges = badges or {}
-		}
-	end
+    local original_full_UI_table = full_UI_table
+    local original_main_end = main_end
+    local first_pass = nil
+    if not full_UI_table then
+        first_pass = true
+        full_UI_table = {
+            main = {},
+            info = {},
+            type = {},
+            name = nil,
+            badges = badges or {}
+        }
+    end
 
-	local desc_nodes = (not full_UI_table.name and full_UI_table.main) or full_UI_table.info
-	local name_override = nil
-	local info_queue = {}
-	local loc_vars = {}
+    local desc_nodes = (not full_UI_table.name and full_UI_table.main) or full_UI_table.info
+    local name_override = nil
+    local info_queue = {}
+    local loc_vars = {}
     if main_start then
         desc_nodes[#desc_nodes + 1] = main_start
     end
-	
-    if not full_UI_table.name then
-        if specific_vars and specific_vars.no_name then
-        elseif card_type == 'Locked' then
-        elseif card_type == 'Undiscovered' then 
-        elseif specific_vars and (card_type == 'Default' or card_type == 'Enhanced') then
-        elseif card_type == 'Booster' then
-        else
-            full_UI_table.name = localize{type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name}
-        end
-		full_UI_table.card_type = card_type or _c.set
-	end
-	
+    
     if not (card_type == 'Locked') and not hide_desc then
         if _c.set == 'Tarot' then
             for _k, v in pairs(SMODS.Tarots) do
@@ -217,29 +205,31 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
         end
     end
 
-	if first_pass and not (_c.set == 'Edition') and badges and next(badges) then
-		for _, v in ipairs(badges) do
-			for k, _ in pairs(SMODS.Seals) do
-				if k == v then info_queue[#info_queue + 1] = { key = v, set = 'Other' } end
-			end
-		end
-	end
+    if first_pass and not (_c.set == 'Edition') and badges and next(badges) then
+        for _, v in ipairs(badges) do
+            for k, _ in pairs(SMODS.Seals) do
+                if k == v then info_queue[#info_queue + 1] = { key = v, set = 'Other' } end
+            end
+        end
+    end
 
     if next(loc_vars) then
+        full_UI_table.name = localize { type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name }
+        full_UI_table.card_type = card_type or _c.set
         localize { type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars }
     end
-
-    if main_end then
-        desc_nodes[#desc_nodes + 1] = main_end
-    end
-
-	for _, v in ipairs(info_queue) do
-		sendDebugMessage(inspect(v))
-		generate_card_ui(v, full_UI_table)
+	
+	if main_end then
+		desc_nodes[#desc_nodes + 1] = main_end
 	end
-	if next(loc_vars) or next(info_queue) then return full_UI_table end
-	return generate_card_ui_ref(_c, original_full_UI_table, specific_vars, card_type, badges, hide_desc, main_start,
-		original_main_end)
+
+    for _, v in ipairs(info_queue) do
+        sendDebugMessage(inspect(v))
+        generate_card_ui(v, full_UI_table)
+    end
+    if next(loc_vars) or next(info_queue) then return full_UI_table end
+    return generate_card_ui_ref(_c, original_full_UI_table, specific_vars, card_type, badges, hide_desc, main_start,
+        original_main_end)
 end
 
 local card_use_consumeable_ref = Card.use_consumeable
