@@ -7,17 +7,17 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Verify GCC Version
-      run: gcc --version
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-    - name: Update Chocolatey Package List
+    - name: Upgrade Chocolatey
       run: choco upgrade all -y
     - name: Install MinGW (C compiler)
       run: |
         choco install mingw  # Installs MinGW via Chocolatey
+    - name: Verify GCC Version
+      run: gcc --version
     - name: Install Nuitka and dependencies
       run: pip install -U nuitka==1.9.4 requests
     - name: Compile Python script to EXE

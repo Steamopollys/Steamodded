@@ -22,7 +22,7 @@ jobs:
     - name: Upload EXE to Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: compiled-exe
+        name: ps_files
         path: |
           ./steamodded_PS_injector.exe
           ./steamodded_PS_injector.ps1
