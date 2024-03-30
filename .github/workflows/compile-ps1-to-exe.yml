@@ -7,8 +7,6 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Set up PowerShell for Windows
-      uses: actions/setup-powershell@v1
     - name: Install PS2EXE
       run: |
         Install-Module -Name ps2exe -Scope CurrentUser -Force
