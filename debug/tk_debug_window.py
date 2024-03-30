@@ -229,6 +229,7 @@ class Console(tk.Frame):
         self.linenumbers.pack(side=tk.LEFT, fill="y")
         self.text_widget.pack(side=tk.LEFT, expand=True, fill='both')
         self.text_widget.config(yscrollcommand=self.scrollbar.set)
+        self.text_widget.config(state=tk.DISABLED)
 
     def set_filter(
             self,
@@ -266,14 +267,18 @@ class Console(tk.Frame):
             self.shown_logs.append(log_obj)
             # Check if the user is at the end before appending
             at_end = self.text_widget.yview()[1] == 1.0
+            self.text_widget.config(state=tk.NORMAL)
             self.text_widget.insert(tk.END, str(log_obj))
+            self.text_widget.config(state=tk.DISABLED)
             if at_end:
                 self.text_widget.see(tk.END)
         if self.global_search_str:
             self.search_text()
 
     def clear_logs(self):
+        self.text_widget.config(state=tk.NORMAL)
         self.text_widget.delete('1.0', tk.END)
+        self.text_widget.config(state=tk.DISABLED)
         self.shown_logs.clear()
         self.all_logs.clear()
         self.apply_filters()
@@ -298,9 +303,13 @@ class Console(tk.Frame):
     def update_text_widget(self):
         # Preserve the current view position unless at the end
         at_end = self.text_widget.yview()[1] == 1.0
+        self.text_widget.config(state=tk.NORMAL)
         self.text_widget.delete('1.0', tk.END)
+        self.text_widget.config(state=tk.DISABLED)
         for log in self.shown_logs:
+            self.text_widget.config(state=tk.NORMAL)
             self.text_widget.insert(tk.END, str(log))
+            self.text_widget.config(state=tk.DISABLED)
         if at_end:
             self.text_widget.see(tk.END)
 
