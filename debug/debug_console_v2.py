@@ -1,3 +1,4 @@
+import re
 import socket
 import threading
 import tkinter as tk
@@ -136,6 +137,7 @@ class GlobalSearchFrame(tk.Frame):
         self.search_entry.pack(side=tk.LEFT, fill='x', expand=True, padx=(5, 0))
         for mode in self.search_modes:
             mode.pack(side=tk.LEFT, padx=(5, 0))
+        self.search_entry.bind('<Return>', lambda event: self.console.next_occurrence())
 
     def on_entry_changed(self, *args):
         if self.after_id:
@@ -216,9 +218,8 @@ class Console(tk.Frame):
     def apply_filters(self):
         # Re-filter all logs and update the text widget only if necessary
         filtered_logs = [log for log in self.all_logs if self.filter_log(log)]
-        if filtered_logs != self.shown_logs:
-            self.shown_logs = filtered_logs
-            self.update_text_widget()
+        self.shown_logs = filtered_logs
+        self.update_text_widget()
 
     def filter_log(self, log):
         if self.and_above:
@@ -244,7 +245,72 @@ class Console(tk.Frame):
             self.search_text()
 
     def search_text(self):
-        pass
+        self.text_widget.tag_remove('found', '1.0', tk.END)
+        search_query = self.global_search_str.strip()
+        if not search_query:
+            return
+
+        if self.global_search_mode == 'match_case':
+            pattern = re.escape(search_query)
+        elif self.global_search_mode == 'regex':
+            # Directly use the user input for regex, but be cautious of Tkinter's limited regex support
+            pattern = search_query
+        else:  # normal mode, make it case-insensitive
+            pattern = '(?i)' + re.escape(search_query)  # Add (?i) for case-insensitive search in Tkinter
+
+        start = '1.0'
+        while True:
+            match_start = self.text_widget.search(pattern, start, tk.END, regexp=True)
+            if not match_start:
+                break
+            match_end = f"{match_start}+{len(search_query)}c"
+            self.text_widget.tag_add('found', match_start, match_end)
+            start = match_end
+
+        self.text_widget.tag_config('found', background='yellow')
+        if at_end := self.text_widget.yview()[1] == 1.0:
+            first_occurrence = self.text_widget.tag_ranges('found')
+            if first_occurrence:
+                self.text_widget.see(first_occurrence[0])
+                self.next_occurrence()
+
+    def next_occurrence(self):
+        current_tags = self.text_widget.tag_ranges('found')
+        if not current_tags:
+            return
+
+        # Ensure the 'current_found' tag exists with a blue background.
+        self.text_widget.tag_config('current_found', background='#ADD8E6')
+
+        # Get the current position of the cursor in the text widget.
+        cursor_index = self.text_widget.index(tk.INSERT)
+
+        # Remove the 'current_found' tag from the entire text widget.
+        self.text_widget.tag_remove('current_found', '1.0', tk.END)
+
+        # Convert the current cursor index to a comparable value.
+        cursor_line, cursor_char = map(int, cursor_index.split('.'))
+
+        for i in range(0, len(current_tags), 2):
+            tag_start = current_tags[i]
+            tag_end = current_tags[i + 1]
+
+            # Convert tag start index to comparable values.
+            tag_start_line, tag_start_char = map(int, str(tag_start).split('.'))
+
+            # Check if the tag start is greater than the cursor position.
+            if tag_start_line > cursor_line or (tag_start_line == cursor_line and tag_start_char > cursor_char):
+                self.text_widget.mark_set(tk.INSERT, tag_start)
+                self.text_widget.see(tag_start)
+
+                # Apply the 'current_found' tag to the current occurrence.
+                self.text_widget.tag_add('current_found', tag_start, tag_end)
+                break
+        else:
+            # Wrap to the first tag if no next tag is found.
+            self.text_widget.mark_set(tk.INSERT, str(current_tags[0]))
+            self.text_widget.see(str(current_tags[0]))
+            self.text_widget.tag_add('current_found', current_tags[0], current_tags[1])
 
 
 class SpecificSearchFrame(tk.Frame):
@@ -332,7 +398,7 @@ class MainWindow(tk.Tk):
         self.bind('<Control-F>', self.focus_search)
 
     def create_widgets(self):
-        self.console.pack(side=tk.TOP,expand=True, fill='both')
+        self.console.pack(side=tk.TOP, expand=True, fill='both')
         self.options_frame.pack(side=tk.BOTTOM, fill='x', expand=False)
 
     def get_console(self):
