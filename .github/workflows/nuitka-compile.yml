@@ -27,5 +27,5 @@ jobs:
       with:
         name: steamodded_injector
         path: |
-          ./steamodded_injector.dist/steamodded_injector.exe
+          ./steamodded_injector.dist/*
           out.xml
