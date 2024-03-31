@@ -5,6 +5,8 @@ on: [push]
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      CC: gcc
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
