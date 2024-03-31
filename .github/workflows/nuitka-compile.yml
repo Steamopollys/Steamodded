@@ -19,7 +19,7 @@ jobs:
     - name: Verify GCC Version
       run: gcc --version
     - name: Install Nuitka and dependencies
-      run: pip install --force-reinstall nuitka==1.9.4 requests socket
+      run: pip install --force-reinstall nuitka==1.9.4 requests urllib3
     - name: Compile Python script to EXE
       run: python -m nuitka --assume-yes-for-downloads --standalone --onefile --include-package=urllib3 --include-package=requests --include-data-dir=core=./core --include-data-dir=debug=./debug --include-data-dir=loader=./loader steamodded_injector.py
     - name: Upload EXE to Artifacts
