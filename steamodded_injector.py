@@ -5,7 +5,6 @@ import tempfile
 import zipfile
 import shutil
 import platform
-import _socket
 import requests
 
 def download_file(url, output_path):
