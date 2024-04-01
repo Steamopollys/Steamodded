@@ -15,11 +15,11 @@ jobs:
       - name: Detect version change
         id: detect-version-change
         run: |
-          echo "version_changed=$(git diff HEAD^ HEAD -- manifest.json | grep -q '"version_number":' && echo "true" || echo "false")" >> $GITHUB_ENV
+          echo ::set-output name=version_changed::$(git diff HEAD^ HEAD -- manifest.json | grep -q '"version_number":' && echo "true" || echo "false")
 
   bump-and-tag-version:
     needs: check-version-change
-    if: env.version_changed == 'true'
+    if: needs.check-version-change.outputs.version_changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -62,11 +62,11 @@ jobs:
       - name: Commit and push if changed
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "Automatically bump version to ${{ steps.bump-version.outputs.version_number }}"
+          commit_message: "Automatically bump version to ${{ needs.bump-and-tag-version.outputs.version_number }}"
           file_pattern: core/core.lua injector.ps1
 
       - name: Create and push tag
         if: steps.bump-version.outputs.version_number
         run: |
-          git tag ${{ steps.bump-version.outputs.version_number }}
-          git push origin ${{ steps.bump-version.outputs.version_number }}
+          git tag ${{ needs.bump-and-tag-version.outputs.version_number }}
+          git push origin ${{ needs.bump-and-tag-version.outputs.version_number }}
