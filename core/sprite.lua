@@ -213,6 +213,10 @@ function Card:set_sprites(_center, _front)
                     (_center.set == 'Voucher' and G.v_undiscovered.pos) or 
                     (_center.set == 'Booster' and G.booster_undiscovered.pos))
                 end
+                if _center.soul_pos then
+                    self.children.floating_sprite.atlas = G.ASSET_ATLAS[_center.atlas or _center.set]
+                    self.children.floating_sprite:set_pos(_center.soul_pos)
+                end
             end
         end
     end

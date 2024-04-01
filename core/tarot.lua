@@ -32,7 +32,7 @@ function SMODS.Tarot:new(name, slug, config, pos, loc_txt, cost, cost_mult, effe
 	o.effect = effect or ""
 	o.cost_mult = cost_mult or 1.0
 	o.atlas = atlas
-    o.mod_name = SMODS._MOD_NAME
+	o.mod_name = SMODS._MOD_NAME
 	o.badge_colour = SMODS._BADGE_COLOUR
 	return o
 end
@@ -67,7 +67,7 @@ function SMODS.injectTarots()
 			effect = tarot.effect,
 			cost_mult = tarot.cost_mult,
 			atlas = tarot.atlas,
-            mod_name = tarot.mod_name,
+			mod_name = tarot.mod_name,
 			badge_colour = tarot.badge_colour
 		}
 
@@ -173,19 +173,19 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
 
 	local desc_nodes = (not full_UI_table.name and full_UI_table.main) or full_UI_table.info
 	local name_override = nil
-    local info_queue = {}
-	
+	local info_queue = {}
+
 	local loc_vars = {}
 
 	if not (card_type == 'Locked') and not hide_desc and not (specific_vars and specific_vars.debuffed) then
 		local key = _c.key
 		local center_obj = SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key] or SMODS.Vouchers[key]
-        if center_obj and center_obj.loc_def and type(center_obj.loc_def) == 'function' then
-            local o, m = center_obj.loc_def(_c, info_queue)
-            if o and next(o) then loc_vars = o end
-            if m then main_end = m end
-        end
-        local joker_obj = SMODS.Jokers[key]
+		if center_obj and center_obj.loc_def and type(center_obj.loc_def) == 'function' then
+			local o, m = center_obj.loc_def(_c, info_queue)
+			if o and next(o) then loc_vars = o end
+			if m then main_end = m end
+		end
+		local joker_obj = SMODS.Jokers[key]
 		if joker_obj and joker_obj.tooltip and type(joker_obj.tooltip) == 'function' then
 			joker_obj.tooltip(_c, info_queue)
 		end
@@ -197,37 +197,62 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
 		end
 	end
 
-    if next(loc_vars) then
+	if next(loc_vars) or next(info_queue) then
 		if full_UI_table.name then
 			full_UI_table.info[#full_UI_table.info + 1] = {}
 			desc_nodes = full_UI_table.info[#full_UI_table.info]
 		end
-        if not full_UI_table.name then
-            full_UI_table.name = localize { type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name }
-            full_UI_table.card_type = card_type or _c.set
-        end
-        if main_start then
-            desc_nodes[#desc_nodes + 1] = main_start
-        end
-        localize { type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars }
-		if not ((specific_vars and not specific_vars.sticker) and (card_type == 'Default' or card_type == 'Enhanced')) then
-			if desc_nodes == full_UI_table.main and not full_UI_table.name then
-				localize{type = 'name', key = _c.key, set = _c.set, nodes = full_UI_table.name} 
-				if not full_UI_table.name then full_UI_table.name = {} end
-			elseif desc_nodes ~= full_UI_table.main then 
-				desc_nodes.name = localize{type = 'name_text', key = name_override or _c.key, set = name_override and 'Other' or _c.set} 
+		if not full_UI_table.name then
+			if specific_vars and specific_vars.no_name then
+				full_UI_table.name = true
+			elseif card_type == 'Locked' then
+				full_UI_table.name = localize { type = 'name', set = 'Other', key = 'locked', nodes = {} }
+			elseif card_type == 'Undiscovered' then
+				full_UI_table.name = localize { type = 'name', set = 'Other', key = 'undiscovered_' .. (string.lower(_c.set)), name_nodes = {} }
+			elseif specific_vars and (card_type == 'Default' or card_type == 'Enhanced') then
+				if (_c.name == 'Stone Card') then full_UI_table.name = true end
+				if (specific_vars.playing_card and (_c.name ~= 'Stone Card')) then
+					full_UI_table.name = {}
+					localize { type = 'other', key = 'playing_card', set = 'Other', nodes = full_UI_table.name, vars = { localize(specific_vars.value, 'ranks'), localize(specific_vars.suit, 'suits_plural'), colours = { specific_vars.colour } } }
+					full_UI_table.name = full_UI_table.name[1]
+				end
+			elseif card_type == 'Booster' then
+
+			else
+				full_UI_table.name = localize { type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name }
+			end
+			full_UI_table.card_type = card_type or _c.set
+		end
+		if main_start then
+			desc_nodes[#desc_nodes + 1] = main_start
+		end
+		if next(loc_vars) then
+			localize { type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars }
+			if not ((specific_vars and not specific_vars.sticker) and (card_type == 'Default' or card_type == 'Enhanced')) then
+				if desc_nodes == full_UI_table.main and not full_UI_table.name then
+					localize { type = 'name', key = _c.key, set = _c.set, nodes = full_UI_table.name }
+					if not full_UI_table.name then full_UI_table.name = {} end
+				elseif desc_nodes ~= full_UI_table.main then
+					desc_nodes.name = localize { type = 'name_text', key = name_override or _c.key, set = name_override and 'Other' or _c.set }
+				end
 			end
 		end
-	end
+		if _c.set == 'Joker' then
+			if specific_vars and specific_vars.pinned then info_queue[#info_queue + 1] = { key = 'pinned_left', set =
+				'Other' } end
+			if specific_vars and specific_vars.sticker then info_queue[#info_queue + 1] = { key = string.lower(
+				specific_vars.sticker) .. '_sticker', set = 'Other' } end
+			localize { type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = specific_vars or {} }
+		end
+		if main_end then
+			desc_nodes[#desc_nodes + 1] = main_end
+		end
 
-	if main_end then
-		desc_nodes[#desc_nodes + 1] = main_end
+		for _, v in ipairs(info_queue) do
+			generate_card_ui(v, full_UI_table)
+		end
+		return full_UI_table
 	end
-
-	for _, v in ipairs(info_queue) do
-		generate_card_ui(v, full_UI_table)
-	end
-	if next(loc_vars) or next(info_queue) then return full_UI_table end
 	return generate_card_ui_ref(_c, original_full_UI_table, specific_vars, card_type, badges, hide_desc, main_start,
 		original_main_end)
 end
@@ -237,14 +262,15 @@ function Card:use_consumeable(area, copier)
 	local key = self.config.center.key
 	local center_obj = SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key]
 	if center_obj and center_obj.use and type(center_obj.use) == 'function' then
-        stop_use()
+		stop_use()
 		if not copier then set_consumeable_usage(self) end
-        if self.debuff then return nil end
+		if self.debuff then return nil end
 		if self.ability.consumeable.max_highlighted then
-			update_hand_text({immediate = true, nopulse = true, delay = 0}, {mult = 0, chips = 0, level = '', handname = ''})
+			update_hand_text({ immediate = true, nopulse = true, delay = 0 },
+				{ mult = 0, chips = 0, level = '', handname = '' })
 		end
-        center_obj.use(self, area, copier)
-    else
+		center_obj.use(self, area, copier)
+	else
 		card_use_consumeable_ref(self, area, copier)
 	end
 end
@@ -280,15 +306,17 @@ function G.UIDEF.card_h_popup(card)
 	local badges = t.nodes[1].nodes[1].nodes[1].nodes[3]
 	badges = badges and badges.nodes or nil
 	local key = card.config.center.key
-	local center_obj = SMODS.Jokers[key] or SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key] or SMODS.Vouchers[key]
+	local center_obj = SMODS.Jokers[key] or SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key] or
+		SMODS.Vouchers[key]
 	if center_obj then
 		if center_obj.set_badges and type(center_obj.set_badges) == 'function' then
 			center_obj.set_badges(card, badges)
 		end
-        if not G.SETTINGS.no_mod_tracking then
-            local mod_name = string.sub(center_obj.mod_name, 1, 16)
+		if not G.SETTINGS.no_mod_tracking then
+			local mod_name = string.sub(center_obj.mod_name, 1, 16)
 			local len = string.len(mod_name)
-			badges[#badges + 1] = create_badge(mod_name, center_obj.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil, len <= 6 and 0.9 or 0.9 - 0.02*(len-6))
+			badges[#badges + 1] = create_badge(mod_name, center_obj.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil,
+				len <= 6 and 0.9 or 0.9 - 0.02 * (len - 6))
 		end
 	end
 	return t
@@ -297,8 +325,8 @@ end
 local settings_ref = G.UIDEF.settings_tab
 function G.UIDEF.settings_tab(tab)
 	local t = settings_ref(tab)
-    if tab == 'Game' then
-        t.nodes[7] = create_toggle { label = 'Disable Mod Tracking', ref_table = G.SETTINGS, ref_value = 'no_mod_tracking' }
-    end
+	if tab == 'Game' then
+		t.nodes[7] = create_toggle { label = 'Disable Mod Tracking', ref_table = G.SETTINGS, ref_value = 'no_mod_tracking' }
+	end
 	return t
 end

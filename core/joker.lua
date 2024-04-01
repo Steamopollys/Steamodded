@@ -193,13 +193,6 @@ function Card:generate_UIBox_ability_table()
     end
     return ability_table_ref(self)
 end
---[[
-    function SMODS.Jokers.j_example.loc_def(card)
-        if card.ability.name == 'Example Joker' then
-            return {card.ability.extra.mult}
-        end
-    end
-]]
 
 function SMODS.end_calculate_context(c)
     if not c.after and not c.before and not c.other_joker and not c.repetition and not c.individual and
