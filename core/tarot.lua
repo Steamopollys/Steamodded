@@ -180,10 +180,14 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
 	if not (card_type == 'Locked') and not hide_desc and not (specific_vars and specific_vars.debuffed) then
 		local key = _c.key
 		local center_obj = SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key] or SMODS.Vouchers[key]
-		if center_obj and center_obj.loc_def and type(center_obj.loc_def) == 'function' then
-			local o, m = center_obj.loc_def(_c, info_queue)
-			if o and next(o) then loc_vars = o end
-			if m then main_end = m end
+        if center_obj and center_obj.loc_def and type(center_obj.loc_def) == 'function' then
+            local o, m = center_obj.loc_def(_c, info_queue)
+            if o and next(o) then loc_vars = o end
+            if m then main_end = m end
+        end
+        local joker_obj = SMODS.Jokers[key]
+		if joker_obj and joker_obj.tooltip and type(joker_obj.tooltip) == 'function' then
+			joker_obj.tooltip(_c, info_queue)
 		end
 	end
 
@@ -279,7 +283,7 @@ function G.UIDEF.card_h_popup(card)
 	local center_obj = SMODS.Jokers[key] or SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key] or SMODS.Vouchers[key]
 	if center_obj then
 		if center_obj.set_badges and type(center_obj.set_badges) == 'function' then
-			badges = center_obj.set_badges(card, badges)
+			center_obj.set_badges(card, badges)
 		end
         if not G.SETTINGS.no_mod_tracking then
             local mod_name = string.sub(center_obj.mod_name, 1, 16)
