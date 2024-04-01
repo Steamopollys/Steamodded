@@ -215,7 +215,7 @@ function Card:set_sprites(_center, _front)
                 end
                 if _center.soul_pos then
                     self.children.floating_sprite.atlas = G.ASSET_ATLAS[_center.atlas or _center.set]
-                    self.children.floating_sprite:set_pos(_center.soul_pos)
+                    self.children.floating_sprite:set_sprite_pos(_center.soul_pos)
                 end
             end
         end
