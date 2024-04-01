@@ -28,5 +28,3 @@ jobs:
         name: steamodded_injector
         path: |
           ./steamodded_injector.exe
-          ./steamodded_injector.dist/*
-          out.xml
