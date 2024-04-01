@@ -1065,7 +1065,8 @@ function SMODS.Card:_extend()
 	end
 
 	function Card:is_face(from_boss)
-		if self.debuff and not from_boss then return end
+        if self.debuff and not from_boss then return end
+		if self:get_id() < 0 then return end
 		local val = self.base.value
 		if next(find_joker('Pareidolia')) or (val and SMODS.Card.RANKS[val] and SMODS.Card.RANKS[val].face) then return true end
 	end
