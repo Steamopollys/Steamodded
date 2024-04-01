@@ -14,6 +14,7 @@ SMODS.BUFFERS = {
 	Vouchers = {},
 }
 
+
 MODDED_VERSION = "0.9.4-STEAMODDED"
 
 function STR_UNPACK(str)
