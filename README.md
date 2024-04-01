@@ -21,7 +21,21 @@ If it's for now very simple, it will seach for an header at the top of the file 
 
 This header is mandatory and the mod loader will not load the mod without it.
 
-The `MOD_ID` must be unique and without spaces. The `MOD_AUTHOR` mus be an array. Every part of the Header must be present.
+The `MOD_ID` must be unique and without spaces. The `MOD_AUTHOR` must be an array. Every part of the Header must be present.
+
+Additionally, the following segments may be present below your header in any order:
+
+```text
+--- PRIORITY: -1000
+--- DISPLAY_NAME: ShortName
+--- BADGE_COLOUR: 123456
+```
+
+The priority value must be an integer and defaults to 0 if absent. A lower value will cause your mod to be loaded earlier.
+
+If a display name is present, it will replace your mod name on badges that identify your mod on custom game objects. Make sure to keep it short and recognizable. 
+
+If no badge colour is specified, a default colour of #666666 will be used for these badges. The colour must be a valid hex code.
 
 After the Header validation, the lua code of your mod will be loaded.
 
