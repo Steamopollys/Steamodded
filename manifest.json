@@ -1,6 +1,6 @@
 {
     "name": "Steamodded",
-    "version_number": "test-0.0.1",
+    "version_number": "test-0.0.2",
     "website_url": "https://github.com/Steamopollys/Steamodded",
     "description": "A Balatro ModLoader",
     "dependencies": [

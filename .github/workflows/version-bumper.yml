@@ -67,6 +67,9 @@ jobs:
 
       - name: Create and push tag
         if: steps.bump-version.outputs.version_number
+        env:
+          VERSION: ${{ steps.bump-version.outputs.version_number }}
         run: |
-          git tag ${{ needs.bump-and-tag-version.outputs.version_number }}
-          git push origin ${{ needs.bump-and-tag-version.outputs.version_number }}
+          git tag $VERSION
+          git push origin $VERSION
+
