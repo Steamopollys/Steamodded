@@ -3,6 +3,7 @@ import socket
 import threading
 import tkinter as tk
 from datetime import datetime
+from tkinter import filedialog
 
 log_levels = {
     "TRACE": 0,
@@ -458,6 +459,46 @@ class SpecificSearchFrame(tk.Frame):
         self.after_id = None
 
 
+class ExportMenuBar(tk.Menu):
+    def __init__(self, parent, console: Console, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.parent = parent
+        self.initialize_menu()
+        self.console = console
+
+    def initialize_menu(self):
+        # Create a File menu
+        file_menu = tk.Menu(self, tearoff=0)
+        file_menu.add_command(label="All logs", command=self.export_all_logs)
+        file_menu.add_separator()
+        file_menu.add_command(label="Filtered logs", command=self.export_filtered_logs)
+
+        # Adding the "File" menu to the menubar
+        self.add_cascade(label="Export", menu=file_menu)
+
+    def export_all_logs(self):
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".log",
+            filetypes=[("Log files", "*.log"), ("All files", "*.*")],
+            initialfile=f"Balatro-AllLogs-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+        )
+        if file_path:
+            with open(file_path, "w") as f:
+                for log in self.console.all_logs:
+                    f.write(str(log))
+
+    def export_filtered_logs(self):
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".log",
+            filetypes=[("Log files", "*.log"), ("All files", "*.*")],
+            initialfile=f"Balatro-FilteredLogs-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+        )
+        if file_path:
+            with open(file_path, "w") as f:
+                for log in self.console.shown_logs:
+                    f.write(str(log))
+
+
 class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -465,6 +506,7 @@ class MainWindow(tk.Tk):
         self.options_frame = OptionsFrame(self)
         self.console = Console(self, self.options_frame)
         self.options_frame.inject_console(self.console)
+        self.menu_bar = ExportMenuBar(self, self.console)
         self.create_widgets()
 
         self.bind('<Control-f>', self.focus_search)
@@ -473,6 +515,7 @@ class MainWindow(tk.Tk):
     def create_widgets(self):
         self.console.pack(side=tk.TOP, expand=True, fill='both')
         self.options_frame.pack(side=tk.BOTTOM, fill='x', expand=False)
+        self.config(menu=self.menu_bar)
 
     def get_console(self):
         return self.console
