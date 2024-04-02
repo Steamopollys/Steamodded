@@ -482,25 +482,31 @@ class MainWindow(tk.Tk):
 
 
 def client_handler(client_socket, console: Console):
-    buffer = ""
+    buffer = []
     while True:
         data = client_socket.recv(1024)
         if not data:
             break
 
-        buffer += data.decode()  # Add the newly received data to the buffer
+        decoded_data = data.decode()
+        buffer.append(decoded_data)  # Append new data to the buffer list
 
-        # Check if "ENDOFLOG" is in the buffer
-        while "ENDOFLOG" in buffer:
-            end_index = buffer.find("ENDOFLOG")
-            log = buffer[:end_index]  # Extract log until "ENDOFLOG"
+        # Join the buffer and split by "ENDOFLOG"
+        # This handles cases where "ENDOFLOG" is spread across multiple recv calls
+        combined_data = ''.join(buffer)
+        logs = combined_data.split("ENDOFLOG")
+
+        # The last element might be an incomplete log; keep it in the buffer
+        buffer = [logs.pop()] if logs[-1] else []
+
+        # Append each complete log to the console
+        for log in logs:
             if log:
                 console.append_log(log)
-            buffer = buffer[end_index + len("ENDOFLOG"):]  # Remove the processed log from the buffer
 
-    # Handle any remaining log in the buffer after the connection is closed
-    if buffer:
-        console.append_log(buffer)
+    # Handle any remaining data in the buffer after the connection is closed
+    if ''.join(buffer):
+        console.append_log(''.join(buffer))
 
 
 def listen_for_clients(console: Console):
