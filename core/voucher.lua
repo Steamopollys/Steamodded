@@ -31,6 +31,8 @@ function SMODS.Voucher:new(name, slug, config, pos, loc_txt, cost, unlocked, dis
     o.available = available or true
 	o.requires = requires
     o.atlas = atlas
+    o.mod_name = SMODS._MOD_NAME
+    o.badge_colour = SMODS._BADGE_COLOUR
 	return o
 end
 
@@ -63,6 +65,8 @@ function SMODS.injectVouchers()
             cost = voucher.cost,
             atlas = voucher.atlas,
             requires = voucher.requires,
+            mod_name = voucher.mod_name,
+            badge_colour = voucher.badge_colour
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do

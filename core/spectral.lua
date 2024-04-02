@@ -28,6 +28,8 @@ function SMODS.Spectral:new(name, slug, config, pos, loc_txt, cost, consumeable,
     o.unlocked = true
     o.consumeable = consumeable or true
     o.atlas = atlas
+    o.mod_name = SMODS._MOD_NAME
+    o.badge_colour = SMODS._BADGE_COLOUR
     return o
 end
 
@@ -58,12 +60,12 @@ function SMODS.injectSpectrals()
             pos = spectral.pos,
             config = spectral.config,
             atlas = spectral.atlas,
-            cost = spectral.cost
+            cost = spectral.cost,
+            mod_name = spectral.mod_name,
+            badge_colour = spectral.badge_colour
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
-            sendDebugMessage(sprite.name)
-            sendDebugMessage(tarot_obj.key)
             if sprite.name == tarot_obj.key then
                 tarot_obj.atlas = sprite.name
             end

@@ -14,7 +14,8 @@ SMODS.BUFFERS = {
 	Vouchers = {},
 }
 
-MODDED_VERSION = "0.9.3-STEAMODDED"
+
+MODDED_VERSION = "0.9.5-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
