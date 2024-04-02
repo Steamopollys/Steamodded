@@ -5,6 +5,7 @@ on: [push]
 jobs:
   build:
     runs-on: windows-latest
+    if: github.repository_owner == 'Steamopollys'
     env:
       CC: gcc
     steps:
