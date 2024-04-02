@@ -42,6 +42,8 @@ function SMODS.Planet:new(name, slug, config, pos, loc_txt, cost, cost_mult, eff
     o.freq = freq or 1
     o.cost_mult = cost_mult or 1.0
     o.atlas = atlas
+    o.mod_name = SMODS._MOD_NAME
+    o.badge_colour = SMODS._BADGE_COLOUR
     return o
 end
 
@@ -76,12 +78,12 @@ function SMODS.injectPlanets()
             effect = planet.effect,
             cost_mult = planet.cost_mult,
             freq = planet.freq,
-            atlas = planet.atlas
+            atlas = planet.atlas,
+            mod_name = planet.mod_name,
+            badge_colour = planet.badge_colour
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
-            sendDebugMessage(sprite.name)
-            sendDebugMessage(planet_obj.key)
             if sprite.name == planet_obj.key then
                 planet_obj.atlas = sprite.name
             end

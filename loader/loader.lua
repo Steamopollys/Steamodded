@@ -5,6 +5,9 @@ SMODS.INIT = {}
 SMODS._MOD_PRIO_MAP = {}
 SMODS._INIT_PRIO_MAP = {}
 SMODS._INIT_KEYS = {}
+SMODS._MOD_FROM_INIT = {}
+SMODS._MOD_NAME = ''
+SMODS._BADGE_COLOUR = {}
 
 -- Attempt to require nativefs
 local nfs_success, nativefs = pcall(require, "nativefs")
@@ -57,7 +60,9 @@ function loadMods(modsDirectory)
                     local modName, modID, modAuthorString, modDescription = fileContent:match("%-%-%- MOD_NAME: ([^\n]+)\n%-%-%- MOD_ID: ([^\n]+)\n%-%-%- MOD_AUTHOR: %[(.-)%]\n%-%-%- MOD_DESCRIPTION: ([^\n]+)")
                     local priority = fileContent:match("%-%-%- PRIORITY: (%-?%d+)")
                     priority = priority and priority + 0 or 0
-
+                    local badge_colour = fileContent:match("%-%-%- BADGE_COLO[U?]R: (%x-)\n")
+                    badge_colour = HEX(badge_colour or '666666FF')
+                    local display_name = fileContent:match("%-%-%- DISPLAY_NAME: (.-)\n")
                     -- Validate MOD_ID to ensure it doesn't contain spaces
                     if modID and string.find(modID, " ") then
                         sendDebugMessage("Invalid mod ID: " .. modID)
@@ -72,18 +77,21 @@ function loadMods(modsDirectory)
                             end
 
                             -- Store mod information in the global table, including the directory path
-                            table.insert(mods, {
+                            local mod = {
                                 name = modName,
                                 id = modID,
                                 author = modAuthorArray,
                                 description = modDescription,
                                 path = directory .. "/", -- Store the directory path
                                 priority = priority,
-                            })
+                                badge_colour = badge_colour,
+                                display_name = display_name or modName
+                            }
+                            table.insert(mods, mod)
                             modIDs[modID] = true  -- Mark this ID as used
 
                             SMODS._MOD_PRIO_MAP[priority] = SMODS._MOD_PRIO_MAP[priority] or {}
-                            table.insert(SMODS._MOD_PRIO_MAP[priority], fileContent)
+                            table.insert(SMODS._MOD_PRIO_MAP[priority], { content = fileContent, mod = mod })
                         end
                     end
                 else
@@ -105,14 +113,15 @@ function loadMods(modsDirectory)
 
     -- load the mod files
     for _,priority in ipairs(keyset) do
-        for __,v in ipairs(SMODS._MOD_PRIO_MAP[priority]) do
-            assert(load(v))()
+        for _,v in ipairs(SMODS._MOD_PRIO_MAP[priority]) do
+            assert(load(v.content))()
             -- set priority of added init functions
             for modName, initFunc in pairs(SMODS.INIT) do
                 if type(initFunc) == 'function' and SMODS._INIT_KEYS[modName] == nil then
                     SMODS._INIT_PRIO_MAP[priority] = SMODS._INIT_PRIO_MAP[priority] or {}
                     table.insert(SMODS._INIT_PRIO_MAP[priority], modName)
                     SMODS._INIT_KEYS[modName] = true
+                    SMODS._MOD_FROM_INIT[modName] = v.mod
                 end
             end
         end
@@ -129,6 +138,8 @@ function initMods()
     table.sort(keyset)
     for _,k in ipairs(keyset) do
         for _, modName in ipairs(SMODS._INIT_PRIO_MAP[k]) do
+            SMODS._MOD_NAME = SMODS._MOD_FROM_INIT[modName].display_name
+            SMODS._BADGE_COLOUR = SMODS._MOD_FROM_INIT[modName].badge_colour
             sendDebugMessage("Launch Init Function for: " .. modName .. ".")
             SMODS.INIT[modName]()
         end

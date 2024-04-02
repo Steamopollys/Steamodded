@@ -101,8 +101,8 @@ function SMODS.injectSprites()
         else
             error("Bad Sprite type")
         end
-
-        sendDebugMessage("The Sprite named " .. sprite.name .. " with path " .. sprite.path .. " have been registered.")
+		
+		sendDebugMessage("The Sprite named " .. sprite.name .. " with path " .. sprite.path .. " have been registered.")
 	end
 
     --Reload Textures
@@ -212,6 +212,10 @@ function Card:set_sprites(_center, _front)
                     (_center.set == 'Spectral' and G.s_undiscovered.pos) or 
                     (_center.set == 'Voucher' and G.v_undiscovered.pos) or 
                     (_center.set == 'Booster' and G.booster_undiscovered.pos))
+                end
+                if _center.soul_pos then
+                    self.children.floating_sprite.atlas = G.ASSET_ATLAS[_center.atlas or _center.set]
+                    self.children.floating_sprite:set_sprite_pos(_center.soul_pos)
                 end
             end
         end

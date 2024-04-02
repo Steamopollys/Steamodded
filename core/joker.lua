@@ -18,7 +18,7 @@ SMODS.Joker = {
 }
 
 function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, unlocked, discovered, blueprint_compat,
-                         eternal_compat, effect, atlas)
+                         eternal_compat, effect, atlas, soul_pos)
     o = {}
     setmetatable(o, self)
     self.__index = self
@@ -31,6 +31,7 @@ function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, u
         x = 0,
         y = 0
     }
+    o.soul_pos = soul_pos
     o.rarity = rarity or 1
     o.cost = cost
     o.unlocked = (unlocked == nil) and true or unlocked
@@ -39,6 +40,8 @@ function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, u
     o.eternal_compat = (eternal_compat == nil) and true or eternal_compat
     o.effect = effect or ''
     o.atlas = atlas or nil
+    o.mod_name = SMODS._MOD_NAME
+    o.badge_colour = SMODS._BADGE_COLOUR
     return o
 end
 
@@ -74,12 +77,13 @@ function SMODS.injectJokers()
             effect = joker.effect,
             cost = joker.cost,
             cost_mult = 1.0,
-            atlas = joker.atlas or nil
+            atlas = joker.atlas or nil,
+            mod_name = joker.mod_name,
+            badge_colour = joker.badge_colour,
+            soul_pos = joker.soul_pos
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
-            sendDebugMessage(sprite.name)
-            sendDebugMessage(joker_obj.key)
             if sprite.name == joker_obj.key then
                 joker_obj.atlas = sprite.name
             end
@@ -117,12 +121,12 @@ function Card:calculate_joker(context)
     local ret_val = calculate_jokerref(self, context);
 
     if self.ability.set == "Joker" and not self.debuff then
-        for _k, obj in pairs(SMODS.Jokers) do
-            if obj.calculate and type(obj.calculate) == "function" and _k == self.config.center.key then
-                local o = obj.calculate(self, context)
+        local key = self.config.center.key
+        local joker_obj = SMODS.Jokers[key]
+            if joker_obj and joker_obj.calculate and type(joker_obj.calculate) == "function" then
+                local o = joker_obj.calculate(self, context)
                 if o then return o end
             end
-        end
     end
 
     return ret_val;
@@ -146,14 +150,13 @@ function Card:generate_UIBox_ability_table()
     elseif self.debuff then
     elseif card_type == 'Default' or card_type == 'Enhanced' then
     elseif self.ability.set == 'Joker' then
-        sendDebugMessage(inspect(self.config.center))
-        for k, v in pairs(SMODS.Jokers) do
-            if v.loc_def and type(v.loc_def) == 'function' and k == self.config.center.key then
-                local o, m = v.loc_def(self)
+        local key = self.config.center.key
+        local joker_obj = SMODS.Jokers[key]
+            if joker_obj and joker_obj.loc_def and type(joker_obj.loc_def) == 'function' then
+                local o, m = joker_obj.loc_def(self)
                 if o and next(o) then loc_vars = o end
                 if m and next(m) then main_end = m end
             end
-        end
     end
     if loc_vars then
         local badges = {}
@@ -190,13 +193,6 @@ function Card:generate_UIBox_ability_table()
     end
     return ability_table_ref(self)
 end
---[[
-    function SMODS.Jokers.j_example.loc_def(card)
-        if card.ability.name == 'Example Joker' then
-            return {card.ability.extra.mult}
-        end
-    end
-]]
 
 function SMODS.end_calculate_context(c)
     if not c.after and not c.before and not c.other_joker and not c.repetition and not c.individual and
