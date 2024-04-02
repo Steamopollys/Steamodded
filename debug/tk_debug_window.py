@@ -482,17 +482,25 @@ class MainWindow(tk.Tk):
 
 
 def client_handler(client_socket, console: Console):
+    buffer = ""
     while True:
-        # Traceback can fit in a single log now
-        data = client_socket.recv(8192)
+        data = client_socket.recv(1024)
         if not data:
             break
 
-        decoded_data = data.decode()
-        logs = decoded_data.split("ENDOFLOG")
-        for log in logs:
+        buffer += data.decode()  # Add the newly received data to the buffer
+
+        # Check if "ENDOFLOG" is in the buffer
+        while "ENDOFLOG" in buffer:
+            end_index = buffer.find("ENDOFLOG")
+            log = buffer[:end_index]  # Extract log until "ENDOFLOG"
             if log:
                 console.append_log(log)
+            buffer = buffer[end_index + len("ENDOFLOG"):]  # Remove the processed log from the buffer
+
+    # Handle any remaining log in the buffer after the connection is closed
+    if buffer:
+        console.append_log(buffer)
 
 
 def listen_for_clients(console: Console):
