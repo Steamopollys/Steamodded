@@ -4,6 +4,7 @@ on: push
 
 jobs:
   check-version-change:
+    if: github.repository_owner == 'Steamopollys'
     runs-on: ubuntu-latest
     outputs:
       version_changed: ${{ steps.detect-version-change.outputs.version_changed }}
