@@ -70,18 +70,23 @@ class CustomText(tk.Text):
 
 class Log:
     def __init__(self, log: str):
-        self.timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-        self.log_level = "DEBUG"
-        self.logger = "DefaultLogger"
-        self.log_str = ""
         self.parse_error = False
         log_parts = log.split(" :: ")
-        if len(log_parts) == 3:
-            self.log_level = log_parts[0]
-            self.logger = log_parts[1]
+        if len(log_parts) == 4:
+            self.timestamp_str = log_parts[0]
+            self.log_level = log_parts[1]
+            self.logger = log_parts[2]
+            self.log_str = log_parts[3]
+        elif len(log_parts) == 3:
+            self.timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+            self.logger = log_parts[0]
+            self.log_str = log_parts[1]
             self.log_str = log_parts[2]
         else:
             self.parse_error = True
+            self.timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+            self.log_level = "DEBUG"
+            self.logger = "DefaultLogger"
             self.log_str = log
 
     def __str__(self):
