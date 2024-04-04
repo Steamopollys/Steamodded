@@ -14,7 +14,6 @@ SMODS.BUFFERS = {
 	Vouchers = {},
 }
 
-
 MODDED_VERSION = "0.9.5-STEAMODDED"
 
 function STR_UNPACK(str)
@@ -976,25 +975,6 @@ function SMODS.LOAD_LOC()
             end
         end
     end
-end
-
--- retain added objects on profile reload
-local init_item_prototypes_ref = Game.init_item_prototypes
-function Game:init_item_prototypes()
-	local P_CENTERS = self.P_CENTERS
-	local P_CENTER_POOLS = self.P_CENTER_POOLS
-	local P_JOKER_RARITY_POOLS = self.P_JOKER_RARITY_POOLS
-	local P_BLINDS = self.P_BLINDS
-    local P_SEALS = self.P_SEALS
-    local P_CARDS = self.P_CARDS
-	init_item_prototypes_ref(self)
-	if P_CENTERS then self.P_CENTERS = P_CENTERS end
-    if P_CENTER_POOLS then self.P_CENTER_POOLS = P_CENTER_POOLS end
-    if P_JOKER_RARITY_POOLS then self.P_JOKER_RARITY_POOLS = P_JOKER_RARITY_POOLS end
-    if P_BLINDS then self.P_BLINDS = P_BLINDS end
-    if P_SEALS then self.P_SEALS = P_SEALS end
-	if P_CARDS then self.P_CARDS = P_CARDS end
-	SMODS.SAVE_UNLOCKS()
 end
 
 ----------------------------------------------

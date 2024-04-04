@@ -81,7 +81,6 @@ function SMODS.injectSpectrals()
         sendDebugMessage("The Spectral named " .. spectral.name .. " with the slug " .. spectral.slug ..
             " have been registered at the id " .. id .. ".")
     end
-    SMODS.BUFFERS.Spectrals = {}
 end
 
 function create_UIBox_your_collection_spectrals()

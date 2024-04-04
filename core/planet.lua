@@ -99,7 +99,6 @@ function SMODS.injectPlanets()
         sendDebugMessage("The Planet named " .. planet.name .. " with the slug " .. planet.slug ..
             " have been registered at the id " .. id .. ".")
     end
-    SMODS.BUFFERS.Planets = {}
 end
 
 function create_UIBox_your_collection_planets()

@@ -100,33 +100,28 @@ function SMODS.injectJokers()
         sendDebugMessage("The Joker named " .. joker.name .. " with the slug " .. joker.slug ..
             " have been registered at the id " .. id .. ".")
     end
-    SMODS.BUFFERS.Jokers = {}
 end
 
 local cardset_abilityRef = Card.set_ability
 function Card.set_ability(self, center, initial, delay_sprites)
     cardset_abilityRef(self, center, initial, delay_sprites)
-
-    -- Iterate over each object in SMODS.JKR_EFFECT
-    for _k, obj in pairs(SMODS.Jokers) do
-        --! CHANGED from effect due to overlap
-        if obj.set_ability and type(obj.set_ability) == "function" and _k == self.config.center.key then
-            obj.set_ability(self, center, initial, delay_sprites)
-        end
+    local key = self.config.center.key
+    local joker_obj = SMODS.Jokers[key]
+    if joker_obj and joker_obj.set_ability and type(joker_obj.set_ability) == 'function' then
+        joker_obj.set_ability(self, center, initial, delay_sprites)
     end
 end
 
 local calculate_jokerref = Card.calculate_joker;
 function Card:calculate_joker(context)
-    local ret_val = calculate_jokerref(self, context);
-
-    if self.ability.set == "Joker" and not self.debuff then
+    local ret_val = calculate_jokerref(self, context)
+    if not self.debuff then
         local key = self.config.center.key
-        local joker_obj = SMODS.Jokers[key]
-            if joker_obj and joker_obj.calculate and type(joker_obj.calculate) == "function" then
-                local o = joker_obj.calculate(self, context)
-                if o then return o end
-            end
+        local center_obj = SMODS.Jokers[key] or SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key]
+        if center_obj and center_obj.calculate and type(center_obj.calculate) == "function" then
+            local o = center_obj.calculate(self, context)
+            if o then return o end
+        end
     end
 
     return ret_val;
@@ -154,8 +149,8 @@ function Card:generate_UIBox_ability_table()
         local joker_obj = SMODS.Jokers[key]
             if joker_obj and joker_obj.loc_def and type(joker_obj.loc_def) == 'function' then
                 local o, m = joker_obj.loc_def(self)
-                if o and next(o) then loc_vars = o end
-                if m and next(m) then main_end = m end
+                if o then loc_vars = o end
+                if m then main_end = m end
             end
     end
     if loc_vars then

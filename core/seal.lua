@@ -60,7 +60,6 @@ function SMODS.injectSeals()
         sendDebugMessage("The Seal named " ..
         seal.name .. " have been registered at the id " .. #G.P_CENTER_POOLS.Seal .. ".")
     end
-    SMODS.BUFFERS.Seals = {}
 end
 
 local get_badge_colourref = get_badge_colour

@@ -148,18 +148,35 @@ end
 
 function initSteamodded()
     injectStackTrace()
-	SMODS.MODS = loadMods(SMODS.MODS_DIR)
+    SMODS.MODS = loadMods(SMODS.MODS_DIR)
 
-	sendDebugMessage(inspectDepth(SMODS.MODS, 0, 0))
+    sendDebugMessage(inspectDepth(SMODS.MODS, 0, 0))
 
     initGlobals()
 
-	if SMODS.MODS then
-		initializeModUIFunctions()
-		initMods()
-	end
-
+    if SMODS.MODS then
+        initializeModUIFunctions()
+        initMods()
+    end
     SMODS.injectSprites()
+    SMODS.injectDecks()
+    SMODS.injectJokers()
+    SMODS.injectTarots()
+    SMODS.injectPlanets()
+    SMODS.injectSpectrals()
+    SMODS.injectVouchers()
+    SMODS.injectBlinds()
+    SMODS.injectSeals()
+    SMODS.LOAD_LOC()
+    SMODS.SAVE_UNLOCKS()
+    sendDebugMessage(inspectDepth(G.P_CENTER_POOLS.Back))
+end
+
+-- retain added objects on profile reload
+local init_item_prototypes_ref = Game.init_item_prototypes
+function Game:init_item_prototypes()
+	init_item_prototypes_ref(self)
+	SMODS.injectSprites()
 	SMODS.injectDecks()
     SMODS.injectJokers()
     SMODS.injectTarots()
@@ -170,7 +187,11 @@ function initSteamodded()
     SMODS.injectSeals()
     SMODS.LOAD_LOC()
     SMODS.SAVE_UNLOCKS()
-	sendDebugMessage(inspectDepth(G.P_CENTER_POOLS.Back))
+    for _, v in pairs(SMODS.Card.SUITS) do
+        if not v.disabled then
+            SMODS.Card:populate_suit(v.name)
+        end
+    end
 end
 
 ----------------------------------------------
