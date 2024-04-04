@@ -42,7 +42,7 @@ function sendMessageToConsole(level, logger, message)
         logger = logger or "DefaultLogger"
         message = message or "Default log message"
         -- naive way to separate the logs if the console receive multiple logs at the same time
-        client:send(level .. " :: " .. logger .. " :: " .. message .. "ENDOFLOG")
+        client:send(os.date('%Y-%m-%d %H:%M:%S') .. " :: " .. level .. " :: " .. logger .. " :: " .. message .. "ENDOFLOG")
     end
 end
 
