@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   build:
+    if: github.repository_owner == 'Steamopollys'
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3

@@ -3,6 +3,7 @@ import socket
 import threading
 import tkinter as tk
 from datetime import datetime
+from tkinter import filedialog
 
 log_levels = {
     "TRACE": 0,
@@ -69,18 +70,23 @@ class CustomText(tk.Text):
 
 class Log:
     def __init__(self, log: str):
-        self.timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-        self.log_level = "DEBUG"
-        self.logger = "DefaultLogger"
-        self.log_str = ""
         self.parse_error = False
         log_parts = log.split(" :: ")
-        if len(log_parts) == 3:
-            self.log_level = log_parts[0]
-            self.logger = log_parts[1]
+        if len(log_parts) == 4:
+            self.timestamp_str = log_parts[0]
+            self.log_level = log_parts[1]
+            self.logger = log_parts[2]
+            self.log_str = log_parts[3]
+        elif len(log_parts) == 3:
+            self.timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+            self.logger = log_parts[0]
+            self.log_str = log_parts[1]
             self.log_str = log_parts[2]
         else:
             self.parse_error = True
+            self.timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+            self.log_level = "DEBUG"
+            self.logger = "DefaultLogger"
             self.log_str = log
 
     def __str__(self):
@@ -458,6 +464,46 @@ class SpecificSearchFrame(tk.Frame):
         self.after_id = None
 
 
+class ExportMenuBar(tk.Menu):
+    def __init__(self, parent, console: Console, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.parent = parent
+        self.initialize_menu()
+        self.console = console
+
+    def initialize_menu(self):
+        # Create a File menu
+        file_menu = tk.Menu(self, tearoff=0)
+        file_menu.add_command(label="All logs", command=self.export_all_logs)
+        file_menu.add_separator()
+        file_menu.add_command(label="Filtered logs", command=self.export_filtered_logs)
+
+        # Adding the "File" menu to the menubar
+        self.add_cascade(label="Export", menu=file_menu)
+
+    def export_all_logs(self):
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".log",
+            filetypes=[("Log files", "*.log"), ("All files", "*.*")],
+            initialfile=f"Balatro-AllLogs-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+        )
+        if file_path:
+            with open(file_path, "w") as f:
+                for log in self.console.all_logs:
+                    f.write(str(log))
+
+    def export_filtered_logs(self):
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".log",
+            filetypes=[("Log files", "*.log"), ("All files", "*.*")],
+            initialfile=f"Balatro-FilteredLogs-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+        )
+        if file_path:
+            with open(file_path, "w") as f:
+                for log in self.console.shown_logs:
+                    f.write(str(log))
+
+
 class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -465,6 +511,7 @@ class MainWindow(tk.Tk):
         self.options_frame = OptionsFrame(self)
         self.console = Console(self, self.options_frame)
         self.options_frame.inject_console(self.console)
+        self.menu_bar = ExportMenuBar(self, self.console)
         self.create_widgets()
 
         self.bind('<Control-f>', self.focus_search)
@@ -473,6 +520,7 @@ class MainWindow(tk.Tk):
     def create_widgets(self):
         self.console.pack(side=tk.TOP, expand=True, fill='both')
         self.options_frame.pack(side=tk.BOTTOM, fill='x', expand=False)
+        self.config(menu=self.menu_bar)
 
     def get_console(self):
         return self.console
@@ -482,17 +530,31 @@ class MainWindow(tk.Tk):
 
 
 def client_handler(client_socket, console: Console):
+    buffer = []
     while True:
-        # Traceback can fit in a single log now
-        data = client_socket.recv(8192)
+        data = client_socket.recv(1024)
         if not data:
             break
 
         decoded_data = data.decode()
-        logs = decoded_data.split("ENDOFLOG")
+        buffer.append(decoded_data)  # Append new data to the buffer list
+
+        # Join the buffer and split by "ENDOFLOG"
+        # This handles cases where "ENDOFLOG" is spread across multiple recv calls
+        combined_data = ''.join(buffer)
+        logs = combined_data.split("ENDOFLOG")
+
+        # The last element might be an incomplete log; keep it in the buffer
+        buffer = [logs.pop()] if logs[-1] else []
+
+        # Append each complete log to the console
         for log in logs:
             if log:
                 console.append_log(log)
+
+    # Handle any remaining data in the buffer after the connection is closed
+    if ''.join(buffer):
+        console.append_log(''.join(buffer))
 
 
 def listen_for_clients(console: Console):
