@@ -37,12 +37,14 @@ function sendFatalMessage(message, logger)
 end
 
 function sendMessageToConsole(level, logger, message)
+    level = level or "DEBUG"
+    logger = logger or "DefaultLogger"
+    message = message or "Default log message"
+    date = os.date('%Y-%m-%d %H:%M:%S')
+    print(date .. " :: " .. level .. " :: " .. message)
     if client then
-        level = level or "DEBUG"
-        logger = logger or "DefaultLogger"
-        message = message or "Default log message"
         -- naive way to separate the logs if the console receive multiple logs at the same time
-        client:send(os.date('%Y-%m-%d %H:%M:%S') .. " :: " .. level .. " :: " .. logger .. " :: " .. message .. "ENDOFLOG")
+        client:send(date .. " :: " .. level .. " :: " .. logger .. " :: " .. message .. "ENDOFLOG")
     end
 end
 
