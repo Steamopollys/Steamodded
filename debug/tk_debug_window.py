@@ -141,7 +141,7 @@ class PlaceholderEntry(tk.Entry):
 
         # Find the start of the word to the left of the cursor
         pre_cursor = content[:cursor_pos]
-        match = re.search(r'[\s\W]|$', pre_cursor[::-1])  # [\s\W]|$ matches spaces, punctuation, or end of string
+        match = self.word_pattern.search(pre_cursor[::-1])  # [\s\W]|$ matches spaces, punctuation, or end of string
         word_start = cursor_pos - match.start() if match else 0
 
         # Delete the word
@@ -160,7 +160,7 @@ class PlaceholderEntry(tk.Entry):
 
         # Find the end of the word to the right of the cursor
         post_cursor = content[cursor_pos:]
-        match = re.search(r'[\s\W]|$', post_cursor)  # [\s\W]|$ matches spaces, punctuation, or end of string
+        match = self.word_pattern.search(post_cursor)  # [\s\W]|$ matches spaces, punctuation, or end of string
         word_end = match.start() if match else len(post_cursor)
 
         # Delete the word
