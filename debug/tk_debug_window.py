@@ -1,5 +1,6 @@
 import re
 import socket
+import string
 import threading
 import tkinter as tk
 from datetime import datetime
@@ -101,10 +102,12 @@ class PlaceholderEntry(tk.Entry):
         self.placeholder = placeholder
         self.user_has_interacted = False
         self.insert(0, self.placeholder)
+        self.word_pattern = re.compile(r'[\s\W]|$')
         self.config(fg='grey')
         self.bind('<FocusOut>', self.on_focus_out)
         self.bind('<FocusIn>', self.on_focus_in)
         self.bind('<Control-BackSpace>', self.handle_ctrl_backspace)
+        self.bind('<Control-Delete>', self.handle_ctrl_delete)
         self.bind('<Key>', self.on_key_press)  # Bind key press event
 
     def on_focus_in(self, event):
@@ -130,17 +133,38 @@ class PlaceholderEntry(tk.Entry):
         # Get the current content of the entry and the cursor position
         content = self.get()
         cursor_pos = self.index(tk.INSERT)
-        # Find the start of the word to the left of the cursor
-        pre_cursor = content[:cursor_pos]
 
-        # If the last character before the cursor is a space, delete it
-        if len(pre_cursor) > 0 and pre_cursor[-1] == ' ':
+        # If the last character before the cursor is a space or punctuation, delete it
+        if cursor_pos > 0 and (content[cursor_pos - 1] == ' ' or content[cursor_pos - 1] in string.punctuation):
             self.delete(cursor_pos - 1, tk.INSERT)
             return "break"  # Prevent default behavior
 
-        word_start = pre_cursor.rfind(' ') + 1 if ' ' in pre_cursor else 0
+        # Find the start of the word to the left of the cursor
+        pre_cursor = content[:cursor_pos]
+        match = re.search(r'[\s\W]|$', pre_cursor[::-1])  # [\s\W]|$ matches spaces, punctuation, or end of string
+        word_start = cursor_pos - match.start() if match else 0
+
         # Delete the word
-        self.delete(f"{word_start}", tk.INSERT)
+        self.delete(word_start, cursor_pos)
+        return "break"  # Prevent default behavior
+
+    def handle_ctrl_delete(self, event: tk.Event):
+        # Get the current content of the entry and the cursor position
+        content = self.get()
+        cursor_pos = self.index(tk.INSERT)
+
+        # If the first character after the cursor is a space or punctuation, delete it
+        if len(content) > cursor_pos and (content[cursor_pos] == ' ' or content[cursor_pos] in string.punctuation):
+            self.delete(cursor_pos, cursor_pos + 1)
+            return "break"  # Prevent default behavior
+
+        # Find the end of the word to the right of the cursor
+        post_cursor = content[cursor_pos:]
+        match = re.search(r'[\s\W]|$', post_cursor)  # [\s\W]|$ matches spaces, punctuation, or end of string
+        word_end = match.start() if match else len(post_cursor)
+
+        # Delete the word
+        self.delete(cursor_pos, cursor_pos + word_end)
         return "break"  # Prevent default behavior
 
 
