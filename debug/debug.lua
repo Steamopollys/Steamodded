@@ -41,7 +41,7 @@ function sendMessageToConsole(level, logger, message)
     logger = logger or "DefaultLogger"
     message = message or "Default log message"
     date = os.date('%Y-%m-%d %H:%M:%S')
-    print(date .. " :: " .. level .. " :: " .. message)
+    print(date .. " :: " .. level .. " :: " .. logger .. " :: " .. message)
     if client then
         -- naive way to separate the logs if the console receive multiple logs at the same time
         client:send(date .. " :: " .. level .. " :: " .. logger .. " :: " .. message .. "ENDOFLOG")
