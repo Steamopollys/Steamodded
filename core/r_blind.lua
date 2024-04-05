@@ -174,7 +174,7 @@ function Blind:modify_hand(cards, poker_hands, text, mult, hand_chips)
     if blind_obj and blind_obj.modify_hand and type(blind_obj.modify_hand) == 'function' and not self.debuff then
         return blind_obj.modify_hand(cards, poker_hands, text, mult, hand_chips)
     end
-    return blind_modify_hand_ref(cards, poker_hands, text, mult, hand_chips)
+    return blind_modify_hand_ref(self, cards, poker_hands, text, mult, hand_chips)
 end
 
 local blind_press_play_ref = Blind.press_play
