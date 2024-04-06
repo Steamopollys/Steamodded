@@ -1,5 +1,6 @@
 import re
 import socket
+import string
 import threading
 import tkinter as tk
 from datetime import datetime
@@ -101,10 +102,12 @@ class PlaceholderEntry(tk.Entry):
         self.placeholder = placeholder
         self.user_has_interacted = False
         self.insert(0, self.placeholder)
+        self.word_pattern = re.compile(r'[\s\W]|$')
         self.config(fg='grey')
-        self.bind('<FocusIn>', self.on_focus_in)
         self.bind('<FocusOut>', self.on_focus_out)
+        self.bind('<FocusIn>', self.on_focus_in)
         self.bind('<Control-BackSpace>', self.handle_ctrl_backspace)
+        self.bind('<Control-Delete>', self.handle_ctrl_delete)
         self.bind('<Key>', self.on_key_press)  # Bind key press event
 
     def on_focus_in(self, event):
@@ -117,6 +120,8 @@ class PlaceholderEntry(tk.Entry):
             self.insert(0, self.placeholder)
             self.config(fg='grey')
             self.user_has_interacted = False  # Reset flag if entry is empty
+        else:
+            self.user_has_interacted = True
 
     def on_key_press(self, event):
         self.user_has_interacted = True  # User has interacted when any key is pressed
@@ -128,17 +133,38 @@ class PlaceholderEntry(tk.Entry):
         # Get the current content of the entry and the cursor position
         content = self.get()
         cursor_pos = self.index(tk.INSERT)
-        # Find the start of the word to the left of the cursor
-        pre_cursor = content[:cursor_pos]
 
-        # If the last character before the cursor is a space, delete it
-        if len(pre_cursor) > 0 and pre_cursor[-1] == ' ':
+        # If the last character before the cursor is a space or punctuation, delete it
+        if cursor_pos > 0 and (content[cursor_pos - 1] == ' ' or content[cursor_pos - 1] in string.punctuation):
             self.delete(cursor_pos - 1, tk.INSERT)
             return "break"  # Prevent default behavior
 
-        word_start = pre_cursor.rfind(' ') + 1 if ' ' in pre_cursor else 0
+        # Find the start of the word to the left of the cursor
+        pre_cursor = content[:cursor_pos]
+        match = self.word_pattern.search(pre_cursor[::-1])  # [\s\W]|$ matches spaces, punctuation, or end of string
+        word_start = cursor_pos - match.start() if match else 0
+
         # Delete the word
-        self.delete(f"{word_start}", tk.INSERT)
+        self.delete(word_start, cursor_pos)
+        return "break"  # Prevent default behavior
+
+    def handle_ctrl_delete(self, event: tk.Event):
+        # Get the current content of the entry and the cursor position
+        content = self.get()
+        cursor_pos = self.index(tk.INSERT)
+
+        # If the first character after the cursor is a space or punctuation, delete it
+        if len(content) > cursor_pos and (content[cursor_pos] == ' ' or content[cursor_pos] in string.punctuation):
+            self.delete(cursor_pos, cursor_pos + 1)
+            return "break"  # Prevent default behavior
+
+        # Find the end of the word to the right of the cursor
+        post_cursor = content[cursor_pos:]
+        match = self.word_pattern.search(post_cursor)  # [\s\W]|$ matches spaces, punctuation, or end of string
+        word_end = match.start() if match else len(post_cursor)
+
+        # Delete the word
+        self.delete(cursor_pos, cursor_pos + word_end)
         return "break"  # Prevent default behavior
 
 
@@ -197,6 +223,7 @@ class GlobalSearchFrame(tk.Frame):
         for mode in self.search_modes:
             mode.pack(side=tk.LEFT, padx=(5, 0))
         self.search_entry.bind('<Return>', lambda event: self.console.next_occurrence())
+        self.search_entry.bind('<Shift-Return>', lambda event: self.console.previous_occurrence())
 
     def on_entry_changed(self, *args):
         if self.after_id:
@@ -247,13 +274,9 @@ class Console(tk.Frame):
     ):
         if global_search_str is not None and self.option_frame.global_search_frame.search_entry.user_has_interacted:
             self.global_search_str = global_search_str
-        elif global_search_str is None or not self.option_frame.global_search_frame.search_entry.user_has_interacted:
-            self.global_search_str = ""
 
         if logger_name is not None and self.option_frame.specific_search_frame.logger_entry.user_has_interacted:
             self.logger_name = logger_name
-        elif logger_name is None or not self.option_frame.specific_search_frame.logger_entry.user_has_interacted:
-            self.logger_name = ""
 
         if global_search_mode is not None:
             self.global_search_mode = global_search_mode
@@ -296,6 +319,7 @@ class Console(tk.Frame):
         self.update_text_widget()
 
     def filter_log(self, log):
+        # print(self.global_search_str, self.global_search_mode, self.logger_name, self.log_level, self.and_above)
         if self.and_above:
             flag = log_levels[log.log_level] >= log_levels[self.log_level]
         else:
@@ -353,10 +377,10 @@ class Console(tk.Frame):
                 self.text_widget.see(first_occurrence[0])
                 self.next_occurrence()
 
-    def next_occurrence(self):
+    def prepare_occurrence_navigation(self):
         current_tags = self.text_widget.tag_ranges('found')
         if not current_tags:
-            return
+            return None, None
 
         # Ensure the 'current_found' tag exists with a blue background.
         self.text_widget.tag_config('current_found', background='#ADD8E6')
@@ -369,6 +393,15 @@ class Console(tk.Frame):
 
         # Convert the current cursor index to a comparable value.
         cursor_line, cursor_char = map(int, cursor_index.split('.'))
+
+        return current_tags, (cursor_line, cursor_char)
+
+    def next_occurrence(self):
+        current_tags, cursor_position = self.prepare_occurrence_navigation()
+        if not current_tags or not cursor_position:
+            return
+
+        cursor_line, cursor_char = cursor_position
 
         for i in range(0, len(current_tags), 2):
             tag_start = current_tags[i]
@@ -390,6 +423,34 @@ class Console(tk.Frame):
             self.text_widget.mark_set(tk.INSERT, str(current_tags[0]))
             self.text_widget.see(str(current_tags[0]))
             self.text_widget.tag_add('current_found', current_tags[0], current_tags[1])
+
+    def previous_occurrence(self):
+        current_tags, cursor_position = self.prepare_occurrence_navigation()
+        if not current_tags or not cursor_position:
+            return
+
+        cursor_line, cursor_char = cursor_position
+
+        for i in range(len(current_tags) - 2, -1, -2):
+            tag_start = current_tags[i]
+            tag_end = current_tags[i + 1]
+
+            # Convert tag start index to comparable values.
+            tag_start_line, tag_start_char = map(int, str(tag_start).split('.'))
+
+            # Check if the tag start is less than the cursor position.
+            if tag_start_line < cursor_line or (tag_start_line == cursor_line and tag_start_char < cursor_char):
+                self.text_widget.mark_set(tk.INSERT, tag_start)
+                self.text_widget.see(tag_start)
+
+                # Apply the 'current_found' tag to the current occurrence.
+                self.text_widget.tag_add('current_found', tag_start, tag_end)
+                break
+        else:
+            # Wrap to the last tag if no previous tag is found.
+            self.text_widget.mark_set(tk.INSERT, str(current_tags[-2]))
+            self.text_widget.see(str(current_tags[-2]))
+            self.text_widget.tag_add('current_found', current_tags[-2], current_tags[-1])
 
 
 class SpecificSearchFrame(tk.Frame):
@@ -460,7 +521,8 @@ class SpecificSearchFrame(tk.Frame):
         self.after_id = self.root.after(250, self.apply_logger_entry_var)
 
     def apply_logger_entry_var(self):
-        self.console.set_filter(logger_name=self.logger_entry_var.get())
+        if self.logger_entry.user_has_interacted:
+            self.console.set_filter(logger_name=self.logger_entry_var.get())
         self.after_id = None
 
 
@@ -517,6 +579,18 @@ class MainWindow(tk.Tk):
         self.bind('<Control-f>', self.focus_search)
         self.bind('<Control-F>', self.focus_search)
 
+        self.bind('<Control-Shift-s>', lambda event: self.menu_bar.export_filtered_logs())
+        self.bind('<Control-Shift-S>', lambda event: self.menu_bar.export_filtered_logs())
+
+        self.bind('<Control-s>', lambda event: self.menu_bar.export_all_logs())
+        self.bind('<Control-S>', lambda event: self.menu_bar.export_all_logs())
+
+        self.bind('<Control-d>', lambda event: self.console.clear_logs())
+        self.bind('<Control-D>', lambda event: self.console.clear_logs())
+
+        self.bind('<Control-l>', self.focus_logger)
+        self.bind('<Control-L>', self.focus_logger)
+
     def create_widgets(self):
         self.console.pack(side=tk.TOP, expand=True, fill='both')
         self.options_frame.pack(side=tk.BOTTOM, fill='x', expand=False)
@@ -527,6 +601,9 @@ class MainWindow(tk.Tk):
 
     def focus_search(self, event):
         self.options_frame.global_search_frame.search_entry.focus()
+
+    def focus_logger(self, event):
+        self.options_frame.specific_search_frame.logger_entry.focus()
 
 
 def client_handler(client_socket, console: Console):
