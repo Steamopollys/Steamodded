@@ -45,48 +45,81 @@ function SMODS.Tarot:register()
 end
 
 function SMODS.injectTarots()
-	local minId = table_length(G.P_CENTER_POOLS['Tarot']) + 1
-	local id = 0
-	local i = 0
-	local tarot = nil
-	for _, slug in ipairs(SMODS.BUFFERS.Tarots) do
-		tarot = SMODS.Tarots[slug]
-		i = i + 1
-		-- Prepare some Datas
-		id = i + minId
-		local tarot_obj = {
-			unlocked = tarot.unlocked,
-			discovered = tarot.discovered,
-			consumeable = tarot.consumeable,
-			name = tarot.name,
-			set = "Tarot",
-			order = id,
-			key = tarot.slug,
-			pos = tarot.pos,
-			config = tarot.config,
-			effect = tarot.effect,
-			cost = tarot.cost,
-			cost_mult = tarot.cost_mult,
-			atlas = tarot.atlas,
-			mod_name = tarot.mod_name,
-			badge_colour = tarot.badge_colour
-		}
+    local minId = table_length(G.P_CENTER_POOLS['Tarot']) + 1
+    local id = 0
+    local i = 0
+    local tarot = nil
+    for _, slug in ipairs(SMODS.BUFFERS.Tarots) do
+        tarot = SMODS.Tarots[slug]
+		if tarot.order then
+            id = tarot.order
+        else
+			i = i + 1
+        	id = i + minId
+		end
+        local tarot_obj = {
+            unlocked = tarot.unlocked,
+            discovered = tarot.discovered,
+            consumeable = tarot.consumeable,
+            name = tarot.name,
+            set = "Tarot",
+            order = id,
+            key = tarot.slug,
+            pos = tarot.pos,
+            config = tarot.config,
+            effect = tarot.effect,
+            cost = tarot.cost,
+            cost_mult = tarot.cost_mult,
+            atlas = tarot.atlas,
+            mod_name = tarot.mod_name,
+            badge_colour = tarot.badge_colour
+        }
 
-		for _i, sprite in ipairs(SMODS.Sprites) do
-			if sprite.name == tarot_obj.key then
-				tarot_obj.atlas = sprite.name
+        for _i, sprite in ipairs(SMODS.Sprites) do
+            if sprite.name == tarot_obj.key then
+                tarot_obj.atlas = sprite.name
+            end
+        end
+
+        -- Now we replace the others
+        G.P_CENTERS[tarot.slug] = tarot_obj
+        if not tarot.taken_ownership then
+			table.insert(G.P_CENTER_POOLS['Tarot'], tarot_obj)
+		else
+			for k, v in ipairs(G.P_CENTER_POOLS['Tarot']) do
+				if v.key == slug then G.P_CENTER_POOLS['Tarot'][k] = tarot_obj end
 			end
 		end
+        -- Setup Localize text
+        G.localization.descriptions["Tarot"][tarot.slug] = tarot.loc_txt
+        sendInfoMessage("Registered Tarot " .. tarot.name .. " with the slug " .. tarot.slug .. " at ID " .. id .. ".", 'ConsumableAPI')
+    end
+end
 
-		-- Now we replace the others
-		G.P_CENTERS[tarot.slug] = tarot_obj
-		table.insert(G.P_CENTER_POOLS['Tarot'], tarot_obj)
-
-		-- Setup Localize text
-		G.localization.descriptions["Tarot"][tarot.slug] = tarot.loc_txt
-		sendDebugMessage("The Tarot named " .. tarot.name .. " with the slug " .. tarot.slug ..
-			" have been registered at the id " .. id .. ".")
-	end
+function SMODS.Tarot:take_ownership(slug)
+    if not (string.sub(slug, 1, 2) == 'c_') then slug = 'c_' .. slug end
+    local obj = G.P_CENTERS[slug]
+    if not obj then
+        sendWarnMessage('Tried to take ownership of non-existent Tarot: ' .. slug, 'ConsumableAPI')
+        return nil
+    end
+    if obj.mod_name then
+        sendWarnMessage('Can only take ownership of unclaimed vanilla Tarots! ' ..
+            slug .. ' belongs to ' .. obj.mod_name, 'ConsumableAPI')
+        return nil
+    end
+    o = {}
+    setmetatable(o, self)
+    self.__index = self
+    o.loc_txt = G.localization.descriptions['Tarot'][slug]
+    o.slug = slug
+    for k, v in pairs(obj) do
+        o[k] = v
+    end
+	o.mod_name = SMODS._MOD_NAME
+    o.badge_colour = SMODS._BADGE_COLOUR
+	o.taken_ownership = true
+	return o
 end
 
 function create_UIBox_your_collection_tarots()

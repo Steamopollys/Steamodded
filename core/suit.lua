@@ -162,7 +162,7 @@ end
 function SMODS.Card:delete_suit(name)
 	local suit_data = SMODS.Card.SUITS[name]
 	if not suit_data then
-		sendWarnMessage('Tried to delete non-existent suit: ' .. name)
+		sendWarnMessage('Tried to delete non-existent suit: ' .. name, 'PlayingCardAPI')
 		return false
 	end
 	local prefix = suit_data.prefix
@@ -180,7 +180,7 @@ end
 function SMODS.Card:wipe_suit(name)
 	local suit_data = SMODS.Card.SUITS[name]
 	if not suit_data then
-		sendWarnMessage('Tried to wipe non-existent suit: ' .. name)
+		sendWarnMessage('Tried to wipe non-existent suit: ' .. name, 'PlayingCardAPI')
 		return false
 	end
 	local prefix = suit_data.prefix
@@ -195,7 +195,7 @@ end
 function SMODS.Card:populate_suit(name)
 	local suit_data = SMODS.Card.SUITS[name]
 	if not suit_data then
-		sendWarnMessage('Tried to populate non-existent suit: ' .. name)
+		sendWarnMessage('Tried to populate non-existent suit: ' .. name, 'PlayingCardAPI')
 		return false
 	end
 	for _, v in pairs(SMODS.Card.RANKS) do
@@ -220,12 +220,12 @@ function SMODS.Card:new_rank(value, nominal, atlas_low_contrast, atlas_high_cont
 							 create_cards)
 	options = options or {}
 	if SMODS.Card.RANKS[value] then
-		sendDebugMessage('Failed to register duplicate rank: ' .. value)
+		sendWarnMessage('Failed to register duplicate rank: ' .. value, 'PlayingCardAPI')
 		return nil
 	end
 	local suffix = SMODS.Card:generate_suffix()
 	if not suffix then
-		sendDebugMessage('Too many ranks! Failed to assign valid suffix to: ' .. value)
+		sendWarnMessage('Too many ranks! Failed to assign valid suffix to: ' .. value, 'PlayingCardAPI')
 		return nil
 	end
 	SMODS.Card.MAX_ID = SMODS.Card.MAX_ID + 1
@@ -235,7 +235,7 @@ function SMODS.Card:new_rank(value, nominal, atlas_low_contrast, atlas_high_cont
 		options.shorthand.length and string.sub(value, 1, options.shorthand.length) or
 		string.sub(value, 1, 1)
 	SMODS.Card.RANK_LIST[#SMODS.Card.RANK_LIST + 1] = shorthand
-	SMODS.Card.RANK_SHORTHAND_LOOKUP[shorthand] = value
+    SMODS.Card.RANK_SHORTHAND_LOOKUP[shorthand] = value
 	SMODS.Card.RANKS[value] = {
 		value = value,
 		suffix = suffix,
@@ -256,7 +256,12 @@ function SMODS.Card:new_rank(value, nominal, atlas_low_contrast, atlas_high_cont
 		straight_edge = options.straight_edge,
 		disabled = not create_cards or nil,
 		shorthand = shorthand,
-	}
+    }
+	local function nominal(v) 
+        local rank_data = SMODS.Card.RANKS[SMODS.Card.RANK_SHORTHAND_LOOKUP[v] or v]
+		return rank_data.nominal + (rank_data.face_nominal or 0)
+	end
+	table.sort(SMODS.Card.RANK_LIST, function(a, b) return nominal(a) < nominal(b) end)
 	if create_cards then
 		SMODS.Card:populate_rank(value)
 	end
@@ -268,7 +273,7 @@ end
 function SMODS.Card:delete_rank(value)
 	local rank_data = SMODS.Card.RANKS[value]
 	if not rank_data then
-		sendWarnMessage('Tried to delete non-existent rank: ' .. value)
+		sendWarnMessage('Tried to delete non-existent rank: ' .. value, 'PlayingCardAPI')
 		return false
 	end
 	local suffix = rank_data.suffix or rank_data.value
@@ -286,7 +291,7 @@ end
 function SMODS.Card:wipe_rank(value)
 	local rank_data = SMODS.Card.RANKS[value]
 	if not rank_data then
-		sendWarnMessage('Tried to wipe non-existent rank: ' .. value)
+		sendWarnMessage('Tried to wipe non-existent rank: ' .. value, 'PlayingCardAPI')
 		return false
 	end
 	local suffix = rank_data.suffix or rank_data.value
@@ -301,7 +306,7 @@ end
 function SMODS.Card:populate_rank(value)
 	local rank_data = SMODS.Card.RANKS[value]
 	if not rank_data then
-		sendWarnMessage('Tried to populate non-existent rank: ' .. value)
+		sendWarnMessage('Tried to populate non-existent rank: ' .. value, 'PlayingCardAPI')
 		return false
 	end
 	local suffix = rank_data.suffix or rank_data.value
@@ -335,10 +340,10 @@ function SMODS.Card:new(suit, value, name, pos, atlas_low_contrast, atlas_high_c
 	local suit_data = SMODS.Card.SUITS[suit]
 	local rank_data = SMODS.Card.RANKS[value]
 	if not suit_data then
-		sendWarnMessage('Suit does not exist: ' .. suit)
+		sendWarnMessage('Suit does not exist: ' .. suit, 'PlayingCardAPI')
 		return nil
 	elseif not rank_data then
-		sendWarnMessage('Rank does not exist: ' .. value)
+		sendWarnMessage('Rank does not exist: ' .. value, 'PlayingCardAPI')
 		return nil
 	end
 	G.P_CARDS[suit_data.prefix .. '_' .. (rank_data.suffix or rank_data.value)] = {
@@ -356,13 +361,13 @@ function SMODS.Card:remove(suit, value)
 	local suit_data = SMODS.Card.SUITS[suit]
 	local rank_data = SMODS.Card.RANKS[value]
 	if not suit_data then
-		sendWarnMessage('Suit does not exist: ' .. suit)
+		sendWarnMessage('Suit does not exist: ' .. suit, 'PlayingCardAPI')
 		return false
 	elseif not rank_data then
-		sendWarnMessage('Rank does not exist: ' .. value)
+		sendWarnMessage('Rank does not exist: ' .. value, 'PlayingCardAPI')
 		return false
 	elseif not G.P_CARDS[suit_data.prefix .. '_' .. (rank_data.suffix or rank_data.value)] then
-		sendWarnMessage('Card not found at index: ' .. suit_data.prefix .. '_' .. (rank_data.suffix or rank_data.value))
+		sendWarnMessage('Card not found at index: ' .. suit_data.prefix .. '_' .. (rank_data.suffix or rank_data.value), 'PlayingCardAPI')
 		return false
 	end
 	G.P_CARDS[suit_data.prefix .. '_' .. (rank_data.suffix or rank_data.value)] = nil
@@ -493,28 +498,35 @@ function SMODS.Card:_extend()
 		return ret
 	end
 
-	function get_X_same(num, hand)
-		local vals = {}
-		for i = 1, SMODS.Card.MAX_ID do
-			vals[i] = {}
-		end
-		for i = #hand, 1, -1 do
-			local curr = {}
-			table.insert(curr, hand[i])
-			for j = 1, #hand do
-				if hand[i]:get_id() == hand[j]:get_id() and i ~= j then
-					table.insert(curr, hand[j])
-				end
-			end
-			if #curr == num then
-				vals[curr[1]:get_id()] = curr
-			end
-		end
-		local ret = {}
-		for i = #vals, 1, -1 do
-			if next(vals[i]) then table.insert(ret, vals[i]) end
-		end
-		return ret
+    function get_X_same(num, hand)
+        local vals = {}
+        for i = 1, SMODS.Card.MAX_ID do
+            vals[i] = {}
+        end
+        for i = #hand, 1, -1 do
+            local curr = {}
+            table.insert(curr, hand[i])
+            for j = 1, #hand do
+                if hand[i]:get_id() == hand[j]:get_id() and i ~= j then
+                    table.insert(curr, hand[j])
+                end
+            end
+            if #curr == num then
+                vals[curr[1]:get_id()] = curr
+            end
+        end
+        local ret = {}
+        for i = #vals, 1, -1 do
+            if next(vals[i]) then table.insert(ret, vals[i]) end
+        end
+        return ret
+    end
+	
+	function Card:get_nominal(mod)
+		local mult = 1
+		if mod == 'suit' then mult = 10000 end
+		if self.ability.effect == 'Stone Card' then mult = -10000 end
+		return 10*self.base.nominal + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal + 0.000001*self.unique_val
 	end
 
 	function G.UIDEF.view_deck(unplayed_only)
@@ -982,7 +994,9 @@ function SMODS.Card:_extend()
 
 		local _row = {}
 		local _bg_col = G.C.JOKER_GREY
-		for k, v in ipairs(rank_name_mapping) do
+        for i = #SMODS.Card.RANK_LIST, 1, -1 do
+			local v = SMODS.Card.RANK_LIST[i]
+			local rank_data = SMODS.Card.RANKS[SMODS.Card.RANK_SHORTHAND_LOOKUP[v] or v]
 			local _tscale = 0.3
 			local _colour = G.C.BLACK
 			local rank_col = v == 'A' and _bg_col or (v == 'K' or v == 'Q' or v == 'J') and G.C.WHITE or _bg_col
@@ -1007,7 +1021,7 @@ function SMODS.Card:_extend()
 								n = G.UIT.R,
 								config = { align = "cm", minw = _minw + 0.04, minh = _minh, colour = G.C.L_BLACK, r = 0.1 },
 								nodes = {
-									{ n = G.UIT.T, config = { text = '' .. (rank_counts[id_index_mapping[k]] or 0), colour = flip_col, scale = _tscale, shadow = true } }
+									{ n = G.UIT.T, config = { text = '' .. (rank_counts[id_index_mapping[rank_data.id]] or 0), colour = flip_col, scale = _tscale, shadow = true } }
 								}
 							}
 						}

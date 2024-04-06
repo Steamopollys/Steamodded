@@ -102,7 +102,7 @@ function SMODS.injectSprites()
             error("Bad Sprite type")
         end
 		
-		sendDebugMessage("The Sprite named " .. sprite.name .. " with path " .. sprite.path .. " have been registered.")
+		sendInfoMessage("Registered Sprite " .. sprite.name .. " with path " .. sprite.path .. ".", 'SpriteAPI')
 	end
 
     --Reload Textures
@@ -181,7 +181,7 @@ function SMODS.injectSprites()
     G.ASSET_ATLAS.Planet = G.ASSET_ATLAS.Tarot
     G.ASSET_ATLAS.Spectral = G.ASSET_ATLAS.Tarot
 
-    sendDebugMessage("All the sprites have been loaded!")
+    sendInfoMessage("All the sprites have been loaded!", 'SpriteAPI')
 end
 
 gameset_render_settingsRef = Game.set_render_settings
@@ -201,7 +201,6 @@ function Card:set_sprites(_center, _front)
                     self.children.center.atlas = G.ASSET_ATLAS
                     [(_center.atlas or (_center.set == 'Joker' or _center.consumeable or _center.set == 'Voucher') and _center.set) or 'centers']
                     self.children.center:set_sprite_pos(_center.pos)
-                    sendDebugMessage(inspect(self.children.center))
                 elseif not _center.discovered then
                     self.children.center.atlas = G.ASSET_ATLAS[_center.set]
                     self.children.center:set_sprite_pos(

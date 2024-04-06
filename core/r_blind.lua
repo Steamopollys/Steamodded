@@ -8,10 +8,10 @@ SMODS.Blind = {
     vars = {},
     debuff = {},
     pos = { x = 0, y = 0 },
-    boss = {},
-    boss_colour =
-        HEX('FFFFFF'),
-    defeated = false
+    --boss = {},
+    --boss_colour =
+    --    HEX('FFFFFF'),
+    discovered = false
 }
 
 function SMODS.Blind:new(name, slug, loc_txt, dollars, mult, vars, debuff, pos, boss, boss_colour, defeated, atlas)
@@ -47,11 +47,14 @@ function SMODS.injectBlinds()
     local id = 0
     local i = 0
     local blind = nil
-
     for _, slug in ipairs(SMODS.BUFFERS.Blinds) do
-        i = i + 1
-        id = i + minId
         blind = SMODS.Blinds[slug]
+        if blind.order then
+            id = blind.order
+        else
+            i = i + 1
+            id = minId + i
+        end
         local blind_obj = {
             key = blind.slug,
             order = id,
@@ -64,7 +67,8 @@ function SMODS.injectBlinds()
             boss = blind.boss,
             boss_colour = blind.boss_colour,
             discovered = blind.discovered,
-            atlas = blind.atlas
+            atlas = blind.atlas,
+            debuff_text = blind.debuff_text
         }
         -- Now we replace the others
         G.P_BLINDS[blind.slug] = blind_obj
@@ -72,9 +76,32 @@ function SMODS.injectBlinds()
         -- Setup Localize text
         G.localization.descriptions["Blind"][blind.slug] = blind.loc_txt
 
-        sendDebugMessage("The Blind named " ..
-            blind.name .. " with the slug " .. blind.slug .. " have been registered at the id " .. id .. ".")
+        sendInfoMessage("Registered Blind " .. blind.name .. " with the slug " .. blind.slug .. " at ID " .. id .. ".", 'BlindAPI')
     end
+end
+
+function SMODS.Blind:take_ownership(slug)
+    if not (string.sub(slug, 1, 3) == 'bl_') then slug = 'bl_' .. slug end
+    local obj = G.P_BLINDS[slug]
+    if not obj then
+        sendWarnMessage('Tried to take ownership of non-existent Blind: ' .. slug, 'BlindAPI')
+        return nil
+    end
+    if SMODS.Blinds[slug] then
+        sendWarnMessage('Can only take ownership of unclaimed vanilla Blinds! ' ..
+            slug .. ' is already registered', 'BlindAPI')
+        return nil
+    end
+    o = {}
+    setmetatable(o, self)
+    self.__index = self
+    o.loc_txt = G.localization.descriptions['Blind'][slug]
+    o.slug = slug
+    for k, v in pairs(obj) do
+        o[k] = v
+    end
+	o.taken_ownership = true
+	return o
 end
 
 local set_blindref = Blind.set_blind;
@@ -465,7 +492,7 @@ function create_UIBox_your_collection_blinds(exit)
     end
 
     local blinds_per_row = math.ceil(#blind_tab / 6)
-    sendDebugMessage("Blinds per row:" .. tostring(blinds_per_row))
+    sendTraceMessage("Blinds per row:" .. tostring(blinds_per_row), 'BlindAPI')
 
     table.sort(blind_tab, function(a, b) return a.order < b.order end)
 
@@ -522,7 +549,6 @@ function create_UIBox_your_collection_blinds(exit)
             end
         end
         local row = math.ceil((k - 1) / blinds_per_row + 0.001)
-        sendDebugMessage("Y:" .. tostring(row) .. " X:" .. tostring(1 + ((k - 1) % 6)))
         table.insert(blind_matrix[row], {
             n = G.UIT.C,
             config = { align = "cm", padding = 0.1 },

@@ -28,8 +28,8 @@ function SMODS.INIT.JAPI()
 
     joker_test:register()
 
-    SMODS.Jokers.j_test.effect = function(self, context)
-        sendDebugMessage("Hello !")
+    SMODS.Jokers.j_test.set_ability = function(self, context)
+        sendDebugMessage("Hello !", 'MyLogger')
     end
 
     SMODS.Jokers.j_test.calculate = function(self, context)

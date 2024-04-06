@@ -61,8 +61,12 @@ function SMODS.injectPlanets()
     local planet = nil
     for _, slug in ipairs(SMODS.BUFFERS.Planets) do
         planet = SMODS.Planets[slug]
-        i = i + 1
-        id = i + minId
+        if planet.order then
+            id = planet.order
+        else
+            i = i + 1
+            id = i + minId
+        end
 
         local planet_obj = {
             unlocked = planet.unlocked,
@@ -90,15 +94,46 @@ function SMODS.injectPlanets()
         end
 
         -- Now we replace the others
-        G.P_CENTERS[planet.slug] = planet_obj
-        table.insert(G.P_CENTER_POOLS['Planet'], planet_obj)
+        G.P_CENTERS[slug] = planet_obj
+        if not planet.taken_ownership then
+			table.insert(G.P_CENTER_POOLS['Planet'], planet_obj)
+		else
+			for k, v in ipairs(G.P_CENTER_POOLS['Planet']) do
+				if v.key == slug then G.P_CENTER_POOLS['Planet'][k] = planet_obj end
+			end
+		end
 
         -- Setup Localize text
         G.localization.descriptions["Planet"][planet.slug] = planet.loc_txt
 
-        sendDebugMessage("The Planet named " .. planet.name .. " with the slug " .. planet.slug ..
-            " have been registered at the id " .. id .. ".")
+        sendInfoMessage("Registered Planet " .. planet.name .. " with the slug " .. planet.slug .. " at ID " .. id .. ".", 'ConsumableAPI')
     end
+end
+
+function SMODS.Planet:take_ownership(slug)
+    if not (string.sub(slug, 1, 2) == 'c_') then slug = 'c_' .. slug end
+    local obj = G.P_CENTERS[slug]
+    if not obj then
+        sendWarnMessage('Tried to take ownership of non-existent Planet: ' .. slug, 'ConsumableAPI')
+        return nil
+    end
+    if obj.mod_name then
+        sendWarnMessage('Can only take ownership of unclaimed vanilla Planets! ' ..
+            slug .. ' belongs to ' .. obj.mod_name, 'ConsumableAPI')
+        return nil
+    end
+    o = {}
+    setmetatable(o, self)
+    self.__index = self
+    o.loc_txt = G.localization.descriptions['Planet'][slug]
+    o.slug = slug
+    for k, v in pairs(obj) do
+        o[k] = v
+    end
+	o.mod_name = SMODS._MOD_NAME
+    o.badge_colour = SMODS._BADGE_COLOUR
+	o.taken_ownership = true
+	return o
 end
 
 function create_UIBox_your_collection_planets()
@@ -125,8 +160,6 @@ function create_UIBox_your_collection_planets()
     for j = 1, #G.your_collection do
         for i = 1, 3 do
             local center = G.P_CENTER_POOLS["Planet"][i + (j - 1) * (3)]
-            sendDebugMessage(tostring(i + (j - 1) * (4)))
-            sendDebugMessage(inspect(center))
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y, G
                 .CARD_W,
                 G.CARD_H, nil, center)

@@ -46,9 +46,13 @@ function SMODS.injectSpectrals()
     local i = 0
     local spectral = nil
     for _, slug in ipairs(SMODS.BUFFERS.Spectrals) do
-        i = i + 1
-        id = i + minId
         spectral = SMODS.Spectrals[slug]
+        if spectral.order then
+            id = spectral.order
+        else
+            i = i + 1
+            id = i + minId
+        end
         local tarot_obj = {
             unlocked = spectral.unlocked,
             discovered = spectral.discovered,
@@ -62,7 +66,9 @@ function SMODS.injectSpectrals()
             atlas = spectral.atlas,
             cost = spectral.cost,
             mod_name = spectral.mod_name,
-            badge_colour = spectral.badge_colour
+            badge_colour = spectral.badge_colour,
+            -- * currently unsupported
+            hidden = spectral.hidden
         }
 
         for _i, sprite in ipairs(SMODS.Sprites) do
@@ -72,15 +78,46 @@ function SMODS.injectSpectrals()
         end
 
         -- Now we replace the others
-        G.P_CENTERS[spectral.slug] = tarot_obj
-        table.insert(G.P_CENTER_POOLS['Spectral'], tarot_obj)
+        G.P_CENTERS[slug] = tarot_obj
+        if not spectral.taken_ownership then
+			table.insert(G.P_CENTER_POOLS['Spectral'], tarot_obj)
+		else
+			for k, v in ipairs(G.P_CENTER_POOLS['Spectral']) do
+				if v.key == slug then G.P_CENTER_POOLS['Spectral'][k] = tarot_obj end
+			end
+		end
 
         -- Setup Localize text
         G.localization.descriptions["Spectral"][spectral.slug] = spectral.loc_txt
 
-        sendDebugMessage("The Spectral named " .. spectral.name .. " with the slug " .. spectral.slug ..
-            " have been registered at the id " .. id .. ".")
+        sendInfoMessage("Registered Spectral " .. spectral.name .. " with the slug " .. spectral.slug .. " at ID " .. id .. ".", 'ConsumableAPI')
     end
+end
+
+function SMODS.Spectral:take_ownership(slug)
+    if not (string.sub(slug, 1, 2) == 'c_') then slug = 'c_' .. slug end
+    local obj = G.P_CENTERS[slug]
+    if not obj then
+        sendWarnMessage('Tried to take ownership of non-existent Spectral: ' .. slug, 'ConsumableAPI')
+        return nil
+    end
+    if obj.mod_name then
+        sendWarnMessage('Can only take ownership of unclaimed vanilla Spectrals! ' ..
+            slug .. ' belongs to ' .. obj.mod_name, 'ConsumableAPI')
+        return nil
+    end
+    o = {}
+    setmetatable(o, self)
+    self.__index = self
+    o.loc_txt = G.localization.descriptions['Spectral'][slug]
+    o.slug = slug
+    for k, v in pairs(obj) do
+        o[k] = v
+    end
+	o.mod_name = SMODS._MOD_NAME
+    o.badge_colour = SMODS._BADGE_COLOUR
+	o.taken_ownership = true
+	return o
 end
 
 function create_UIBox_your_collection_spectrals()
