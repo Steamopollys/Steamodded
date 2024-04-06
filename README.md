@@ -4,11 +4,21 @@
 
 Steamodded is a mod loader and injector for the game Balatro. It is developed using Lua for the injected code and Python for additional tools. Currently, Steamodded focuses on basic mod loading and injection functionalities and does not include a modding API.
 
+`Steammodded` is a mod loader for the game `Balatro`. 
+Developed with 
+- Lua 
+- Python
+
+Currently, `Steammodded` focuses on basic mod loading and injection functionalities and does not include a modding API.
+
 ## Features
 
-- **Mod Loader:** Loads mods into the game.
+- Mod Loader:
 
-It will load every mods located at the path `C:\Users\<USER>\AppData\Roaming\Balatro` (or `%appdata%\Balatro\Mods`) into the game.
+
+
+### Development
+
 If it's for now very simple, it will seach for an header at the top of the file that looks like this:
 
 ```text
@@ -108,18 +118,39 @@ For this one, go to the [release page](https://github.com/Steamopollys/steamodde
 
 **THIS IS LEGACY MAC SUPPORT, FORMAL ONE WILL COME LATER**
 
-- **CLOSE THE GAME !**
-- Make sure you have python3, pip3, MPocate/PLocate, 7zip-full, and the python requests library.
-- run `git clone https://github.com/Steamopollys/Steamodded.git && cd Steamodded && python3 steamodded_injector.py` and drag in Balatro.love from within the Package Contents of the Balatro app before hitting enter! (Should look something like `git clone https://github.com/Steamopollys/Steamodded.git && cd Steamodded && python3 steamodded_injector.py ~/Library/Application\ Support/Steam/steamapps/common/Balatro/Balatro.app/Contents/Resources/Balatro.love`)
-- Wait for it to finish
-- And that's it! Balatro is now ready to be Modded.
+```sh
+# Clone the Steamodded repository
+git clone https://github.com/Steamopollys/Steamodded.git
+# Install virtualenv using pip and setup a virtual environment
+cd Steamodded
+pip install virtualenv
+virtualenv venv
+source venv/bin/activate
+# Install dependencies
+pip install requests
+brew install p7zip
+# Run the injector
+python steamodded_injector.py ~/Library/Application\ Support/Steam/steamapps/common/Balatro/Balatro.app/Contents/Resources/Balatro.love
+```
 
-## How to Install a Mod
-
-- Go to `C:\Users\<USER>\AppData\Roaming\Balatro\Mods` (or `%appdata%\Balatro\Mods`) (Create the "Mods" directory if necessary)
-- On Linux it is typically `/home/$USER/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods`
-- Put the mod into the directory (only the Mod File if there is only one file provided or all the files in a subdirectory)
-- Launch the Game and enjoy!
+## Installing Mods
+- Navigate and create the directory for mods:
+  - Windows: `cd C:\Users\<USER>\AppData\Roaming\Balatro\Mods` or `cd %appdata%\Balatro\Mods`
+  - Linux: `cd /home/$USER/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods`
+  - macOS: `cd ~/Library/Application Support/Balatro/mods`
+- Place the mod files in the directory.
+- ```
+  mods/
+  |-- rng_poker_mod.love
+  |-- card_deck_mod.love
+  |-- dungeon_deck_mod/
+    |-- assets/
+        |-- monster_assets.png
+        |-- treasure_assets.png
+    |-- monster_mod.love
+    |-- treasure_mod.love
+    |-- readme.md
+```
 
 ## Dependencies
 

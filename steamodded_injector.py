@@ -3,7 +3,6 @@ import os
 import sys
 import tempfile
 import zipfile
-import shutil
 import platform
 import requests
 
@@ -149,7 +148,7 @@ seven_zip_path = f"{seven_zip_dir.name}/7z.exe"
 if os.name == 'posix':
     if platform.system() == 'Darwin':
         # This is macOS
-        command = "7zz"  # Update this path as necessary for macOS
+        command = "7z"  # Update this path as necessary for macOS
     else:
         # This is Linux or another POSIX-compliant OS
         command = "7zz"
@@ -221,5 +220,5 @@ seven_zip_dir.cleanup()
 temp_dir.cleanup()
 
 print("Process completed successfully.")
-print("Press any key to exit...")
+print("Press ENTER to exit...")
 input()
