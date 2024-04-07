@@ -452,10 +452,29 @@ function getDebugInfoForCrash()
     if lovely_success then
         info = info .. "\nLovely Version: " .. lovely.version
     end
-    info = info .. "\nSteamodded Mods:"
-    for k, v in pairs(SMODS.MODS) do
-        info = info .. "\n    " .. k .. ": " .. v.name .. " By " .. concatAuthors(v.author) .. " [ID: " .. v.id ..
-                   (v.priority ~= 0 and (", Priority: " .. v.priority) or "") .. "]"
+    if SMODS.MODS then
+        info = info .. "\nSteamodded Mods:"
+        for k, v in pairs(SMODS.MODS) do
+            info = info .. "\n    " .. k .. ": " .. v.name .. " By " .. concatAuthors(v.author) .. " [ID: " .. v.id ..
+                       (v.priority ~= 0 and (", Priority: " .. v.priority) or "") .. "]"
+            local debugInfo = SMODS.DebugInfo[v.id]
+            if debugInfo then
+                if type(debugInfo) == "string" then
+                    if #debugInfo ~= 0 then
+                        info = info .. "\n        " .. debugInfo
+                    end
+                elseif type(debugInfo) == "table" then
+                    for k, v in pairs(debugInfo) do
+                        if type(v) ~= nil then
+                            v = tostring(v)
+                        end
+                        if #v ~= 0 then
+                            info = info .. "\n        " .. k .. ": " .. v
+                        end
+                    end
+                end
+            end
+        end
     end
     return info
 end
@@ -465,6 +484,7 @@ function injectStackTrace()
         return
     end
     stackTraceAlreadyInjected = true
+    SMODS.DebugInfo = {}
     local STP = loadStackTracePlus()
     local utf8 = require("utf8")
 
@@ -661,7 +681,6 @@ function injectStackTrace()
         end
 
     end
-
 end
 
 -- ----------------------------------------------
