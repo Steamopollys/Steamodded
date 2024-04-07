@@ -457,6 +457,8 @@ function injectStackTrace()
     function love.errorhandler(msg)
         msg = tostring(msg)
 
+        sendErrorMessage("Oops! The game crashed\n" .. STP.stacktrace(msg), 'StackTrace')
+
         if not love.window or not love.graphics or not love.event then
             return
         end
@@ -503,7 +505,7 @@ function injectStackTrace()
 
         local err = {}
 
-        table.insert(err, "Error: ")
+        table.insert(err, "Oops! The game crashed:")
         table.insert(err, sanitizedmsg)
 
         if #sanitizedmsg ~= #msg then
