@@ -448,6 +448,9 @@ local stackTraceAlreadyInjected = false
 
 function getDebugInfoForCrash()
     local info = "Additional Context:\nBalatro Version: " .. VERSION .. "\nModded Version: " .. MODDED_VERSION
+    local major, minor, revision, codename = love.getVersion()
+    info = info .. string.format("\nLove2D Version: %d.%d.%d", major, minor, revision)
+
     local lovely_success, lovely = pcall(require, "lovely")
     if lovely_success then
         info = info .. "\nLovely Version: " .. lovely.version
