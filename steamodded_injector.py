@@ -104,122 +104,123 @@ def modify_game_lua(game_lua_path):
         print(f"Error modifying game.lua: {e}")
 
 
-print("Starting the process...")
+def main():
+    print("Starting the process...")
 
-# URL to download the LuaJIT decompiler
-# luajit_decompiler_url = ""
+    # URL to download the LuaJIT decompiler
+    # luajit_decompiler_url = ""
 
-# Temporary directory for operations
-with tempfile.TemporaryDirectory() as decompiler_dir:
-    # This part was used to download the LuaJit decompiler
-    # luajit_decompiler_path = os.path.join(decompiler_dir, 'luajit-decompiler-v2.exe')
+    # Temporary directory for operations
+    with tempfile.TemporaryDirectory() as decompiler_dir:
+        # This part was used to download the LuaJit decompiler
+        # luajit_decompiler_path = os.path.join(decompiler_dir, 'luajit-decompiler-v2.exe')
 
-    # # Download LuaJIT decompiler
-    # if not download_file(luajit_decompiler_url, luajit_decompiler_path):
-    #     print("Failed to download LuaJIT decompiler.")
-    #     sys.exit(1)
+        # # Download LuaJIT decompiler
+        # if not download_file(luajit_decompiler_url, luajit_decompiler_path):
+        #     print("Failed to download LuaJIT decompiler.")
+        #     sys.exit(1)
 
-    # print("LuaJIT Decompiler downloaded.")
+        # print("LuaJIT Decompiler downloaded.")
 
-    # URL to download the 7-Zip suite
-    seven_zip_url = "https://github.com/Steamopollys/Steamodded/raw/main/7-zip/7z.zip"
+        # URL to download the 7-Zip suite
+        seven_zip_url = "https://github.com/Steamopollys/Steamodded/raw/main/7-zip/7z.zip"
 
-    # Temporary directory for 7-Zip suite
-seven_zip_dir = tempfile.TemporaryDirectory()
-print(seven_zip_dir.name)
-print("Downloading and extracting 7-Zip suite...")
-download_file(seven_zip_url, os.path.join(seven_zip_dir.name, "7z.zip"))
-with zipfile.ZipFile(
-    os.path.join(seven_zip_dir.name, "7z.zip"), "r"
-) as zip_ref:
-    zip_ref.extractall(seven_zip_dir.name)
+        # Temporary directory for 7-Zip suite
+    seven_zip_dir = tempfile.TemporaryDirectory()
+    print(seven_zip_dir.name)
+    print("Downloading and extracting 7-Zip suite...")
+    download_file(seven_zip_url, os.path.join(seven_zip_dir.name, "7z.zip"))
+    with zipfile.ZipFile(
+        os.path.join(seven_zip_dir.name, "7z.zip"), "r"
+    ) as zip_ref:
+        zip_ref.extractall(seven_zip_dir.name)
 
-# Check the operating system
-#if os.name() == 'Linux':
-#    seven_zip_path = ['wine', os.path.join(seven_zip_dir.name, "7z.exe")]
-#elif os.name == 'nt':
-#    seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
-#else:
-#    # Handle other operating systems or raise an error
-#    raise NotImplementedError("This script only supports Windows and Linux.")
+    # Check the operating system
+    #if os.name() == 'Linux':
+    #    seven_zip_path = ['wine', os.path.join(seven_zip_dir.name, "7z.exe")]
+    #elif os.name == 'nt':
+    #    seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
+    #else:
+    #    # Handle other operating systems or raise an error
+    #    raise NotImplementedError("This script only supports Windows and Linux.")
 
-seven_zip_path = f"{seven_zip_dir.name}/7z.exe"
+    seven_zip_path = f"{seven_zip_dir.name}/7z.exe"
 
-# Determine the operating system and prepare the 7-Zip command accordingly
-if os.name == 'posix':
-    if platform.system() == 'Darwin':
-        # This is macOS
-        command = "7zz"  # Update this path as necessary for macOS
+    # Determine the operating system and prepare the 7-Zip command accordingly
+    if os.name == 'posix':
+        if platform.system() == 'Darwin':
+            # This is macOS
+            command = "7zz"  # Update this path as necessary for macOS
+        else:
+            # This is Linux or another POSIX-compliant OS
+            command = "7zz"
     else:
-        # This is Linux or another POSIX-compliant OS
-        command = "7zz"
-else:
-    # This is for Windows
-    command = f"{seven_zip_dir.name}/7z.exe"
+        # This is for Windows
+        command = f"{seven_zip_dir.name}/7z.exe"
 
-#command = seven_zip_dir + ["x", "-o" + temp_dir.name, sfx_archive_path]
+    #command = seven_zip_dir + ["x", "-o" + temp_dir.name, sfx_archive_path]
 
-# seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
+    # seven_zip_path = os.path.join(seven_zip_dir.name, "7z.exe")
 
-# Check if the SFX archive path is provided
-if len(sys.argv) < 2:
-    print("Please drag and drop the SFX archive onto this executable.")
+    # Check if the SFX archive path is provided
+    if len(sys.argv) < 2:
+        print("Please drag and drop the SFX archive onto this executable.")
+        seven_zip_dir.cleanup()
+        sys.exit(1)
+
+    sfx_archive_path = sys.argv[1]
+    print(f"SFX Archive received: {sfx_archive_path}")
+
+    # Temporary directory for extraction and modification
+    temp_dir = tempfile.TemporaryDirectory()
+    print(temp_dir.name)
+    # Extract the SFX archive
+    #subprocess.run([command, "x", "-o" + temp_dir.name, sfx_archive_path])
+    subprocess.run([command, "x", f"-o{temp_dir.name}", sfx_archive_path], check=True)
+    print("Extraction complete.")
+
+    # Path to main.lua and game.lua within the extracted files
+    main_lua_path = os.path.join(temp_dir.name, "main.lua")
+    game_lua_path = os.path.join(temp_dir.name, "game.lua")
+    decompile_output_path = os.path.join(temp_dir.name, "output")
+    os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
+
+
+    # This part was used to decompile to game data
+    # No longer needed
+    # decompile_lua(luajit_decompiler_path, main_lua_path, decompile_output_path)
+    # print("Decompilation of main.lua complete.")
+
+    main_lua_output_path = os.path.join(temp_dir.name, "main.lua")
+
+    # Determine the base directory (where the .exe is located)
+    if getattr(sys, "frozen", False):
+        # Running in a PyInstaller or Nuitka bundle
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        # Running in a normal Python environment
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Modify main.lua
+    directories = ["core", "debug", "loader"]
+    modify_main_lua(main_lua_output_path, base_dir, directories)
+    print("Modification of main.lua complete.")
+
+    # Modify main.lua
+    modify_game_lua(game_lua_path)
+    print("Modification of game.lua complete.")
+
+    # Update the SFX archive with the modified main.lua
+    #subprocess.run([command, "a", sfx_archive_path, main_lua_output_path])
+    subprocess.run([command, "a", sfx_archive_path, main_lua_output_path], check=True)
+    # Update the SFX archive with the modified game.lua
+    #subprocess.run([command, "a", sfx_archive_path, game_lua_path])
+    subprocess.run([command, "a", sfx_archive_path, game_lua_path], check=True)
+    print("SFX Archive updated.")
+
     seven_zip_dir.cleanup()
-    sys.exit(1)
+    temp_dir.cleanup()
 
-sfx_archive_path = sys.argv[1]
-print(f"SFX Archive received: {sfx_archive_path}")
-
-# Temporary directory for extraction and modification
-temp_dir = tempfile.TemporaryDirectory()
-print(temp_dir.name)
-# Extract the SFX archive
-#subprocess.run([command, "x", "-o" + temp_dir.name, sfx_archive_path])
-subprocess.run([command, "x", f"-o{temp_dir.name}", sfx_archive_path], check=True)
-print("Extraction complete.")
-
-# Path to main.lua and game.lua within the extracted files
-main_lua_path = os.path.join(temp_dir.name, "main.lua")
-game_lua_path = os.path.join(temp_dir.name, "game.lua")
-decompile_output_path = os.path.join(temp_dir.name, "output")
-os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
-
-
-# This part was used to decompile to game data
-# No longer needed
-# decompile_lua(luajit_decompiler_path, main_lua_path, decompile_output_path)
-# print("Decompilation of main.lua complete.")
-
-main_lua_output_path = os.path.join(temp_dir.name, "main.lua")
-
-# Determine the base directory (where the .exe is located)
-if getattr(sys, "frozen", False):
-    # Running in a PyInstaller or Nuitka bundle
-    base_dir = os.path.dirname(sys.executable)
-else:
-    # Running in a normal Python environment
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Modify main.lua
-directories = ["core", "debug", "loader"]
-modify_main_lua(main_lua_output_path, base_dir, directories)
-print("Modification of main.lua complete.")
-
-# Modify main.lua
-modify_game_lua(game_lua_path)
-print("Modification of game.lua complete.")
-
-# Update the SFX archive with the modified main.lua
-#subprocess.run([command, "a", sfx_archive_path, main_lua_output_path])
-subprocess.run([command, "a", sfx_archive_path, main_lua_output_path], check=True)
-# Update the SFX archive with the modified game.lua
-#subprocess.run([command, "a", sfx_archive_path, game_lua_path])
-subprocess.run([command, "a", sfx_archive_path, game_lua_path], check=True)
-print("SFX Archive updated.")
-
-seven_zip_dir.cleanup()
-temp_dir.cleanup()
-
-print("Process completed successfully.")
-print("Press any key to exit...")
-input()
+    print("Process completed successfully.")
+    print("Press any key to exit...")
+    input()
