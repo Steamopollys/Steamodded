@@ -3,18 +3,16 @@ import os
 import sys
 import tempfile
 import zipfile
-import shutil
 import platform
-import requests
 
-def download_file(url, output_path):
-    response = requests.get(url, stream=True)
-    if response.status_code == 200:
-        with open(output_path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                file.write(chunk)
-        return True
-    return False
+# def download_file(url, output_path):
+#     response = requests.get(url, stream=True)
+#     if response.status_code == 200:
+#         with open(output_path, "wb") as file:
+#             for chunk in response.iter_content(chunk_size=8192):
+#                 file.write(chunk)
+#         return True
+#     return False
 
 
 # def decompile_lua(decompiler_path, lua_path, output_dir):
@@ -110,7 +108,7 @@ print("Starting the process...")
 # luajit_decompiler_url = ""
 
 # Temporary directory for operations
-with tempfile.TemporaryDirectory() as decompiler_dir:
+# with tempfile.TemporaryDirectory() as decompiler_dir:
     # This part was used to download the LuaJit decompiler
     # luajit_decompiler_path = os.path.join(decompiler_dir, 'luajit-decompiler-v2.exe')
 
@@ -121,17 +119,21 @@ with tempfile.TemporaryDirectory() as decompiler_dir:
 
     # print("LuaJIT Decompiler downloaded.")
 
-    # URL to download the 7-Zip suite
-    seven_zip_url = "https://github.com/Steamopollys/Steamodded/raw/main/7-zip/7z.zip"
+# Determine the base directory (where the .exe is located)
+if getattr(sys, "frozen", False):
+    # Running in a PyInstaller or Nuitka bundle
+    base_dir = os.path.dirname(sys.executable)
+else:
+    # Running in a normal Python environment
+    base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Temporary directory for 7-Zip suite
+seven_zip_file = os.path.join(base_dir, "7-zip/7z.zip")
+
+# Temporary directory for 7-Zip suite
 seven_zip_dir = tempfile.TemporaryDirectory()
 print(seven_zip_dir.name)
 print("Downloading and extracting 7-Zip suite...")
-download_file(seven_zip_url, os.path.join(seven_zip_dir.name, "7z.zip"))
-with zipfile.ZipFile(
-    os.path.join(seven_zip_dir.name, "7z.zip"), "r"
-) as zip_ref:
+with zipfile.ZipFile(seven_zip_file, "r") as zip_ref:
     zip_ref.extractall(seven_zip_dir.name)
 
 # Check the operating system
@@ -191,14 +193,6 @@ os.makedirs(decompile_output_path, exist_ok=True)  # Create the output directory
 # print("Decompilation of main.lua complete.")
 
 main_lua_output_path = os.path.join(temp_dir.name, "main.lua")
-
-# Determine the base directory (where the .exe is located)
-if getattr(sys, "frozen", False):
-    # Running in a PyInstaller or Nuitka bundle
-    base_dir = os.path.dirname(sys.executable)
-else:
-    # Running in a normal Python environment
-    base_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Modify main.lua
 directories = ["core", "debug", "loader"]
