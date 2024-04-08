@@ -121,12 +121,12 @@ end
 function SMODS.Card:new_suit(name, card_atlas_low_contrast, card_atlas_high_contrast, card_pos, ui_atlas_low_contrast,
 							 ui_atlas_high_contrast, ui_pos, colour_low_contrast, colour_high_contrast, create_cards)
 	if SMODS.Card.SUITS[name] then
-		sendDebugMessage('Failed to register duplicate suit:' .. name)
+		sendWarnMessage('Failed to register duplicate suit:' .. name, 'PlayingCardAPI')
 		return nil
 	end
 	local prefix = SMODS.Card.generate_prefix()
 	if not prefix then
-		sendDebugMessage('Too many suits! Failed to assign valid prefix to:' .. name)
+		sendWarnMessage('Too many suits! Failed to assign valid prefix to:' .. name, 'PlayingCardAPI')
 	end
 	SMODS.Card.MAX_SUIT_NOMINAL = SMODS.Card.MAX_SUIT_NOMINAL + 0.01
 	create_cards = not (create_cards == false)

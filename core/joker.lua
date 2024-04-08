@@ -223,12 +223,15 @@ function Card:generate_UIBox_ability_table()
         if self.ability.eternal then
             badges[#badges + 1] = 'eternal'
         end
+        if self.ability.perishable then
+            loc_vars.perish_tally=self.ability.perish_tally
+            badges[#badges + 1] = 'perishable'
+        end
+        if self.ability.rental then badges[#badges + 1] = 'rental' end
         if self.pinned then
             badges[#badges + 1] = 'pinned_left'
         end
-
         if self.sticker then
-            loc_vars = loc_vars or {};
             loc_vars.sticker = self.sticker
         end
 
