@@ -88,13 +88,20 @@ You can also use it uncompiled if you know what you are doing ! (This is the Pow
 
 #### (External Tool) Lovely Injector
 
-Lovely is an other project created to inject code into LOVE 2D Games. This is a very good way to install the Modloader without dealing with a "Classic" injector.
+Lovely is an other project created to inject code into LOVE 2D Games. This is a very good way to install the Modloader without dealing with a "Classic" injector, especially if Windows Defender prevents it from running. This will also prevent you from needing to rerun the injector when Balatro updates.
 
-You can check it out on this link, you wont regret it: https://github.com/ethangreen-dev/lovely-injector
+The main project page can be found here: https://github.com/ethangreen-dev/lovely-injector
 
-It's a little bit more complicated to use than the 2 previous options, but it can spare you from a lot of troubles. Every informations on how to use Steamodded with it can be found directly on the project link.
-
-For this one, go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the latest release (Your aiming for the "Source Code (zip)" download and the "lovely.toml" file). Then, follow the instructions provided by the Lovely Github.
+**Lovely Instructions:**
+- Go to the [release page](https://github.com/Steamopollys/steamodded/releases) and download the latest release (Your aiming for the "Source Code (zip)" download)
+- Extract this folder `%APPDATA%\Balatro\Mods` (you might have to create the "Mods" folder).
+  - If done correctly, you should have a folder that looks something like "Steamodded-x.x.x" in your "Mods" folder containing various files, including `lovely.toml`.
+- Download the "version.dll" file from [the Lovely releases page](https://github.com/ethangreen-dev/lovely-injector/releases) 
+- place the downloaded "version.dll" file next to your "Balatro.exe" file where Balatro is installed.
+  - "Balatro.exe" can be found by right-clicking the game in Steam, and selecting "Manage > Browse Local Files"
+- Launch Balatro. If done correctly, there should be a "Mods" menu item on the main menu.
+- And that's it! Balatro is now ready to be Modded.
+  - Place any mods you wish to have installed next to "Steamodded-x.x.x" folder in `%APPDATA%\Balatro\Mods`
 
 ### Linux
 
