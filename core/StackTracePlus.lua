@@ -658,6 +658,12 @@ function injectStackTrace()
                     scrollOffset = endHeight
                 elseif e == "wheelmoved" then
                     scrollUp(b * 20)
+                elseif e == "gamepadpressed" and a == "dpdown" then
+                    scrollDown()
+                elseif e == "gamepadpressed" and a == "dpup" then
+                    scrollUp()
+                elseif e == "gamepadpressed" and (a == "back" or a == "start") then
+                    return 1
                 elseif e == "touchpressed" then
                     local name = love.window.getTitle()
                     if #name == 0 or name == "Untitled" then
