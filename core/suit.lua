@@ -45,7 +45,7 @@ SMODS.Card.RANKS = {
 	['10'] = { suffix = 'T', value = '10', pos = { x = 8 }, id = 10, nominal = 10, next = { 'Jack' } },
 	['Jack'] = { suffix = 'J', value = 'Jack', pos = { x = 9 }, id = 11, nominal = 10, face_nominal = 0.1, face = true, next = { 'Queen' }, shorthand = 'J' },
 	['Queen'] = { suffix = 'Q', value = 'Queen', pos = { x = 10 }, id = 12, nominal = 10, face_nominal = 0.2, face = true, next = { 'King' }, shorthand = 'Q' },
-	['King'] = { suffix = 'K', value = 'King', pos = { x = 11 }, id = 13, nominal = 10, face_nominal = 0.3, face = true, next = { 'Ace', shorthand = 'K' } },
+	['King'] = { suffix = 'K', value = 'King', pos = { x = 11 }, id = 13, nominal = 10, face_nominal = 0.3, face = true, next = { 'Ace' }, shorthand = 'K' },
 	['Ace'] = { suffix = 'A', value = 'Ace', pos = { x = 12 }, id = 14, nominal = 11, face_nominal = 0.4, next = { '2' }, straight_edge = true, shorthand = 'A' }
 }
 SMODS.Card.RANK_LIST = { '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A' }

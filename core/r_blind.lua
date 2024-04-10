@@ -149,7 +149,7 @@ function Blind:defeat(silent)
     local key = self.config.blind.key
     local blind_obj = SMODS.Blinds[key]
     if blind_obj and blind_obj.defeat and type(blind_obj.defeat) == 'function' then
-        blind_obj.set_blind(self, silent)
+        blind_obj.defeat(self, silent)
     end
     blind_defeat_ref(self, silent)
 end
