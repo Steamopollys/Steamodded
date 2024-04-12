@@ -12,6 +12,7 @@ SMODS.BUFFERS = {
     Blinds = {},
 	Seals = {},
 	Vouchers = {},
+	Stickers = {},
 }
 
 MODDED_VERSION = "0.9.8-STEAMODDED"
