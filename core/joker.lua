@@ -165,6 +165,11 @@ end
 
 local calculate_jokerref = Card.calculate_joker;
 function Card:calculate_joker(context)
+    for k, v in pairs(SMODS.Stickers) do
+        if self.ability[v.label] then
+            v.calculate_sticker(self, context)
+        end
+    end
     if not self.debuff then
         local key = self.config.center.key
         local center_obj = SMODS.Jokers[key] or SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key]
@@ -202,6 +207,7 @@ function Card:generate_UIBox_ability_table()
             if m then main_end = m end
         end
     end
+    SMODS.set_card_SMODS_sticker_info(self)
     if loc_vars then
         local badges = {}
         if (card_type ~= 'Locked' and card_type ~= 'Undiscovered' and card_type ~= 'Default') or self.debuff then
@@ -225,6 +231,11 @@ function Card:generate_UIBox_ability_table()
         end
         if self.pinned then
             badges[#badges + 1] = 'pinned_left'
+        end
+
+        for k, v in pairs(SMODS.Stickers) do
+            sendInfoMessage(type(v))
+            if self.ability[v] == true then badges[#badges + 1] = v end
         end
 
         if self.sticker then
