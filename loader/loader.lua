@@ -185,6 +185,7 @@ function Game:init_item_prototypes()
     SMODS.injectVouchers()
     SMODS.injectBlinds()
     SMODS.injectSeals()
+    SMODS.injectStickers()
     SMODS.LOAD_LOC()
     SMODS.SAVE_UNLOCKS()
     for _, v in pairs(SMODS.Card.SUITS) do
