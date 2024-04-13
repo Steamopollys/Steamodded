@@ -7,11 +7,12 @@ SMODS.Sticker = {
 	chance = 0.3,
 	atlas = "",
     color = HEX("FFFFFF"),
-    sticker_compat = {true, {}, {}},
+    default_compat = true,
+    compat_exceptions = {}
 }
 SMODS.Card_Stickers = nil
 
-function SMODS.Sticker:new(name, label, config, pos, chance, atlas, color, default_compat, auto_set_true, auto_set_false)
+function SMODS.Sticker:new(name, label, config, pos, chance, atlas, color, default_compat, compat_exceptions)
 	o = {}
 	setmetatable(o, self)
 	self.__index = self
@@ -27,31 +28,17 @@ function SMODS.Sticker:new(name, label, config, pos, chance, atlas, color, defau
 	o.atlas = atlas or ""
     o.color = color or HEX("FFFFFF")
     o.default_compat = default_compat or true
-    o.auto_set_true = auto_set_true or {}
-    o.auto_set_false = auto_set_false or {}
+    o.compat_exceptions = compat_exceptions or {}
 	return o
-end
-
---helper function for InjectStickers
-function tableContains(table, key)
-    if not table then return false end
-    for _, value in pairs(table) do
-        if value == key then
-            return true
-        end
-    end
-    return false
 end
 
 function SMODS.injectStickers()
     for _, label in ipairs(SMODS.BUFFERS.Stickers) do
         local sticker = SMODS.Stickers[label]
         for k, v in pairs(G.P_CENTERS) do
-            if v.set == "Joker" and not G.P_CENTERS[v.key][sticker.label.."_compat"] then
-                if sticker.auto_set_true and tableContains(sticker.auto_set_true, v.key) then
-                    G.P_CENTERS[v.key][sticker.label.."_compat"] = true
-                elseif sticker.auto_set_false and tableContains(sticker.auto_set_false, v.key) then
-                    G.P_CENTERS[v.key][sticker.label.."_compat"] = false
+            if v.set == "Joker" and G.P_CENTERS[v.key][sticker.label.."_compat"] == nil then
+                if sticker.compat_exceptions[v.key] ~= nil then
+                    G.P_CENTERS[v.key][sticker.label.."_compat"] = sticker.compat_exceptions[v.key]
                 else
                     G.P_CENTERS[v.key][sticker.label.."_compat"] = sticker.default_compat
                 end
