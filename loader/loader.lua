@@ -160,8 +160,8 @@ function initSteamodded()
     end
     SMODS.injectSprites()
     SMODS.injectDecks()
-    SMODS.injectStickers()
     SMODS.injectJokers()
+    SMODS.injectStickers()
     SMODS.injectTarots()
     SMODS.injectPlanets()
     SMODS.injectSpectrals()
@@ -179,8 +179,8 @@ function Game:init_item_prototypes()
 	init_item_prototypes_ref(self)
 	SMODS.injectSprites()
 	SMODS.injectDecks()
-    SMODS.injectStickers()
     SMODS.injectJokers()
+    SMODS.injectStickers()
     SMODS.injectTarots()
     SMODS.injectPlanets()
     SMODS.injectSpectrals()
@@ -195,6 +195,7 @@ function Game:init_item_prototypes()
         end
     end
 end
+
 
 ----------------------------------------------
 ------------MOD LOADER END--------------------
