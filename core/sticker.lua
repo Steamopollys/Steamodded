@@ -125,9 +125,5 @@ function SMODS.set_card_SMODS_sticker_info(card)
             SMODS_sticker_count[#SMODS_sticker_count+1] = v.label 
         end
     end
-    if SMODS_sticker_count ~= nil then 
-        SMODS.Card_Stickers = SMODS_sticker_count 
-    else 
-        SMODS.Card_Stickers = nil
-    end
+	SMODS.Card_Stickers = SMODS_sticker_count 
 end
