@@ -1,6 +1,6 @@
 SMODS.SOUND_SOURCES = {}
 
-function Add_Custom_Sound_Global(modID)
+function register_sound_global(modID)
     local mod = SMODS.findModByID(modID)
     for _, filename in ipairs(love.filesystem.getDirectoryItems(mod.path .. 'Assets')) do
         local extension = string.sub(filename, -4)
