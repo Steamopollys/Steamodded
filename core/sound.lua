@@ -55,7 +55,7 @@ end
 
 SMODS.STOP_SOUNDS = {}
 
-function Add_Custom_Stop_Sound(sound_code)
+function register_stop_sound(sound_code)
     if type(sound_code)=="table" then
         for _,s_c in ipairs(sound_code) do
             if type(s_c)=="string" then
@@ -74,7 +74,7 @@ end
 
 SMODS.REPLACE_SOUND_PLAYED = {}
 
-function Add_Custom_Replace_Sound(replace_code_table)
+function register_replace_sound_played(replace_code_table)
     if type(replace_code_table)=="table" then
         for original_sound_code,replacement_sound_code in pairs(replace_code_table) do
             if type(replacement_sound_code)=="table" or type(replacement_sound_code)=="string" then
