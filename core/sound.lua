@@ -2,7 +2,7 @@ SMODS.SOUND_SOURCES = {}
 
 function register_sound_global(modID)
     local mod = SMODS.findModByID(modID)
-    for _, filename in ipairs(love.filesystem.getDirectoryItems(mod.path ..'Assets')) do
+    for _, filename in ipairs(love.filesystem.getDirectoryItems(mod.path ..'assets/sounds/')) do
         local extension = string.sub(filename, -4)
         if extension == '.ogg' or extension == '.mp3' or extension == '.wav' then -- please use .ogg or .wav files
             local sound = nil
@@ -13,7 +13,7 @@ function register_sound_global(modID)
             }
             sound.sound_code = sound_code
             SMODS.SOUND_SOURCES[sound_code] = sound
-            sendInfoMessage("Registered sound " .. name .. " from file " .. filename, 'SoundAPI')
+            --sendInfoMessage("Registered sound '" .. sound_code .. "' from file " .. filename, 'SoundAPI')
         end
     end
 end
@@ -31,7 +31,7 @@ function register_sound(name, path, filename) -- Keep that here to support old v
     -- s.original_volume = 0.75
     s.sound_code = name
 
-    sendInfoMessage("Registered sound " .. name .. " from file " .. filename, 'SoundAPI')
+    --sendInfoMessage("Registered sound '" .. name .. "' from file " .. filename, 'SoundAPI')
     SMODS.SOUND_SOURCES[name] = s
 end
 
@@ -97,7 +97,7 @@ local Original_play_sound = play_sound
 function play_sound(sound_code, per, vol)
     if SMODS.REPLACE_SOUND_PLAYED[sound_code] then
         if type(SMODS.REPLACE_SOUND_PLAYED[sound_code]) == "table" then
-            local sound_args = Custom_Replace_Sound[sound_code]
+            local sound_args = SMODS.REPLACE_SOUND_PLAYED[sound_code]
             Custom_Play_Sound(sound_args.sound_code,sound_args.stop_previous_instance,sound_args.volume, sound_args.pitch)
             if not (sound_args.continue_base_sound) then return end
         else
