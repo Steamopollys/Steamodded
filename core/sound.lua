@@ -2,43 +2,47 @@ SMODS.SOUND_SOURCES = {}
 
 function register_sound_global(modID)
     local mod = SMODS.findModByID(modID)
-    for _, filename in ipairs(love.filesystem.getDirectoryItems(mod.path .. 'Assets')) do
+    for _, filename in ipairs(love.filesystem.getDirectoryItems(mod.path ..'Assets')) do
         local extension = string.sub(filename, -4)
-        if extension == '.ogg' or extension == '.mp3' or extension=='.wav' then --please use .ogg or .wav files
+        if extension == '.ogg' or extension == '.mp3' or extension == '.wav' then -- please use .ogg or .wav files
             local sound = nil
             local sound_code = string.sub(filename, 1, -5)
-            sound = {sound = love.audio.newSource(mod.path .. 'assets/sounds/' .. filename, ((string.find(sound_code,'music') or string.find(sound_code,'stream')) and "stream" or 'static'))}
+            sound = {
+                sound = love.audio.newSource(mod.path .. 'assets/sounds/' .. filename,
+                ((string.find(sound_code, 'music') orstring.find(sound_code, 'stream')) and "stream" or 'static'))
+            }
             sound.sound_code = sound_code
-            SMODS.SOUND_SOURCES[sound_code]=sound
-	    sendInfoMessage("Registered sound " .. name .. " from file " .. filename, 'SoundAPI')
+            SMODS.SOUND_SOURCES[sound_code] = sound
+            sendInfoMessage("Registered sound " .. name .. " from file " .. filename, 'SoundAPI')
         end
     end
 end
 
+function register_sound(name, path, filename) -- Keep that here to support old versions
+    local sound_code = string.sub(filename, 1, -5)
+    local s = {
+        sound = love.audio.newSource(
+            path .. "assets/sounds/" .. filename,
+            ((string.find(sound_code, 'music') or string.find(sound_code, 'stream')) and "stream" or 'static')
+        ),
+        filepath = path .. "assets/sounds/" .. filename
+    }
+    -- s.original_pitch = 1
+    -- s.original_volume = 0.75
+    s.sound_code = name
 
-function register_sound(name, path, filename) --Keep that here to support old versions
-	local sound_code = string.sub(filename, 1, -5)
-	local s = {
-		sound = love.audio.newSource(path .. "assets/sounds/" .. filename, ((string.find(sound_code,'music') or string.find(sound_code,'stream')) and "stream" or 'static')),
-		filepath = path .. "assets/sounds/" .. filename
-	}
-	--s.original_pitch = 1
-	--s.original_volume = 0.75
-	s.sound_code = name
-
-	sendInfoMessage("Registered sound " .. name .. " from file " .. filename, 'SoundAPI')
-	SMODS.SOUND_SOURCES[name] = s
+    sendInfoMessage("Registered sound " .. name .. " from file " .. filename, 'SoundAPI')
+    SMODS.SOUND_SOURCES[name] = s
 end
 
-
-function Custom_Play_Sound(sound_code,stop_previous_instance, volume, pitch)
+function Custom_Play_Sound(sound_code, stop_previous_instance, volume, pitch)
     if SMODS.SOUND_SOURCES[sound_code] then
-	    sendTraceMessage("found sound code: " .. sound_code, 'SoundAPI')
+        sendTraceMessage("found sound code: " .. sound_code, 'SoundAPI')
         local s = SMODS.SOUND_SOURCES[sound_code]
         stop_previous_instance = (stop_previous_instance == nil) and true or stop_previous_instance
         volume = volume or 1
         s.sound:setPitch(pitch or 1)
-        local sound_vol = volume*(G.SETTINGS.SOUND.volume/100.0)*(G.SETTINGS.SOUND.game_sounds_volume/100.0)
+        local sound_vol = volume * (G.SETTINGS.SOUND.volume / 100.0) * (G.SETTINGS.SOUND.game_sounds_volume / 100.0)
         if sound_vol <= 0 then
             s.sound:setVolume(0)
         else
@@ -56,15 +60,15 @@ end
 SMODS.STOP_SOUNDS = {}
 
 function register_stop_sound(sound_code)
-    if type(sound_code)=="table" then
-        for _,s_c in ipairs(sound_code) do
-            if type(s_c)=="string" then
+    if type(sound_code) == "table" then
+        for _, s_c in ipairs(sound_code) do
+            if type(s_c) == "string" then
                 SMODS.STOP_SOUNDS[s_c] = true
             else
                 return false
             end
         end
-    elseif type(sound_code)=="string" then
+    elseif type(sound_code) == "string" then
         SMODS.STOP_SOUNDS[sound_code] = true
     else
         return false
@@ -75,9 +79,9 @@ end
 SMODS.REPLACE_SOUND_PLAYED = {}
 
 function register_replace_sound_played(replace_code_table)
-    if type(replace_code_table)=="table" then
-        for original_sound_code,replacement_sound_code in pairs(replace_code_table) do
-            if type(replacement_sound_code)=="table" or type(replacement_sound_code)=="string" then
+    if type(replace_code_table) == "table" then
+        for original_sound_code, replacement_sound_code in pairs(replace_code_table) do
+            if type(replacement_sound_code) == "table" or type(replacement_sound_code) == "string" then
                 SMODS.REPLACE_SOUND_PLAYED[original_sound_code] = replacement_sound_code
             else
                 return false
@@ -94,17 +98,13 @@ function play_sound(sound_code, per, vol)
     if SMODS.REPLACE_SOUND_PLAYED[sound_code] then
         if type(SMODS.REPLACE_SOUND_PLAYED[sound_code]) == "table" then
             local sound_args = Custom_Replace_Sound[sound_code]
-            Custom_Play_Sound(sound_args.sound_code,sound_args.stop_previous_instance,sound_args.volume,sound_args.pitch)
-            if not(sound_args.continue_base_sound) then
-                return
-            end
+            Custom_Play_Sound(sound_args.sound_code,sound_args.stop_previous_instance,sound_args.volume, sound_args.pitch)
+            if not (sound_args.continue_base_sound) then return end
         else
             Custom_Play_Sound(SMODS.REPLACE_SOUND_PLAYED[sound_code])
             return
         end
     end
-    if SMODS.STOP_SOUNDS[sound_code] then
-        return
-    end
+    if SMODS.STOP_SOUNDS[sound_code] then return end
     return Original_play_sound(sound_code, per, vol)
 end
