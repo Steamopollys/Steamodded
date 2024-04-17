@@ -7,7 +7,7 @@ function register_sound_global(modID)
         if extension == '.ogg' or extension == '.mp3' or extension=='.wav' then --please use .ogg or .wav files
             local sound = nil
             local sound_code = string.sub(filename, 1, -5)
-		sound = love.audio.newSource(path .. "assets/sounds/" .. filename, ((string.find(sound_code,'music') or string.find(sound_code,'stream')) and "stream" or 'static'),
+            sound = {sound = love.audio.newSource(mod.path .. 'assets/sounds/' .. filename, ((string.find(sound_code,'music') or string.find(sound_code,'stream')) and "stream" or 'static')}
             sound.sound_code = sound_code
             SMODS.SOUND_SOURCES[sound_code]=sound
 	    sendInfoMessage("Registered sound " .. name .. " from file " .. filename, 'SoundAPI')
@@ -19,7 +19,7 @@ end
 function register_sound(name, path, filename) --Keep that here to support old versions
 	local sound_code = string.sub(filename, 1, -5)
 	local s = {
-		sound = love.audio.newSource(path .. "assets/sounds/" .. filename, (string.find(sound_code,'music') or string.find(sound_code,'stream') and "stream" or 'static'),
+		sound = love.audio.newSource(path .. "assets/sounds/" .. filename, ((string.find(sound_code,'music') or string.find(sound_code,'stream')) and "stream" or 'static'),
 		filepath = path .. "assets/sounds/" .. filename
 	}
 	--s.original_pitch = 1
@@ -91,6 +91,7 @@ end
 
 local Original_play_sound = play_sound
 function play_sound(sound_code, per, vol)
+    sendDebugmessage("sound played hook correct")
     if SMODS.REPLACE_SOUND_PLAYED[sound_code] then
         if type(SMODS.REPLACE_SOUND_PLAYED[sound_code]) == "table" then
             local sound_args = Custom_Replace_Sound[sound_code]
