@@ -52,3 +52,59 @@ function Custom_Play_Sound(sound_code,stop_previous_instance, volume, pitch)
     end
     return false
 end
+
+SMODS.STOP_SOUNDS = {}
+
+function Add_Custom_Stop_Sound(sound_code)
+    if type(sound_code)=="table" then
+        for _,s_c in ipairs(sound_code) do
+            if type(s_c)=="string" then
+                SMODS.STOP_SOUNDS[s_c] = true
+            else
+                return false
+            end
+        end
+    elseif type(sound_code)=="string" then
+        SMODS.STOP_SOUNDS[sound_code] = true
+    else
+        return false
+    end
+    return true
+end
+
+SMODS.REPLACE_SOUND_PLAYED = {}
+
+function Add_Custom_Replace_Sound(replace_code_table)
+    if type(replace_code_table)=="table" then
+        for original_sound_code,replacement_sound_code in pairs(replace_code_table) do
+            if type(replacement_sound_code)=="table" or type(replacement_sound_code)=="string" then
+                SMODS.REPLACE_SOUND_PLAYED[original_sound_code] = replacement_sound_code
+            else
+                return false
+            end
+        end
+    else
+        return false
+    end
+    return true
+end
+
+local Original_play_sound = play_sound
+function play_sound(sound_code, per, vol)
+    if SMODS.REPLACE_SOUND_PLAYED[sound_code] then
+        if type(SMODS.REPLACE_SOUND_PLAYED[sound_code]) == "table" then
+            local sound_args = Custom_Replace_Sound[sound_code]
+            Custom_Play_Sound(sound_args.sound_code,sound_args.stop_previous_instance,sound_args.volume,sound_args.pitch)
+            if not(sound_args.continue_base_sound) then
+                return
+            end
+        else
+            Custom_Play_Sound(SMODS.REPLACE_SOUND_PLAYED[sound_code])
+            return
+        end
+    end
+    if SMODS.STOP_SOUNDS[sound_code] then
+        return
+    end
+    return Original_play_sound(sound_code, per, vol)
+end
