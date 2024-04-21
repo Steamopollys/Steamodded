@@ -49,6 +49,7 @@ function SMODS.injectVouchers()
     local i = 0
     local voucher = nil
     for _, slug in ipairs(SMODS.BUFFERS.Vouchers) do
+        boot_print_stage("Injecting Voucher: "..slug)
         voucher = SMODS.Vouchers[slug]
         if voucher.order then
             id = voucher.order

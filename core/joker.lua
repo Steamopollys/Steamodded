@@ -58,6 +58,7 @@ function SMODS.injectJokers()
     local i = 0
     local joker = nil
     for k, slug in ipairs(SMODS.BUFFERS.Jokers) do
+        boot_print_stage("Injecting Joker: "..slug)
         joker = SMODS.Jokers[slug]
         if joker.order then
             id = joker.order

@@ -39,6 +39,7 @@ end
 function SMODS.injectSeals()
     local seal = nil
     for _, label in ipairs(SMODS.BUFFERS.Seals) do
+        boot_print_stage("Injecting Seal: "..label)
         seal = SMODS.Seals[label]
         local seal_obj = {
             discovered = seal.discovered,

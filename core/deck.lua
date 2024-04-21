@@ -39,6 +39,7 @@ function SMODS.injectDecks()
 	local replacedName = ""
 
     for i, deck in ipairs(SMODS.Decks) do
+        boot_print_stage("Injecting Deck: "..deck.slug)
         -- Prepare some Datas
         id = i + minId - 1
 

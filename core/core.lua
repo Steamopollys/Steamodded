@@ -325,6 +325,7 @@ end
 
 local function initializeModUIFunctions()
 	for id, modInfo in pairs(SMODS.MODS) do
+		boot_print_stage("Initializing Mod UI: "..modInfo.id)
 		G.FUNCS["openModUI_" .. modInfo.id] = function(arg_736_0)
 			G.ACTIVE_MOD_UI = modInfo
 			G.FUNCS.overlay_menu({
@@ -876,6 +877,7 @@ function SMODS.GUI.dynamicModListContent(page)
 end
 
 function SMODS.SAVE_UNLOCKS()
+    boot_print_stage("Saving Unlocks")
 	G:save_progress()
     -------------------------------------
     local TESTHELPER_unlocks = false and not _RELEASE_MODE
@@ -953,6 +955,7 @@ function SMODS.SAVE_UNLOCKS()
 end
 
 function SMODS.LOAD_LOC()
+	boot_print_stage("Loading Localizations")
     for g_k, group in pairs(G.localization) do
         if g_k == 'descriptions' then
             for _, set in pairs(group) do

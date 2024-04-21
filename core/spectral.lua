@@ -46,6 +46,7 @@ function SMODS.injectSpectrals()
     local i = 0
     local spectral = nil
     for _, slug in ipairs(SMODS.BUFFERS.Spectrals) do
+        boot_print_stage("Injecting Spectral: "..slug)
         spectral = SMODS.Spectrals[slug]
         if spectral.order then
             id = spectral.order
