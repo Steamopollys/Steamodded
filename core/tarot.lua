@@ -50,6 +50,7 @@ function SMODS.injectTarots()
     local i = 0
     local tarot = nil
     for _, slug in ipairs(SMODS.BUFFERS.Tarots) do
+        boot_print_stage("Injecting Tarot: "..slug)
         tarot = SMODS.Tarots[slug]
 		if tarot.order then
             id = tarot.order

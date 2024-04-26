@@ -48,6 +48,7 @@ function SMODS.injectBlinds()
     local i = 0
     local blind = nil
     for _, slug in ipairs(SMODS.BUFFERS.Blinds) do
+        boot_print_stage("Injecting Blind: "..slug)
         blind = SMODS.Blinds[slug]
         if blind.order then
             id = blind.order
