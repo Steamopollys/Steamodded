@@ -48,6 +48,7 @@ function SMODS.injectBlinds()
     local i = 0
     local blind = nil
     for _, slug in ipairs(SMODS.BUFFERS.Blinds) do
+        boot_print_stage("Injecting Blind: "..slug)
         blind = SMODS.Blinds[slug]
         if blind.order then
             id = blind.order
@@ -149,7 +150,7 @@ function Blind:defeat(silent)
     local key = self.config.blind.key
     local blind_obj = SMODS.Blinds[key]
     if blind_obj and blind_obj.defeat and type(blind_obj.defeat) == 'function' then
-        blind_obj.set_blind(self, silent)
+        blind_obj.defeat(self, silent)
     end
     blind_defeat_ref(self, silent)
 end

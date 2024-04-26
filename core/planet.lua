@@ -60,6 +60,7 @@ function SMODS.injectPlanets()
     local i = 0
     local planet = nil
     for _, slug in ipairs(SMODS.BUFFERS.Planets) do
+        boot_print_stage("Injecting Planet: "..slug)
         planet = SMODS.Planets[slug]
         if planet.order then
             id = planet.order
