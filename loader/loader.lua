@@ -30,7 +30,6 @@ NFS = nativefs
 
 function loadMods(modsDirectory)
     local mods = {}
-    local modIDs = {}
 
     -- Function to process each directory (including subdirectories) with depth tracking
     local function processDirectory(directory, depth)
@@ -66,7 +65,7 @@ function loadMods(modsDirectory)
                     -- Validate MOD_ID to ensure it doesn't contain spaces
                     if modID and string.find(modID, " ") then
                         sendWarnMessage("Invalid mod ID: " .. modID, 'Loader')
-                    elseif modIDs[modID] then
+                    elseif mods[modID] then
                         sendWarnMessage("Duplicate mod ID: " .. modID, 'Loader')
                     else
                         if modName and modID and modAuthorString and modDescription then
@@ -87,9 +86,7 @@ function loadMods(modsDirectory)
                                 badge_colour = badge_colour,
                                 display_name = display_name or modName
                             }
-                            table.insert(mods, mod)
-                            modIDs[modID] = true  -- Mark this ID as used
-
+                            mods[modID] = mod
                             SMODS._MOD_PRIO_MAP[priority] = SMODS._MOD_PRIO_MAP[priority] or {}
                             table.insert(SMODS._MOD_PRIO_MAP[priority], { content = fileContent, mod = mod })
                         end
@@ -115,15 +112,6 @@ function loadMods(modsDirectory)
     for _,priority in ipairs(keyset) do
         for _,v in ipairs(SMODS._MOD_PRIO_MAP[priority]) do
             assert(load(v.content))()
-            -- set priority of added init functions
-            for modName, initFunc in pairs(SMODS.INIT) do
-                if type(initFunc) == 'function' and SMODS._INIT_KEYS[modName] == nil then
-                    SMODS._INIT_PRIO_MAP[priority] = SMODS._INIT_PRIO_MAP[priority] or {}
-                    table.insert(SMODS._INIT_PRIO_MAP[priority], modName)
-                    SMODS._INIT_KEYS[modName] = true
-                    SMODS._MOD_FROM_INIT[modName] = v.mod
-                end
-            end
         end
     end
 
@@ -132,16 +120,16 @@ end
 
 function initMods()
     local keyset = {}
-    for k, _ in pairs(SMODS._INIT_PRIO_MAP) do
+    for k, _ in pairs(SMODS._MOD_PRIO_MAP) do
         keyset[#keyset + 1] = k
     end
     table.sort(keyset)
     for _,k in ipairs(keyset) do
-        for _, modName in ipairs(SMODS._INIT_PRIO_MAP[k]) do
-            SMODS._MOD_NAME = SMODS._MOD_FROM_INIT[modName].display_name
-            SMODS._BADGE_COLOUR = SMODS._MOD_FROM_INIT[modName].badge_colour
-            sendInfoMessage("Launch Init Function for: " .. modName .. ".")
-            SMODS.INIT[modName]()
+        for _, mod in ipairs(SMODS._MOD_PRIO_MAP[k]) do
+            if mod.init and type(mod.init) == 'function' then
+                SMODS._CURRENT_MOD = mod
+                mod:init()
+            end
         end
     end
 end

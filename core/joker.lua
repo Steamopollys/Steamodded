@@ -17,6 +17,7 @@ SMODS.Joker = {
     effect = ""
 }
 
+--[[
 function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, unlocked, discovered, blueprint_compat,
                          eternal_compat, effect, atlas, soul_pos)
     o = {}
@@ -42,6 +43,13 @@ function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, u
     o.atlas = atlas or nil
     o.mod_name = SMODS._MOD_NAME
     o.badge_colour = SMODS._BADGE_COLOUR
+    return o
+end
+]]
+
+function SMODS.Joker:new(o)
+    setmetatable(o, self)
+    self.__index = self
     return o
 end
 
