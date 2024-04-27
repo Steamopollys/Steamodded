@@ -50,6 +50,7 @@ function SMODS.injectTarots()
     local i = 0
     local tarot = nil
     for _, slug in ipairs(SMODS.BUFFERS.Tarots) do
+        boot_print_stage("Injecting Tarot: "..slug)
         tarot = SMODS.Tarots[slug]
 		if tarot.order then
             id = tarot.order
@@ -224,8 +225,21 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
 		end
 	end
 
-	if first_pass and not (_c.set == 'Edition') and badges and next(badges) then
-		for _, v in ipairs(badges) do
+    if first_pass and not (_c.set == 'Edition') and badges and next(badges) then
+        for _, v in ipairs(badges) do
+			if v == 'foil' then info_queue[#info_queue+1] = G.P_CENTERS['e_foil'] end
+            if v == 'holographic' then info_queue[#info_queue+1] = G.P_CENTERS['e_holo'] end
+            if v == 'polychrome' then info_queue[#info_queue+1] = G.P_CENTERS['e_polychrome'] end
+            if v == 'negative' then info_queue[#info_queue+1] = G.P_CENTERS['e_negative'] end
+            if v == 'negative_consumable' then info_queue[#info_queue+1] = {key = 'e_negative_consumable', set = 'Edition', config = {extra = 1}} end
+            if v == 'gold_seal' then info_queue[#info_queue+1] = {key = 'gold_seal', set = 'Other'} end
+            if v == 'blue_seal' then info_queue[#info_queue+1] = {key = 'blue_seal', set = 'Other'} end
+            if v == 'red_seal' then info_queue[#info_queue+1] = {key = 'red_seal', set = 'Other'} end
+            if v == 'purple_seal' then info_queue[#info_queue+1] = {key = 'purple_seal', set = 'Other'} end
+            if v == 'eternal' then info_queue[#info_queue+1] = {key = 'eternal', set = 'Other'} end
+            if v == 'perishable' then info_queue[#info_queue+1] = {key = 'perishable', set = 'Other', vars = {G.GAME.perishable_rounds or 1, specific_vars.perish_tally or G.GAME.perishable_rounds}} end
+            if v == 'rental' then info_queue[#info_queue+1] = {key = 'rental', set = 'Other', vars = {G.GAME.rental_rate or 1}} end
+            if v == 'pinned_left' then info_queue[#info_queue+1] = {key = 'pinned_left', set = 'Other'} end
 			if SMODS.Seals[v] then info_queue[#info_queue + 1] = { key = v, set = 'Other' } end
 		end
 	end
@@ -279,6 +293,15 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
 		end
 		if main_end then
 			desc_nodes[#desc_nodes + 1] = main_end
+		end
+		
+		if not ((specific_vars and not specific_vars.sticker) and (card_type == 'Default' or card_type == 'Enhanced')) then
+			if desc_nodes == full_UI_table.main and not full_UI_table.name then
+				localize{type = 'name', key = _c.key, set = _c.set, nodes = full_UI_table.name} 
+				if not full_UI_table.name then full_UI_table.name = {} end
+			elseif desc_nodes ~= full_UI_table.main then 
+				desc_nodes.name = localize{type = 'name_text', key = name_override or _c.key, set = name_override and 'Other' or _c.set} 
+			end
 		end
 
 		for _, v in ipairs(info_queue) do

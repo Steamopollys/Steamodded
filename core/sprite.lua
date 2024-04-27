@@ -63,6 +63,7 @@ end
 function SMODS.injectSprites()
 
 	for i, sprite in ipairs(SMODS.Sprites) do
+        boot_print_stage("Injecting Sprite: "..sprite.name)
         local foundAndReplaced = false
 
 		if sprite.type == "animation_atli" then
@@ -104,6 +105,9 @@ function SMODS.injectSprites()
 		
 		sendInfoMessage("Registered Sprite " .. sprite.name .. " with path " .. sprite.path .. ".", 'SpriteAPI')
 	end
+
+    
+    boot_print_stage("Reloading Textures")
 
     --Reload Textures
     
