@@ -1,3 +1,4 @@
+-- check this for more explanation on how to use this: https://github.com/Infarcactus/Balatro-Custom-Sound-Player
 SMODS.SOUND_SOURCES = {}
 
 function register_sound_global(modID)
