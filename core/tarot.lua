@@ -1,267 +1,369 @@
--- ----------------------------------------------
--- ------------MOD CORE API JOKER----------------
-
-SMODS.Jokers = {}
-SMODS.Joker = {
-    name = "",
-    slug = "",
-    config = {},
-    spritePos = {},
-    loc_txt = {},
-    rarity = 1,
-    cost = 0,
-    unlocked = true,
-    discovered = true,
-    blueprint_compat = false,
-    eternal_compat = true,
-    effect = ""
+SMODS.Tarots = {}
+SMODS.Tarot = {
+	name = "",
+	slug = "",
+	cost = 3,
+	config = {},
+	pos = {},
+	loc_txt = {},
+	discovered = false,
+	consumeable = true,
+	effect = "",
+	cost_mult = 1.0,
 }
 
-function SMODS.Joker:new(name, slug, config, spritePos, loc_txt, rarity, cost, unlocked, discovered, blueprint_compat,
-                         eternal_compat, effect, atlas, soul_pos)
-    o = {}
-    setmetatable(o, self)
-    self.__index = self
+function SMODS.Tarot:new(name, slug, config, pos, loc_txt, cost, cost_mult, effect, consumeable, discovered, atlas)
+	o = {}
+	setmetatable(o, self)
+	self.__index = self
 
-    o.loc_txt = loc_txt
-    o.name = name
-    o.slug = "j_" .. slug
-    o.config = config or {}
-    o.pos = spritePos or {
-        x = 0,
-        y = 0
-    }
-    o.soul_pos = soul_pos
-    o.rarity = rarity or 1
-    o.cost = cost
-    o.unlocked = (unlocked == nil) and true or unlocked
-    o.discovered = (discovered == nil) and true or discovered
-    o.blueprint_compat = blueprint_compat or false
-    o.eternal_compat = (eternal_compat == nil) and true or eternal_compat
-    o.effect = effect or ''
-    o.atlas = atlas or nil
-    o.mod_name = SMODS._MOD_NAME
-    o.badge_colour = SMODS._BADGE_COLOUR
-    return o
+	o.loc_txt = loc_txt
+	o.name = name
+	o.slug = "c_" .. slug
+	o.config = config or {}
+	o.pos = pos or {
+		x = 0,
+		y = 0
+	}
+	o.cost = cost
+	o.unlocked = true
+	o.discovered = discovered or false
+	o.consumeable = consumeable or true
+	o.effect = effect or ""
+	o.cost_mult = cost_mult or 1.0
+	o.atlas = atlas
+	o.mod_name = SMODS._MOD_NAME
+	o.badge_colour = SMODS._BADGE_COLOUR
+	return o
 end
 
-function SMODS.Joker:register()
-    if not SMODS.Jokers[self.slug] then
-        SMODS.Jokers[self.slug] = self
-        SMODS.BUFFERS.Jokers[#SMODS.BUFFERS.Jokers + 1] = self.slug
-    end
+function SMODS.Tarot:register()
+	if not SMODS.Tarots[self.slug] then
+		SMODS.Tarots[self.slug] = self
+		SMODS.BUFFERS.Tarots[#SMODS.BUFFERS.Tarots + 1] = self.slug
+	end
 end
 
-function SMODS.injectJokers()
-    local minId = table_length(G.P_CENTER_POOLS['Joker']) + 1
+function SMODS.injectTarots()
+    local minId = table_length(G.P_CENTER_POOLS['Tarot']) + 1
     local id = 0
     local i = 0
-    local joker = nil
-    for k, slug in ipairs(SMODS.BUFFERS.Jokers) do
-        joker = SMODS.Jokers[slug]
-        if joker.order then
-            id = joker.order
+    local tarot = nil
+    for _, slug in ipairs(SMODS.BUFFERS.Tarots) do
+        tarot = SMODS.Tarots[slug]
+		if tarot.order then
+            id = tarot.order
         else
-            i = i + 1
-            id = i + minId
-        end
-        local joker_obj = {
-            discovered = joker.discovered,
-            name = joker.name,
-            set = "Joker",
-            unlocked = joker.unlocked,
+			i = i + 1
+        	id = i + minId
+		end
+        local tarot_obj = {
+            unlocked = tarot.unlocked,
+            discovered = tarot.discovered,
+            consumeable = tarot.consumeable,
+            name = tarot.name,
+            set = "Tarot",
             order = id,
-            key = joker.slug,
-            pos = joker.pos,
-            config = joker.config,
-            rarity = joker.rarity,
-            blueprint_compat = joker.blueprint_compat,
-            eternal_compat = joker.eternal_compat,
-            effect = joker.effect,
-            cost = joker.cost,
-            cost_mult = 1.0,
-            atlas = joker.atlas or nil,
-            mod_name = joker.mod_name,
-            badge_colour = joker.badge_colour,
-            soul_pos = joker.soul_pos,
-            -- * currently unsupported
-            no_pool_flag = joker.no_pool_flag,
-            yes_pool_flag = joker.yes_pool_flag,
-            unlock_condition = joker.unlock_condition,
-            enhancement_gate = joker.enhancement_gate,
-            start_alerted = joker.start_alerted
+            key = tarot.slug,
+            pos = tarot.pos,
+            config = tarot.config,
+            effect = tarot.effect,
+            cost = tarot.cost,
+            cost_mult = tarot.cost_mult,
+            atlas = tarot.atlas,
+            mod_name = tarot.mod_name,
+            badge_colour = tarot.badge_colour
         }
+
         for _i, sprite in ipairs(SMODS.Sprites) do
-            if sprite.name == joker_obj.key then
-                joker_obj.atlas = sprite.name
+            if sprite.name == tarot_obj.key then
+                tarot_obj.atlas = sprite.name
             end
         end
 
         -- Now we replace the others
-        G.P_CENTERS[slug] = joker_obj
-        if not joker.taken_ownership then
-            table.insert(G.P_CENTER_POOLS['Joker'], joker_obj)
-            table.insert(G.P_JOKER_RARITY_POOLS[joker_obj.rarity], joker_obj)
-        else
-            for kk, v in ipairs(G.P_CENTER_POOLS['Joker']) do
-                if v.key == slug then G.P_CENTER_POOLS['Joker'][kk] = joker_obj end
-            end
-            if joker_obj.rarity == joker.rarity_original then
-                for kk, v in ipairs(G.P_JOKER_RARITY_POOLS[joker_obj.rarity]) do
-                    if v.key == slug then G.P_JOKER_RARITY_POOLS[kk] = joker_obj end
-                end
-            else
-                table.insert(G.P_JOKER_RARITY_POOLS[joker_obj.rarity], joker_obj)
-                local j
-                for kk, v in ipairs(G.P_JOKER_RARITY_POOLS[joker.rarity_original]) do
-                    if v.key == slug then j = kk end
-                end
-                table.remove(G.P_JOKER_RARITY_POOLS[joker.rarity_original], j)
-            end
-        end
+        G.P_CENTERS[tarot.slug] = tarot_obj
+        if not tarot.taken_ownership then
+			table.insert(G.P_CENTER_POOLS['Tarot'], tarot_obj)
+		else
+			for k, v in ipairs(G.P_CENTER_POOLS['Tarot']) do
+				if v.key == slug then G.P_CENTER_POOLS['Tarot'][k] = tarot_obj end
+			end
+		end
         -- Setup Localize text
-        G.localization.descriptions["Joker"][slug] = joker.loc_txt
-
-        sendInfoMessage("Registered Joker " .. joker.name .. " with the slug " .. joker.slug .. " at ID " .. id .. ".")
+        G.localization.descriptions["Tarot"][tarot.slug] = tarot.loc_txt
+        sendInfoMessage("Registered Tarot " .. tarot.name .. " with the slug " .. tarot.slug .. " at ID " .. id .. ".", 'ConsumableAPI')
     end
 end
 
-function SMODS.Joker:take_ownership(slug)
-    if not (string.sub(slug, 1, 2) == 'j_') then slug = 'j_' .. slug end
-    local joker = G.P_CENTERS[slug]
-    if not joker then
-        sendWarnMessage('Tried to take ownership of non-existent Joker: ' .. slug, 'JokerAPI')
+function SMODS.Tarot:take_ownership(slug)
+    if not (string.sub(slug, 1, 2) == 'c_') then slug = 'c_' .. slug end
+    local obj = G.P_CENTERS[slug]
+    if not obj then
+        sendWarnMessage('Tried to take ownership of non-existent Tarot: ' .. slug, 'ConsumableAPI')
         return nil
     end
-    if joker.mod_name then
-        sendWarnMessage('Can only take ownership of unclaimed vanilla Jokers! ' ..
-            slug .. ' belongs to ' .. joker.mod_name, 'JokerAPI')
+    if obj.mod_name then
+        sendWarnMessage('Can only take ownership of unclaimed vanilla Tarots! ' ..
+            slug .. ' belongs to ' .. obj.mod_name, 'ConsumableAPI')
         return nil
     end
     o = {}
     setmetatable(o, self)
     self.__index = self
-    o.loc_txt = G.localization.descriptions['Joker'][slug]
+    o.loc_txt = G.localization.descriptions['Tarot'][slug]
     o.slug = slug
-    for k, v in pairs(joker) do
+    for k, v in pairs(obj) do
         o[k] = v
     end
-    o.rarity_original = o.rarity
-    o.mod_name = SMODS._MOD_NAME
+	o.mod_name = SMODS._MOD_NAME
     o.badge_colour = SMODS._BADGE_COLOUR
-    o.taken_ownership = true
-    return o
+	o.taken_ownership = true
+	return o
 end
 
-local cardset_abilityRef = Card.set_ability
-function Card.set_ability(self, center, initial, delay_sprites)
-    cardset_abilityRef(self, center, initial, delay_sprites)
+function create_UIBox_your_collection_tarots()
+	local deck_tables = {}
+
+	G.your_collection = {}
+	for j = 1, 2 do
+		G.your_collection[j] = CardArea(
+			G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h,
+			(4.25 + j) * G.CARD_W,
+			1 * G.CARD_H,
+			{ card_limit = 4 + j, type = 'title', highlight_limit = 0, collection = true })
+		table.insert(deck_tables,
+			{
+				n = G.UIT.R,
+				config = { align = "cm", padding = 0, no_fill = true },
+				nodes = {
+					{ n = G.UIT.O, config = { object = G.your_collection[j] } }
+				}
+			}
+		)
+	end
+
+	local tarot_options = {}
+	for i = 1, math.ceil(#G.P_CENTER_POOLS.Tarot / 11) do
+		table.insert(tarot_options,
+			localize('k_page') .. ' ' .. tostring(i) .. '/' .. tostring(math.ceil(#G.P_CENTER_POOLS.Tarot / 11)))
+	end
+
+	for j = 1, #G.your_collection do
+		for i = 1, 4 + j do
+			local center = G.P_CENTER_POOLS["Tarot"][i + (j - 1) * (5)]
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y, G
+				.CARD_W, G.CARD_H, nil, center)
+			card:start_materialize(nil, i > 1 or j > 1)
+			G.your_collection[j]:emplace(card)
+		end
+	end
+
+	INIT_COLLECTION_CARD_ALERTS()
+
+	local t = create_UIBox_generic_options({
+		back_func = 'your_collection',
+		contents = {
+			{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables },
+			{
+				n = G.UIT.R,
+				config = { align = "cm" },
+				nodes = {
+					create_option_cycle({
+						options = tarot_options,
+						w = 4.5,
+						cycle_shoulders = true,
+						opt_callback =
+						'your_collection_tarot_page',
+						focus_args = { snap_to = true, nav = 'wide' },
+						current_option = 1,
+						colour =
+							G.C.RED,
+						no_pips = true
+					})
+				}
+			}
+		}
+	})
+	return t
+end
+
+local generate_card_ui_ref = generate_card_ui
+function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)
+	local original_full_UI_table = full_UI_table
+	local original_main_end = main_end
+	local first_pass = nil
+	if not full_UI_table then
+		first_pass = true
+		full_UI_table = {
+			main = {},
+			info = {},
+			type = {},
+			name = nil,
+			badges = badges or {}
+		}
+	end
+
+	local desc_nodes = (not full_UI_table.name and full_UI_table.main) or full_UI_table.info
+	local name_override = nil
+	local info_queue = {}
+
+	local loc_vars = nil
+
+	if not (card_type == 'Locked') and not hide_desc and not (specific_vars and specific_vars.debuffed) then
+		local key = _c.key
+		local center_obj = SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key] or SMODS.Vouchers[key]
+		if center_obj and center_obj.loc_def and type(center_obj.loc_def) == 'function' then
+			local o, m = center_obj.loc_def(_c, info_queue)
+			if o then loc_vars = o end
+			if m then main_end = m end
+		end
+		local joker_obj = SMODS.Jokers[key]
+		if joker_obj and joker_obj.tooltip and type(joker_obj.tooltip) == 'function' then
+			joker_obj.tooltip(_c, info_queue)
+		end
+	end
+
+	if first_pass and not (_c.set == 'Edition') and badges and next(badges) then
+		for _, v in ipairs(badges) do
+			if SMODS.Seals[v] then info_queue[#info_queue + 1] = { key = v, set = 'Other' } end
+		end
+	end
+
+	if loc_vars or next(info_queue) then
+		if full_UI_table.name then
+			full_UI_table.info[#full_UI_table.info + 1] = {}
+			desc_nodes = full_UI_table.info[#full_UI_table.info]
+		end
+		if not full_UI_table.name then
+			if specific_vars and specific_vars.no_name then
+				full_UI_table.name = true
+			elseif card_type == 'Locked' then
+				full_UI_table.name = localize { type = 'name', set = 'Other', key = 'locked', nodes = {} }
+			elseif card_type == 'Undiscovered' then
+				full_UI_table.name = localize { type = 'name', set = 'Other', key = 'undiscovered_' .. (string.lower(_c.set)), name_nodes = {} }
+			elseif specific_vars and (card_type == 'Default' or card_type == 'Enhanced') then
+				if (_c.name == 'Stone Card') then full_UI_table.name = true end
+				if (specific_vars.playing_card and (_c.name ~= 'Stone Card')) then
+					full_UI_table.name = {}
+					localize { type = 'other', key = 'playing_card', set = 'Other', nodes = full_UI_table.name, vars = { localize(specific_vars.value, 'ranks'), localize(specific_vars.suit, 'suits_plural'), colours = { specific_vars.colour } } }
+					full_UI_table.name = full_UI_table.name[1]
+				end
+			elseif card_type == 'Booster' then
+
+			else
+				full_UI_table.name = localize { type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name }
+			end
+			full_UI_table.card_type = card_type or _c.set
+		end
+		if main_start then
+			desc_nodes[#desc_nodes + 1] = main_start
+		end
+		if loc_vars then
+			localize { type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars }
+			if not ((specific_vars and not specific_vars.sticker) and (card_type == 'Default' or card_type == 'Enhanced')) then
+				if desc_nodes == full_UI_table.main and not full_UI_table.name then
+					localize { type = 'name', key = _c.key, set = _c.set, nodes = full_UI_table.name }
+					if not full_UI_table.name then full_UI_table.name = {} end
+				elseif desc_nodes ~= full_UI_table.main then
+					desc_nodes.name = localize { type = 'name_text', key = name_override or _c.key, set = name_override and 'Other' or _c.set }
+				end
+			end
+		end
+		if _c.set == 'Joker' then
+			if specific_vars and specific_vars.pinned then info_queue[#info_queue + 1] = { key = 'pinned_left', set =
+				'Other' } end
+			if specific_vars and specific_vars.sticker then info_queue[#info_queue + 1] = { key = string.lower(
+				specific_vars.sticker) .. '_sticker', set = 'Other' } end
+			localize { type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = specific_vars or {} }
+		end
+		if main_end then
+			desc_nodes[#desc_nodes + 1] = main_end
+		end
+
+		for _, v in ipairs(info_queue) do
+			generate_card_ui(v, full_UI_table)
+		end
+		return full_UI_table
+	end
+	return generate_card_ui_ref(_c, original_full_UI_table, specific_vars, card_type, badges, hide_desc, main_start,
+		original_main_end)
+end
+
+local card_use_consumeable_ref = Card.use_consumeable
+function Card:use_consumeable(area, copier)
+	local key = self.config.center.key
+	local center_obj = SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key]
+	if center_obj and center_obj.use and type(center_obj.use) == 'function' then
+		stop_use()
+		if not copier then set_consumeable_usage(self) end
+		if self.debuff then return nil end
+		if self.ability.consumeable.max_highlighted then
+			update_hand_text({ immediate = true, nopulse = true, delay = 0 },
+				{ mult = 0, chips = 0, level = '', handname = '' })
+		end
+		center_obj.use(self, area, copier)
+	else
+		card_use_consumeable_ref(self, area, copier)
+	end
+end
+
+local card_can_use_consumeable_ref = Card.can_use_consumeable
+function Card:can_use_consumeable(any_state, skip_check)
+    if not skip_check and ((G.play and #G.play.cards > 0) or
+            (G.CONTROLLER.locked) or
+            (G.GAME.STOP_USE and G.GAME.STOP_USE > 0))
+    then
+        return false
+    end
+    if (G.STATE == G.STATES.HAND_PLAYED or G.STATE == G.STATES.DRAW_TO_HAND or G.STATE == G.STATES.PLAY_TAROT) and not any_state then
+        return false
+    end
+    local t = nil
     local key = self.config.center.key
-    local joker_obj = SMODS.Jokers[key]
-    if joker_obj and joker_obj.set_ability and type(joker_obj.set_ability) == 'function' then
-        joker_obj.set_ability(self, center, initial, delay_sprites)
+    local center_obj = SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key]
+    if center_obj and center_obj.can_use and type(center_obj.can_use) == 'function' then
+        t = center_obj.can_use(self) or t
+    end
+    if not (t == nil) then
+        return t
+    else
+        return card_can_use_consumeable_ref(self, any_state, skip_check)
     end
 end
 
-local calculate_jokerref = Card.calculate_joker;
-function Card:calculate_joker(context)
-    for k, v in pairs(SMODS.Stickers) do
-        if self.ability[v.label] then
-            if v.calculate and type(v.calculate) == 'function' then
-                v.calculate(self, context)
-            end
-        end
-    end
-    if not self.debuff then
-        local key = self.config.center.key
-        local center_obj = SMODS.Jokers[key] or SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key]
-        if center_obj and center_obj.calculate and type(center_obj.calculate) == "function" then
-            local o = center_obj.calculate(self, context)
-            if o then return o end
-        end
-    end
-    return calculate_jokerref(self, context)
+local card_h_popup_ref = G.UIDEF.card_h_popup
+function G.UIDEF.card_h_popup(card)
+	local t = card_h_popup_ref(card)
+    if not card.config.center or -- no center
+	(card.config.center.unlocked == false and not card.bypass_lock) or -- locked card
+	card.debuff or -- debuffed card
+	(not card.config.center.discovered and ((card.area ~= G.jokers and card.area ~= G.consumeables and card.area) or not card.area)) -- undiscovered card
+	then return t end
+	local badges = t.nodes[1].nodes[1].nodes[1].nodes[3]
+	badges = badges and badges.nodes or nil
+	local key = card.config.center.key
+	local center_obj = SMODS.Jokers[key] or SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key] or
+		SMODS.Vouchers[key]
+	if center_obj then
+		if center_obj.set_badges and type(center_obj.set_badges) == 'function' then
+			center_obj.set_badges(card, badges)
+		end
+		if not G.SETTINGS.no_mod_tracking then
+			local mod_name = string.sub(center_obj.mod_name, 1, 16)
+			local len = string.len(mod_name)
+			badges[#badges + 1] = create_badge(mod_name, center_obj.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil,
+				len <= 6 and 0.9 or 0.9 - 0.02 * (len - 6))
+		end
+	end
+	return t
 end
 
-local ability_table_ref = Card.generate_UIBox_ability_table
-function Card:generate_UIBox_ability_table()
-    local card_type, hide_desc = self.ability.set or "None", nil
-    local loc_vars = nil
-    local main_start, main_end = nil, nil
-    local no_badge = nil
-    if not self.bypass_lock and self.config.center.unlocked ~= false and
-        self.ability.set == 'Joker' and
-        not self.config.center.discovered and
-        ((self.area ~= G.jokers and self.area ~= G.consumeables and self.area) or not self.area) then
-        card_type = 'Undiscovered'
-    end
-
-    if self.config.center.unlocked == false and not self.bypass_lock then    -- For everyting that is locked
-    elseif card_type == 'Undiscovered' and not self.bypass_discovery_ui then -- Any Joker or tarot/planet/voucher that is not yet discovered
-    elseif self.debuff then
-    elseif card_type == 'Default' or card_type == 'Enhanced' then
-    elseif self.ability.set == 'Joker' then
-        local key = self.config.center.key
-        local joker_obj = SMODS.Jokers[key]
-        if joker_obj and joker_obj.loc_def and type(joker_obj.loc_def) == 'function' then
-            local o, m = joker_obj.loc_def(self)
-            if o then loc_vars = o end
-            if m then main_end = m end
-        end
-    end
-    if loc_vars then
-        local badges = {}
-        if (card_type ~= 'Locked' and card_type ~= 'Undiscovered' and card_type ~= 'Default') or self.debuff then
-            badges.card_type = card_type
-        end
-        if self.ability.set == 'Joker' and self.bypass_discovery_ui and (not no_badge) then
-            badges.force_rarity = true
-        end
-        if self.edition then
-            if self.edition.type == 'negative' and self.ability.consumeable then
-                badges[#badges + 1] = 'negative_consumable'
-            else
-                badges[#badges + 1] = (self.edition.type == 'holo' and 'holographic' or self.edition.type)
-            end
-        end
-        if self.seal then
-            badges[#badges + 1] = string.lower(self.seal) .. '_seal'
-        end
-        if self.ability.eternal then
-            badges[#badges + 1] = 'eternal'
-        end
-        if self.pinned then
-            badges[#badges + 1] = 'pinned_left'
-        end
-
-        if self.sticker then
-            loc_vars = loc_vars or {};
-            loc_vars.sticker = self.sticker
-        end
-
-        for k, v in pairs(SMODS.Stickers) do
-            if self.ability[v.label] then
-                if v.set_badges and type(v.set_badges) == 'function' then v.set_badges(self, badges) end
-            end
-        end
-
-        local center = self.config.center
-        return generate_card_ui(center, nil, loc_vars, card_type, badges, hide_desc, main_start, main_end)
-    end
-    return ability_table_ref(self)
+local settings_ref = G.UIDEF.settings_tab
+function G.UIDEF.settings_tab(tab)
+	local t = settings_ref(tab)
+	if tab == 'Game' then
+		t.nodes[7] = create_toggle { label = 'Disable Mod Tracking', ref_table = G.SETTINGS, ref_value = 'no_mod_tracking' }
+	end
+	return t
 end
-
-function SMODS.end_calculate_context(c)
-    if not c.after and not c.before and not c.other_joker and not c.repetition and not c.individual and
-        not c.end_of_round and not c.discard and not c.pre_discard and not c.debuffed_hand and not c.using_consumeable and
-        not c.remove_playing_cards and not c.cards_destroyed and not c.destroying_card and not c.setting_blind and
-        not c.first_hand_drawn and not c.playing_card_added and not c.skipping_booster and not c.skip_blind and
-        not c.ending_shop and not c.reroll_shop and not c.selling_card and not c.selling_self and not c.buying_card and
-        not c.open_booster then
-        return true
-    end
-    return false
-end
-
--- ----------------------------------------------
--- ------------MOD CORE API JOKER END------------
