@@ -225,15 +225,6 @@ function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, h
 	end
 
 	if first_pass and not (_c.set == 'Edition') and badges and next(badges) then
-		if card_type == 'Joker' and SMODS.Card_Stickers then
-			for k, v in pairs(SMODS.Card_Stickers) do
-				local sticker = SMODS.Stickers[v]
-				if sticker then
-					if sticker.tooltip and type(sticker.tooltip) == 'function' then sticker.tooltip(_c, info_queue) end
-					if sticker.set_badges and type(sticker.set_badges) == 'function' then sticker.set_badges(_c, badges) end
-				end
-			end
-		end
 		for _, v in ipairs(badges) do
 			if SMODS.Seals[v] then info_queue[#info_queue + 1] = { key = v, set = 'Other' } end
 		end
