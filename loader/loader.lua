@@ -64,6 +64,8 @@ function loadMods(modsDirectory)
                     local badge_colour = fileContent:match("%-%-%- BADGE_COLO[U?]R: (%x-)\n")
                     badge_colour = HEX(badge_colour or '666666FF')
                     local display_name = fileContent:match("%-%-%- DISPLAY_NAME: (.-)\n")
+                    local requiredDependenciesString = fileContent:match("%-%-%- REQUIRED_DEPENDENCIES: %[(.-)%]\n")
+                    local iconAtlas = fileContent:match("%-%-%- ICON_ATLAS: (.-)\n")
                     -- Validate MOD_ID to ensure it doesn't contain spaces
                     if modID and string.find(modID, " ") then
                         sendWarnMessage("Invalid mod ID: " .. modID, 'Loader')
@@ -77,6 +79,13 @@ function loadMods(modsDirectory)
                                 table.insert(modAuthorArray, author:match("^%s*(.-)%s*$")) -- Trim spaces
                             end
 
+                            local requiredDependenciesArray = {}
+                            if requiredDependenciesString then
+                                for author in string.gmatch(requiredDependenciesString, "([^,]+)") do
+                                    table.insert(requiredDependenciesArray, author:match("^%s*(.-)%s*$")) -- Trim spaces
+                                end
+                            end
+
                             -- Store mod information in the global table, including the directory path
                             local mod = {
                                 name = modName,
@@ -86,7 +95,9 @@ function loadMods(modsDirectory)
                                 path = directory .. "/", -- Store the directory path
                                 priority = priority,
                                 badge_colour = badge_colour,
-                                display_name = display_name or modName
+                                display_name = display_name or modName,
+                                required_dependencies = requiredDependenciesArray or {},
+                                icon_atlas = iconAtlas or "tags"
                             }
                             table.insert(mods, mod)
                             modIDs[modID] = true  -- Mark this ID as used

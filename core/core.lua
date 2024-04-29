@@ -301,26 +301,99 @@ end
 
 
 
+function missingDependencies(modInfo)
+    local missing_dependencies = false
+    local missing_list = {}
+
+    if modInfo.required_dependencies then
+        for k, modid in ipairs(modInfo.required_dependencies) do
+            if not SMODS.INIT[modid] then
+                table.insert(missing_list, modid)
+                missing_dependencies = true
+            end
+        end
+    end
+    return missing_dependencies, missing_list
+end
+
+function buildModtag(modInfo)
+    local tag_pos, tag_message, tag_atlas = {x = 0, y = 0}, "mod_loaded_successfully", modInfo.icon_atlas
+    local specific_vars = {}
+
+    local is_missing, missing_list = missingDependencies(modInfo)
+
+    if is_missing then
+        tag_message = "mod_missing_dependencies"
+        tag_atlas = "tag_error"
+        specific_vars = { concatAuthors(missing_list) }
+    end
+
+
+    local tag_sprite_tab = nil
+    
+    local tag_sprite = Sprite(0, 0, 0.8*1, 0.8*1, G.ASSET_ATLAS[tag_atlas], tag_pos)
+    tag_sprite.T.scale = 1
+    tag_sprite_tab = {n= G.UIT.C, config={align = "cm", padding = 0}, nodes={
+        {n=G.UIT.O, config={w=0.8*1, h=0.8*1, colour = G.C.BLUE, object = tag_sprite, focus_with_object = true}},
+    }}
+    tag_sprite:define_draw_steps({
+        {shader = 'dissolve', shadow_height = 0.05},
+        {shader = 'dissolve'},
+    })
+    tag_sprite.float = true
+    tag_sprite.states.hover.can = true
+    tag_sprite.states.drag.can = false
+    tag_sprite.states.collide.can = true
+
+    tag_sprite.hover = function(_self)
+        if not G.CONTROLLER.dragging.target or G.CONTROLLER.using_touch then 
+            if not _self.hovering and _self.states.visible then
+                _self.hovering = true
+                if _self == tag_sprite then
+                    _self.hover_tilt = 3
+                    _self:juice_up(0.05, 0.02)
+                    play_sound('paper1', math.random()*0.1 + 0.55, 0.42)
+                    play_sound('tarot2', math.random()*0.1 + 0.55, 0.09)
+                end
+                tag_sprite.ability_UIBox_table = generate_card_ui({set = "Other", discovered = false, key = tag_message}, nil, specific_vars, 'Other', nil, false)
+                _self.config.h_popup =  G.UIDEF.card_h_popup(_self)
+                _self.config.h_popup_config ={align = 'cl', offset = {x=-0.1,y=0},parent = _self}
+                Node.hover(_self)
+                if _self.children.alert then 
+                    _self.children.alert:remove()
+                    _self.children.alert = nil
+                    G:save_progress()
+                end
+            end
+        end
+    end
+    tag_sprite.stop_hover = function(_self) _self.hovering = false; Node.stop_hover(_self); _self.hover_tilt = 0 end
+
+    tag_sprite:juice_up()
+
+    return tag_sprite_tab
+end
+
+
 -- Helper function to create a clickable mod box
 local function createClickableModBox(modInfo, scale)
-	return {
-		n = G.UIT.R,
-		config = {
-			padding = 0,
-			align = "cm",
-		},
-		nodes = {
-			UIBox_button({
-				label = {" " .. modInfo.name .. " ", " By: " .. concatAuthors(modInfo.author) .. " "},
-				shadow = true,
-				scale = scale,
-				colour = G.C.BOOSTER,
-				button = "openModUI_" .. modInfo.id,
-				minh = 0.8,
-				minw = 8
-			})
-		}
-	}
+    return { n = G.UIT.R, config = { padding = 0, align = "cm" }, nodes = {
+        { n = G.UIT.C, config = { align = "cm" }, nodes = {
+            buildModtag(modInfo)
+        }},
+        { n = G.UIT.C, config = { padding = 0, align = "cm", }, nodes = {
+            UIBox_button({
+                label = {" " .. modInfo.name .. " ", " By: " .. concatAuthors(modInfo.author) .. " "},
+                shadow = true,
+                scale = scale,
+                colour = G.C.BOOSTER,
+                button = "openModUI_" .. modInfo.id,
+                minh = 0.8,
+                minw = 7
+            })
+        }}
+    }}
+	
 end
 
 local function initializeModUIFunctions()

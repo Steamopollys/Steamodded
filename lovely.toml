@@ -29,6 +29,8 @@ sources = [
     "core/planet.lua",
     "core/spectral.lua",
     "core/seal.lua",
+    "core/tag.lua",
+    "core/poker_hand.lua",
     "core/StackTracePlus.lua",
     "debug/debug.lua",
     "loader/loader.lua",
