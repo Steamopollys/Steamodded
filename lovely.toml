@@ -33,3 +33,34 @@ sources = [
     "debug/debug.lua",
     "loader/loader.lua",
 ]
+
+#Sticker API
+#generate_UIBox_ability_table()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = "(?<indent>[\t ]*)if self.sticker then loc_vars = loc_vars or \\{}; loc_vars.sticker=self.sticker end"
+position = "before"
+line_prepend = "$indent"
+payload = '''
+for k, v in pairs(SMODS.Stickers) do
+	if self.ability[v.label] then
+        if v.set_badges and type(v.set_badges) == 'function' then v.set_badges(self, badges) end
+    end
+end
+'''
+
+#generate_card_ui()
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = "(?<indent>[\t ]*)if main_end then"
+position = "before"
+line_prepend = "$indent"
+payload = '''
+if first_pass and not (_c.set == 'Edition') and badges and next(badges) then
+	for k, v in ipairs(badges) do
+        if SMODS.Stickers[v] and SMODS.Stickers[v].set_tooltip and type(SMODS.Stickers[v].set_tooltip) == 'function' then SMODS.Stickers[v].set_tooltip(_c, info_queue) end
+    end
+end
+'''
