@@ -10,7 +10,6 @@ SMODS.Sticker = {
     default_compat = true,
     compat_exceptions = {}
 }
-SMODS.Card_Stickers = nil
 
 function SMODS.Sticker:new(name, label, config, pos, chance, atlas, color, default_compat, compat_exceptions)
 	o = {}
@@ -114,16 +113,4 @@ function Card.draw(self, layer)
             end
         end
     end
-end
-
---Shortcut around generate_UIBox_ability_table function
-function SMODS.set_card_SMODS_sticker_info(card)
-    local SMODS_sticker_count = nil
-    for k, v in pairs(SMODS.Stickers) do
-        if card.ability[v.label] then 
-            if SMODS_sticker_count == nil then SMODS_sticker_count = {} end
-            SMODS_sticker_count[#SMODS_sticker_count+1] = v.label 
-        end
-    end
-	SMODS.Card_Stickers = SMODS_sticker_count 
 end
