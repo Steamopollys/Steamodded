@@ -209,7 +209,6 @@ function Card:generate_UIBox_ability_table()
             if m then main_end = m end
         end
     end
-    SMODS.set_card_SMODS_sticker_info(self)
     if loc_vars then
         local badges = {}
         if (card_type ~= 'Locked' and card_type ~= 'Undiscovered' and card_type ~= 'Default') or self.debuff then
@@ -235,14 +234,15 @@ function Card:generate_UIBox_ability_table()
             badges[#badges + 1] = 'pinned_left'
         end
 
-        for k, v in pairs(SMODS.Stickers) do
-            sendInfoMessage(type(v))
-            if self.ability[v] == true then badges[#badges + 1] = v end
-        end
-
         if self.sticker then
             loc_vars = loc_vars or {};
             loc_vars.sticker = self.sticker
+        end
+
+        for k, v in pairs(SMODS.Stickers) do
+            if self.ability[v.label] then
+                if v.set_badges and type(v.set_badges) == 'function' then v.set_badges(self, badges) end
+            end
         end
 
         local center = self.config.center
