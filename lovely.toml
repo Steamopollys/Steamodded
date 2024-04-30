@@ -45,7 +45,7 @@ position = "before"
 line_prepend = "$indent"
 payload = '''
 for k, v in pairs(SMODS.Stickers) do
-	if self.ability[v.slug] then
+	if self.ability[v.key] then
         if v.set_badges and type(v.set_badges) == 'function' then v.set_badges(self, badges) end
     end
 end
@@ -76,8 +76,8 @@ line_prepend = "$indent"
 payload = '''
 --asdf
 for k, v in pairs(SMODS.Stickers) do
-    if pseudorandom('ssj'..v.slug..G.GAME.round_resets.ante) > (1-v.chance) then
-        local sticker_obj = SMODS.Stickers[v.slug]
+    if pseudorandom('ssj'..v.key..G.GAME.round_resets.ante) > (1-v.chance) then
+        local sticker_obj = SMODS.Stickers[v.key]
         if sticker_obj and sticker_obj.set_sticker and type(sticker_obj.set_sticker) == 'function' then
             sticker_obj.set_sticker(card, true)
         end
@@ -94,13 +94,13 @@ position = "after"
 line_prepend = "$indent"
 payload = '''
 --asdf
-for _, slug in ipairs(SMODS.BUFFERS.Stickers) do
-    local asset_atlas = SMODS.Stickers[slug].atlas
-    local atlas_pos = SMODS.Stickers[slug].pos
+for _, key in ipairs(SMODS.BUFFERS.Stickers) do
+    local asset_atlas = SMODS.Stickers[key].atlas
+    local atlas_pos = SMODS.Stickers[key].pos
     if asset_atlas ~= "" then
-        self.shared_stickers[slug] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS[asset_atlas], atlas_pos)
+        self.shared_stickers[key] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS[asset_atlas], atlas_pos)
     else
-        self.shared_stickers[slug] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS["stickers"], atlas_pos)
+        self.shared_stickers[key] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS["stickers"], atlas_pos)
     end
 end
 '''
@@ -115,13 +115,13 @@ line_prepend = "$indent"
 payload = '''
 --asdf
 for k, v in pairs(SMODS.Stickers) do
-    if self.ability[v.slug] then
+    if self.ability[v.key] then
         if v and v.set_shader and type(v.set_shader) == 'function' then
             v.set_shader(self)
         else
-            G.shared_stickers[v.slug].role.draw_major = self
-            G.shared_stickers[v.slug]:draw_shader('dissolve', nil, nil, nil, self.children.center)
-            G.shared_stickers[v.slug]:draw_shader('voucher', nil, self.ARGS.send_to_shader, nil, self.children.center)
+            G.shared_stickers[v.key].role.draw_major = self
+            G.shared_stickers[v.key]:draw_shader('dissolve', nil, nil, nil, self.children.center)
+            G.shared_stickers[v.key]:draw_shader('voucher', nil, self.ARGS.send_to_shader, nil, self.children.center)
         end
     end
 end
