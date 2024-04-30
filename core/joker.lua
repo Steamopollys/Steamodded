@@ -166,7 +166,7 @@ end
 local calculate_jokerref = Card.calculate_joker;
 function Card:calculate_joker(context)
     for k, v in pairs(SMODS.Stickers) do
-        if self.ability[v.label] then
+        if self.ability[v.slug] then
             if v.calculate and type(v.calculate) == 'function' then
                 v.calculate(self, context)
             end
