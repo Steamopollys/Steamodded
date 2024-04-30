@@ -239,12 +239,6 @@ function Card:generate_UIBox_ability_table()
             loc_vars.sticker = self.sticker
         end
 
-        for k, v in pairs(SMODS.Stickers) do
-            if self.ability[v.label] then
-                if v.set_badges and type(v.set_badges) == 'function' then v.set_badges(self, badges) end
-            end
-        end
-
         local center = self.config.center
         return generate_card_ui(center, nil, loc_vars, card_type, badges, hide_desc, main_start, main_end)
     end
