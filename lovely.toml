@@ -29,6 +29,7 @@ sources = [
     "core/planet.lua",
     "core/spectral.lua",
     "core/seal.lua",
+    "core/sticker.lua",
     "core/StackTracePlus.lua",
     "debug/debug.lua",
     "loader/loader.lua",
@@ -44,7 +45,7 @@ position = "before"
 line_prepend = "$indent"
 payload = '''
 for k, v in pairs(SMODS.Stickers) do
-	if self.ability[v.label] then
+	if self.ability[v.slug] then
         if v.set_badges and type(v.set_badges) == 'function' then v.set_badges(self, badges) end
     end
 end
@@ -61,6 +62,67 @@ payload = '''
 if first_pass and not (_c.set == 'Edition') and badges and next(badges) then
 	for k, v in ipairs(badges) do
         if SMODS.Stickers[v] and SMODS.Stickers[v].set_tooltip and type(SMODS.Stickers[v].set_tooltip) == 'function' then SMODS.Stickers[v].set_tooltip(_c, info_queue) end
+    end
+end
+'''
+
+#create_card()
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '''(?<indent>[\t ]*)card:set_rental\(true\)\n[\s][\s][\s][\s][\s][\s][\s][\s][\s][\s][\s][\s]end'''
+position = "after"
+line_prepend = "$indent"
+payload = '''
+--asdf
+for k, v in pairs(SMODS.Stickers) do
+    if pseudorandom('ssj'..v.slug..G.GAME.round_resets.ante) > (1-v.chance) then
+        local sticker_obj = SMODS.Stickers[v.slug]
+        if sticker_obj and sticker_obj.set_sticker and type(sticker_obj.set_sticker) == 'function' then
+            sticker_obj.set_sticker(card, true)
+        end
+    end
+end
+'''
+
+#start_up()
+[[patches]]
+[patches.regex]
+target = "game.lua"
+pattern = '''(?<indent>[\t ]*)boot_timer\('splash prep', 'end',1\)'''
+position = "after"
+line_prepend = "$indent"
+payload = '''
+--asdf
+for _, slug in ipairs(SMODS.BUFFERS.Stickers) do
+    local asset_atlas = SMODS.Stickers[slug].atlas
+    local atlas_pos = SMODS.Stickers[slug].pos
+    if asset_atlas ~= "" then
+        self.shared_stickers[slug] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS[asset_atlas], atlas_pos)
+    else
+        self.shared_stickers[slug] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS["stickers"], atlas_pos)
+    end
+end
+'''
+
+#draw()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''(?<indent>[\t ]*)self:draw_boundingrect\(\)'''
+position = "after"
+line_prepend = "$indent"
+payload = '''
+--asdf
+for k, v in pairs(SMODS.Stickers) do
+    if self.ability[v.slug] then
+        if v and v.set_shader and type(v.set_shader) == 'function' then
+            v.set_shader(self)
+        else
+            G.shared_stickers[v.slug].role.draw_major = self
+            G.shared_stickers[v.slug]:draw_shader('dissolve', nil, nil, nil, self.children.center)
+            G.shared_stickers[v.slug]:draw_shader('voucher', nil, self.ARGS.send_to_shader, nil, self.children.center)
+        end
     end
 end
 '''
