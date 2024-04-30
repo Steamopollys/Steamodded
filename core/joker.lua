@@ -165,13 +165,6 @@ end
 
 local calculate_jokerref = Card.calculate_joker;
 function Card:calculate_joker(context)
-    for k, v in pairs(SMODS.Stickers) do
-        if self.ability[v.slug] then
-            if v.calculate and type(v.calculate) == 'function' then
-                v.calculate(self, context)
-            end
-        end
-    end
     if not self.debuff then
         local key = self.config.center.key
         local center_obj = SMODS.Jokers[key] or SMODS.Tarots[key] or SMODS.Planets[key] or SMODS.Spectrals[key]

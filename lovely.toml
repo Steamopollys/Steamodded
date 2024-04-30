@@ -126,3 +126,22 @@ for k, v in pairs(SMODS.Stickers) do
     end
 end
 '''
+
+#calculate_joker()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.debuff then return nil end"
+position = 'before'
+payload = '''
+--asdf
+for k, v in pairs(SMODS.Stickers) do
+    if self.ability[v.key] then
+        if v.calculate and type(v.calculate) == 'function' then
+            v.calculate(self, context)
+        end
+    end
+end
+'''
+overwrite = false
+match_indent = true
