@@ -11,23 +11,23 @@ SMODS.Sticker = {
     compat_exceptions = {}
 }
 
-function SMODS.Sticker:new(name, slug, config, pos, chance, atlas, color, default_compat, compat_exceptions)
+function SMODS.Sticker:new(st_config)
 	o = {}
 	setmetatable(o, self)
 	self.__index = self
 
-	o.name = name
-	o.slug = 'st_'..slug
-	o.config = config or {}
-	o.pos = pos or {
+	o.name = st_config.name
+	o.key = 'st_'..st_config.key
+	o.config = st_config.config or {}
+	o.pos = st_config.pos or {
 		x = 0,
 		y = 0
 	}
-	o.chance = chance or 0.3
-	o.atlas = atlas or ""
-    o.color = color or HEX("FFFFFF")
-    o.default_compat = default_compat or true
-    o.compat_exceptions = compat_exceptions or {}
+	o.chance = st_config.chance or 0.3
+	o.atlas = st_config.atlas or ""
+    o.color = st_config.color or HEX("FFFFFF")
+    o.default_compat = st_config.default_compat or true
+    o.compat_exceptions = st_config.compat_exceptions or {}
 	return o
 end
 
