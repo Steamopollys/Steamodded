@@ -17,19 +17,1324 @@ overwrite = false
 target = "main.lua"
 position = "append"
 sources = [
-    "core/core.lua",
-    "core/deck.lua",
-    "core/joker.lua",
-    "core/r_blind.lua",
-    "core/sound.lua",
-    "core/sprite.lua",
-    "core/suit.lua",
-    "core/tarot.lua",
-    "core/voucher.lua",
-    "core/planet.lua",
-    "core/spectral.lua",
-    "core/seal.lua",
-    "core/StackTracePlus.lua",
-    "debug/debug.lua",
-    "loader/loader.lua",
+	"core/core.lua",
+	"core/game_object.lua",
+	"core/sound.lua",
+	"core/StackTracePlus.lua",
+	"debug/debug.lua",
+	"loader/loader.lua",
 ]
+
+### Center API
+# Card:set_ability()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if not G.OVERLAY_MENU then "
+position = 'before'
+payload = '''
+local obj = self.config.center
+if obj.set_ability and type(obj.set_ability) == 'function' then
+	obj.set_ability(self, center, initial, delay_sprites)
+end'''
+overwrite = false
+match_indent = true
+
+# Card:calculate_joker()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = 'if self.ability.set == "Planet" and not self.debuff then'
+position = 'before'
+payload = '''
+local obj = self.config.center
+if obj.calculate and type(obj.calculate) == 'function' then
+	local o = obj.calculate(self, context)
+	if o then return o end
+end
+'''
+overwrite = false
+match_indent = true
+
+# Card:update()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = 'if G.STAGE == G.STAGES.RUN then'
+position = 'before'
+overwrite = false
+match_indent = true
+payload = '''
+local obj = self.config.center
+if obj.update and type(obj.update) == 'function' then
+	obj.update(self, dt)
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<else>else)\n[\t ]*if self.ability.name == 'Loyalty Card' then\n[\t ]*self.ability.loyalty_remaining"
+root_capture = 'else'
+position = 'at'
+payload = 'elseif SMODS.end_calculate_context(context) then'
+
+# Card:generate_UIBox_ability_table()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if (?<rest>self.ability.name == 'Joker' then .*\n)"
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+local obj = self.config.center
+if obj.loc_def and type(obj.loc_def) == 'function' then
+	loc_vars, main_start, main_end = obj.loc_def(self)
+elseif $rest
+'''
+
+#generate_card_ui()
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)elseif _c.set == 'Voucher' then"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+elseif _c.loc_def and type(_c.loc_def) == 'function' then
+	loc_vars, main_start, main_end = _c:loc_def(info_queue)
+	localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if (?<rest>_c.name == 'Golden Ticket' then)"
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+if _c.unlock_loc_def and type(_c.unlock_loc_def) == 'function' then
+	loc_vars = _c:unlock_loc_def(info_queue)
+elseif $rest
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if (?<rest>_c.name == 'Stone Joker' .*\n)"
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+if _c.tooltip and type(_c.tooltip) == 'function' then
+	main_end = _c:tooltip(info_queue)
+elseif $rest
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if v == 'eternal'"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+if SMODS.Seals[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end
+'''
+# check_for_unlock()
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if not card.unlocked and card.unlock_condition and args.type == 'career_stat' then"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+
+if not card.unlocked and card.check_for_unlock and type(card.check_for_unlock) == 'function' then
+	ret = card:check_for_unlock(args)
+	if ret then unlock_card(card) end
+end
+'''
+
+#Card:use_consumable()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if self.ability.consumeable.mod_conv or self.ability.consumeable.suit_conv then"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+local obj = self.config.center
+if obj.use and type(obj.use) == 'function' then
+	obj.use(self, area, copier)
+	return
+end
+'''
+
+# Card:can_use_consumable()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if self.ability.name == 'The Hermit' or self.ability.consumeable.hand_type"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+local obj = self.config.center
+if obj.can_use and type(obj.can_use) == 'function' then
+	return obj.can_use(self)
+end
+'''
+
+# G.UIDEF.card_h_popup()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)(?<if>if AUT.badges.card_type or AUT.badges.force_rarity then)\n[\t ]*(?<rest>.*)\n[\t ]*end"
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+local obj = card.config.center
+$if
+	if obj and obj.set_card_type_badge and type(obj.set_card_type_badge) == 'function' then
+		obj.set_card_type_badge(card, badges)
+	else
+		$rest
+	end
+end
+if obj and obj.set_badges and type(obj.set_badges) == 'function' then
+	obj.set_badges(card, badges)
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)if AUT.badges then\n([\t ]*.*\n){4}[\t ]*end"
+line_prepend = '$indent'
+position = 'after'
+payload = '''
+if not G.SETTINGS.no_mod_badges and obj and obj.mod and obj.mod.display_name then
+	local mod_name = string.sub(obj.mod.display_name, 1, 16)
+	local len = string.len(mod_name)
+	badges[#badges + 1] = create_badge(mod_name, obj.mod.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil, len <= 6 and 0.9 or 0.9 - 0.02 * (len - 6))
+end
+'''
+
+# G.UIDEF.settings_tab()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)G.F_CRASH_REPORTS.*\n"
+line_prepend = '$indent'
+position = 'after'
+payload = '''
+create_toggle { label = 'Disable Mod Badges', ref_table = G.SETTINGS, ref_value = 'no_mod_badges' },
+'''
+
+# set_discover_tallies()
+[[patches]]
+[patches.regex]
+target = 'functions/misc_functions.lua'
+pattern = "(?<indent>[\t ]*)if v.set == 'Planet' then\n([\t ]*.*\n){15}"
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+local tally = G.DISCOVER_TALLIES[v.set:lower()..'s']
+tally.of = tally.of + 1
+if v.discovered then
+	tally.tally = tally.tally + 1
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/misc_functions.lua'
+pattern = "[\t ]*tarots = \\{tally = 0, of = 0\\},\n(.*\n){2}"
+line_prepend = '$indent'
+position = 'at'
+payload = ''
+overwrite = true
+
+[[patches]]
+[patches.regex]
+target = 'functions/misc_functions.lua'
+pattern = "(?<indent>[\t ]*)for _, v in pairs\\(G.DISCOVER_TALLIES\\) do\n"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+for _, v in pairs(SMODS.ConsumableTypes) do
+	G.DISCOVER_TALLIES[v.key:lower()..'s'] = {tally = 0, of = 0}
+end
+'''
+
+# create_UIBox_your_collection()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local t = create_UIBox_generic_options\\(\\{ back_func = G.STAGE"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+local consumable_nodes = {}
+for _, key in ipairs(SMODS.ConsumableType.obj_buffer) do
+	local id = 'your_collection_'..key:lower()..'s'
+	consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)nodes=\\{\n[\t ]*UIBox_button\\(\\{button = 'your_collection_tarots'(.*\n){3}[\t ]*}"
+line_prepend = '$indent'
+position = 'at'
+payload = 'nodes = consumable_nodes'
+
+# Card:apply_to_run()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if center_table.name == 'Overstock'"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+local obj = center or self.config.center
+if obj.redeem and type(obj.redeem) == 'function' then
+	obj:redeem()
+	return
+end
+'''
+### Sprite API
+# Card:set_sprites()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = '(?<start>.*)G.ASSET_ATLAS\["centers"\](?<end>.*)'
+position = 'at'
+payload = "$start G.ASSET_ATLAS[(G.GAME.viewed_back or G.GAME.selected_back) and ((G.GAME.viewed_back or G.GAME.selected_back)[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or (G.GAME.viewed_back or G.GAME.selected_back).atlas) or 'centers']$end"
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = '(?<start>.*)G.ASSET_ATLAS\[_center.atlas or _center.set\](?<end>.*)'
+position = 'at'
+payload = "$start G.ASSET_ATLAS[SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas or _center.set]$end"
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<start>.*)G.ASSET_ATLAS\\['Joker'\\](?<end>.*)"
+position = 'at'
+payload = "$start G.ASSET_ATLAS[_center[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.atlas or _center.set]$end"
+
+[[patches]]
+[patches.regex]
+target = 'card.lua' 
+pattern = '(?<start>.*)G.ASSET_ATLAS\[_center.set\](?<end>.*)'
+position = 'at'
+payload = "$start G.ASSET_ATLAS[_center[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.atlas or _center.set]$end"
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)\\(_center.set == 'Joker' and G.j_undiscovered.pos\\) or \n(.*\n){6}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+SMODS.UndiscoveredSprites[_center.set].pos)
+
+'''
+[[patches]]
+[patches.regex]
+target = 'card.lua' 
+pattern = '(?<start>.*)G.ASSET_ATLAS\[_front.atlas\](?<end>.*)'
+position = 'at'
+payload = '$start G.ASSET_ATLAS[G.SETTINGS.colourblind_option and _front.hc_atlas or _front.lc_atlas] or G.ASSET_ATLAS[_front.atlas]$end'
+
+
+# Game:set_render_settings()
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "self.ASSET_ATLAS.Spectral = self.ASSET_ATLAS.Tarot"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = "if SMODS.booted then SMODS.injectObjects(SMODS.Sprites) end"
+
+### Back API
+# Back:init()
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = "if not selected_back then selected_back = G.P_CENTERS.b_red end"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = "self.atlas = selected_back.atlas"
+
+# Back:change_to()
+
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = "if not new_back then new_back = G.P_CENTERS.b_red end"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = "self.atlas = new_back.atlas"
+
+# G.FUNCS.change_viewed_back
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = "G.PROFILES[G.SETTINGS.profile].MEMORY.deck = args.to_val"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+for key, val in pairs(G.sticker_card.area.cards) do
+	val.children.back = false
+	val:set_ability(val.config.center, true)
+end
+'''
+
+# Back:apply_to_run()
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = "function Back:apply_to_run()"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+	local obj = self.effect.center
+	if obj.apply_to_run and type(obj.apply_to_run) == 'function' then
+		obj.apply_to_run(self)
+	end
+'''
+
+### Blind API
+# Blind:set_blind()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "G.GAME.last_blind = G.GAME.last_blind or {}"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.atlas then
+	self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[obj.atlas]
+	self.children.animatedSprite:reset()
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '--add new debuffs'
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.set_blind and type(obj.set_blind) == 'function' then
+	obj.set_blind(self, blind, reset, silent)
+end
+'''
+
+# Blind:disable()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.name == 'The Water' then"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.disable and type(obj.disable) == 'function' then
+	obj.disable(self)
+end
+'''
+
+# Blind:defeat()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.name == 'The Manacle' and not self.disabled then"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.defeat and type(obj.defeat) == 'function' then
+	obj.defeat(self)
+end
+'''
+
+# Blind:debuff_card()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.debuff and not self.disabled and card.area ~= G.jokers then"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.debuff_card and type(obj.debuff_card) == 'function' then
+	if obj.debuff_card(self, card, from_blind) then return end
+end
+'''
+
+# Blind:stay_flipped()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if area == G.hand then"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.stay_flipped and type(obj.stay_flipped) == 'function' then
+	return obj.stay_flipped(self, area, card)
+end
+'''
+
+# Blind:drawn_to_hand()
+[[patches]]
+[patches.regex]
+target = 'blind.lua'
+pattern = "(?<indent>[\t ]*)if self.name == 'Cerulean Bell' then\n"
+position = 'before'
+line_prepend = '$indent'
+payload = '''
+local obj = self.config.blind
+if obj.drawn_to_hand and type(obj.drawn_to_hand) == 'function' then
+	obj.drawn_to_hand(self)
+end
+'''
+
+# Blind:debuff_hand()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.debuff then"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.debuff_hand and type(obj.debuff_hand) == 'function' then
+	obj.debuff_hand(self, cards, hand, handname, check)
+end
+'''
+
+# Blind:modify_hand()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.disabled then return mult, hand_chips, false end"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.modify_hand and type(obj.modify_hand) == 'function' then
+	return obj.modify_hand(self, cards, poker_hands, text, mult, hand_chips)
+end
+'''
+
+# Blind:press_play()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = 'if self.name == "The Hook" then'
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.press_play and type(obj.press_play) == 'function' then
+	return obj.press_play(self)
+end
+'''
+
+# Blind:get_loc_debuff_text()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = 'return disp_text'
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.get_loc_debuff_text and type(obj.get_loc_debuff_text) == 'function' then
+	return obj.get_loc_debuff_text(self)
+end
+'''
+
+# Blind:set_text()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = 'local loc_vars = nil'
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.loc_def and type(obj.def) == 'function' then
+	loc_vars = obj.loc_def(self)
+end
+'''
+
+# Blind:load()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = 'if G.P_BLINDS[blindTable.config_blind] then'
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+if self.config.blind.atlas then
+	self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[self.config.blind.atlas]
+end
+'''
+
+
+# create_UIBox_blind_choice
+# create_UIBox_round_scores_row
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)blind_choice.animation = AnimatedSprite\\(0,0, 1.4, 1.4, G.ANIMATION_ATLAS\\[(?<atlas>'blind_chips')\\],  blind_choice.config.pos\\)"
+position = 'at'
+root_capture = 'atlas'
+payload = "blind_choice.config.atlas or 'blind_chips'"
+
+# create_UIBox_your_collection_blinds
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local temp_blind = AnimatedSprite\\(0,0,1.3,1.3, G.ANIMATION_ATLAS\\[(?<atlas>'blind_chips')\\], discovered and v.pos or G.b_undiscovered.pos\\)"
+position = 'at'
+root_capture = 'atlas'
+payload = "discovered and v.atlas or 'blind_chips'"
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = 'blind_matrix[math.ceil((k-1)/5+0.001)][1+((k-1)%5)] = {n=G.UIT.C, config={align = "cm", padding = 0.1}, nodes={'
+overwrite = true
+match_indent = true
+position = 'at'
+payload = '''
+local blinds_per_row = math.ceil(#blind_tab / 6)
+local row = math.ceil((k - 1) / blinds_per_row + 0.001)
+table.insert(blind_matrix[row], {
+	n = G.UIT.C,
+	config = { align = "cm", padding = 0.1 },
+	nodes = {
+		((k - blinds_per_row) % (2 * blinds_per_row) == 1) and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
+		{ n = G.UIT.O, config = { object = temp_blind, focus_with_object = true } },
+		((k - blinds_per_row) % (2 * blinds_per_row) == 0) and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
+	}
+})
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = '[\t ]*\(k==6 or k ==16 or k == 26\) and \{n=G.UIT.B, config=\{h=0.2,w=0.5\}\} or nil,\n[\t ]*\{n=G.UIT.O, config=\{object = temp_blind, focus_with_object = true\}\},\n[\t ]*\(k==5 or k ==15 or k == 25\) and \{n=G.UIT.B, config=\{h=0.2,w=0.5\}\} or nil,\n[\t ]*\}\}'
+position = 'at'
+payload = ''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = 'table.sort(blind_tab, function (a, b) return a.order < b.order end)'
+overwrite = true
+match_indent = true
+position = 'at'
+payload = '''
+table.sort(blind_tab, function(a, b) return a.order + (a.boss and a.boss.showdown and 100 or 0) < b.order + (b.boss and b.boss.showdown and 100 or 0) end)
+'''
+
+# add_round_eval_row
+[[patches]]
+[patches.regex]
+target = 'function/common_events.lua'
+pattern = "(?<indent>[\t ]*)local blind_sprite = AnimatedSprite\\(0, 0, 1.2,1.2, G.ANIMATION_ATLAS\\[(?<atlas>'blind_chips')\\], copy_table\\(G.GAME.blind.pos\\)\\)"
+root_capture = 'atlas'
+position = 'at'
+payload = "G.GAME.blind.config.blind.atlas or 'blind_chips'"
+
+### Seal API
+# Card:open()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = '''
+(?<indent>[\t ]*)if seal_type > 0.75 then card:set_seal\('Red'\)
+[\t ]*elseif seal_type > 0.5 then card:set_seal\('Blue'\)
+[\t ]*elseif seal_type > 0.25 then card:set_seal\('Gold'\)
+[\t ]*else card:set_seal\('Purple'\)
+[\t ]*end
+'''
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+card:set_seal(SMODS.Seal.rng_buffer[math.ceil(seal_type*#SMODS.Seal.rng_buffer) or 1])
+'''
+
+# get_badge_colour()
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = 'return G.BADGE_COL[key] or {1, 0, 0, 1}'
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+for k, v in pairs(SMODS.Seals) do
+	G.BADGE_COL[k] = v.badge_colour
+end
+'''
+
+# Card:calculate_seal()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = 'function Card:calculate_seal\(context\)\n(?<indent>[\t ]*)if self.debuff then return nil end\n'
+position = 'after'
+line_prepend = '$indent'
+payload = '''
+local obj = G.P_SEALS[self.seal] or {}
+if obj.calculate and type(obj.calculate) == 'function' then
+	local o = obj.calculate(self, context)
+	if o then return o end
+end
+'''
+
+# Card:get_p_dollars()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = "(?<indent>[\t ]*)if (?<cond>self.seal == 'Gold' then)\n"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local obj = G.P_SEALS[self.seal] or {}
+if obj.get_p_dollars and type(obj.get_p_dollars) == 'function' then
+	ret = ret + obj.get_p_dollars(self)
+elseif $cond
+
+'''
+
+### Playing Card API
+# Game:init_game_object()
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = 'function Game:init_game_object()'
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+	local cards_played = {}
+	for _,v in ipairs(SMODS.Rank.obj_buffer) do
+		cards_played[v] = { suits = {}, total = 0 }
+	end
+'''
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = 'local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)'
+position = 'at'
+match_indent = true
+overwrite = true
+payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].card_key'
+
+# Game:start_run()
+[[patches]]
+[patches.regex]
+target = "game.lua"
+pattern = '(?<indent>[\t ]*)cards_played = \{\n(.*\n){13}[\t ]*\},'
+position = 'at'
+line_prepend = '$indent'
+payload = 'cards_played = cards_played,'
+
+# loc_colour()
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = 'return G.ARGS.LOC_COLOURS[_c] or _default or G.C.UI.TEXT_DARK'
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+	for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SECONDARY_SET[v] 
+	end
+	for _, v in ipairs(SMODS.Suit.obj_buffer) do
+		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SUITS[v]
+	end
+'''
+
+# get_flush()
+[[patches]]
+[patches.regex]
+target = "functions/misc_functions.lua"
+pattern = '(?<indent>[\t ]*)local suits = \{\n[\t ]*"Spades",\n[\t ]*"Hearts",\n[\t ]*"Clubs",\n[\t ]*"Diamonds"\n[\t ]*\}\n[\t ]*if #hand > 5 or (?<restcond>#hand < \(5 - \(four_fingers and 1 or 0\)\) then return ret else)'
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local suits = SMODS.Suit.obj_buffer
+if $restcond
+'''
+# I can't do better than fully replacing this function :skull:
+# get_straight()
+[[patches]]
+[patches.regex]
+target = "functions/misc_functions.lua"
+pattern = 'function get_straight\(hand\)\n(.*\n)*?end\n'
+position = 'at'
+payload = '''
+function get_straight(hand)
+	local ret = {}
+	local four_fingers = next(find_joker('Four Fingers'))
+	local can_skip = next(find_joker('Shortcut'))
+	if #hand < (5 - (four_fingers and 1 or 0)) then return ret end
+	local t = {}
+	local RANKS = {}
+	for i = 1, #hand do
+		local rank = hand[i].base.value
+			RANKS[rank] = RANKS[rank] or {}
+		RANKS[rank][#RANKS[rank] + 1] = hand[i]
+	end
+	local straight_length = 0
+	local straight = false
+	local skipped_rank = false
+	local vals = {}
+	for k, v in pairs(SMODS.Ranks) do
+		if v.straight_edge then
+		table.insert(vals, k)
+		end
+	end
+	local init_vals = {}
+	for _, v in ipairs(vals) do
+		init_vals[v] = true
+	end
+	if not next(vals) then table.insert(vals, 'Ace') end
+	local initial = true
+	local br = false
+	local end_iter = false
+	local i = 0
+	while 1 do
+		end_iter = false
+		if straight_length >= (5 - (four_fingers and 1 or 0)) then
+		straight = true
+		end
+		i = i + 1
+		if br or (i > #SMODS.Rank.obj_buffer + 1) then break end
+		if not next(vals) then break end
+		for _, val in ipairs(vals) do
+		if init_vals[val] and not initial then br = true end
+		if RANKS[val] then
+			straight_length = straight_length + 1
+			skipped_rank = false
+			for _, vv in ipairs(RANKS[val]) do
+			t[#t + 1] = vv
+			end
+			vals = SMODS.Ranks[val].next
+			initial = false
+			end_iter = true
+			break
+		end
+		end
+		if not end_iter then
+			local new_vals = {}
+			for _, val in ipairs(vals) do
+				for _, r in ipairs(SMODS.Ranks[val].next) do
+					table.insert(new_vals, r)
+				end
+			end
+			vals = new_vals
+			if can_skip and not skipped_rank then
+				skipped_rank = true
+			else
+				straight_length = 0
+				skipped_rank = false
+				if not straight then t = {} end
+				if straight then break end
+			end
+			end
+	end
+	if not straight then return ret end
+	table.insert(ret, t)
+	return ret
+end
+
+'''
+
+# get_X_same()
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = 'local vals = {{},{},{},{},{},{},{},{},{},{},{},{},{},{}}'
+position = 'at'
+match_indent = true
+overwrite = false
+payload = '''
+local vals = {}
+for i = 1, SMODS.Rank.max_id.value do
+	vals[i] = {}
+end
+'''
+
+# Card:get_nominal()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = 'function Card:get_nominal\(mod\)\n([\t ]+.*\n)*end'
+position = 'at'
+payload = '''
+function Card:get_nominal(mod)
+	local mult = 1
+	if mod == 'suit' then mult = 10000 end
+	if self.ability.effect == 'Stone Card' then mult = -10000 end
+	return 10*self.base.nominal + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal + 0.000001*self.unique_val
+end
+'''
+
+# Card:set_base()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if self.base.value == '2' then self.base.nominal = 2; self.base.id = 2\n([\t ]+elseif .*\n)*"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local rank = SMODS.Ranks[self.base.value] or {}
+self.base.nominal = rank.nominal or 0
+self.base.face_nominal = rank.face_nominal or 0
+self.base.id = rank.id
+'''
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if self.base.suit == 'Diamonds' then self.base.suit_nominal = 0.01; self.base.suit_nominal_original = suit_base_nominal_original or 0.001 \n([\t ]+elseif .*\n)*"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local suit = SMODS.Suits[self.base.suit] or {}
+self.base.suit_nominal = suit.suit_nominal or 0
+self.base.suit_nominal_original = suit_base_nominal_original or suit.suit_nominal or 0
+'''
+
+# Card:change_suit()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)local new_code = [\\s\\S]*?local new_val = [\\s\\S]*?local new_card = G.P_CARDS\\[new_code..new_val\\]"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local new_code = SMODS.Suits[new_suit].card_key
+local new_val = SMODS.Ranks[self.base.value].card_key
+local new_card = G.P_CARDS[new_code..'_'..new_val]
+'''
+
+# Card:is_face()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if id == 11 or id == 12 or id == 13 or next\\(find_joker\\(\"Pareidolia\"\\)\\) then"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local rank = SMODS.Ranks[self.base.value]
+if id > 0 and rank.face or next(find_joker("Pareidolia")) then
+'''
+
+# G.UIDEF.view_deck()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local SUITS = \\{\n(.*\n){4}[\t ]*\\}\n[\t ]*local suit_map = \\{'Spades', 'Hearts', 'Clubs', 'Diamonds'\\}\n[\t ]*for (?<iter1>k, v in ipairs\\(G.playing_cards\\) do)\n[\t ]*(?<iter2>table.insert\\(SUITS\\[v.base.suit\\], v\\))\n[\t ]*end\n[\t ]*for j = 1, 4 do"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local SUITS = {}
+local suit_map = {}
+for i = #SMODS.Suit.obj_buffer, 1, -1 do
+	SUITS[SMODS.Suit.obj_buffer[i]] = {}
+	suit_map[#suit_map+1] = SMODS.Suit.obj_buffer[i]
+end
+for $iter1
+	$iter2
+end
+local num_suits = 0
+for j = 1, #suit_map do
+	if SUITS[suit_map[j]][1] then num_suits = num_suits + 1 end
+end
+for j = 1, #suit_map do
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)0.6\\*G.CARD_H,\n"
+position = 'at'
+line_prepend = '$indent'
+payload = "((num_suits > 8) and 0.2 or (num_suits > 4) and (1 - 0.1 * num_suits) or 0.6) * G.CARD_H,\n"
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local flip_col = G.C.WHITE\n(\n.*){5}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local flip_col = G.C.WHITE
+
+local suit_tallies = {}
+local mod_suit_tallies = {}
+for _, v in ipairs(suit_map) do
+	suit_tallies[v] = 0
+	mod_suit_tallies[v] = 0
+end
+local rank_tallies = {}
+local mod_rank_tallies = {}
+local rank_name_mapping = SMODS.Rank.obj_buffer
+for _, v in ipairs(rank_name_mapping) do
+	rank_tallies[v] = 0
+	mod_rank_tallies[v] = 0
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)for k, v in ipairs\\(G.playing_cards\\) do\n[\t ]*if v.ability.name ~= 'Stone Card'.*\n(.*\n)*?[\t ]*--ranks(\n.*){4}\n\n[\t ]*local modded = .*(\n.*){4}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+for k, v in ipairs(G.playing_cards) do
+	if v.ability.name ~= 'Stone Card' and (not unplayed_only or ((v.area and v.area == G.deck) or v.ability.wheel_flipped)) then
+		if v.ability.wheel_flipped and unplayed_only then wheel_flipped = wheel_flipped + 1 end
+		--For the suits
+		suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1
+		for kk, vv in pairs(mod_suit_tallies) do
+			mod_suit_tallies[kk] = (vv or 0) + (v:is_suit(kk) and 1 or 0)
+		end
+
+		--for face cards/numbered cards/aces
+		local card_id = v:get_id()
+		face_tally = face_tally + ((SMODS.Ranks[v.base.value].face) and 1 or 0)
+		mod_face_tally = mod_face_tally + (v:is_face() and 1 or 0)
+		if not SMODS.Ranks[v.base.value].face and card_id ~= 14 then
+			num_tally = num_tally + 1
+			if not v.debuff then mod_num_tally = mod_num_tally + 1 end
+		end
+		if card_id == 14 then
+			ace_tally = ace_tally + 1
+			if not v.debuff then mod_ace_tally = mod_ace_tally + 1 end
+		end
+
+		--ranks
+		rank_tallies[v.base.value] = rank_tallies[v.base.value] + 1
+		if not v.debuff then mod_rank_tallies[v.base.value] = mod_rank_tallies[v.base.value] + 1 end
+	end
+end
+local modded = face_tally ~= mod_face_tally
+for kk, vv in pairs(mod_suit_tallies) do
+	modded = modded or (vv ~= suit_tallies[kk])
+	if modded then break end
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = 'for i = 13, 1, -1 do'
+position = 'at'
+match_indent = true
+overwrite = false
+payload = '''
+for i = #rank_name_mapping, 1, -1 do
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'text = rank_name_mapping\[i\]'
+position = 'at'
+payload = 'text = SMODS.Ranks[rank_name_mapping[i]].shorthand'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "text = rank_tallies\\[i\\] or 'NIL'"
+position = 'at'
+payload = 'text = rank_tallies[rank_name_mapping[i]]'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local t = \n[\t ]*\\{n=G.UIT.ROOT, config=\\{align = \"cm\", colour = G.C.CLEAR\\}, nodes=\\{"
+position = 'before'
+line_prepend = '$indent'
+payload = '''
+local tally_ui = {
+	-- base cards
+	{
+		n = G.UIT.R,
+		config = { align = "cm", minh = 0.05, padding = 0.07 },
+		nodes = {
+			{ n = G.UIT.O, config = { object = DynaText({ string = { { string = localize('k_base_cards'), colour = G.C.RED }, modded and { string = localize('k_effective'), colour = G.C.BLUE } or nil }, colours = { G.C.RED }, silent = true, scale = 0.4, pop_in_rate = 10, pop_delay = 4 }) } }
+		}
+	},
+	-- aces, faces and numbered cards
+	{
+		n = G.UIT.R,
+		config = { align = "cm", minh = 0.05, padding = 0.1 },
+		nodes = {
+			tally_sprite({ x = 1, y = 0 },
+				{ { string = '' .. ace_tally, colour = flip_col }, { string = '' .. mod_ace_tally, colour = G.C.BLUE } },
+				{ localize('k_aces') }), --Aces
+			tally_sprite({ x = 2, y = 0 },
+				{ { string = '' .. face_tally, colour = flip_col }, { string = '' .. mod_face_tally, colour = G.C.BLUE } },
+				{ localize('k_face_cards') }), --Face
+			tally_sprite({ x = 3, y = 0 },
+				{ { string = '' .. num_tally, colour = flip_col }, { string = '' .. mod_num_tally, colour = G.C.BLUE } },
+				{ localize('k_numbered_cards') }), --Numbers
+		}
+	},
+}
+-- add suit tallies
+for i = 1, #suit_map, 2 do
+	local n = {
+		n = G.UIT.R,
+		config = { align = "cm", minh = 0.05, padding = 0.1 },
+		nodes = {
+			tally_sprite(SMODS.Suits[suit_map[i]].ui_pos,
+				{ { string = '' .. suit_tallies[suit_map[i]], colour = flip_col }, { string = '' .. mod_suit_tallies[suit_map[i]], colour = G.C.BLUE } },
+				{ localize(suit_map[i], 'suits_plural') },
+				suit_map[i]),
+			suit_map[i + 1] and tally_sprite(SMODS.Suits[suit_map[i + 1]].ui_pos,
+				{ { string = '' .. suit_tallies[suit_map[i + 1]], colour = flip_col }, { string = '' .. mod_suit_tallies[suit_map[i + 1]], colour = G.C.BLUE } },
+				{ localize(suit_map[i + 1], 'suits_plural') },
+				suit_map[i + 1]) or nil,
+		}
+	}
+	table.insert(tally_ui, n)
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'nodes=\{\n[\t ]*\{n=G.UIT.R, config=\{align = "cm", minh = 0.05, padding = 0.07\}, nodes=\{(\n.*)*?\n[\t ]*\}\}\n'
+position = 'at'
+payload = 'nodes = tally_ui}'
+
+# tally_sprite
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = '(?<start>[\t ]*local t_s = Sprite\(0,0,0.5,0.5,)G.ASSET_ATLAS\[.*?\](?<rest>.*?\))'
+position = 'at'
+payload = '$start G.ASSET_ATLAS[suit and SMODS.Suits[suit][G.SETTINGS.colourblind_option and "hc_ui_atlas" or "lc_ui_atlas"] or ("ui_"..(G.SETTINGS.colourblind_option and "2" or "1"))]$rest'
+
+# G.UIDEF.challenge_description_tab()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local SUITS = \\{(\n.*){5}\n[\t ]*local suit_map = \\{'S', 'H', 'C', 'D'\\}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local SUITS = {}
+local suit_map = {}
+for i = #SMODS.Suit.obj_buffer, 1, -1 do
+	local suit = SMODS.Suits[SMODS.Suit.obj_buffer[i]]
+	SUITS[suit.card_key] = {}
+	suit_map[#suit_map+1] = suit.card_key
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = 'local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)'
+position = 'at'
+match_indent = true
+overwrite = true
+payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].card_key'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)for j = 1, 4 do\n[\t ]*(?<mid>if.*(\n.*)*?)\n[\t ]*0.42\\*G.CARD_H,"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local num_suits = 0
+for j = 1, #suit_map do
+	if SUITS[suit_map[j]][1] then num_suits = num_suits + 1 end
+end
+for j = 1, #suit_map do
+	$mid			
+			(0.42 - (num_suits <= 4 and 0 or num_suits >= 8 and 0.28 or 0.07 * (num_suits - 4))) * G.CARD_H,
+'''
+
+# G.UIDEF.deck_preview()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local suit_counts = \\{((\n.*)*?\n[\t ]*\\}){2}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local suit_counts = {}
+local mod_suit_counts = {}
+for _, v in ipairs(SMODS.Suit.obj_buffer) do
+	suit_counts[v] = 0
+	mod_suit_counts[v] = 0
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local SUITS = \\{(\n.*){6}\n[\t ]*for(.*\n)*?[\t ]*local rank_name_mapping.*\n"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local SUITS = {}
+for _, suit in ipairs(SMODS.Suit.obj_buffer) do
+	SUITS[suit] = {}
+	for _, rank in ipairs(SMODS.Rank.obj_buffer) do
+		SUITS[suit][rank] = {}
+	end
+end
+local stones = nil
+local suit_map = {}
+for i = #SMODS.Suit.obj_buffer, 1, -1 do
+	suit_map[#suit_map+1] = SMODS.Suit.obj_buffer[i]
+end
+local rank_name_mapping = {}
+for i = #SMODS.Rank.obj_buffer, 1, -1 do
+	rank_name_mapping[#rank_name_mapping+1] = SMODS.Rank.obj_buffer[i]
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "\\[v.base.id\\]"
+position = 'at'
+payload = '[v.base.value]'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "local rank_col = v == 'A'.*\n"
+position = 'at'
+payload = "local rank_col = SMODS.Ranks[v].face and G.C.WHITE or _bg_col\n"
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "text = ''..v"
+position = 'at'
+payload = "text = ''..SMODS.Ranks[v].shorthand"
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'rank_counts\[15 - k\]'
+position = 'at'
+payload = 'rank_counts[v]'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'for j = 1, 4 do'
+position = 'at'
+payload = 'for _, suit in ipairs(suit_map) do'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'G.C.SUITS\[suit_map\[j\]\]'
+position = 'at'
+payload = 'G.C.SUITS[suit]'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'for i = 14, 2, -1 do'
+position = 'at'
+payload = 'for _, rank in ipairs(rank_name_mapping) do'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = '#SUITS\[suit_map\[j\]\]\[i\]'
+position = 'at'
+payload = '#SUITS[suit][rank]'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'local _x =.*\n.*\n'
+position = 'at'
+payload = 'local t_s = Sprite(0,0,0.3,0.3,G.ASSET_ATLAS[SMODS.Suits[v][G.SETTINGS.colourblind_option and "hc_ui_atlas" or "lc_ui_atlas"] or ("ui_"..(G.SETTINGS.colourblind_option and "2" or "1"))], SMODS.Suits[v].ui_pos)'
+
+### Language API
+# Game:set_language()
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "G.SETTINGS.language = 'en-us'"
+position = 'before'
+payload = 'self.temp_language = self.SETTINGS.language'
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "self.LANG = self.LANGUAGES[self.SETTINGS.language] or self.LANGUAGES['en-us']"
+position = 'before'
+payload = 'if self.temp_language then self.SETTINGS.language = self.temp_language end'
+match_indent = true
+overwrite = false
+
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "local localization = love.filesystem.getInfo('localization/'..G.SETTINGS.language..'.lua')"
+position = 'at'
+payload = "local localization = self.LANG.full_path and NFS.getInfo(self.LANG.full_path) or love.filesystem.getInfo('localization/'..G.SETTINGS.language..'.lua')"
+match_indent = true
+overwrite = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "self.localization = assert(loadstring(love.filesystem.read('localization/'..G.SETTINGS.language..'.lua')))()"
+position = 'at'
+payload = "self.localization = assert(loadstring(self.LANG.full_path and NFS.read(self.LANG.full_path) or love.filesystem.read('localization/'..G.SETTINGS.language..'.lua')))()"
+match_indent = true
+overwrite = true
