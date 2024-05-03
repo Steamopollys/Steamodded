@@ -1,5 +1,5 @@
--- ----------------------------------------------
--- ----------MOD CORE API STACKTRACE-------------
+--- STEAMODDED CORE
+--- MODULE STACKTRACE
 -- NOTE: This is a modifed version of https://github.com/ignacio/StackTracePlus/blob/master/src/StackTracePlus.lua
 -- Licensed under the MIT License. See https://github.com/ignacio/StackTracePlus/blob/master/LICENSE
 -- The MIT License

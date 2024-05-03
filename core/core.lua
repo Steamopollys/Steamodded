@@ -1,20 +1,11 @@
-----------------------------------------------
-------------MOD CORE--------------------------
+--- STEAMODDED CORE
+--- MODULE CORE
 
 SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
-SMODS.BUFFERS = {
-    Jokers = {},
-    Tarots = {},
-    Planets = {},
-	Spectrals = {},
-    Blinds = {},
-	Seals = {},
-	Vouchers = {},
-}
 
-MODDED_VERSION = "0.9.8-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -323,18 +314,6 @@ local function createClickableModBox(modInfo, scale)
 	}
 end
 
-local function initializeModUIFunctions()
-	for id, modInfo in pairs(SMODS.MODS) do
-		boot_print_stage("Initializing Mod UI: "..modInfo.id)
-		G.FUNCS["openModUI_" .. modInfo.id] = function(arg_736_0)
-			G.ACTIVE_MOD_UI = modInfo
-			G.FUNCS.overlay_menu({
-				definition = create_UIBox_mods(arg_736_0)
-			})
-		end
-	end
-end
-
 function G.FUNCS.openModsDirectory(options)
     if not love.filesystem.exists("Mods") then
         love.filesystem.createDirectory("Mods")
@@ -520,16 +499,6 @@ function create_UIBox_profile_button()
 	return(profile_menu)
 end
 
--- Function to find a mod by its ID
-function SMODS.findModByID(modID)
-    for _, mod in pairs(SMODS.MODS) do
-        if mod.id == modID then
-            return mod
-        end
-    end
-    return nil  -- Return nil if no mod is found with the given ID
-end
-
 -- Disable achievments and crash report upload
 function initGlobals()
 	G.F_NO_ACHIEVEMENTS = true
@@ -695,13 +664,13 @@ local function recalculateModsList(page)
 	local modsPerPage = 4
 	local startIndex = (page - 1) * modsPerPage + 1
 	local endIndex = startIndex + modsPerPage - 1
-	local totalPages = math.ceil(#SMODS.MODS / modsPerPage)
+	local totalPages = math.ceil(#SMODS.MODLIST / modsPerPage)
 	local currentPage = "Page " .. page .. "/" .. totalPages
 	local pageOptions = {}
 	for i = 1, totalPages do
 		table.insert(pageOptions, ("Page " .. i .. "/" .. totalPages))
 	end
-	local showingList = #SMODS.MODS > 0
+	local showingList = #SMODS.MODLIST > 0
 
 	return currentPage, pageOptions, showingList, startIndex, endIndex, modsPerPage
 end
@@ -856,7 +825,7 @@ function SMODS.GUI.dynamicModListContent(page)
         })
     else
         local modCount = 0
-        for id, modInfo in ipairs(SMODS.MODS) do
+        for id, modInfo in ipairs(SMODS.MODLIST) do
             if id >= startIndex and id <= endIndex then
                 table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
                 modCount = modCount + 1
@@ -955,7 +924,7 @@ function SMODS.SAVE_UNLOCKS()
 end
 
 function SMODS.LOAD_LOC()
-	boot_print_stage("Loading Localizations")
+    boot_print_stage("Loading Localizations")
     for g_k, group in pairs(G.localization) do
         if g_k == 'descriptions' then
             for _, set in pairs(group) do
@@ -978,6 +947,35 @@ function SMODS.LOAD_LOC()
             end
         end
     end
+end
+
+function SMODS.process_loc_text(ref_table, ref_value, loc_txt)
+    local target = (type(loc_txt) == 'table') and (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
+	if not(type(target) == 'string' or next(target)) then return end
+    ref_table[ref_value] = target
+end
+
+function SMODS.insert_pool(pool, center, replace)
+	sendTraceMessage(string.format('Inserting to pool: %s', center.key))
+	if replace == nil then replace = center.taken_ownership end
+	if replace then
+		for k, v in ipairs(pool) do
+            if v.key == center.key then
+                pool[k] = center
+            end
+		end
+    else
+		center.order = #pool+1
+		table.insert(pool, center)
+	end
+end
+
+function SMODS.remove_pool(pool, key)
+	local j
+	for i, v in ipairs(pool) do
+		if v.key == key then j = i end
+	end
+	if j then return table.remove(pool, j) end
 end
 
 ----------------------------------------------

@@ -1,3 +1,6 @@
+--- STEAMODDED CORE
+--- MODULE SOUND
+
 SMODS.SOUND_SOURCES = {}
 
 function register_sound(name, path, filename)
