@@ -1450,20 +1450,3 @@ end
 '''
 overwrite = false
 match_indent = true
-
-#calc_dollar_bonus add-on
-#calculate_dollar_bonus()
-[[patches]]
-[patches.regex]
-target = "card.lua"
-pattern = '''(?<indent>[\t ]*)if self\.ability\.name == 'Cloud 9' and self\.ability\.nine_tally and self\.ability\.nine_tally > 0 then'''
-position = "before"
-line_prepend = "$indent"
-payload = '''
---asdf
-local key = self.config.center.key
-local joker_obj = SMODS.Jokers[key]
-if joker_obj and joker_obj.calc_dollar_bonus and type(joker_obj.calc_dollar_bonus) == 'function' then
-    return joker_obj.calc_dollar_bonus(self)
-end
-'''
