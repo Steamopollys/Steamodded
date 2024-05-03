@@ -1,5 +1,5 @@
-----------------------------------------------
-------------MOD DEBUG SOCKET------------------
+--- STEAMODDED CORE
+--- MODULE DEBUG
 
 function initializeSocketConnection()
     local socket = require("socket")
