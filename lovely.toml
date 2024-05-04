@@ -1349,9 +1349,8 @@ position = "before"
 line_prepend = "$indent"
 payload = '''
 --asdf
-local key = self.config.center.key
-local joker_obj = SMODS.Jokers[key]
-if joker_obj and joker_obj.calc_dollar_bonus and type(joker_obj.calc_dollar_bonus) == 'function' then
+local joker_obj = self.config.center
+if joker_obj.calc_dollar_bonus and type(joker_obj.calc_dollar_bonus) == 'function' then
     return joker_obj.calc_dollar_bonus(self)
 end
 '''
