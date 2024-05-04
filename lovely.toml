@@ -1450,8 +1450,6 @@ end
 '''
 overwrite = false
 match_indent = true
-
-
 #Sticker API
 #generate_UIBox_ability_table()
 [[patches]]
