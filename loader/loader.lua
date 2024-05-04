@@ -99,7 +99,7 @@ function loadMods(modsDirectory)
                                 badge_colour = badge_colour,
                                 display_name = display_name or modName,
                                 required_dependencies = requiredDependenciesArray or {},
-                                icon_atlas = iconAtlas or "tags"
+                                icon_atlas = iconAtlas or "tags",
                                 prefix = prefix,
                                 content = fileContent,
                             }
