@@ -455,24 +455,25 @@ function getDebugInfoForCrash()
     if lovely_success then
         info = info .. "\nLovely Version: " .. lovely.version
     end
-    if SMODS.MODS then
+    if SMODS.mod_list then
         info = info .. "\nSteamodded Mods:"
-        for k, v in pairs(SMODS.MODS) do
-            info = info .. "\n    " .. k .. ": " .. v.name .. " By " .. concatAuthors(v.author) .. " [ID: " .. v.id ..
-                       (v.priority ~= 0 and (", Priority: " .. v.priority) or "") .. "]"
-            local debugInfo = SMODS.DebugInfo[v.id]
+        for k, v in ipairs(SMODS.mod_list) do
+            info = info .. "\n    " .. k .. ": " ..
+                v.name .. " by " .. concatAuthors(v.author) ..
+                " [ID: " .. v.id .. (v.priority ~= 0 and (", Priority: " .. v.priority) or "") .. "]"
+            local debugInfo = v.debug_info
             if debugInfo then
                 if type(debugInfo) == "string" then
                     if #debugInfo ~= 0 then
                         info = info .. "\n        " .. debugInfo
                     end
                 elseif type(debugInfo) == "table" then
-                    for k, v in pairs(debugInfo) do
-                        if type(v) ~= nil then
-                            v = tostring(v)
+                    for kk, vv in pairs(debugInfo) do
+                        if type(vv) ~= 'nil' then
+                            vv = tostring(vv)
                         end
-                        if #v ~= 0 then
-                            info = info .. "\n        " .. k .. ": " .. v
+                        if #vv ~= 0 then
+                            info = info .. "\n        " .. kk .. ": " .. vv
                         end
                     end
                 end

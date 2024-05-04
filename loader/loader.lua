@@ -1,14 +1,8 @@
 --- STEAMODDED CORE
 --- MODULE MODLOADER
 
-SMODS.INIT = {}
-SMODS._MOD_PRIO_MAP = {}
-SMODS._INIT_PRIO_MAP = {}
-SMODS.MODLIST = {}
-SMODS.BUFFERS = {
-    Seals = {},
-}
-
+SMODS.mod_priorities = {}
+SMODS.mod_list = {}
 -- Attempt to require nativefs
 local nfs_success, nativefs = pcall(require, "nativefs")
 local lovely_success, lovely = pcall(require, "lovely")
@@ -30,6 +24,19 @@ NFS = nativefs
 
 function loadMods(modsDirectory)
     local mods = {}
+    local header_components = {
+        name         = { pattern = '%-%-%- MOD_NAME: ([^\n]+)\n', required = true },
+        id           = { pattern = '%-%-%- MOD_ID: ([^%s]+)\n', required = true },
+        author       = { pattern = '%-%-%- MOD_AUTHOR: %[(.-)%]\n', required = true, parse_array = true },
+        description  = { pattern = '%-%-%- MOD_DESCRIPTION: (.-)\n', required = true },
+        priority     = { pattern = '%-%-%- PRIORITY: (%-?%d+)\n', handle = function(x) return x and x + 0 or 0 end },
+        badge_colour = { pattern = '%-%-%- BADGE_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or '666666FF') end },
+        display_name = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
+        dependencies = { pattern = '%-%-%- DEPENDENCIES: [(.-)%]\n', parse_array = true },
+        icon_atlas   = { pattern = '%-%-%- ICON_ATLAS: (.-)\n', handle = function(x) return x or 'tags' end },
+        prefix       = { pattern = '%-%-%- PREFIX: (.-)\n' },
+    }
+    local smods_dir
 
     -- Function to process each directory (including subdirectories) with depth tracking
     local function processDirectory(directory, depth)
@@ -38,76 +45,63 @@ function loadMods(modsDirectory)
         end
 
         for _, filename in ipairs(NFS.getDirectoryItems(directory)) do
-            local filePath = directory .. "/" .. filename
+            local file_path = directory .. "/" .. filename
 
             -- Check if the current file is a directory
-            if NFS.getInfo(filePath).type == "directory" then
+            if NFS.getInfo(file_path).type == "directory" then
                 -- If it's a directory and depth is within limit, recursively process it
-                processDirectory(filePath, depth + 1)
+                processDirectory(file_path, depth + 1)
             elseif filename:match("%.lua$") then -- Check if the file is a .lua file
-                local fileContent = NFS.read(filePath)
+                local file_content = NFS.read(file_path)
 
                 -- Convert CRLF in LF
-                fileContent = fileContent:gsub("\r\n", "\n")
+                file_content = file_content:gsub("\r\n", "\n")
 
                 -- Check the header lines using string.match
-                local headerLine, secondaryLine = fileContent:match("^(.-)\n(.-)\n")
-                if headerLine == "--- STEAMODDED HEADER" and secondaryLine == "--- SECONDARY MOD FILE" then
-                    sendTraceMessage("Skipping secondary mod file: " .. filename, 'Loader')
-                elseif headerLine == "--- STEAMODDED HEADER" then
-                    -- Extract individual components from the header
-                    local modName, modID, modAuthorString, modDescription = fileContent:match(
-                    "%-%-%- MOD_NAME: ([^\n]+)\n%-%-%- MOD_ID: ([^\n]+)\n%-%-%- MOD_AUTHOR: %[(.-)%]\n%-%-%- MOD_DESCRIPTION: ([^\n]+)")
-                    boot_print_stage("Loading Mod: " .. modID)
-                    local priority = fileContent:match("%-%-%- PRIORITY: (%-?%d+)")
-                    priority = priority and priority + 0 or 0
-                    local badge_colour = fileContent:match("%-%-%- BADGE_COLO[U]?R: (%x-)\n")
-                    badge_colour = HEX(badge_colour or '666666FF')
-                    local display_name = fileContent:match("%-%-%- DISPLAY_NAME: (.-)\n")
-                    local requiredDependenciesString = fileContent:match("%-%-%- REQUIRED_DEPENDENCIES: %[(.-)%]\n")
-                    local iconAtlas = fileContent:match("%-%-%- ICON_ATLAS: (.-)\n")
-                    local prefix = fileContent:match("%-%-%- PREFIX: (.-)\n") or string.sub(string.lower(modID), 1, 4)
-          
-                    -- Validate MOD_ID to ensure it doesn't contain spaces
-                    if modID and string.find(modID, " ") then
-                        sendWarnMessage("Invalid mod ID: " .. modID, 'Loader')
-                    elseif mods[modID] then
-                        sendWarnMessage("Duplicate mod ID: " .. modID, 'Loader')
-                    else
-                        if modName and modID and modAuthorString and modDescription then
-                            -- Parse MOD_AUTHOR array
-                            local modAuthorArray = {}
-                            for author in string.gmatch(modAuthorString, "([^,]+)") do
-                                table.insert(modAuthorArray, author:match("^%s*(.-)%s*$")) -- Trim spaces
-                            end
-
-                            local requiredDependenciesArray = {}
-                            if requiredDependenciesString then
-                                for author in string.gmatch(requiredDependenciesString, "([^,]+)") do
-                                    table.insert(requiredDependenciesArray, author:match("^%s*(.-)%s*$")) -- Trim spaces
-                                end
-                            end
-
-                            -- Store mod information in the global table, including the directory path
-                            local mod = {
-                                name = modName,
-                                id = modID,
-                                author = modAuthorArray,
-                                description = modDescription,
-                                path = directory .. "/", -- Store the directory path
-                                priority = priority,
-                                badge_colour = badge_colour,
-                                display_name = display_name or modName,
-                                required_dependencies = requiredDependenciesArray or {},
-                                icon_atlas = iconAtlas or "tags",
-                                prefix = prefix,
-                                content = fileContent,
-                            }
-                            mods[modID] = mod
-                            SMODS._MOD_PRIO_MAP[priority] = SMODS._MOD_PRIO_MAP[priority] or {}
-                            table.insert(SMODS._MOD_PRIO_MAP[priority], mod)
+                local headerLine = file_content:match("^(.-)\n")
+                if headerLine == "--- STEAMODDED HEADER" then
+                    boot_print_stage('Processing Mod File: '.. filename)
+                    local mod = {}
+                    local sane = true
+                    for k, v in pairs(header_components) do
+                        local component = file_content:match(v.patttern)
+                        if v.required and not component then
+                            sane = false
+                            sendWarnMessage(string.format('Mod file %s is missing required header component: %s',
+                                filename, k))
+                            break
                         end
+                        if v.parse_array then
+                            local list = {}
+                            component = component or ''
+                            for val in string.gmatch(component, "([^,]+)") do
+                                table.insert(list, val:match("^%s*(.-)%s*$")) -- Trim spaces
+                            end
+                            component = list
+                        end
+                        if v.handle and type(v.handle) == 'function' then
+                            component = v.handle(component)
+                        end
+                        mod[k] = component
                     end
+                    if mods[mod.id] then
+                        sane = false
+                        sendWarnMessage("Duplicate Mod ID: " .. mod.id, 'Loader')
+                    end
+                    
+                    if sane then
+                        boot_print_stage('Saving Mod Info: '..mod.id)
+                        mod.path = directory .. '/'
+                        mod.display_name = mod.display_name or mod.name
+                        mod.prefix = mod.prefix or mod.id:lower():sub(1, 4)
+                        mod.content = file_content
+                        mod.optional_dependencies = {}
+                        mods[mod.id] = mod
+                        SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
+                        table.insert(SMODS.mod_priorities[mod.priority], mod)
+                    end
+                elseif headerLine == '--- STEAMODDED CORE' then
+                    smods_dir = smods_dir or directory:match('^(.+)/')
                 else
                     sendTraceMessage("Skipping non-Lua file or invalid header: " .. filename, 'Loader')
                 end
@@ -120,40 +114,22 @@ function loadMods(modsDirectory)
 
     -- sort by priority
     local keyset = {}
-    for k, _ in pairs(SMODS._MOD_PRIO_MAP) do
+    for k, _ in pairs(SMODS.mod_priorities) do
         keyset[#keyset + 1] = k
     end
     table.sort(keyset)
 
     -- load the mod files
     for _, priority in ipairs(keyset) do
-        for _, mod in ipairs(SMODS._MOD_PRIO_MAP[priority]) do
+        for _, mod in ipairs(SMODS.mod_priorities[priority]) do
             boot_print_stage('Loading Mod: ' .. mod.id)
-            SMODS.MODLIST[#SMODS.MODLIST+1] = mod -- keep mod list in prioritized load order
+            SMODS.mod_list[#SMODS.mod_list + 1] = mod -- keep mod list in prioritized load order
             SMODS.current_mod = mod
             assert(load(mod.content))()
         end
     end
 
     return mods
-end
-
-function initMods()
-    local keyset = {}
-    for k, _ in pairs(SMODS._MOD_PRIO_MAP) do
-        keyset[#keyset + 1] = k
-    end
-    table.sort(keyset)
-    for _, k in ipairs(keyset) do
-        for _, mod in ipairs(SMODS._MOD_PRIO_MAP[k]) do
-            if mod.init and type(mod.init) == 'function' then
-                SMODS.current_mod = mod
-                boot_print_stage("Initializing Mod: " .. mod.id)
-                sendInfoMessage("Launch Init Function for: " .. mod.id .. ".")
-                mod:init()
-            end
-        end
-    end
 end
 
 function SMODS.injectItems()
@@ -163,15 +139,15 @@ function SMODS.injectItems()
 end
 
 local function initializeModUIFunctions()
-	for id, modInfo in pairs(SMODS.MODLIST) do
-		boot_print_stage("Initializing Mod UI: "..modInfo.id)
-		G.FUNCS["openModUI_" .. modInfo.id] = function(arg_736_0)
-			G.ACTIVE_MOD_UI = modInfo
-			G.FUNCS.overlay_menu({
-				definition = create_UIBox_mods(arg_736_0)
-			})
-		end
-	end
+    for id, modInfo in pairs(SMODS.mod_list) do
+        boot_print_stage("Initializing Mod UI: " .. modInfo.id)
+        G.FUNCS["openModUI_" .. modInfo.id] = function(arg_736_0)
+            G.ACTIVE_MOD_UI = modInfo
+            G.FUNCS.overlay_menu({
+                definition = create_UIBox_mods(arg_736_0)
+            })
+        end
+    end
 end
 
 function initSteamodded()
@@ -184,11 +160,7 @@ function initSteamodded()
 
     initGlobals()
 
-    boot_print_stage("Initializing Mods")
-    if SMODS.Mods then
-        initializeModUIFunctions()
-        initMods()
-    end
+    initializeModUIFunctions()
     boot_print_stage("Injecting Items")
     SMODS.injectItems()
     SMODS.booted = true

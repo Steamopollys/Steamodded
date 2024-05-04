@@ -32,10 +32,22 @@ function loadAPIs()
     end
 
     function SMODS.GameObject:register()
-        if not self.obj_table[self.key] then
+        if self:check_dependencies() and not self.obj_table[self.key] then
             self.obj_table[self.key] = self
             self.obj_buffer[#self.obj_buffer + 1] = self.key
         end
+    end
+
+    function SMODS.GameObject:check_dependencies()
+        local keep = true
+        if self.requires then
+            if type(self.requires) == 'string' then self.requires = { self.requires } end
+            for _, v in ipairs(self.requires) do
+                self.mod.optional_dependencies[v] = true
+                if not SMODS.Mods[v] then keep = false end
+            end
+        end
+        return keep
     end
 
     function SMODS.GameObject:process_loc_text()
@@ -55,8 +67,9 @@ function loadAPIs()
             -- Setup Localize text
             o:process_loc_text()
 
-            sendInfoMessage(string.format('Registered game object %s of type %s with key %s', o.name or o.key, o.set,
-                o.key))
+            sendInfoMessage(string.format(
+                'Registered game object %s of type %s with key %s',
+                o.name or o.key, o.set, o.key), o.set or 'GameObject')
         end
     end
 
@@ -121,7 +134,9 @@ function loadAPIs()
         inject = function(self)
             local file_path = type(self.path) == 'table' and (self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
             if file_path == 'DEFAULT' then return end
+            -- language specific sprites override fully defined sprites only if that language is set
             if self.language and not (G.SETTINGS.language == self.language) then return end
+            if not self.language and self.obj_buffer[string.format('%s_%s', self.key, G.SETTINGS.language)] then return end
             self.full_path = self.mod.path .. 'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
             local file_data = NFS.newFileData(self.full_path)
             if file_data then
@@ -705,12 +720,22 @@ function loadAPIs()
         valid_cards_keys = SMODS.Suit.valid_card_keys,
         get_card_key = SMODS.Suit.get_card_key,
         register = function(self)
+            -- custom buffer insertion logic, so i copied
+            if self.requires then
+                local keep = true
+                if type(self.requires) == 'string' then self.requires = { self.requires } end
+                for _, v in ipairs(self.requires) do
+                    self.mod.optional_dependencies[v] = true
+                    if not SMODS.Mods[v] then keep = false end
+                end
+                if not keep then return end
+            end
             self.card_key = self:get_card_key(self.card_key)
             self.max_id.value = self.max_id.value + 1
             self.id = self.max_id.value
             self.shorthand = self.shorthand or self.key
             self.sort_nominal = self.nominal + (self.face_nominal or 0)
-            if not self.obj_table[self.key] then
+            if self:check_dependencies() and not self.obj_table[self.key] then
                 self.obj_table[self.key] = self
                 local j
                 -- keep buffer sorted in ascending nominal order
