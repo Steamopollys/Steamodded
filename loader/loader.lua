@@ -64,7 +64,7 @@ function loadMods(modsDirectory)
                     local mod = {}
                     local sane = true
                     for k, v in pairs(header_components) do
-                        local component = file_content:match(v.patttern)
+                        local component = file_content:match(v.pattern)
                         if v.required and not component then
                             sane = false
                             sendWarnMessage(string.format('Mod file %s is missing required header component: %s',
