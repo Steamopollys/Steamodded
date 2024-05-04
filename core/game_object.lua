@@ -109,7 +109,7 @@ function loadAPIs()
         end
     end
 
-       -------------------------------------------------------------------------------------------------
+    -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Language
     -------------------------------------------------------------------------------------------------
 
@@ -185,6 +185,176 @@ function loadAPIs()
         end,
         process_loc_text = function() end
     }
+
+    -------------------------------------------------------------------------------------------------
+    ------- API CODE GameObject.ConsumableType
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.ConsumableTypes = {}
+    SMODS.ConsumableType = SMODS.GameObject:extend {
+        obj_table = SMODS.ConsumableTypes,
+        obj_buffer = {},
+        set = 'ConsumableType',
+        required_params = {
+            'key',
+            'primary_colour',
+            'secondary_colour',
+            'loc_txt'
+        },
+        omit_prefix = true,
+        collection_rows = { 6, 6 },
+        create_UIBox_your_collection = function(self)
+            local deck_tables = {}
+
+            G.your_collection = {}
+            for j = 1, #self.collection_rows do
+                G.your_collection[j] = CardArea(
+                    G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h,
+                    (self.collection_rows[j] + 0.25) * G.CARD_W,
+                    1 * G.CARD_H,
+                    { card_limit = self.collection_rows[j], type = 'title', highlight_limit = 0, collection = true })
+                table.insert(deck_tables,
+                    {
+                        n = G.UIT.R,
+                        config = { align = "cm", padding = 0, no_fill = true },
+                        nodes = {
+                            { n = G.UIT.O, config = { object = G.your_collection[j] } }
+                        }
+                    }
+                )
+            end
+
+            local sum = 0
+            for j = 1, #G.your_collection do
+                for i = 1, self.collection_rows[j] do
+                    sum = sum + 1
+                    local center = G.P_CENTER_POOLS[self.key][sum]
+                    if not center then break end
+                    local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+                        G.CARD_W, G.CARD_H, nil, center)
+                    card:start_materialize(nil, i > 1 or j > 1)
+                    G.your_collection[j]:emplace(card)
+                end
+            end
+
+            local center_options = {}
+            for i = 1, math.ceil(#G.P_CENTER_POOLS[self.key] / sum) do
+                table.insert(center_options,
+                    localize('k_page') ..
+                    ' ' .. tostring(i) .. '/' .. tostring(math.ceil(#G.P_CENTER_POOLS[self.key] / sum)))
+            end
+
+            INIT_COLLECTION_CARD_ALERTS()
+
+            local t = create_UIBox_generic_options({
+                back_func = 'your_collection',
+                contents = {
+                    { n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables },
+                    {
+                        n = G.UIT.R,
+                        config = { align = "cm", padding = 0 },
+                        nodes = {
+                            create_option_cycle({
+                                options = center_options,
+                                w = 4.5,
+                                cycle_shoulders = true,
+                                opt_callback =
+                                    'your_collection_' .. string.lower(self.key) .. '_page',
+                                focus_args = { snap_to = true, nav = 'wide' },
+                                current_option = 1,
+                                colour = G
+                                    .C.RED,
+                                no_pips = true
+                            })
+                        }
+                    },
+                }
+            })
+            return t
+        end,
+        inject = function(self)
+            G.P_CENTER_POOLS[self.key] = {}
+            G.localization.descriptions[self.key] = {}
+            G.C.SET[self.key] = self.primary_colour
+            G.C.SECONDARY_SET[self.key] = self.secondary_colour
+            G.FUNCS['your_collection_' .. string.lower(self.key) .. 's'] = function(e)
+                G.SETTINGS.paused = true
+                G.FUNCS.overlay_menu {
+                    definition = self:create_UIBox_your_collection(),
+                }
+            end
+            G.FUNCS['your_collection_' .. string.lower(self.key) .. '_page'] = function(args)
+                if not args or not args.cycle_config then return end
+                for j = 1, #G.your_collection do
+                    for i = #G.your_collection[j].cards, 1, -1 do
+                        local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+                        c:remove()
+                        c = nil
+                    end
+                end
+                local sum = 0
+                for j = 1, #G.your_collection do
+                    sum = sum + self.collection_rows[j]
+                end
+                sum = sum * (args.cycle_config.current_option - 1)
+                for j = 1, #G.your_collection do
+                    for i = 1, self.collection_rows[j] do
+                        sum = sum + 1
+                        local center = G.P_CENTER_POOLS[self.key][sum]
+                        if not center then break end
+                        local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2,
+                            G.your_collection[j].T.y, G
+                            .CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+                        card:start_materialize(nil, i > 1 or j > 1)
+                        G.your_collection[j]:emplace(card)
+                    end
+                end
+                INIT_COLLECTION_CARD_ALERTS()
+            end
+        end,
+        process_loc_text = function(self)
+            if not next(self.loc_txt) then return end
+            SMODS.process_loc_text(G.localization.misc.dictionary, 'k_' .. string.lower(self.key), self.loc_txt.name)
+            SMODS.process_loc_text(G.localization.misc.dictionary, 'b_' .. string.lower(self.key) .. '_cards',
+                self.loc_txt.collection)
+            SMODS.process_loc_text(G.localization.misc.labels, string.lower(self.key), self.loc_txt.label)
+            SMODS.process_loc_text(G.localization.descriptions.Other, 'undiscovered_'..string.lower(self.key), self.loc_txt.undiscovered)
+        end
+    }
+
+    SMODS.ConsumableType {
+        key = 'Tarot',
+        collection_rows = { 5, 6 },
+        primary_colour = G.C.SET.Tarot,
+        secondary_colour = G.C.SECONDARY_SET.Tarot,
+        inject_card = function(self)
+            SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], self)
+        end,
+        loc_txt = {},
+    }:register()
+    SMODS.ConsumableType {
+        key = 'Planet',
+        collection_rows = { 6, 6 },
+        primary_colour = G.C.SET.Planet,
+        secondary_colour = G.C.SECONDARY_SET.Planet,
+        inject_card = function(self)
+            SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], self)
+        end,
+        loc_txt = {},
+    }:register()
+    SMODS.ConsumableType {
+        key = 'Spectral',
+        collection_rows = { 4, 5 },
+        primary_colour = G.C.SET.Spectral,
+        secondary_colour = G.C.SECONDARY_SET.Spectral,
+        loc_txt = {},
+    }:register()
+
+    -- TODO
+    -- create_card_for_shop logic
+    -- create_card forcing legendary consumables
+    -- get_current_pool logic, defaults
+
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Center
@@ -271,169 +441,11 @@ function loadAPIs()
             if self.type and self.type.inject_card and type(self.type.inject_card) == 'function' then
                 self.type.inject_card(self)
             end
+        end,
+        loc_def = function(self, info_queue)
+            return {}
         end
     }
-
-    -------------------------------------------------------------------------------------------------
-    ------- API CODE GameObject.ConsumableType
-    -------------------------------------------------------------------------------------------------
-
-    SMODS.ConsumableTypes = {}
-    SMODS.ConsumableType = SMODS.GameObject:extend {
-        obj_table = SMODS.ConsumableTypes,
-        obj_buffer = {},
-        set = 'ConsumableType',
-        required_params = {
-            'key',
-            'primary_colour',
-            'secondary_colour'
-        },
-        omit_prefix = true,
-        collection_rows = { 6, 6 },
-        create_UIBox_your_collection = function(self)
-            local deck_tables = {}
-
-            G.your_collection = {}
-            for j = 1, #self.collection_rows do
-                G.your_collection[j] = CardArea(
-                    G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h,
-                    (self.collection_rows[j] + 0.25) * G.CARD_W,
-                    1 * G.CARD_H,
-                    { card_limit = self.collection_rows[j], type = 'title', highlight_limit = 0, collection = true })
-                table.insert(deck_tables,
-                    {
-                        n = G.UIT.R,
-                        config = { align = "cm", padding = 0, no_fill = true },
-                        nodes = {
-                            { n = G.UIT.O, config = { object = G.your_collection[j] } }
-                        }
-                    }
-                )
-            end
-
-            local sum = 0
-            for j = 1, #G.your_collection do
-                for i = 1, self.collection_rows[j] do
-                    sum = sum + 1
-                    local center = G.P_CENTER_POOLS[self.key][sum]
-                    local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                        G.CARD_W, G.CARD_H, nil, center)
-                    card:start_materialize(nil, i > 1 or j > 1)
-                    G.your_collection[j]:emplace(card)
-                end
-            end
-
-            local center_options = {}
-            for i = 1, math.ceil(#G.P_CENTER_POOLS[self.key] / sum) do
-                table.insert(center_options,
-                    localize('k_page') ..
-                    ' ' .. tostring(i) .. '/' .. tostring(math.ceil(#G.P_CENTER_POOLS[self.key] / sum)))
-            end
-
-            INIT_COLLECTION_CARD_ALERTS()
-
-            local t = create_UIBox_generic_options({
-                back_func = 'your_collection',
-                contents = {
-                    { n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables },
-                    {
-                        n = G.UIT.R,
-                        config = { align = "cm", padding = 0 },
-                        nodes = {
-                            create_option_cycle({
-                                options = center_options,
-                                w = 4.5,
-                                cycle_shoulders = true,
-                                opt_callback =
-                                    'your_collection_' .. string.lower(self.key) .. '_page',
-                                focus_args = { snap_to = true, nav = 'wide' },
-                                current_option = 1,
-                                colour = G
-                                    .C.RED,
-                                no_pips = true
-                            })
-                        }
-                    },
-                }
-            })
-            return t
-        end,
-        inject = function(self)
-            G.C.SET[self.key] = self.primary_colour
-            G.C.SECONDARY_SET[self.key] = self.secondary_colour
-            G.FUNCS['your_collection_' .. string.lower(self.key) .. 's'] = function(e)
-                G.SETTINGS.paused = true
-                G.FUNCS.overlay_menu {
-                    definition = self:create_UIBox_your_collection(),
-                }
-            end
-            G.FUNCS['your_collection_' .. string.lower(self.key) .. '_page'] = function(args)
-                if not args or not args.cycle_config then return end
-                for j = 1, #G.your_collection do
-                    for i = #G.your_collection[j].cards, 1, -1 do
-                        local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
-                        c:remove()
-                        c = nil
-                    end
-                end
-                local sum = 0
-                for j = 1, #G.your_collection do
-                    sum = sum + self.collection_rows[j]
-                end
-                sum = sum * (args.cycle_config.current_option - 1)
-                for j = 1, #G.your_collection do
-                    for i = 1, self.collection_rows[j] do
-                        sum = sum + 1
-                        local center = G.P_CENTER_POOLS[self.key][sum]
-                        if not center then break end
-                        local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2,
-                            G.your_collection[j].T.y, G
-                            .CARD_W, G.CARD_H, G.P_CARDS.empty, center)
-                        card:start_materialize(nil, i > 1 or j > 1)
-                        G.your_collection[j]:emplace(card)
-                    end
-                end
-                INIT_COLLECTION_CARD_ALERTS()
-            end
-        end,
-        process_loc_text = function(self)
-            if not self.loc_txt then return end
-            SMODS.process_loc_text(G.localization.misc.dictionary, 'k_' .. string.lower(self.key), self.loc_txt.name)
-            SMODS.process_loc_text(G.localization.misc.dictionary, 'b_' .. string.lower(self.key) .. '_cards',
-                self.loc_txt.collection)
-            SMODS.process_loc_text(G.localization.misc.labels, string.lower, self.loc_txt.label)
-        end
-    }
-
-    SMODS.ConsumableType {
-        key = 'Tarot',
-        collection_rows = { 5, 6 },
-        primary_colour = G.C.SET.Tarot,
-        secondary_colour = G.C.SECONDARY_SET.Tarot,
-        inject_card = function(self)
-            SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], self)
-        end,
-    }:register()
-    SMODS.ConsumableType {
-        key = 'Planet',
-        collection_rows = { 6, 6 },
-        primary_colour = G.C.SET.Planet,
-        secondary_colour = G.C.SECONDARY_SET.Planet,
-        inject_card = function(self)
-            SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], self)
-        end
-    }:register()
-    SMODS.ConsumableType {
-        key = 'Spectral',
-        collection_rows = { 4, 5 },
-        primary_colour = G.C.SET.Spectral,
-        secondary_colour = G.C.SECONDARY_SET.Spectral,
-    }:register()
-
-    -- TODO
-    -- create_card_for_shop logic
-    -- create_card forcing legendary consumables
-    -- get_current_pool logic, defaults
 
 
     -------------------------------------------------------------------------------------------------
