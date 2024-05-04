@@ -32,7 +32,8 @@ function loadMods(modsDirectory)
         priority     = { pattern = '%-%-%- PRIORITY: (%-?%d+)\n', handle = function(x) return x and x + 0 or 0 end },
         badge_colour = { pattern = '%-%-%- BADGE_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or '666666FF') end },
         display_name = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
-        dependencies = { pattern = '%-%-%- DEPENDENCIES: [(.-)%]\n', parse_array = true },
+        dependencies = { pattern = '%-%-%- DEPENDENCIES: %[(.-)%]\n', parse_array = true },
+        conflicts    = { pattern = '%-%-%- CONFLICTS: %[(.-)%]\n', parse_array = true },
         icon_atlas   = { pattern = '%-%-%- ICON_ATLAS: (.-)\n', handle = function(x) return x or 'tags' end },
         prefix       = { pattern = '%-%-%- PREFIX: (.-)\n' },
     }

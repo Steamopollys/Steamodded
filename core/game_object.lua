@@ -109,6 +109,35 @@ function loadAPIs()
         end
     end
 
+       -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Language
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Languages = {}
+    SMODS.Language = SMODS.GameObject:extend {
+        obj_table = SMODS.Languages,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'label',
+            'path',
+            'font',
+        },
+        omit_prefix = true,
+        process_loc_text = function() end,
+        inject = function(self)
+            self.full_path = self.mod.path .. 'localization/' .. self.path
+            if type(self.font) == 'number' then
+                self.font = G.FONTS[self.font]
+            end
+            G.LANGUAGES[self.key] = self
+        end,
+        injector = function(self)
+            self.super.injector(self)
+            G:set_language()
+        end
+    }
+
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Sprite
     -------------------------------------------------------------------------------------------------
@@ -1132,33 +1161,4 @@ function loadAPIs()
             end
         end
     })
-
-    -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.Language
-    -------------------------------------------------------------------------------------------------
-
-    SMODS.Languages = {}
-    SMODS.Language = SMODS.GameObject:extend {
-        obj_table = SMODS.Languages,
-        obj_buffer = {},
-        required_params = {
-            'key',
-            'label',
-            'path',
-            'font',
-        },
-        omit_prefix = true,
-        process_loc_text = function() end,
-        inject = function(self)
-            self.full_path = self.mod.path .. 'localization/' .. self.path
-            if type(self.font) == 'number' then
-                self.font = G.FONTS[self.font]
-            end
-            G.LANGUAGES[self.key] = self
-        end,
-        injector = function(self)
-            self.super.injector(self)
-            G:set_language()
-        end
-    }
 end

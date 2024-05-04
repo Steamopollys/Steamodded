@@ -737,13 +737,13 @@ local function recalculateModsList(page)
 	local modsPerPage = 4
 	local startIndex = (page - 1) * modsPerPage + 1
 	local endIndex = startIndex + modsPerPage - 1
-	local totalPages = math.ceil(#SMODS.MODLIST / modsPerPage)
+	local totalPages = math.ceil(#SMODS.mod_list / modsPerPage)
 	local currentPage = "Page " .. page .. "/" .. totalPages
 	local pageOptions = {}
 	for i = 1, totalPages do
 		table.insert(pageOptions, ("Page " .. i .. "/" .. totalPages))
 	end
-	local showingList = #SMODS.MODLIST > 0
+	local showingList = #SMODS.mod_list > 0
 
 	return currentPage, pageOptions, showingList, startIndex, endIndex, modsPerPage
 end
@@ -898,7 +898,7 @@ function SMODS.GUI.dynamicModListContent(page)
         })
     else
         local modCount = 0
-        for id, modInfo in ipairs(SMODS.MODLIST) do
+        for id, modInfo in ipairs(SMODS.mod_list) do
             if id >= startIndex and id <= endIndex then
                 table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
                 modCount = modCount + 1

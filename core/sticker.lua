@@ -1,4 +1,5 @@
 SMODS.Stickers = {}
+SMODS.BUFFERS = { Stickers = {}}
 SMODS.Sticker = {
 	name = "",
 	slug = "",
