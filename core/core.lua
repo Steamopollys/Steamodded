@@ -1,20 +1,11 @@
-----------------------------------------------
-------------MOD CORE--------------------------
+--- STEAMODDED CORE
+--- MODULE CORE
 
 SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
-SMODS.BUFFERS = {
-    Jokers = {},
-    Tarots = {},
-    Planets = {},
-	Spectrals = {},
-    Blinds = {},
-	Seals = {},
-	Vouchers = {},
-}
 
-MODDED_VERSION = "0.9.8-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -301,37 +292,99 @@ end
 
 
 
--- Helper function to create a clickable mod box
-local function createClickableModBox(modInfo, scale)
-	return {
-		n = G.UIT.R,
-		config = {
-			padding = 0,
-			align = "cm",
-		},
-		nodes = {
-			UIBox_button({
-				label = {" " .. modInfo.name .. " ", " By: " .. concatAuthors(modInfo.author) .. " "},
-				shadow = true,
-				scale = scale,
-				colour = G.C.BOOSTER,
-				button = "openModUI_" .. modInfo.id,
-				minh = 0.8,
-				minw = 8
-			})
-		}
-	}
+function missingDependencies(modInfo)
+    local missing_dependencies = false
+    local missing_list = {}
+
+    if modInfo.required_dependencies then
+        for k, modid in ipairs(modInfo.required_dependencies) do
+            if not SMODS.INIT[modid] then
+                table.insert(missing_list, modid)
+                missing_dependencies = true
+            end
+        end
+    end
+    return missing_dependencies, missing_list
 end
 
-local function initializeModUIFunctions()
-	for id, modInfo in pairs(SMODS.MODS) do
-		G.FUNCS["openModUI_" .. modInfo.id] = function(arg_736_0)
-			G.ACTIVE_MOD_UI = modInfo
-			G.FUNCS.overlay_menu({
-				definition = create_UIBox_mods(arg_736_0)
-			})
-		end
-	end
+function buildModtag(modInfo)
+    local tag_pos, tag_message, tag_atlas = {x = 0, y = 0}, "mod_loaded_successfully", modInfo.icon_atlas
+    local specific_vars = {}
+
+    local is_missing, missing_list = missingDependencies(modInfo)
+
+    if is_missing then
+        tag_message = "mod_missing_dependencies"
+        tag_atlas = "tag_error"
+        specific_vars = { concatAuthors(missing_list) }
+    end
+
+
+    local tag_sprite_tab = nil
+    
+    local tag_sprite = Sprite(0, 0, 0.8*1, 0.8*1, G.ASSET_ATLAS[tag_atlas], tag_pos)
+    tag_sprite.T.scale = 1
+    tag_sprite_tab = {n= G.UIT.C, config={align = "cm", padding = 0}, nodes={
+        {n=G.UIT.O, config={w=0.8*1, h=0.8*1, colour = G.C.BLUE, object = tag_sprite, focus_with_object = true}},
+    }}
+    tag_sprite:define_draw_steps({
+        {shader = 'dissolve', shadow_height = 0.05},
+        {shader = 'dissolve'},
+    })
+    tag_sprite.float = true
+    tag_sprite.states.hover.can = true
+    tag_sprite.states.drag.can = false
+    tag_sprite.states.collide.can = true
+
+    tag_sprite.hover = function(_self)
+        if not G.CONTROLLER.dragging.target or G.CONTROLLER.using_touch then 
+            if not _self.hovering and _self.states.visible then
+                _self.hovering = true
+                if _self == tag_sprite then
+                    _self.hover_tilt = 3
+                    _self:juice_up(0.05, 0.02)
+                    play_sound('paper1', math.random()*0.1 + 0.55, 0.42)
+                    play_sound('tarot2', math.random()*0.1 + 0.55, 0.09)
+                end
+                tag_sprite.ability_UIBox_table = generate_card_ui({set = "Other", discovered = false, key = tag_message}, nil, specific_vars, 'Other', nil, false)
+                _self.config.h_popup =  G.UIDEF.card_h_popup(_self)
+                _self.config.h_popup_config ={align = 'cl', offset = {x=-0.1,y=0},parent = _self}
+                Node.hover(_self)
+                if _self.children.alert then 
+                    _self.children.alert:remove()
+                    _self.children.alert = nil
+                    G:save_progress()
+                end
+            end
+        end
+    end
+    tag_sprite.stop_hover = function(_self) _self.hovering = false; Node.stop_hover(_self); _self.hover_tilt = 0 end
+
+    tag_sprite:juice_up()
+
+    return tag_sprite_tab
+end
+
+
+-- Helper function to create a clickable mod box
+local function createClickableModBox(modInfo, scale)
+    return { n = G.UIT.R, config = { padding = 0, align = "cm" }, nodes = {
+        { n = G.UIT.C, config = { align = "cm" }, nodes = {
+            buildModtag(modInfo)
+        }},
+        { n = G.UIT.C, config = { padding = 0, align = "cm", }, nodes = {
+            UIBox_button({
+                label = {" " .. modInfo.name .. " ", " By: " .. concatAuthors(modInfo.author) .. " "},
+                shadow = true,
+                scale = scale,
+                colour = G.C.BOOSTER,
+                button = "openModUI_" .. modInfo.id,
+                minh = 0.8,
+                minw = 7
+            })
+        }}
+    }}
+	
 end
 
 function G.FUNCS.openModsDirectory(options)
@@ -519,16 +572,6 @@ function create_UIBox_profile_button()
 	return(profile_menu)
 end
 
--- Function to find a mod by its ID
-function SMODS.findModByID(modID)
-    for _, mod in pairs(SMODS.MODS) do
-        if mod.id == modID then
-            return mod
-        end
-    end
-    return nil  -- Return nil if no mod is found with the given ID
-end
-
 -- Disable achievments and crash report upload
 function initGlobals()
 	G.F_NO_ACHIEVEMENTS = true
@@ -694,13 +737,13 @@ local function recalculateModsList(page)
 	local modsPerPage = 4
 	local startIndex = (page - 1) * modsPerPage + 1
 	local endIndex = startIndex + modsPerPage - 1
-	local totalPages = math.ceil(#SMODS.MODS / modsPerPage)
+	local totalPages = math.ceil(#SMODS.mod_list / modsPerPage)
 	local currentPage = "Page " .. page .. "/" .. totalPages
 	local pageOptions = {}
 	for i = 1, totalPages do
 		table.insert(pageOptions, ("Page " .. i .. "/" .. totalPages))
 	end
-	local showingList = #SMODS.MODS > 0
+	local showingList = #SMODS.mod_list > 0
 
 	return currentPage, pageOptions, showingList, startIndex, endIndex, modsPerPage
 end
@@ -855,7 +898,7 @@ function SMODS.GUI.dynamicModListContent(page)
         })
     else
         local modCount = 0
-        for id, modInfo in ipairs(SMODS.MODS) do
+        for id, modInfo in ipairs(SMODS.mod_list) do
             if id >= startIndex and id <= endIndex then
                 table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
                 modCount = modCount + 1
@@ -876,6 +919,7 @@ function SMODS.GUI.dynamicModListContent(page)
 end
 
 function SMODS.SAVE_UNLOCKS()
+    boot_print_stage("Saving Unlocks")
 	G:save_progress()
     -------------------------------------
     local TESTHELPER_unlocks = false and not _RELEASE_MODE
@@ -953,6 +997,7 @@ function SMODS.SAVE_UNLOCKS()
 end
 
 function SMODS.LOAD_LOC()
+    boot_print_stage("Loading Localizations")
     for g_k, group in pairs(G.localization) do
         if g_k == 'descriptions' then
             for _, set in pairs(group) do
@@ -975,6 +1020,35 @@ function SMODS.LOAD_LOC()
             end
         end
     end
+end
+
+function SMODS.process_loc_text(ref_table, ref_value, loc_txt)
+    local target = (type(loc_txt) == 'table') and (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
+	if not(type(target) == 'string' or next(target)) then return end
+    ref_table[ref_value] = target
+end
+
+function SMODS.insert_pool(pool, center, replace)
+	sendTraceMessage(string.format('Inserting to pool: %s', center.key))
+	if replace == nil then replace = center.taken_ownership end
+	if replace then
+		for k, v in ipairs(pool) do
+            if v.key == center.key then
+                pool[k] = center
+            end
+		end
+    else
+		center.order = #pool+1
+		table.insert(pool, center)
+	end
+end
+
+function SMODS.remove_pool(pool, key)
+	local j
+	for i, v in ipairs(pool) do
+		if v.key == key then j = i end
+	end
+	if j then return table.remove(pool, j) end
 end
 
 ----------------------------------------------

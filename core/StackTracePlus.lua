@@ -1,5 +1,5 @@
--- ----------------------------------------------
--- ----------MOD CORE API STACKTRACE-------------
+--- STEAMODDED CORE
+--- MODULE STACKTRACE
 -- NOTE: This is a modifed version of https://github.com/ignacio/StackTracePlus/blob/master/src/StackTracePlus.lua
 -- Licensed under the MIT License. See https://github.com/ignacio/StackTracePlus/blob/master/LICENSE
 -- The MIT License
@@ -443,25 +443,256 @@ Stack Traceback
     return _M
 end
 
-
 -- Note: The below code is not from the original StackTracePlus.lua
 local stackTraceAlreadyInjected = false
+
+function getDebugInfoForCrash()
+    local info = "Additional Context:\nBalatro Version: " .. VERSION .. "\nModded Version: " .. MODDED_VERSION
+    local major, minor, revision, codename = love.getVersion()
+    info = info .. string.format("\nLove2D Version: %d.%d.%d", major, minor, revision)
+
+    local lovely_success, lovely = pcall(require, "lovely")
+    if lovely_success then
+        info = info .. "\nLovely Version: " .. lovely.version
+    end
+    if SMODS.mod_list then
+        info = info .. "\nSteamodded Mods:"
+        for k, v in ipairs(SMODS.mod_list) do
+            info = info .. "\n    " .. k .. ": " ..
+                v.name .. " by " .. concatAuthors(v.author) ..
+                " [ID: " .. v.id .. (v.priority ~= 0 and (", Priority: " .. v.priority) or "") .. "]"
+            local debugInfo = v.debug_info
+            if debugInfo then
+                if type(debugInfo) == "string" then
+                    if #debugInfo ~= 0 then
+                        info = info .. "\n        " .. debugInfo
+                    end
+                elseif type(debugInfo) == "table" then
+                    for kk, vv in pairs(debugInfo) do
+                        if type(vv) ~= 'nil' then
+                            vv = tostring(vv)
+                        end
+                        if #vv ~= 0 then
+                            info = info .. "\n        " .. kk .. ": " .. vv
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return info
+end
+
 function injectStackTrace()
-    if(stackTraceAlreadyInjected) then
+    if (stackTraceAlreadyInjected) then
         return
     end
     stackTraceAlreadyInjected = true
+    SMODS.DebugInfo = {}
     local STP = loadStackTracePlus()
+    local utf8 = require("utf8")
 
-    local crashHandler = love.errhand
-    function love.errhand(msg)
+    -- Modifed from https://love2d.org/wiki/love.errorhandler
+    function love.errorhandler(msg)
+        msg = tostring(msg)
+
         sendErrorMessage("Oops! The game crashed\n" .. STP.stacktrace(msg), 'StackTrace')
-        if _RELEASE_MODE then
-            msg = STP.stacktrace(msg .. "\n", 3) -- The game shows the stack for me if release mode is false
+
+        if not love.window or not love.graphics or not love.event then
+            return
         end
-        return crashHandler(msg)
+
+        if not love.graphics.isCreated() or not love.window.isOpen() then
+            local success, status = pcall(love.window.setMode, 800, 600)
+            if not success or not status then
+                return
+            end
+        end
+
+        -- Reset state.
+        if love.mouse then
+            love.mouse.setVisible(true)
+            love.mouse.setGrabbed(false)
+            love.mouse.setRelativeMode(false)
+            if love.mouse.isCursorSupported() then
+                love.mouse.setCursor()
+            end
+        end
+        if love.joystick then
+            -- Stop all joystick vibrations.
+            for i, v in ipairs(love.joystick.getJoysticks()) do
+                v:setVibration()
+            end
+        end
+        if love.audio then
+            love.audio.stop()
+        end
+
+        love.graphics.reset()
+        local font = love.graphics.setNewFont("resources/fonts/m6x11plus.ttf", 20)
+
+        love.graphics.clear(G.C.BLACK)
+        love.graphics.origin()
+
+        local trace = STP.stacktrace("", 3)
+
+        local sanitizedmsg = {}
+        for char in msg:gmatch(utf8.charpattern) do
+            table.insert(sanitizedmsg, char)
+        end
+        sanitizedmsg = table.concat(sanitizedmsg)
+
+        local err = {}
+
+        table.insert(err, "Oops! The game crashed:")
+        table.insert(err, sanitizedmsg)
+
+        if #sanitizedmsg ~= #msg then
+            table.insert(err, "Invalid UTF-8 string in error message.")
+        end
+
+        local success, msg = pcall(getDebugInfoForCrash)
+        if success and msg then
+            table.insert(err, '\n' .. msg)
+            sendInfoMessage(msg, 'StackTrace')
+        else
+            table.insert(err, "\n" .. "Failed to get additional context :/")
+            sendErrorMessage("Failed to get additional context :/\n" .. msg, 'StackTrace')
+        end
+
+        for l in trace:gmatch("(.-)\n") do
+            if not l:match("boot.lua") then
+                l = l:gsub("stack traceback:", "Traceback\n")
+                table.insert(err, l)
+            end
+        end
+
+        local p = table.concat(err, "\n")
+
+        p = p:gsub("\t", "")
+        p = p:gsub("%[string \"(.-)\"%]", "%1")
+
+        local scrollOffset = 0
+        local endHeight = 0
+        love.keyboard.setKeyRepeat(true)
+
+        local function scrollDown(amt)
+            if amt == nil then
+                amt = 18
+            end
+            scrollOffset = scrollOffset + amt
+            if scrollOffset > endHeight then
+                scrollOffset = endHeight
+            end
+        end
+
+        local function scrollUp(amt)
+            if amt == nil then
+                amt = 18
+            end
+            scrollOffset = scrollOffset - amt
+            if scrollOffset < 0 then
+                scrollOffset = 0
+            end
+        end
+
+        local pos = 70
+
+        local function calcEndHeight()
+            local font = love.graphics.getFont()
+            local rw, lines = font:getWrap(p, love.graphics.getWidth() - pos * 2)
+            local lineHeight = font:getHeight()
+            local atBottom = scrollOffset == endHeight and scrollOffset ~= 0
+            endHeight = #lines * lineHeight - love.graphics.getHeight() + pos * 2
+            if (endHeight < 0) then
+                endHeight = 0
+            end
+            if scrollOffset > endHeight or atBottom then
+                scrollOffset = endHeight
+            end
+        end
+
+        local function draw()
+            if not love.graphics.isActive() then
+                return
+            end
+            love.graphics.clear(G.C.BLACK)
+            calcEndHeight()
+            love.graphics.printf(p, pos, pos - scrollOffset, love.graphics.getWidth() - pos * 2)
+            love.graphics.present()
+        end
+
+        local fullErrorText = p
+        local function copyToClipboard()
+            if not love.system then
+                return
+            end
+            love.system.setClipboardText(fullErrorText)
+            p = p .. "\nCopied to clipboard!"
+        end
+
+        if love.system then
+            p = p .. "\n\nPress Ctrl+C or tap to copy this error"
+        end
+
+        return function()
+            love.event.pump()
+
+            for e, a, b, c in love.event.poll() do
+                if e == "quit" then
+                    return 1
+                elseif e == "keypressed" and a == "escape" then
+                    return 1
+                elseif e == "keypressed" and a == "c" and love.keyboard.isDown("lctrl", "rctrl") then
+                    copyToClipboard()
+                elseif e == "keypressed" and a == "down" then
+                    scrollDown()
+                elseif e == "keypressed" and a == "up" then
+                    scrollUp()
+                elseif e == "keypressed" and a == "pagedown" then
+                    scrollDown(love.graphics.getHeight())
+                elseif e == "keypressed" and a == "pageup" then
+                    scrollUp(love.graphics.getHeight())
+                elseif e == "keypressed" and a == "home" then
+                    scrollOffset = 0
+                elseif e == "keypressed" and a == "end" then
+                    scrollOffset = endHeight
+                elseif e == "wheelmoved" then
+                    scrollUp(b * 20)
+                elseif e == "gamepadpressed" and b == "dpdown" then
+                    scrollDown()
+                elseif e == "gamepadpressed" and b == "dpup" then
+                    scrollUp()
+                elseif e == "gamepadpressed" and b == "a" then
+                    copyToClipboard()
+                elseif e == "gamepadpressed" and (b == "b" or b == "back" or b == "start") then
+                    return 1
+                elseif e == "touchpressed" then
+                    local name = love.window.getTitle()
+                    if #name == 0 or name == "Untitled" then
+                        name = "Game"
+                    end
+                    local buttons = {"OK", "Cancel"}
+                    if love.system then
+                        buttons[3] = "Copy to clipboard"
+                    end
+                    local pressed = love.window.showMessageBox("Quit " .. name .. "?", "", buttons)
+                    if pressed == 1 then
+                        return 1
+                    elseif pressed == 3 then
+                        copyToClipboard()
+                    end
+                end
+            end
+
+            draw()
+
+            if love.timer then
+                love.timer.sleep(0.1)
+            end
+        end
+
     end
-    debug.traceback = STP.stacktrace -- For when the game itself calls it
 end
 
 -- ----------------------------------------------
