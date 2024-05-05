@@ -291,32 +291,22 @@ end
 
 
 
-
-function missingDependencies(modInfo)
-    local missing_dependencies = false
-    local missing_list = {}
-
-    if modInfo.required_dependencies then
-        for k, modid in ipairs(modInfo.required_dependencies) do
-            if not SMODS.INIT[modid] then
-                table.insert(missing_list, modid)
-                missing_dependencies = true
-            end
-        end
-    end
-    return missing_dependencies, missing_list
-end
-
-function buildModtag(modInfo)
-    local tag_pos, tag_message, tag_atlas = {x = 0, y = 0}, "mod_loaded_successfully", modInfo.icon_atlas
+function buildModtag(mod)
+    local tag_pos, tag_message, tag_atlas = {x = 0, y = 0}, "load_success", mod.icon_atlas
     local specific_vars = {}
 
-    local is_missing, missing_list = missingDependencies(modInfo)
-
-    if is_missing then
-        tag_message = "mod_missing_dependencies"
+    if not mod.can_load then
+        tag_message = "load_failure"
         tag_atlas = "tag_error"
-        specific_vars = { concatAuthors(missing_list) }
+        specific_vars = {}
+        if next(mod.load_issues.dependencies) then
+			tag_message = tag_message..'_d'
+            table.insert(specific_vars, concatAuthors(mod.load_issues.dependencies))
+        end
+        if next(mod.load_issues.conflicts) then
+            tag_message = tag_message .. '_c'
+            table.insert(specific_vars, concatAuthors(mod.load_issues.conflicts))
+        end
     end
 
 
@@ -1022,8 +1012,9 @@ function SMODS.LOAD_LOC()
     end
 end
 
-function SMODS.process_loc_text(ref_table, ref_value, loc_txt)
+function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
     local target = (type(loc_txt) == 'table') and (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
+	if key and (type(target) == 'table') then target = target[key] end
 	if not(type(target) == 'string' or next(target)) then return end
     ref_table[ref_value] = target
 end

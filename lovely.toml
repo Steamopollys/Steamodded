@@ -213,9 +213,18 @@ line_prepend = '$indent'
 position = 'after'
 payload = '''
 if not G.SETTINGS.no_mod_badges and AUT.card_type ~= 'Locked' and AUT.card_type ~= 'Undiscovered' and obj and obj.mod and obj.mod.display_name then
-	local mod_name = string.sub(obj.mod.display_name, 1, 16)
-	local len = string.len(mod_name)
-	badges[#badges + 1] = create_badge(mod_name, obj.mod.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil, len <= 6 and 0.9 or 0.9 - 0.02 * (len - 6))
+	local mods = { obj.mod }
+	if obj.dependencies then
+		for _, v in ipairs(obj.dependencies) do
+			table.insert(mods, SMODS.Mods[v])
+		end
+	end
+	for i, mod in ipairs(mods) do
+		local mod_name = string.sub(mod.display_name, 1, 16)
+		local len = string.len(mod_name)
+		local size = 0.9 - (i > 1 and 0.1 or 0) - (len > 6 and 0.02*(len-6) or 0)
+		badges[#badges + 1] = create_badge(mod_name, mod.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil, size)
+	end
 end
 '''
 

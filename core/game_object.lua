@@ -40,9 +40,10 @@ function loadAPIs()
 
     function SMODS.GameObject:check_dependencies()
         local keep = true
-        if self.requires then
-            if type(self.requires) == 'string' then self.requires = { self.requires } end
-            for _, v in ipairs(self.requires) do
+        if self.dependencies then
+            -- ensure dependencies are a table
+            if type(self.dependencies) == 'string' then self.dependencies = { self.dependencies } end
+            for _, v in ipairs(self.dependencies) do
                 self.mod.optional_dependencies[v] = true
                 if not SMODS.Mods[v] then keep = false end
             end
@@ -78,7 +79,6 @@ function loadAPIs()
         key = (self.omit_prefix or key:sub(1, #self.prefix + 1) == self.prefix .. '_') and key or
             string.format('%s_%s', self.prefix, key)
         local o = self:get_obj(key)
-        sendTraceMessage(inspect(o))
         if not o then
             sendWarnMessage(
                 string.format('Tried to take ownership of non-existent %s: %s', self.set or self.__name, key),
@@ -166,7 +166,7 @@ function loadAPIs()
             -- language specific sprites override fully defined sprites only if that language is set
             if self.language and not (G.SETTINGS.language == self.language) then return end
             if not self.language and self.obj_buffer[string.format('%s_%s', self.key, G.SETTINGS.language)] then return end
-            self.full_path = self.mod.path .. 'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
+            self.full_path = (self.mod and self.mod.path or SMODS.dir) .. 'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
             local file_data = NFS.newFileData(self.full_path)
             if file_data then
                 local image_data = love.image.newImageData(file_data)
@@ -185,6 +185,51 @@ function loadAPIs()
         end,
         process_loc_text = function() end
     }
+
+    SMODS.Sprite {
+        key = 'tag_error',
+        atlas = 'ASSET_ATLAS',
+        path = 'tag_error.png',
+        px = 34,
+        py = 34,
+        loc_txt = {
+            ['en-us'] = {
+                success = {
+                    text = {
+                        'Mod loaded',
+                        '{C:green}successfully!'
+                    }
+                },
+                failure_d = {
+                    text = {
+                        'Missing {C:attention}dependencies!',
+                        '#1#',
+                    }
+                },
+                failure_c = {
+                    text = {
+                        'Unresolved {C:attention}conflicts!',
+                        '#1#'
+                    }
+                },
+                failure_d_c = {
+                    text = {
+                        'Missing {C:attention}dependencies!',
+                        '#1#',
+                        'Unresolved {C:attention}conflicts!',
+                        '#2#'
+                    }
+                }
+            }
+        },
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_success', self.loc_txt, 'success')
+            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_d', self.loc_txt, 'failure_d')
+            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_c', self.loc_txt, 'failure_c')
+            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_d_c', self.loc_txt, 'failure_d_c')
+        end
+    }:register()
+
 
     -------------------------------------------------------------------------------------------------
     ------- API CODE GameObject.ConsumableType
@@ -273,8 +318,8 @@ function loadAPIs()
             return t
         end,
         inject = function(self)
-            G.P_CENTER_POOLS[self.key] = {}
-            G.localization.descriptions[self.key] = {}
+            G.P_CENTER_POOLS[self.key] = G.P_CENTER_POOLS[self.key] or {}
+            G.localization.descriptions[self.key] = G.localization.descriptions[self.key] or {}
             G.C.SET[self.key] = self.primary_colour
             G.C.SECONDARY_SET[self.key] = self.secondary_colour
             G.FUNCS['your_collection_' .. string.lower(self.key) .. 's'] = function(e)
@@ -314,11 +359,11 @@ function loadAPIs()
         end,
         process_loc_text = function(self)
             if not next(self.loc_txt) then return end
-            SMODS.process_loc_text(G.localization.misc.dictionary, 'k_' .. string.lower(self.key), self.loc_txt.name)
+            SMODS.process_loc_text(G.localization.misc.dictionary, 'k_' .. string.lower(self.key), self.loc_txt, 'name')
             SMODS.process_loc_text(G.localization.misc.dictionary, 'b_' .. string.lower(self.key) .. '_cards',
-                self.loc_txt.collection)
-            SMODS.process_loc_text(G.localization.misc.labels, string.lower(self.key), self.loc_txt.label)
-            SMODS.process_loc_text(G.localization.descriptions.Other, 'undiscovered_'..string.lower(self.key), self.loc_txt.undiscovered)
+                self.loc_txt, 'collection')
+            SMODS.process_loc_text(G.localization.misc.labels, string.lower(self.key), self.loc_txt, 'label')
+            SMODS.process_loc_text(G.localization.descriptions.Other, 'undiscovered_'..string.lower(self.key), self.loc_txt, 'undiscovered')
         end
     }
 
@@ -563,9 +608,8 @@ function loadAPIs()
             self.rng_buffer[#self.rng_buffer + 1] = self.key
         end,
         process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.descriptions.Other, self.key:lower() .. '_seal',
-                self.loc_txt.description)
-            SMODS.process_loc_text(G.localization.misc.labels, self.key:lower() .. '_seal', self.loc_txt.label)
+            SMODS.process_loc_text(G.localization.descriptions.Other, self.key:lower() .. '_seal', self.loc_txt, 'description')
+            SMODS.process_loc_text(G.localization.misc.labels, self.key:lower() .. '_seal', self.loc_txt, 'label')
         end,
         get_obj = function(self, key) return G.P_SEALS[key] end
     }
@@ -676,8 +720,8 @@ function loadAPIs()
         process_loc_text = function(self)
             -- empty loc_txt indicates there are existing values that shouldn't be changed
             if next(self.loc_txt) then
-                SMODS.process_loc_text(G.localization.misc.suits_plural, self.key, self.loc_txt.plural)
-                SMODS.process_loc_text(G.localization.misc.suits_singular, self.key, self.loc_txt.singular)
+                SMODS.process_loc_text(G.localization.misc.suits_plural, self.key, self.loc_txt, 'plural')
+                SMODS.process_loc_text(G.localization.misc.suits_singular, self.key, self.loc_txt, 'singular')
                 G.C.SO_1[self.key] = self.lc_colour
                 G.C.SO_2[self.key] = self.hc_colour
                 G.C.SUITS[self.key] = G.C["SO_" .. (G.SETTINGS.colourblind_option and 2 or 1)][self.key]
@@ -900,7 +944,14 @@ function loadAPIs()
     SMODS.Consumable:take_ownership('strength', {
         use = function(self, area, copier)
             local used_tarot = copier or self
-            juice_flip(used_tarot)
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
             delay(0.2)
             for i = 1, #G.hand.highlighted do
                 G.E_MANAGER:add_event(Event({
@@ -947,7 +998,8 @@ function loadAPIs()
                 end
             }))
             delay(0.5)
-        end
+        end,
+        loc_def = 0,
     }):register()
     SMODS.Consumable:take_ownership('sigil', {
         use = function(self, area, copier)
@@ -980,7 +1032,8 @@ function loadAPIs()
                 }))
             end
             delay(0.5)
-        end
+        end,
+        loc_def = 0,
     }):register()
     SMODS.Consumable:take_ownership('ouija', {
         use = function(self, area, copier)
@@ -1009,7 +1062,8 @@ function loadAPIs()
                 }))
             end
             delay(0.5)
-        end
+        end,
+        loc_def = 0,
     }):register()
     local function random_destroy(used_tarot)
         local destroyed_cards = {}
@@ -1076,7 +1130,8 @@ function loadAPIs()
             for i = 1, #G.jokers.cards do
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
-        end
+        end,
+        loc_def = 0,
     }):register()
     SMODS.Consumable:take_ownership('familiar', {
         use = function(self, area, copier)
@@ -1120,7 +1175,8 @@ function loadAPIs()
             for i = 1, #G.jokers.cards do
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
-        end
+        end,
+        loc_def = 0,
     }):register()
     SMODS.Consumable:take_ownership('incantation', {
         use = function(self, area, copier)
@@ -1162,7 +1218,8 @@ function loadAPIs()
             for i = 1, #G.jokers.cards do
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
-        end
+        end,
+        loc_def = 0,
     }):register()
     SMODS.Blind:take_ownership('eye', {
         set_blind = function(self, blind, reset, silent)

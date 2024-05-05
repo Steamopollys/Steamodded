@@ -23,10 +23,10 @@ end
 NFS = nativefs
 
 function loadMods(modsDirectory)
-    local mods = {}
+    SMODS.Mods = {}
     local header_components = {
         name         = { pattern = '%-%-%- MOD_NAME: ([^\n]+)\n', required = true },
-        id           = { pattern = '%-%-%- MOD_ID: ([^%s]+)\n', required = true },
+        id           = { pattern = '%-%-%- MOD_ID: ([^ \n]+)\n', required = true },
         author       = { pattern = '%-%-%- MOD_AUTHOR: %[(.-)%]\n', required = true, parse_array = true },
         description  = { pattern = '%-%-%- MOD_DESCRIPTION: (.-)\n', required = true },
         priority     = { pattern = '%-%-%- PRIORITY: (%-?%d+)\n', handle = function(x) return x and x + 0 or 0 end },
@@ -37,7 +37,6 @@ function loadMods(modsDirectory)
         icon_atlas   = { pattern = '%-%-%- ICON_ATLAS: (.-)\n', handle = function(x) return x or 'tags' end },
         prefix       = { pattern = '%-%-%- PREFIX: (.-)\n' },
     }
-    local smods_dir
 
     -- Function to process each directory (including subdirectories) with depth tracking
     local function processDirectory(directory, depth)
@@ -85,7 +84,7 @@ function loadMods(modsDirectory)
                         end
                         mod[k] = component
                     end
-                    if mods[mod.id] then
+                    if SMODS.Mods[mod.id] then
                         sane = false
                         sendWarnMessage("Duplicate Mod ID: " .. mod.id, 'Loader')
                     end
@@ -97,12 +96,13 @@ function loadMods(modsDirectory)
                         mod.prefix = mod.prefix or mod.id:lower():sub(1, 4)
                         mod.content = file_content
                         mod.optional_dependencies = {}
-                        mods[mod.id] = mod
+                        SMODS.Mods[mod.id] = mod
                         SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
                         table.insert(SMODS.mod_priorities[mod.priority], mod)
                     end
                 elseif headerLine == '--- STEAMODDED CORE' then
-                    smods_dir = smods_dir or directory:match('^(.+)/')
+                    -- save top-level directory of Steamodded installation
+                    SMODS.dir = SMODS.dir or directory:match('^(.+/)')
                 else
                     sendTraceMessage("Skipping non-Lua file or invalid header: " .. filename, 'Loader')
                 end
@@ -119,18 +119,61 @@ function loadMods(modsDirectory)
         keyset[#keyset + 1] = k
     end
     table.sort(keyset)
+    
+    local function check_dependencies(mod, seen)
+        if not (mod.can_load == nil) then return mod.can_load end
+        seen = seen or {}
+        local can_load = true
+        if seen[mod.id] then return true end
+        seen[mod.id] = true
+        local load_issues = {
+            dependencies = {},
+            conflicts = {},
+        }
+        for _,v in ipairs(mod.conflicts or {}) do
+            -- block load even if the conflict is also blocked
+            if SMODS.Mods[v] then
+                can_load = false
+                table.insert(load_issues.conflicts, v)
+            end
+        end
+        for _, v in ipairs(mod.dependencies or {}) do
+            -- recursively check dependencies of dependencies to make sure they are actually fulfilled
+            if not SMODS.Mods[v] or not check_dependencies(SMODS.Mods[v], seen) then
+                can_load = false
+                table.insert(load_issues.dependencies, v)
+            end
+        end
+        if not can_load then
+            mod.load_issues = load_issues
+            return false
+        end
+        for _, v in ipairs(mod.dependencies) do
+            SMODS.Mods[v].can_load = true
+        end
+        return true
+    end
 
     -- load the mod files
     for _, priority in ipairs(keyset) do
         for _, mod in ipairs(SMODS.mod_priorities[priority]) do
-            boot_print_stage('Loading Mod: ' .. mod.id)
+            mod.can_load = check_dependencies(mod)
             SMODS.mod_list[#SMODS.mod_list + 1] = mod -- keep mod list in prioritized load order
-            SMODS.current_mod = mod
-            assert(load(mod.content))()
+            if mod.can_load then
+                boot_print_stage('Loading Mod: ' .. mod.id)
+                SMODS.current_mod = mod
+                assert(load(mod.content))()
+            else
+                boot_print_stage('Failed to load Mod: ' .. mod.id)
+                sendWarnMessage(string.format("Mod %s was unable to load: %s%s", mod.id,
+                    next(mod.load_issues.dependencies) and
+                    'Missing Dependencies: ' .. inspect(mod.load_issues.dependencies) or '',
+                    next(mod.load_issues.conflicts) and
+                    'Unresolved Conflicts: ' .. inspect(mod.load_issues.conflicts) or ''
+                ))
+            end
         end
     end
-
-    return mods
 end
 
 function SMODS.injectItems()
@@ -157,7 +200,7 @@ function initSteamodded()
     boot_print_stage("Loading APIs")
     loadAPIs()
     boot_print_stage("Loading Mods")
-    SMODS.Mods = loadMods(SMODS.MODS_DIR)
+    loadMods(SMODS.MODS_DIR)
 
     initGlobals()
 
