@@ -939,8 +939,7 @@ function SMODS.SAVE_UNLOCKS()
                 v.unlocked = true
             end
             if not v.unlocked and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^v_')) then
-                G.P_LOCKED[#G.P_LOCKED + 1] =
-                    v
+                G.P_LOCKED[#G.P_LOCKED + 1] = v
             end
             if not v.discovered and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^e_') or string.find(k, '^c_') or string.find(k, '^p_') or string.find(k, '^v_')) and meta.discovered[k] then
                 v.discovered = true
@@ -952,6 +951,8 @@ function SMODS.SAVE_UNLOCKS()
             end
         end
     end
+
+	table.sort(G.P_LOCKED, function (a, b) return not a.order or not b.order or a.order < b.order end)
 
 	for k, v in pairs(G.P_BLINDS) do
         v.key = k
@@ -967,7 +968,20 @@ function SMODS.SAVE_UNLOCKS()
             end
         end
     end
-
+	for k, v in pairs(G.P_TAGS) do
+        v.key = k
+        if not v.wip and not v.demo then 
+            if TESTHELPER_unlocks then v.discovered = true; v.alerted = true  end --REMOVE THIS
+            if not v.discovered and meta.discovered[k] then 
+                v.discovered = true
+            end
+            if v.discovered and meta.alerted[k] then 
+                v.alerted = true
+            elseif v.discovered then
+                v.alerted = false
+            end
+        end
+    end
     for k, v in pairs(G.P_SEALS) do
         v.key = k
         if not v.wip and not v.demo then
@@ -981,32 +995,6 @@ function SMODS.SAVE_UNLOCKS()
                 v.alerted = true
             elseif v.discovered then
                 v.alerted = false
-            end
-        end
-    end
-end
-
-function SMODS.LOAD_LOC()
-    boot_print_stage("Loading Localizations")
-    for g_k, group in pairs(G.localization) do
-        if g_k == 'descriptions' then
-            for _, set in pairs(group) do
-                for _, center in pairs(set) do
-                    center.text_parsed = {}
-                    for _, line in ipairs(center.text) do
-                        center.text_parsed[#center.text_parsed + 1] = loc_parse_string(line)
-                    end
-                    center.name_parsed = {}
-                    for _, line in ipairs(type(center.name) == 'table' and center.name or { center.name }) do
-                        center.name_parsed[#center.name_parsed + 1] = loc_parse_string(line)
-                    end
-                    if center.unlock then
-                        center.unlock_parsed = {}
-                        for _, line in ipairs(center.unlock) do
-                            center.unlock_parsed[#center.unlock_parsed + 1] = loc_parse_string(line)
-                        end
-                    end
-                end
             end
         end
     end
