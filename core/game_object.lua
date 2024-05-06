@@ -1230,4 +1230,33 @@ function loadAPIs()
             end
         end
     })
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Challenge
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Challenges = {}
+    SMODS.Challenge = SMODS.GameObject:extend {
+    obj_table = SMODS.Challenges,
+    obj_buffer = {},
+    set = "Challenge",
+    required_params = {
+        'name',
+        'key', --This is not 'key' because of Challenges use "id"
+    },
+    deck = {type = "Challenge Deck"},
+    rules = {custom = {},modifiers = {}},
+    jokers = {},
+    consumeables = {},
+    vouchers = {},
+    restrictions = {banned_cards = {}, banned_tags = {}, banned_other = {}},
+    prefix = 'c',
+    process_loc_text = function(self)
+        SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.name)
+    end,
+    inject = function(self)
+        self.id = self.key
+        table.insert(G.CHALLENGES, self)
+    end,
+    }
 end
