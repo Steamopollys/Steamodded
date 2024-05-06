@@ -1242,7 +1242,7 @@ function loadAPIs()
     set = "Challenge",
     required_params = {
         'name',
-        'key', --This is not 'key' because of Challenges use "id"
+        'key', 
     },
     deck = {type = "Challenge Deck"},
     rules = {custom = {},modifiers = {}},
