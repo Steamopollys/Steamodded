@@ -4,8 +4,8 @@
 
 SMODS.SOUND_SOURCES = {}
 
-function register_sound_global(modID)
-    local mod = SMODS.findModByID(modID)
+function register_sound_global()
+    local mod = SMODS.current_mod
     for _, filename in ipairs(love.filesystem.getDirectoryItems(mod.path ..'assets/sounds/')) do
         local extension = string.sub(filename, -4)
         if extension == '.ogg' or extension == '.mp3' or extension == '.wav' then -- please use .ogg or .wav files

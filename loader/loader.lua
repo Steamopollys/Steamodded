@@ -178,7 +178,8 @@ end
 
 function SMODS.injectItems()
     SMODS.injectObjects(SMODS.GameObject)
-    SMODS.LOAD_LOC()
+    boot_print_stage('Initializing Localization')
+    init_localization()
     SMODS.SAVE_UNLOCKS()
 end
 

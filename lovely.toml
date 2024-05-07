@@ -808,90 +808,6 @@ payload = '''
 local suits = SMODS.Suit.obj_buffer
 if $restcond
 '''
-# I can't do better than fully replacing this function :skull:
-# get_straight()
-[[patches]]
-[patches.regex]
-target = "functions/misc_functions.lua"
-pattern = 'function get_straight\(hand\)\n(.*\n)*?end\n'
-position = 'at'
-payload = '''
-function get_straight(hand)
-	local ret = {}
-	local four_fingers = next(find_joker('Four Fingers'))
-	local can_skip = next(find_joker('Shortcut'))
-	if #hand < (5 - (four_fingers and 1 or 0)) then return ret end
-	local t = {}
-	local RANKS = {}
-	for i = 1, #hand do
-		local rank = hand[i].base.value
-			RANKS[rank] = RANKS[rank] or {}
-		RANKS[rank][#RANKS[rank] + 1] = hand[i]
-	end
-	local straight_length = 0
-	local straight = false
-	local skipped_rank = false
-	local vals = {}
-	for k, v in pairs(SMODS.Ranks) do
-		if v.straight_edge then
-		table.insert(vals, k)
-		end
-	end
-	local init_vals = {}
-	for _, v in ipairs(vals) do
-		init_vals[v] = true
-	end
-	if not next(vals) then table.insert(vals, 'Ace') end
-	local initial = true
-	local br = false
-	local end_iter = false
-	local i = 0
-	while 1 do
-		end_iter = false
-		if straight_length >= (5 - (four_fingers and 1 or 0)) then
-		straight = true
-		end
-		i = i + 1
-		if br or (i > #SMODS.Rank.obj_buffer + 1) then break end
-		if not next(vals) then break end
-		for _, val in ipairs(vals) do
-		if init_vals[val] and not initial then br = true end
-		if RANKS[val] then
-			straight_length = straight_length + 1
-			skipped_rank = false
-			for _, vv in ipairs(RANKS[val]) do
-			t[#t + 1] = vv
-			end
-			vals = SMODS.Ranks[val].next
-			initial = false
-			end_iter = true
-			break
-		end
-		end
-		if not end_iter then
-			local new_vals = {}
-			for _, val in ipairs(vals) do
-				for _, r in ipairs(SMODS.Ranks[val].next) do
-					table.insert(new_vals, r)
-				end
-			end
-			vals = new_vals
-			if can_skip and not skipped_rank then
-				skipped_rank = true
-			else
-				straight_length = 0
-				skipped_rank = false
-				if not straight then t = {} end
-				if straight then break end
-			end
-			end
-	end
-	if not straight then return ret end
-	table.insert(ret, t)
-	return ret
-end
-
-'''
 
 # get_X_same()
 [[patches]]
@@ -1455,6 +1371,66 @@ for k, v in pairs(SMODS.Stickers) do
             v.calculate(self, context)
         end
     end
+end
+'''
+overwrite = false
+match_indent = true
+
+### Poker Hand API
+# evaluate_poker_hand()
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "local parts = {"
+position = 'before'
+payload = '''
+for _,v in ipairs(SMODS.PokerHand.obj_buffer) do
+	results[v] = {}
+end
+'''
+overwrite = false
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "if next(parts._5) and next(parts._flush) then"
+position = 'before'
+payload = '''
+for _,_hand in pairs(SMODS.PokerHands) do
+	if _hand.atomic_part and type(_hand.atomic_part) == 'function' then
+		parts[_hand.key] = _hand.atomic_part(hand)
+	end
+end
+'''
+overwrite = false
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "return results"
+position = 'before'
+payload = '''
+for _,_hand in pairs(SMODS.PokerHands) do
+	if _hand.composite and type(_hand.composite) == 'function' then
+		local other_hands
+		results[_hand.key], other_hands = _hand.composite(parts)
+		if other_hands and type(other_hands) == 'table' then
+			for k, v in pairs(other_hands) do
+				results[k] = v
+			end
+		end
+	else
+		results[_hand.key] = parts[_hand.key]
+	end
+end
+results.top = nil
+for _, v in ipairs(G.handlist) do
+	if not results.top and results[v] then
+		results.top = results[v]
+		break
+	end
 end
 '''
 overwrite = false
