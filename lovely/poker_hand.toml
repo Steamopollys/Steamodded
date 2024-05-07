@@ -1,0 +1,65 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Poker Hand API
+
+# evaluate_poker_hand()
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "local parts = {"
+position = 'before'
+payload = '''
+for _,v in ipairs(SMODS.PokerHand.obj_buffer) do
+	results[v] = {}
+end
+'''
+overwrite = false
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "if next(parts._5) and next(parts._flush) then"
+position = 'before'
+payload = '''
+for _,_hand in pairs(SMODS.PokerHands) do
+	if _hand.atomic_part and type(_hand.atomic_part) == 'function' then
+		parts[_hand.key] = _hand.atomic_part(hand)
+	end
+end
+'''
+overwrite = false
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "return results"
+position = 'before'
+payload = '''
+for _,_hand in pairs(SMODS.PokerHands) do
+	if _hand.composite and type(_hand.composite) == 'function' then
+		local other_hands
+		results[_hand.key], other_hands = _hand.composite(parts)
+		if other_hands and type(other_hands) == 'table' then
+			for k, v in pairs(other_hands) do
+				results[k] = v
+			end
+		end
+	else
+		results[_hand.key] = parts[_hand.key]
+	end
+end
+results.top = nil
+for _, v in ipairs(G.handlist) do
+	if not results.top and results[v] then
+		results.top = results[v]
+		break
+	end
+end
+'''
+overwrite = false
+match_indent = true

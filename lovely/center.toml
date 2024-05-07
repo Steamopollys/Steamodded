@@ -1,0 +1,292 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Center API
+
+# Card:set_ability()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if not G.OVERLAY_MENU then "
+position = 'before'
+payload = '''
+local obj = self.config.center
+if obj.set_ability and type(obj.set_ability) == 'function' then
+	obj.set_ability(self, center, initial, delay_sprites)
+end'''
+overwrite = false
+match_indent = true
+
+# Card:calculate_joker()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = 'if self.ability.set == "Planet" and not self.debuff then'
+position = 'before'
+payload = '''
+local obj = self.config.center
+if obj.calculate and type(obj.calculate) == 'function' then
+	local o = obj.calculate(self, context)
+	if o then return o end
+end
+'''
+overwrite = false
+match_indent = true
+
+# Card:update()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = 'if G.STAGE == G.STAGES.RUN then'
+position = 'before'
+overwrite = false
+match_indent = true
+payload = '''
+local obj = self.config.center
+if obj.update and type(obj.update) == 'function' then
+	obj.update(self, dt)
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<else>else)\n[\t ]*if self.ability.name == 'Loyalty Card' then\n[\t ]*self.ability.loyalty_remaining"
+root_capture = 'else'
+position = 'at'
+payload = 'elseif SMODS.end_calculate_context(context) then'
+
+# Card:generate_UIBox_ability_table()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if (?<rest>self.ability.name == 'Joker' then .*\n)"
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+local obj = self.config.center
+if obj.loc_def and type(obj.loc_def) == 'function' then
+	loc_vars, main_start, main_end = obj.loc_def(self)
+elseif $rest
+'''
+
+# generate_card_ui()
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)elseif _c.set == 'Voucher' then"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+elseif _c.loc_def and type(_c.loc_def) == 'function' then
+	loc_vars, main_start, main_end = _c:loc_def(info_queue)
+	localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if (?<rest>_c.name == 'Golden Ticket' then)\n"
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+if _c.unlock_loc_def and type(_c.unlock_loc_def) == 'function' then
+	loc_vars = _c:unlock_loc_def(info_queue)
+elseif $rest
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if (?<rest>_c.name == 'Stone Joker' .*\n)"
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+if _c.tooltip and type(_c.tooltip) == 'function' then
+	main_end = _c:tooltip(info_queue)
+elseif $rest
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if v == 'eternal'"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+if SMODS.Seals[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end
+'''
+# check_for_unlock()
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if not card.unlocked and card.unlock_condition and args.type == 'career_stat' then"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+
+if not card.unlocked and card.check_for_unlock and type(card.check_for_unlock) == 'function' then
+	ret = card:check_for_unlock(args)
+	if ret then unlock_card(card) end
+end
+'''
+
+#Card:use_consumable()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if self.ability.consumeable.mod_conv or self.ability.consumeable.suit_conv then"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+local obj = self.config.center
+if obj.use and type(obj.use) == 'function' then
+	obj.use(self, area, copier)
+	return
+end
+'''
+
+# Card:can_use_consumable()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if self.ability.name == 'The Hermit' or self.ability.consumeable.hand_type"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+local obj = self.config.center
+if obj.can_use and type(obj.can_use) == 'function' then
+	return obj.can_use(self)
+end
+'''
+
+# G.UIDEF.card_h_popup()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)(?<if>if AUT.badges.card_type or AUT.badges.force_rarity then)\n[\t ]*(?<rest>.*)\n[\t ]*end"
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+local obj = card.config.center
+$if
+	if obj and obj.set_card_type_badge and type(obj.set_card_type_badge) == 'function' then
+		obj.set_card_type_badge(card, badges)
+	else
+		$rest
+	end
+end
+if obj and obj.set_badges and type(obj.set_badges) == 'function' then
+	obj.set_badges(card, badges)
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)if AUT.badges then\n([\t ]*.*\n){4}[\t ]*end"
+line_prepend = '$indent'
+position = 'after'
+payload = '''
+if not G.SETTINGS.no_mod_badges and AUT.card_type ~= 'Locked' and AUT.card_type ~= 'Undiscovered' and obj and obj.mod and obj.mod.display_name then
+	local mods = { obj.mod }
+	if obj.dependencies then
+		for _, v in ipairs(obj.dependencies) do
+			table.insert(mods, SMODS.Mods[v])
+		end
+	end
+	for i, mod in ipairs(mods) do
+		local mod_name = string.sub(mod.display_name, 1, 16)
+		local len = string.len(mod_name)
+		local size = 0.9 - (i > 1 and 0.1 or 0) - (len > 6 and 0.02*(len-6) or 0)
+		badges[#badges + 1] = create_badge(mod_name, mod.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil, size)
+	end
+end
+'''
+
+# G.UIDEF.settings_tab()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)G.F_CRASH_REPORTS.*\n"
+line_prepend = '$indent'
+position = 'after'
+payload = '''
+create_toggle { label = 'Disable Mod Badges', ref_table = G.SETTINGS, ref_value = 'no_mod_badges' },
+'''
+
+# set_discover_tallies()
+[[patches]]
+[patches.regex]
+target = 'functions/misc_functions.lua'
+pattern = "(?<indent>[\t ]*)if v.set == 'Planet' then\n([\t ]*.*\n){15}"
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+local tally = G.DISCOVER_TALLIES[v.set:lower()..'s']
+tally.of = tally.of + 1
+if v.discovered then
+	tally.tally = tally.tally + 1
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/misc_functions.lua'
+pattern = "[\t ]*tarots = \\{tally = 0, of = 0\\},\n(.*\n){2}"
+line_prepend = '$indent'
+position = 'at'
+payload = ''
+overwrite = true
+
+[[patches]]
+[patches.regex]
+target = 'functions/misc_functions.lua'
+pattern = "(?<indent>[\t ]*)for _, v in pairs\\(G.DISCOVER_TALLIES\\) do\n"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+for _, v in pairs(SMODS.ConsumableTypes) do
+	G.DISCOVER_TALLIES[v.key:lower()..'s'] = {tally = 0, of = 0}
+end
+'''
+
+# create_UIBox_your_collection()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local t = create_UIBox_generic_options\\(\\{ back_func = G.STAGE"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+local consumable_nodes = {}
+for _, key in ipairs(SMODS.ConsumableType.obj_buffer) do
+	local id = 'your_collection_'..key:lower()..'s'
+	consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)nodes=\\{\n[\t ]*UIBox_button\\(\\{button = 'your_collection_tarots'(.*\n){3}[\t ]*}"
+line_prepend = '$indent'
+position = 'at'
+payload = 'nodes = consumable_nodes'
+
+# Card:apply_to_run()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if center_table.name == 'Overstock'"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+local obj = center or self.config.center
+if obj.redeem and type(obj.redeem) == 'function' then
+	obj:redeem()
+	return
+end
+'''

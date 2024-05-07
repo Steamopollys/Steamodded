@@ -1,0 +1,485 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Playing Card API
+
+# Game:init_game_object()
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = 'function Game:init_game_object()'
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+	local cards_played = {}
+	for _,v in ipairs(SMODS.Rank.obj_buffer) do
+		cards_played[v] = { suits = {}, total = 0 }
+	end
+'''
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = 'local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)'
+position = 'at'
+match_indent = true
+overwrite = true
+payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].card_key'
+
+# Game:start_run()
+[[patches]]
+[patches.regex]
+target = "game.lua"
+pattern = '(?<indent>[\t ]*)cards_played = \{\n(.*\n){13}[\t ]*\},'
+position = 'at'
+line_prepend = '$indent'
+payload = 'cards_played = cards_played,'
+
+# loc_colour()
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = 'return G.ARGS.LOC_COLOURS[_c] or _default or G.C.UI.TEXT_DARK'
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+	for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SECONDARY_SET[v] 
+	end
+	for _, v in ipairs(SMODS.Suit.obj_buffer) do
+		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SUITS[v]
+	end
+'''
+
+# get_flush()
+[[patches]]
+[patches.regex]
+target = "functions/misc_functions.lua"
+pattern = '(?<indent>[\t ]*)local suits = \{\n[\t ]*"Spades",\n[\t ]*"Hearts",\n[\t ]*"Clubs",\n[\t ]*"Diamonds"\n[\t ]*\}\n[\t ]*if #hand > 5 or (?<restcond>#hand < \(5 - \(four_fingers and 1 or 0\)\) then return ret else)'
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local suits = SMODS.Suit.obj_buffer
+if $restcond
+'''
+
+# get_X_same()
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = 'local vals = {{},{},{},{},{},{},{},{},{},{},{},{},{},{}}'
+position = 'at'
+match_indent = true
+overwrite = false
+payload = '''
+local vals = {}
+for i = 1, SMODS.Rank.max_id.value do
+	vals[i] = {}
+end
+'''
+
+# Card:get_nominal()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = 'function Card:get_nominal\(mod\)\n([\t ]+.*\n)*end'
+position = 'at'
+payload = '''
+function Card:get_nominal(mod)
+	local mult = 1
+	if mod == 'suit' then mult = 10000 end
+	if self.ability.effect == 'Stone Card' then mult = -10000 end
+	return 10*self.base.nominal + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal + 0.000001*self.unique_val
+end
+'''
+
+# Card:set_base()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if self.base.value == '2' then self.base.nominal = 2; self.base.id = 2\n([\t ]+elseif .*\n)*"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local rank = SMODS.Ranks[self.base.value] or {}
+self.base.nominal = rank.nominal or 0
+self.base.face_nominal = rank.face_nominal or 0
+self.base.id = rank.id
+'''
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if self.base.suit == 'Diamonds' then self.base.suit_nominal = 0.01; self.base.suit_nominal_original = suit_base_nominal_original or 0.001 \n([\t ]+elseif .*\n)*"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local suit = SMODS.Suits[self.base.suit] or {}
+self.base.suit_nominal = suit.suit_nominal or 0
+self.base.suit_nominal_original = suit_base_nominal_original or suit.suit_nominal or 0
+'''
+
+# Card:change_suit()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)local new_code = [\\s\\S]*?local new_val = [\\s\\S]*?local new_card = G.P_CARDS\\[new_code..new_val\\]"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local new_code = SMODS.Suits[new_suit].card_key
+local new_val = SMODS.Ranks[self.base.value].card_key
+local new_card = G.P_CARDS[new_code..'_'..new_val]
+'''
+
+# Card:is_face()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)if id == 11 or id == 12 or id == 13 or next\\(find_joker\\(\"Pareidolia\"\\)\\) then"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local rank = SMODS.Ranks[self.base.value]
+if id > 0 and rank.face or next(find_joker("Pareidolia")) then
+'''
+
+# G.UIDEF.view_deck()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local SUITS = \\{\n(.*\n){4}[\t ]*\\}\n[\t ]*local suit_map = \\{'Spades', 'Hearts', 'Clubs', 'Diamonds'\\}\n[\t ]*for (?<iter1>k, v in ipairs\\(G.playing_cards\\) do)\n[\t ]*(?<iter2>table.insert\\(SUITS\\[v.base.suit\\], v\\))\n[\t ]*end\n[\t ]*for j = 1, 4 do"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local SUITS = {}
+local suit_map = {}
+for i = #SMODS.Suit.obj_buffer, 1, -1 do
+	SUITS[SMODS.Suit.obj_buffer[i]] = {}
+	suit_map[#suit_map+1] = SMODS.Suit.obj_buffer[i]
+end
+for $iter1
+	$iter2
+end
+local num_suits = 0
+for j = 1, #suit_map do
+	if SUITS[suit_map[j]][1] then num_suits = num_suits + 1 end
+end
+for j = 1, #suit_map do
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)0.6\\*G.CARD_H,\n"
+position = 'at'
+line_prepend = '$indent'
+payload = "((num_suits > 8) and 0.2 or (num_suits > 4) and (1 - 0.1 * num_suits) or 0.6) * G.CARD_H,\n"
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local flip_col = G.C.WHITE\n(\n.*){5}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local flip_col = G.C.WHITE
+
+local suit_tallies = {}
+local mod_suit_tallies = {}
+for _, v in ipairs(suit_map) do
+	suit_tallies[v] = 0
+	mod_suit_tallies[v] = 0
+end
+local rank_tallies = {}
+local mod_rank_tallies = {}
+local rank_name_mapping = SMODS.Rank.obj_buffer
+for _, v in ipairs(rank_name_mapping) do
+	rank_tallies[v] = 0
+	mod_rank_tallies[v] = 0
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)for k, v in ipairs\\(G.playing_cards\\) do\n[\t ]*if v.ability.name ~= 'Stone Card'.*\n(.*\n)*?[\t ]*--ranks(\n.*){4}\n\n[\t ]*local modded = .*(\n.*){4}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+for k, v in ipairs(G.playing_cards) do
+	if v.ability.name ~= 'Stone Card' and (not unplayed_only or ((v.area and v.area == G.deck) or v.ability.wheel_flipped)) then
+		if v.ability.wheel_flipped and unplayed_only then wheel_flipped = wheel_flipped + 1 end
+		--For the suits
+		suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1
+		for kk, vv in pairs(mod_suit_tallies) do
+			mod_suit_tallies[kk] = (vv or 0) + (v:is_suit(kk) and 1 or 0)
+		end
+
+		--for face cards/numbered cards/aces
+		local card_id = v:get_id()
+		face_tally = face_tally + ((SMODS.Ranks[v.base.value].face) and 1 or 0)
+		mod_face_tally = mod_face_tally + (v:is_face() and 1 or 0)
+		if not SMODS.Ranks[v.base.value].face and card_id ~= 14 then
+			num_tally = num_tally + 1
+			if not v.debuff then mod_num_tally = mod_num_tally + 1 end
+		end
+		if card_id == 14 then
+			ace_tally = ace_tally + 1
+			if not v.debuff then mod_ace_tally = mod_ace_tally + 1 end
+		end
+
+		--ranks
+		rank_tallies[v.base.value] = rank_tallies[v.base.value] + 1
+		if not v.debuff then mod_rank_tallies[v.base.value] = mod_rank_tallies[v.base.value] + 1 end
+	end
+end
+local modded = face_tally ~= mod_face_tally
+for kk, vv in pairs(mod_suit_tallies) do
+	modded = modded or (vv ~= suit_tallies[kk])
+	if modded then break end
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = 'for i = 13, 1, -1 do'
+position = 'at'
+match_indent = true
+overwrite = false
+payload = '''
+for i = #rank_name_mapping, 1, -1 do
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'text = rank_name_mapping\[i\]'
+position = 'at'
+payload = 'text = SMODS.Ranks[rank_name_mapping[i]].shorthand'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "text = rank_tallies\\[i\\] or 'NIL'"
+position = 'at'
+payload = 'text = rank_tallies[rank_name_mapping[i]]'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local t = \n[\t ]*\\{n=G.UIT.ROOT, config=\\{align = \"cm\", colour = G.C.CLEAR\\}, nodes=\\{"
+position = 'before'
+line_prepend = '$indent'
+payload = '''
+local tally_ui = {
+	-- base cards
+	{
+		n = G.UIT.R,
+		config = { align = "cm", minh = 0.05, padding = 0.07 },
+		nodes = {
+			{ n = G.UIT.O, config = { object = DynaText({ string = { { string = localize('k_base_cards'), colour = G.C.RED }, modded and { string = localize('k_effective'), colour = G.C.BLUE } or nil }, colours = { G.C.RED }, silent = true, scale = 0.4, pop_in_rate = 10, pop_delay = 4 }) } }
+		}
+	},
+	-- aces, faces and numbered cards
+	{
+		n = G.UIT.R,
+		config = { align = "cm", minh = 0.05, padding = 0.1 },
+		nodes = {
+			tally_sprite({ x = 1, y = 0 },
+				{ { string = '' .. ace_tally, colour = flip_col }, { string = '' .. mod_ace_tally, colour = G.C.BLUE } },
+				{ localize('k_aces') }), --Aces
+			tally_sprite({ x = 2, y = 0 },
+				{ { string = '' .. face_tally, colour = flip_col }, { string = '' .. mod_face_tally, colour = G.C.BLUE } },
+				{ localize('k_face_cards') }), --Face
+			tally_sprite({ x = 3, y = 0 },
+				{ { string = '' .. num_tally, colour = flip_col }, { string = '' .. mod_num_tally, colour = G.C.BLUE } },
+				{ localize('k_numbered_cards') }), --Numbers
+		}
+	},
+}
+-- add suit tallies
+for i = 1, #suit_map, 2 do
+	local n = {
+		n = G.UIT.R,
+		config = { align = "cm", minh = 0.05, padding = 0.1 },
+		nodes = {
+			tally_sprite(SMODS.Suits[suit_map[i]].ui_pos,
+				{ { string = '' .. suit_tallies[suit_map[i]], colour = flip_col }, { string = '' .. mod_suit_tallies[suit_map[i]], colour = G.C.BLUE } },
+				{ localize(suit_map[i], 'suits_plural') },
+				suit_map[i]),
+			suit_map[i + 1] and tally_sprite(SMODS.Suits[suit_map[i + 1]].ui_pos,
+				{ { string = '' .. suit_tallies[suit_map[i + 1]], colour = flip_col }, { string = '' .. mod_suit_tallies[suit_map[i + 1]], colour = G.C.BLUE } },
+				{ localize(suit_map[i + 1], 'suits_plural') },
+				suit_map[i + 1]) or nil,
+		}
+	}
+	table.insert(tally_ui, n)
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'nodes=\{\n[\t ]*\{n=G.UIT.R, config=\{align = "cm", minh = 0.05, padding = 0.07\}, nodes=\{(\n.*)*?\n[\t ]*\}\}\n'
+position = 'at'
+payload = 'nodes = tally_ui}'
+
+# tally_sprite
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = '(?<start>[\t ]*local t_s = Sprite\(0,0,0.5,0.5,)G.ASSET_ATLAS\[.*?\](?<rest>.*?\))'
+position = 'at'
+payload = '$start G.ASSET_ATLAS[suit and SMODS.Suits[suit][G.SETTINGS.colourblind_option and "hc_ui_atlas" or "lc_ui_atlas"] or ("ui_"..(G.SETTINGS.colourblind_option and "2" or "1"))]$rest'
+
+# G.UIDEF.challenge_description_tab()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local SUITS = \\{(\n.*){5}\n[\t ]*local suit_map = \\{'S', 'H', 'C', 'D'\\}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local SUITS = {}
+local suit_map = {}
+for i = #SMODS.Suit.obj_buffer, 1, -1 do
+	local suit = SMODS.Suits[SMODS.Suit.obj_buffer[i]]
+	SUITS[suit.card_key] = {}
+	suit_map[#suit_map+1] = suit.card_key
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = 'local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)'
+position = 'at'
+match_indent = true
+overwrite = true
+payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].card_key'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)for j = 1, 4 do\n[\t ]*(?<mid>if.*(\n.*)*?)\n[\t ]*0.42\\*G.CARD_H,"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local num_suits = 0
+for j = 1, #suit_map do
+	if SUITS[suit_map[j]][1] then num_suits = num_suits + 1 end
+end
+for j = 1, #suit_map do
+	$mid			
+			(0.42 - (num_suits <= 4 and 0 or num_suits >= 8 and 0.28 or 0.07 * (num_suits - 4))) * G.CARD_H,
+'''
+
+# G.UIDEF.deck_preview()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local suit_counts = \\{((\n.*)*?\n[\t ]*\\}){2}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local suit_counts = {}
+local mod_suit_counts = {}
+for _, v in ipairs(SMODS.Suit.obj_buffer) do
+	suit_counts[v] = 0
+	mod_suit_counts[v] = 0
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local SUITS = \\{(\n.*){6}\n[\t ]*for(.*\n)*?[\t ]*local rank_name_mapping.*\n"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local SUITS = {}
+for _, suit in ipairs(SMODS.Suit.obj_buffer) do
+	SUITS[suit] = {}
+	for _, rank in ipairs(SMODS.Rank.obj_buffer) do
+		SUITS[suit][rank] = {}
+	end
+end
+local stones = nil
+local suit_map = {}
+for i = #SMODS.Suit.obj_buffer, 1, -1 do
+	suit_map[#suit_map+1] = SMODS.Suit.obj_buffer[i]
+end
+local rank_name_mapping = {}
+for i = #SMODS.Rank.obj_buffer, 1, -1 do
+	rank_name_mapping[#rank_name_mapping+1] = SMODS.Rank.obj_buffer[i]
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "\\[v.base.id\\]"
+position = 'at'
+payload = '[v.base.value]'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "local rank_col = v == 'A'.*\n"
+position = 'at'
+payload = "local rank_col = SMODS.Ranks[v].face and G.C.WHITE or _bg_col\n"
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "text = ''..v"
+position = 'at'
+payload = "text = ''..SMODS.Ranks[v].shorthand"
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'rank_counts\[15 - k\]'
+position = 'at'
+payload = 'rank_counts[v]'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'for j = 1, 4 do'
+position = 'at'
+payload = 'for _, suit in ipairs(suit_map) do'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'G.C.SUITS\[suit_map\[j\]\]'
+position = 'at'
+payload = 'G.C.SUITS[suit]'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'for i = 14, 2, -1 do'
+position = 'at'
+payload = 'for _, rank in ipairs(rank_name_mapping) do'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = '#SUITS\[suit_map\[j\]\]\[i\]'
+position = 'at'
+payload = '#SUITS[suit][rank]'
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = 'local _x =.*\n.*\n'
+position = 'at'
+payload = 'local t_s = Sprite(0,0,0.3,0.3,G.ASSET_ATLAS[SMODS.Suits[v][G.SETTINGS.colourblind_option and "hc_ui_atlas" or "lc_ui_atlas"] or ("ui_"..(G.SETTINGS.colourblind_option and "2" or "1"))], SMODS.Suits[v].ui_pos)'

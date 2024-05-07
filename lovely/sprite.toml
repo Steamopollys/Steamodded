@@ -1,0 +1,63 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Sprite API
+
+# Card:set_sprites()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = '(?<start>.*)G.ASSET_ATLAS\["centers"\](?<end>.*)'
+position = 'at'
+payload = "$start G.ASSET_ATLAS[(G.GAME.viewed_back or G.GAME.selected_back) and ((G.GAME.viewed_back or G.GAME.selected_back)[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or (G.GAME.viewed_back or G.GAME.selected_back).atlas) or 'centers']$end"
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = '(?<start>.*)G.ASSET_ATLAS\[_center.atlas or _center.set\](?<end>.*)'
+position = 'at'
+payload = "$start G.ASSET_ATLAS[SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas or _center.set]$end"
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<start>.*)G.ASSET_ATLAS\\['Joker'\\](?<end>.*)"
+position = 'at'
+payload = "$start G.ASSET_ATLAS[_center[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.atlas or _center.set]$end"
+
+[[patches]]
+[patches.regex]
+target = 'card.lua' 
+pattern = '(?<start>.*)G.ASSET_ATLAS\[_center.set\](?<end>.*)'
+position = 'at'
+payload = "$start G.ASSET_ATLAS[_center[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.atlas or _center.set]$end"
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = "(?<indent>[\t ]*)\\(_center.set == 'Joker' and G.j_undiscovered.pos\\) or \n(.*\n){6}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+SMODS.UndiscoveredSprites[_center.set].pos)
+
+'''
+[[patches]]
+[patches.regex]
+target = 'card.lua' 
+pattern = '(?<start>.*)G.ASSET_ATLAS\[_front.atlas\](?<end>.*)'
+position = 'at'
+payload = '$start G.ASSET_ATLAS[G.SETTINGS.colourblind_option and _front.hc_atlas or _front.lc_atlas] or G.ASSET_ATLAS[_front.atlas]$end'
+
+
+# Game:set_render_settings()
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "self.ASSET_ATLAS.Spectral = self.ASSET_ATLAS.Tarot"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = "if SMODS.booted then SMODS.injectObjects(SMODS.Sprites) end"

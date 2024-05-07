@@ -1,0 +1,267 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Blind API
+
+# Blind:set_blind()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "G.GAME.last_blind = G.GAME.last_blind or {}"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.atlas then
+	self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[obj.atlas]
+	self.children.animatedSprite:reset()
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '--add new debuffs'
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.set_blind and type(obj.set_blind) == 'function' then
+	obj.set_blind(self, blind, reset, silent)
+end
+'''
+
+# Blind:disable()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.name == 'The Water' then"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.disable and type(obj.disable) == 'function' then
+	obj.disable(self)
+end
+'''
+
+# Blind:defeat()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.name == 'The Manacle' and not self.disabled then"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.defeat and type(obj.defeat) == 'function' then
+	obj.defeat(self)
+end
+'''
+
+# Blind:debuff_card()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.debuff and not self.disabled and card.area ~= G.jokers then"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.debuff_card and type(obj.debuff_card) == 'function' then
+	if obj.debuff_card(self, card, from_blind) then return end
+end
+'''
+
+# Blind:stay_flipped()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if area == G.hand then"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.stay_flipped and type(obj.stay_flipped) == 'function' then
+	return obj.stay_flipped(self, area, card)
+end
+'''
+
+# Blind:drawn_to_hand()
+[[patches]]
+[patches.regex]
+target = 'blind.lua'
+pattern = "(?<indent>[\t ]*)if self.name == 'Cerulean Bell' then\n"
+position = 'before'
+line_prepend = '$indent'
+payload = '''
+local obj = self.config.blind
+if obj.drawn_to_hand and type(obj.drawn_to_hand) == 'function' then
+	obj.drawn_to_hand(self)
+end
+'''
+
+# Blind:debuff_hand()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.debuff then"
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.debuff_hand and type(obj.debuff_hand) == 'function' then
+	obj.debuff_hand(self, cards, hand, handname, check)
+end
+'''
+
+# Blind:modify_hand()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.disabled then return mult, hand_chips, false end"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.modify_hand and type(obj.modify_hand) == 'function' then
+	return obj.modify_hand(self, cards, poker_hands, text, mult, hand_chips)
+end
+'''
+
+# Blind:press_play()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = 'if self.name == "The Hook" then'
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.press_play and type(obj.press_play) == 'function' then
+	return obj.press_play(self)
+end
+'''
+
+# Blind:get_loc_debuff_text()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = 'return disp_text'
+position = 'before'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.get_loc_debuff_text and type(obj.get_loc_debuff_text) == 'function' then
+	return obj.get_loc_debuff_text(self)
+end
+'''
+
+# Blind:set_text()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = 'local loc_vars = nil'
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+local obj = self.config.blind
+if obj.loc_def and type(obj.def) == 'function' then
+	loc_vars = obj.loc_def(self)
+end
+'''
+
+# Blind:load()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = 'if G.P_BLINDS[blindTable.config_blind] then'
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+if self.config.blind.atlas then
+	self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[self.config.blind.atlas]
+end
+'''
+
+
+# create_UIBox_blind_choice
+# create_UIBox_round_scores_row
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)blind_choice.animation = AnimatedSprite\\(0,0, 1.4, 1.4, G.ANIMATION_ATLAS\\[(?<atlas>'blind_chips')\\],  blind_choice.config.pos\\)"
+position = 'at'
+root_capture = 'atlas'
+payload = "blind_choice.config.atlas or 'blind_chips'"
+
+# create_UIBox_your_collection_blinds
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = "(?<indent>[\t ]*)local temp_blind = AnimatedSprite\\(0,0,1.3,1.3, G.ANIMATION_ATLAS\\[(?<atlas>'blind_chips')\\], discovered and v.pos or G.b_undiscovered.pos\\)"
+position = 'at'
+root_capture = 'atlas'
+payload = "discovered and v.atlas or 'blind_chips'"
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = 'blind_matrix[math.ceil((k-1)/5+0.001)][1+((k-1)%5)] = {n=G.UIT.C, config={align = "cm", padding = 0.1}, nodes={'
+overwrite = true
+match_indent = true
+position = 'at'
+payload = '''
+local blinds_per_row = math.ceil(#blind_tab / 6)
+local row = math.ceil((k - 1) / blinds_per_row + 0.001)
+table.insert(blind_matrix[row], {
+	n = G.UIT.C,
+	config = { align = "cm", padding = 0.1 },
+	nodes = {
+		((k - blinds_per_row) % (2 * blinds_per_row) == 1) and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
+		{ n = G.UIT.O, config = { object = temp_blind, focus_with_object = true } },
+		((k - blinds_per_row) % (2 * blinds_per_row) == 0) and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
+	}
+})
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = '[\t ]*\(k==6 or k ==16 or k == 26\) and \{n=G.UIT.B, config=\{h=0.2,w=0.5\}\} or nil,\n[\t ]*\{n=G.UIT.O, config=\{object = temp_blind, focus_with_object = true\}\},\n[\t ]*\(k==5 or k ==15 or k == 25\) and \{n=G.UIT.B, config=\{h=0.2,w=0.5\}\} or nil,\n[\t ]*\}\}'
+position = 'at'
+payload = ''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = 'table.sort(blind_tab, function (a, b) return a.order < b.order end)'
+overwrite = true
+match_indent = true
+position = 'at'
+payload = '''
+table.sort(blind_tab, function(a, b) return a.order + (a.boss and a.boss.showdown and 100 or 0) < b.order + (b.boss and b.boss.showdown and 100 or 0) end)
+'''
+
+# add_round_eval_row
+[[patches]]
+[patches.regex]
+target = 'function/common_events.lua'
+pattern = "(?<indent>[\t ]*)local blind_sprite = AnimatedSprite\\(0, 0, 1.2,1.2, G.ANIMATION_ATLAS\\[(?<atlas>'blind_chips')\\], copy_table\\(G.GAME.blind.pos\\)\\)"
+root_capture = 'atlas'
+position = 'at'
+payload = "G.GAME.blind.config.blind.atlas or 'blind_chips'"

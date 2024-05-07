@@ -1,0 +1,57 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Back API
+
+# Back:init()
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = "if not selected_back then selected_back = G.P_CENTERS.b_red end"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = "self.atlas = selected_back.atlas"
+
+# Back:change_to()
+
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = "if not new_back then new_back = G.P_CENTERS.b_red end"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = "self.atlas = new_back.atlas"
+
+# G.FUNCS.change_viewed_back
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = "G.PROFILES[G.SETTINGS.profile].MEMORY.deck = args.to_val"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+for key, val in pairs(G.sticker_card.area.cards) do
+	val.children.back = false
+	val:set_ability(val.config.center, true)
+end
+'''
+
+# Back:apply_to_run()
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = "function Back:apply_to_run()"
+position = 'after'
+match_indent = true
+overwrite = false
+payload = '''
+	local obj = self.effect.center
+	if obj.apply_to_run and type(obj.apply_to_run) == 'function' then
+		obj.apply_to_run(self)
+	end
+'''
