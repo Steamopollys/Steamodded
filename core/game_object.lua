@@ -78,24 +78,23 @@ function loadAPIs()
     function SMODS.GameObject:take_ownership(key, obj)
         key = (self.omit_prefix or key:sub(1, #self.prefix + 1) == self.prefix .. '_') and key or
             string.format('%s_%s', self.prefix, key)
-        local o = self:get_obj(key)
+        local o = self.obj_table[key] or self:get_obj(key)
         if not o then
-            sendWarnMessage(
-                string.format('Tried to take ownership of non-existent %s: %s', self.set or self.__name, key),
-                'CenterAPI')
-            return nil
-        end
-        if o.mod then
-            sendWarnMessage(string.format('Failed to take ownership of %s: %s. Object already belongs to %s.',
-                self.set or self.__name, key, o.mod.name))
-            return nil
+            error(
+                string.format('Cannot take ownership of %s %s: Does not exist.', self.set or self.__name, key)
+            )
         end
         setmetatable(o, self)
-        o.mod = SMODS.current_mod
-        o.key = key
-        o.rarity_original = o.rarity
-        -- preserve original text unless it's changed
-        o.loc_txt = {}
+        if o.mod then
+            o.dependencies = o.dependencies or {}
+            table.insert(o.dependencies, SMODS.current_mod.id)
+        else
+            o.mod = SMODS.current_mod
+            o.key = key
+            o.rarity_original = o.rarity
+            -- preserve original text unless it's changed
+            o.loc_txt = {}
+        end
         for k, v in pairs(obj) do o[k] = v end
         o.taken_ownership = true
         return o
