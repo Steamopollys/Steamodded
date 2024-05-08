@@ -1790,7 +1790,7 @@ function loadAPIs()
         pos = {x = 2, y = 0},
         sticker_pos = {x = 3, y = 0},
         modifiers = function()
-            G.GAME.modifiers.scaling = 2
+            G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 2)
         end,
         color = G.C.GREEN,
         loc_txt = {}
@@ -1832,7 +1832,7 @@ function loadAPIs()
         pos = {x = 0, y = 1},
         sticker_pos = {x = 1, y = 1},
         modifiers = function()
-            G.GAME.modifiers.scaling = 3
+            G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 3)
         end,
         color = G.C.PURPLE,
         loc_txt = {}
