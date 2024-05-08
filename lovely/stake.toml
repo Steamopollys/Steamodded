@@ -93,6 +93,16 @@ do
 match_indent = true
 overwrite = true
 
+# Stake Sprites
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'local stake_sprite = Sprite(0,0,_scale*1,_scale*1,G.ASSET_ATLAS["chips"], G.P_CENTER_POOLS.Stake[_stake].pos)'
+position = "at"
+payload = 'local stake_sprite = Sprite(0,0,_scale*1,_scale*1,G.ASSET_ATLAS[G.P_CENTER_POOLS.Stake[_stake].atlas], G.P_CENTER_POOLS.Stake[_stake].pos)'
+match_indent = true
+overwrite = true
+
 # Achievements and unlocks
 [[patches]]
 [patches.pattern]
