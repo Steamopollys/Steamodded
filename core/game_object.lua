@@ -1637,6 +1637,7 @@ function loadAPIs()
             'applied_stakes'
         },
         inject = function(self)
+            -- Inject stake in the correct spot
             local count = #G.P_CENTER_POOLS[self.set]+1
             if self.above_stake then
             count = G.P_STAKES[self.prefix.."_"..self.above_stake].stake_level+1
@@ -1659,6 +1660,7 @@ function loadAPIs()
             for i = 1, #G.P_CENTER_POOLS[self.set] do
                 G.C.STAKES[i] = G.P_CENTER_POOLS[self.set][i].color or G.C.WHITE
             end
+            -- Localization text for applying stakes
             if next(self.loc_txt) then
             local applied_text = "{s:0.8}Applies "
             for _, v in pairs(self.applied_stakes) do
@@ -1668,12 +1670,26 @@ function loadAPIs()
             if (applied_text == "{s:0.8}Applie") then applied_text = "{s:0.8}" end
             self.loc_txt.text[#self.loc_txt.text+1] = applied_text
             end
+            -- Sticker sprites (stake_ prefix is removed for vanilla compatiblity)
+            if self.sticker_pos ~= nil then
+                if self.sticker_atlas ~= nil then
+                    G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.sticker_atlas], self.sticker_pos)
+                else
+                    G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS["stickers"], self.sticker_pos)
+                end
+                G.sticker_map[self.stake_level] = self.key:sub(7)
+            else
+                G.sticker_map[self.stake_level] = nil
+            end
         end,
         process_loc_text = function(self)
-        -- empty loc_txt indicates there are existing values that shouldn't be changed
-        if next(self.loc_txt) then
-            SMODS.process_loc_text(G.localization.descriptions[self.set], self.key, self.loc_txt)
-        end
+            -- empty loc_txt indicates there are existing values that shouldn't be changed or it isn't necessary
+            if next(self.loc_txt) then
+                SMODS.process_loc_text(G.localization.descriptions[self.set], self.key, self.loc_txt)
+            end
+            if self.sticker_loc_txt and next(self.sticker_loc_txt) then
+                SMODS.process_loc_text(G.localization.descriptions["Other"], self.key:sub(7).."_sticker", self.sticker_loc_txt)
+            end
         end,
         get_obj = function(self, key) return G.P_STAKES[key] end
     }
@@ -1712,102 +1728,121 @@ function loadAPIs()
     end
     end
 
+    -- Stickers
+    local startup = G.start_up
+
     --Register vanilla stakes
     G.P_CENTER_POOLS['Stake'] = {}
     G.P_STAKES = {}
     SMODS.Stake({
         name = "White Stake",
-        key = "white",
-    unlocked_stake = "red",
-    unlocked = true,
-    applied_stakes = {},
+        key = "stake_white",
+        omit_prefix = true,
+        unlocked_stake = "red",
+        unlocked = true,
+        applied_stakes = {},
         pos = {x = 0, y = 0},
-    color = G.C.WHITE,
+        sticker_pos = {x = 1, y = 0},
+        color = G.C.WHITE,
         loc_txt = {}
     }):register()
     SMODS.Stake({
         name = "Red Stake",
-        key = "red",
-    unlocked_stake = "green",
-    applied_stakes = {"white"},
+        key = "stake_red",
+        omit_prefix = true,
+        unlocked_stake = "green",
+        applied_stakes = {"white"},
         pos = {x = 1, y = 0},
-    modifiers = function()
-        G.GAME.modifiers.no_blind_reward = G.GAME.modifiers.no_blind_reward or {}
-        G.GAME.modifiers.no_blind_reward.Small = true
-    end,
-    color = G.C.RED,
+        sticker_pos = {x = 2, y = 0},
+        modifiers = function()
+            G.GAME.modifiers.no_blind_reward = G.GAME.modifiers.no_blind_reward or {}
+            G.GAME.modifiers.no_blind_reward.Small = true
+        end,
+        color = G.C.RED,
         loc_txt = {}
     }):register()
     SMODS.Stake({
         name = "Green Stake",
-        key = "green",
-    unlocked_stake = "black",
-    applied_stakes = {"red"},
+        key = "stake_green",
+        omit_prefix = true,
+        unlocked_stake = "black",
+        applied_stakes = {"red"},
         pos = {x = 2, y = 0},
-    modifiers = function()
-        G.GAME.modifiers.scaling = 2
-    end,
-    color = G.C.GREEN,
+        sticker_pos = {x = 3, y = 0},
+        modifiers = function()
+            G.GAME.modifiers.scaling = 2
+        end,
+        color = G.C.GREEN,
         loc_txt = {}
     }):register()
     SMODS.Stake({
         name = "Black Stake",
-        key = "black",
-    unlocked_stake = "blue",
-    applied_stakes = {"green"},
+        key = "stake_black",
+        omit_prefix = true,
+        unlocked_stake = "blue",
+        applied_stakes = {"green"},
         pos = {x = 4, y = 0},
-    modifiers = function()
-        G.GAME.modifiers.enable_eternals_in_shop = true
-    end,
-    color = G.C.BLACK,
+        sticker_pos = {x = 0, y = 1},
+        modifiers = function()
+            G.GAME.modifiers.enable_eternals_in_shop = true
+        end,
+        color = G.C.BLACK,
         loc_txt = {}
     }):register()
     SMODS.Stake({
         name = "Blue Stake",
-        key = "blue",
-    unlocked_stake = "purple",
-    applied_stakes = {"black"},
+        key = "stake_blue",
+        omit_prefix = true,
+        unlocked_stake = "purple",
+        applied_stakes = {"black"},
         pos = {x = 3, y = 0},
-    modifiers = function()
-        G.GAME.starting_params.discards = G.GAME.starting_params.discards - 1
-    end,
-    color = G.C.BLUE,
+        sticker_pos = {x = 4, y = 0},
+        modifiers = function()
+            G.GAME.starting_params.discards = G.GAME.starting_params.discards - 1
+        end,
+        color = G.C.BLUE,
         loc_txt = {}
     }):register()
     SMODS.Stake({
         name = "Purple Stake",
-        key = "purple",
-    unlocked_stake = "orange",
-    applied_stakes = {"blue"},
+        key = "stake_purple",
+        omit_prefix = true,
+        unlocked_stake = "orange",
+        applied_stakes = {"blue"},
         pos = {x = 0, y = 1},
-    modifiers = function()
-        G.GAME.modifiers.scaling = 3
-    end,
-    color = G.C.PURPLE,
+        sticker_pos = {x = 1, y = 1},
+        modifiers = function()
+            G.GAME.modifiers.scaling = 3
+        end,
+        color = G.C.PURPLE,
         loc_txt = {}
     }):register()
     SMODS.Stake({
         name = "Orange Stake",
-        key = "orange",
-    unlocked_stake = "gold",
-    applied_stakes = {"purple"},
+        key = "stake_orange",
+        omit_prefix = true,
+        unlocked_stake = "gold",
+        applied_stakes = {"purple"},
         pos = {x = 1, y = 1},
-    modifiers = function()
-        G.GAME.modifiers.enable_perishables_in_shop = true
-    end,
-    color = G.C.ORANGE,
+        sticker_pos = {x = 2, y = 1},
+        modifiers = function()
+            G.GAME.modifiers.enable_perishables_in_shop = true
+        end,
+        color = G.C.ORANGE,
         loc_txt = {}
     }):register()
     SMODS.Stake({
         name = "Gold Stake",
-        key = "gold",
-    applied_stakes = {"orange"},
+        key = "stake_gold",
+        omit_prefix = true,
+        applied_stakes = {"orange"},
         pos = {x = 2, y = 1},
-    modifiers = function()
-        G.GAME.modifiers.enable_rentals_in_shop = true
-    end,
-    color = G.C.GOLD,
-    shiny = true,
+        sticker_pos = {x = 3, y = 1},
+        modifiers = function()
+            G.GAME.modifiers.enable_rentals_in_shop = true
+        end,
+        color = G.C.GOLD,
+        shiny = true,
         loc_txt = {}
     }):register()
 end
