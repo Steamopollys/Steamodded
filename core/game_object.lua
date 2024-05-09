@@ -522,7 +522,7 @@ function loadAPIs()
             SMODS.insert_pool(G.P_CENTER_POOLS['Consumeables'], self)
             self.type = SMODS.ConsumableTypes[self.set]
             if self.hidden then
-                self.soul_type = self.soul_type or 'Spectral'
+                self.soul_set = self.soul_set or 'Spectral'
                 self.soul_rate = self.soul_rate or 0.003
                 table.insert(self.legendaries, self)
                     
