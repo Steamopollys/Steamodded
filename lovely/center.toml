@@ -226,9 +226,11 @@ line_prepend = '$indent'
 position = 'at'
 payload = '''
 local tally = G.DISCOVER_TALLIES[v.set:lower()..'s']
-tally.of = tally.of + 1
-if v.discovered then
-	tally.tally = tally.tally + 1
+if tally then
+	tally.of = tally.of + 1
+	if v.discovered then
+		tally.tally = tally.tally + 1
+	end
 end
 '''
 
@@ -248,8 +250,8 @@ pattern = "(?<indent>[\t ]*)for _, v in pairs\\(G.DISCOVER_TALLIES\\) do\n"
 line_prepend = '$indent'
 position = 'before'
 payload = '''
-for _, v in pairs(SMODS.ConsumableTypes) do
-	G.DISCOVER_TALLIES[v.key:lower()..'s'] = {tally = 0, of = 0}
+for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+	G.DISCOVER_TALLIES[v:lower()..'s'] = {tally = 0, of = 0}
 end
 '''
 
@@ -289,4 +291,100 @@ if obj.redeem and type(obj.redeem) == 'function' then
 	obj:redeem()
 	return
 end
+'''
+
+# get_current_pool()
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "else _starting_pool, _pool_key = G.P_CENTER_POOLS[_type], _type..(_append or '')"
+match_indent = true
+overwrite = false
+position = 'before'
+payload = '''
+elseif SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].rarities then
+	local rarities = SMODS.ConsumableTypes[_type].rarities
+	local rarity = _rarity or pseudorandom('rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
+	for _, v in ipairs(rarities) do
+		if rarity <= v.rate then
+			rarity = v.key
+			break
+		else
+			rarity = rarity - v.rate
+		end
+	end
+	_starting_pool, _pool_key = SMODS.ConsumableTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1] = \"c_strength\""
+match_indent = true
+overwrite = true
+position = 'at'
+payload = '''
+if SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].default and G.P_CENTERS[SMODS.ConsumableTypes[_type].default] then
+	_pool[#_pool+1] = SMODS.ConsumableTypes[_type].default
+elseif _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1] = "c_strength"
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if v.name == 'Black Hole' or v.name == 'The Soul' then"
+match_indent = true
+overwrite = false
+position = 'at'
+payload = "if v.name == 'Black Hole' or v.name == 'The Soul' or v.hidden then"
+
+# create_card_for_shop()
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = "local total_rate = G.GAME.joker_rate + G.GAME.tarot_rate + G.GAME.planet_rate + G.GAME.playing_card_rate + G.GAME.spectral_rate"
+match_indent = true
+overwrite = false
+position = 'at'
+payload = '''
+local total_rate = G.GAME.joker_rate + G.GAME.playing_card_rate
+for _,v in ipairs(SMODS.ConsumableType.obj_buffer) do
+	total_rate = total_rate + G.GAME[v:lower()..'_rate']
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = '(?<indent>[\t ]*)for _, v in ipairs\((?<li>\{\n(.*\n){5}[\t ]*\})\) do\n'
+line_prepend = '$indent'
+position = 'at'
+payload = '''
+-- need to preserve order to leave RNG unchanged
+local rates = $li
+for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+	if not (v == 'Tarot' or v == 'Planet' or v == 'Spectral') then
+		table.insert(rates, { type = v, val = G.GAME[v:lower()..'_rate'] })
+	end
+end
+for _, v in ipairs(rates) do
+
+'''
+
+# create_card()
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if not forced_key and soulable and (not G.GAME.banned_keys['c_soul']) then"
+match_indent = true
+overwrite = false
+position = 'after'
+payload = '''
+	for _, v in ipairs(SMODS.Consumable.legendaries) do
+		if (_type == v.type.key or _type == v.soul_type) and not (G.GAME.used_jokers[v.key] and not next(find_joker("Showman")) and not v.can_repeat_soul) then
+			if pseudorandom('soul_'..v.key.._type..G.GAME.round_resets.ante) > (1 - v.soul_rate) then
+				forced_key = v.key
+			end
+		end
+	end
 '''

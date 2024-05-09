@@ -28,6 +28,7 @@ function loadAPIs()
         if not o.omit_prefix then
             o.key = string.format('%s_%s_%s', o.prefix, o.mod.prefix, o.key)
         end
+        o:register()
         return o
     end
 
@@ -229,7 +230,7 @@ function loadAPIs()
             SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_c', self.loc_txt, 'failure_c')
             SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_d_c', self.loc_txt, 'failure_d_c')
         end
-    }:register()
+    }
 
 
     -------------------------------------------------------------------------------------------------
@@ -357,6 +358,17 @@ function loadAPIs()
                 end
                 INIT_COLLECTION_CARD_ALERTS()
             end
+            if self.rarities then
+                self.rarity_pools = {}
+                local total = 0
+                for _, v in ipairs(self.rarities) do
+                    total = total + v.rate
+                end
+                for _, v in ipairs(self.rarities) do
+                    v.rate = v.rate/total
+                    self.rarity_pools[v.key] = {}
+                end
+            end
         end,
         process_loc_text = function(self)
             if not next(self.loc_txt) then return end
@@ -381,7 +393,7 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], self.key)
         end,
         loc_txt = {},
-    }:register()
+    }
     SMODS.ConsumableType {
         key = 'Planet',
         collection_rows = { 6, 6 },
@@ -394,19 +406,24 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], self.key)
         end,
         loc_txt = {},
-    }:register()
+    }
     SMODS.ConsumableType {
         key = 'Spectral',
         collection_rows = { 4, 5 },
         primary_colour = G.C.SET.Spectral,
         secondary_colour = G.C.SECONDARY_SET.Spectral,
         loc_txt = {},
-    }:register()
+    }
 
-    -- TODO
-    -- create_card_for_shop logic
-    -- create_card forcing legendary consumables
-    -- get_current_pool logic, defaults
+    local game_init_game_object_ref = Game.init_game_object
+    function Game:init_game_object()
+        local t = game_init_game_object_ref(self)
+        for _, v in pairs(SMODS.ConsumableTypes) do
+            local key = v.key:lower() .. '_rate'
+            t[key] = v.shop_rate or t[key] or 0
+        end
+        return t
+    end
 
 
     -------------------------------------------------------------------------------------------------
@@ -490,6 +507,7 @@ function loadAPIs()
         discovered = false,
         consumeable = true,
         pos = { x = 0, y = 0 },
+        legendaries = {},
         cost = 3,
         config = {},
         prefix = 'c',
@@ -503,6 +521,12 @@ function loadAPIs()
             SMODS.Center.inject(self)
             SMODS.insert_pool(G.P_CENTER_POOLS['Consumeables'], self)
             self.type = SMODS.ConsumableTypes[self.set]
+            if self.hidden then
+                self.soul_type = self.soul_type or 'Spectral'
+                self.soul_rate = self.soul_rate or 0.003
+                table.insert(self.legendaries, self)
+                    
+            end
             if self.type and self.type.inject_card and type(self.type.inject_card) == 'function' then
                 self.type.inject_card(self)
             end
@@ -576,13 +600,13 @@ function loadAPIs()
             'pos',
         }
     }
-    SMODS.UndiscoveredSprite { key = 'Joker', atlas = 'Joker', pos = G.j_undiscovered.pos }:register()
-    SMODS.UndiscoveredSprite { key = 'Edition', atlas = 'Joker', pos = G.j_undiscovered.pos }:register()
-    SMODS.UndiscoveredSprite { key = 'Tarot', atlas = 'Tarot', pos = G.t_undiscovered.pos }:register()
-    SMODS.UndiscoveredSprite { key = 'Planet', atlas = 'Tarot', pos = G.p_undiscovered.pos }:register()
-    SMODS.UndiscoveredSprite { key = 'Spectral', atlas = 'Tarot', pos = G.s_undiscovered.pos }:register()
-    SMODS.UndiscoveredSprite { key = 'Voucher', atlas = 'Voucher', pos = G.v_undiscovered.pos }:register()
-    SMODS.UndiscoveredSprite { key = 'Booster', atlas = 'Booster', pos = G.booster_undiscovered.pos }:register()
+    SMODS.UndiscoveredSprite { key = 'Joker', atlas = 'Joker', pos = G.j_undiscovered.pos }
+    SMODS.UndiscoveredSprite { key = 'Edition', atlas = 'Joker', pos = G.j_undiscovered.pos }
+    SMODS.UndiscoveredSprite { key = 'Tarot', atlas = 'Tarot', pos = G.t_undiscovered.pos }
+    SMODS.UndiscoveredSprite { key = 'Planet', atlas = 'Tarot', pos = G.p_undiscovered.pos }
+    SMODS.UndiscoveredSprite { key = 'Spectral', atlas = 'Tarot', pos = G.s_undiscovered.pos }
+    SMODS.UndiscoveredSprite { key = 'Voucher', atlas = 'Voucher', pos = G.v_undiscovered.pos }
+    SMODS.UndiscoveredSprite { key = 'Booster', atlas = 'Booster', pos = G.booster_undiscovered.pos }
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Blind
@@ -764,40 +788,29 @@ function loadAPIs()
         pos = { y = 2 },
         ui_pos = { x = 1, y = 1 },
         loc_txt = {},
-    }:register()
+    }
     SMODS.Suit {
         key = 'Clubs',
         card_key = 'C',
         pos = { y = 1 },
         ui_pos = { x = 2, y = 1 },
         loc_txt = {},
-    }:register()
+    }
     SMODS.Suit {
         key = 'Hearts',
         card_key = 'H',
         pos = { y = 0 },
         ui_pos = { x = 0, y = 1 },
         loc_txt = {},
-    }:register()
+    }
     SMODS.Suit {
         key = 'Spades',
         card_key = 'S',
         pos = { y = 3 },
         ui_pos = { x = 3, y = 1 },
         loc_txt = {},
-    }:register()
-    SMODS.Suit {
-        key = 'Hearts?',
-        card_key = 'Hq',
-        pos = { y = 0 },
-        ui_pos = { x = 0, y = 1 },
-        hc_colour = G.C.SO_2.Hearts,
-        lc_colour = G.C.SO_1.Hearts,
-        loc_txt = {
-            singular = 'Heart?',
-            plural = 'Hearts?'
-        }
-    }:register()
+    }
+
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Rank
     -------------------------------------------------------------------------------------------------
@@ -885,7 +898,7 @@ function loadAPIs()
             nominal = v,
             next = { (v + 1) .. '' },
             loc_txt = {},
-        }:register()
+        }
     end
     SMODS.Rank {
         key = '10',
@@ -894,7 +907,7 @@ function loadAPIs()
         nominal = 10,
         next = { 'Jack' },
         loc_txt = {},
-    }:register()
+    }
     SMODS.Rank {
         key = 'Jack',
         card_key = 'J',
@@ -905,7 +918,7 @@ function loadAPIs()
         shorthand = 'J',
         next = { 'Queen' },
         loc_txt = {},
-    }:register()
+    }
     SMODS.Rank {
         key = 'Queen',
         card_key = 'Q',
@@ -916,7 +929,7 @@ function loadAPIs()
         shorthand = 'Q',
         next = { 'King' },
         loc_txt = {},
-    }:register()
+    }
     SMODS.Rank {
         key = 'King',
         card_key = 'K',
@@ -927,7 +940,7 @@ function loadAPIs()
         shorthand = 'K',
         next = { 'Ace' },
         loc_txt = {},
-    }:register()
+    }
     SMODS.Rank {
         key = 'Ace',
         card_key = 'A',
@@ -938,7 +951,7 @@ function loadAPIs()
         straight_edge = true,
         next = { '2' },
         loc_txt = {},
-    }:register()
+    }
     -- make consumable effects compatible with added suits
     local function juice_flip(used_tarot)
         G.E_MANAGER:add_event(Event({
@@ -1032,7 +1045,7 @@ function loadAPIs()
             delay(0.5)
         end,
         loc_def = 0,
-    }):register()
+    })
     SMODS.Consumable:take_ownership('sigil', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1066,7 +1079,7 @@ function loadAPIs()
             delay(0.5)
         end,
         loc_def = 0,
-    }):register()
+    })
     SMODS.Consumable:take_ownership('ouija', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1096,7 +1109,7 @@ function loadAPIs()
             delay(0.5)
         end,
         loc_def = 0,
-    }):register()
+    })
     local function random_destroy(used_tarot)
         local destroyed_cards = {}
         destroyed_cards[#destroyed_cards + 1] = pseudorandom_element(G.hand.cards, pseudoseed('random_destroy'))
@@ -1164,7 +1177,7 @@ function loadAPIs()
             end
         end,
         loc_def = 0,
-    }):register()
+    })
     SMODS.Consumable:take_ownership('familiar', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1209,7 +1222,7 @@ function loadAPIs()
             end
         end,
         loc_def = 0,
-    }):register()
+    })
     SMODS.Consumable:take_ownership('incantation', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1254,7 +1267,7 @@ function loadAPIs()
             end
         end,
         loc_def = 0,
-    }):register()
+    })
     SMODS.Blind:take_ownership('eye', {
         set_blind = function(self, blind, reset, silent)
             if not reset then
@@ -1402,11 +1415,11 @@ function loadAPIs()
         for _, key in ipairs(SMODS.PokerHand.obj_buffer) do
             t.hands[key] = {}
             for k, v in pairs(SMODS.PokerHands[key]) do
+                -- G.GAME needs to be able to be serialized
                 if type(v) == 'number' or type(v) == 'boolean' or k == 'example' then
                     t.hands[key][k] = v
                 end
             end
-            sendTraceMessage(inspect(t.hands[key]))
         end
         return t
     end

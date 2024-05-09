@@ -21,6 +21,15 @@ payload = '''
 '''
 
 [[patches]]
+[patches.regex]
+target = "game.lua"
+pattern = '(?<indent>[\t ]*)cards_played = \{\n(.*\n){13}[\t ]*\},'
+position = 'at'
+line_prepend = '$indent'
+payload = 'cards_played = cards_played,'
+
+# Game:start_run()
+[[patches]]
 [patches.pattern]
 target = "game.lua"
 pattern = 'local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)'
@@ -28,15 +37,6 @@ position = 'at'
 match_indent = true
 overwrite = true
 payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].card_key'
-
-# Game:start_run()
-[[patches]]
-[patches.regex]
-target = "game.lua"
-pattern = '(?<indent>[\t ]*)cards_played = \{\n(.*\n){13}[\t ]*\},'
-position = 'at'
-line_prepend = '$indent'
-payload = 'cards_played = cards_played,'
 
 # loc_colour()
 [[patches]]
