@@ -1001,10 +1001,10 @@ function SMODS.SAVE_UNLOCKS()
 end
 
 function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
-    local target = (type(loc_txt) == 'table') and (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
+	local target = (type(loc_txt) == 'table') and (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
 	if key and (type(target) == 'table') then target = target[key] end
 	if not(type(target) == 'string' or next(target)) then return end
-    ref_table[ref_value] = target
+	ref_table[ref_value] = target
 end
 
 function SMODS.insert_pool(pool, center, replace)

@@ -1631,4 +1631,22 @@ function loadAPIs()
         SMODS.insert_pool(G.CHALLENGES, self)
     end,
     }
+
+    -------------------------------------------------------------------------------------------------
+    ----- INTERNAL API CODE GameObject._Loc
+    -------------------------------------------------------------------------------------------------
+
+    SMODS._Loc = SMODS.GameObject:extend {
+        obj_table = {},
+        obj_buffer = {},
+        silent = true,
+        __call = function() error('INTERNAL CLASS, DO NOT CALL') end,
+        injector = function()
+            for _, mod in ipairs(SMODS.mod_list) do
+                if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
+                    mod.process_loc_text()
+                end
+            end
+        end
+    }
 end
