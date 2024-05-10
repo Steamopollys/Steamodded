@@ -196,8 +196,6 @@ local function initializeModUIFunctions()
 end
 
 function initSteamodded()
-    boot_print_stage("Loading Stack Trace")
-    injectStackTrace()
     boot_print_stage("Loading APIs")
     loadAPIs()
     boot_print_stage("Loading Mods")

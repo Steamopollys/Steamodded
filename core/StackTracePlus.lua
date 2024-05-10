@@ -487,7 +487,6 @@ function injectStackTrace()
         return
     end
     stackTraceAlreadyInjected = true
-    SMODS.DebugInfo = {}
     local STP = loadStackTracePlus()
     local utf8 = require("utf8")
 
@@ -701,6 +700,8 @@ function injectStackTrace()
 
     end
 end
+
+injectStackTrace()
 
 -- ----------------------------------------------
 -- --------MOD CORE API STACKTRACE END-----------
