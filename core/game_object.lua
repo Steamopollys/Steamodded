@@ -1631,6 +1631,7 @@ function loadAPIs()
         unlocked = false,
         set = 'Stake',
         atlas = 'chips',
+        injected = false,
         required_params = {
             'name',
             'pos',
@@ -1638,20 +1639,45 @@ function loadAPIs()
             'applied_stakes'
         },
         inject = function(self)
-            -- Inject stake in the correct spot
-            local count = #G.P_CENTER_POOLS[self.set]+1
-            if self.above_stake then
-            count = G.P_STAKES[self.prefix.."_"..self.above_stake].stake_level+1
+            if not self.injected then
+                -- Inject stake in the correct spot
+                local count = #G.P_CENTER_POOLS[self.set]+1
+                if self.above_stake then
+                count = G.P_STAKES[self.prefix.."_"..self.above_stake].stake_level+1
+                end
+                self.order = count
+                self.stake_level = count
+                for _, v in pairs(G.P_STAKES) do
+                if v.stake_level >= self.stake_level then
+                    v.stake_level = v.stake_level + 1
+                    v.order = v.stake_level
+                end
+                end
+                G.P_STAKES[self.key] = self
+                -- Localization text for applying stakes
+                if next(self.loc_txt) then
+                local applied_text = "{s:0.8}Applies "
+                for _, v in pairs(self.applied_stakes) do
+                    applied_text = applied_text .. G.P_STAKES[self.prefix.."_"..v].name .. ", "
+                end
+                applied_text = applied_text:sub(1, -3)
+                if (applied_text == "{s:0.8}Applie") then applied_text = "{s:0.8}" end
+                self.loc_txt.text[#self.loc_txt.text+1] = applied_text
+                end
+                -- Sticker sprites (stake_ prefix is removed for vanilla compatiblity)
+                if self.sticker_pos ~= nil then
+                    if self.sticker_atlas ~= nil then
+                        G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.sticker_atlas], self.sticker_pos)
+                    else
+                        G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS["stickers"], self.sticker_pos)
+                    end
+                    G.sticker_map[self.stake_level] = self.key:sub(7)
+                else
+                    G.sticker_map[self.stake_level] = nil
+                end
+            else
+                G.P_STAKES[self.key] = self
             end
-            self.order = count
-            self.stake_level = count
-            for _, v in pairs(G.P_STAKES) do
-            if v.stake_level >= self.stake_level then
-                v.stake_level = v.stake_level + 1
-                v.order = v.stake_level
-            end
-            end
-            G.P_STAKES[self.key] = self
             G.P_CENTER_POOLS[self.set] = {}
             for _, v in pairs(G.P_STAKES) do
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], v)
@@ -1661,27 +1687,7 @@ function loadAPIs()
             for i = 1, #G.P_CENTER_POOLS[self.set] do
                 G.C.STAKES[i] = G.P_CENTER_POOLS[self.set][i].color or G.C.WHITE
             end
-            -- Localization text for applying stakes
-            if next(self.loc_txt) then
-            local applied_text = "{s:0.8}Applies "
-            for _, v in pairs(self.applied_stakes) do
-                applied_text = applied_text .. G.P_STAKES[self.prefix.."_"..v].name .. ", "
-            end
-            applied_text = applied_text:sub(1, -3)
-            if (applied_text == "{s:0.8}Applie") then applied_text = "{s:0.8}" end
-            self.loc_txt.text[#self.loc_txt.text+1] = applied_text
-            end
-            -- Sticker sprites (stake_ prefix is removed for vanilla compatiblity)
-            if self.sticker_pos ~= nil then
-                if self.sticker_atlas ~= nil then
-                    G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.sticker_atlas], self.sticker_pos)
-                else
-                    G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS["stickers"], self.sticker_pos)
-                end
-                G.sticker_map[self.stake_level] = self.key:sub(7)
-            else
-                G.sticker_map[self.stake_level] = nil
-            end
+            self.injected = true
         end,
         process_loc_text = function(self)
             -- empty loc_txt indicates there are existing values that shouldn't be changed or it isn't necessary
