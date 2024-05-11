@@ -388,3 +388,31 @@ payload = '''
 		end
 	end
 '''
+
+# Card:add_to_deck()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = '(?<indent>[\t ]*)if self.ability.h_size ~= 0 then\n[\t ]*G\.hand:change_size\(self.ability.h_size\)'
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+local obj = self.config.center
+if obj and obj.add_to_deck and type(obj.add_to_deck) == 'function' then
+	obj.add_to_deck(self, from_debuff)
+end
+'''
+
+# Card:remove_from_deck()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = '(?<indent>[\t ]*)if self.ability.h_size ~= 0 then\n[\t ]*G\.hand:change_size\(-self.ability.h_size\)'
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+local obj = self.config.center
+if obj and obj.remove_from_deck and type(obj.obj.remove_from_deck) == 'function' then
+	obj.remove_from_deck(self, from_debuff)
+end
+'''
