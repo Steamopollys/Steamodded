@@ -18,10 +18,10 @@ target = "main.lua"
 position = "append"
 sources = [
 	"core/core.lua",
+	"core/StackTracePlus.lua",
 	"core/game_object.lua",
 	"core/sound.lua",
 	"core/sticker.lua",
-	"core/StackTracePlus.lua",
 	"debug/debug.lua",
 	"loader/loader.lua",
 ]

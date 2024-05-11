@@ -458,9 +458,8 @@ function getDebugInfoForCrash()
     if SMODS.mod_list then
         info = info .. "\nSteamodded Mods:"
         for k, v in ipairs(SMODS.mod_list) do
-            info = info .. "\n    " .. k .. ": " ..
-                v.name .. " by " .. concatAuthors(v.author) ..
-                " [ID: " .. v.id .. (v.priority ~= 0 and (", Priority: " .. v.priority) or "") .. "]"
+            info = info .. "\n    " .. k .. ": " .. v.name .. " by " .. concatAuthors(v.author) .. " [ID: " .. v.id ..
+                       (v.priority ~= 0 and (", Priority: " .. v.priority) or "") .. "]"
             local debugInfo = v.debug_info
             if debugInfo then
                 if type(debugInfo) == "string" then
@@ -488,7 +487,6 @@ function injectStackTrace()
         return
     end
     stackTraceAlreadyInjected = true
-    SMODS.DebugInfo = {}
     local STP = loadStackTracePlus()
     local utf8 = require("utf8")
 
@@ -561,10 +559,7 @@ function injectStackTrace()
         end
 
         for l in trace:gmatch("(.-)\n") do
-            if not l:match("boot.lua") then
-                l = l:gsub("stack traceback:", "Traceback\n")
-                table.insert(err, l)
-            end
+            table.insert(err, l)
         end
 
         local p = table.concat(err, "\n")
@@ -597,6 +592,7 @@ function injectStackTrace()
         end
 
         local pos = 70
+        local arrowSize = 20
 
         local function calcEndHeight()
             local font = love.graphics.getFont()
@@ -619,6 +615,16 @@ function injectStackTrace()
             love.graphics.clear(G.C.BLACK)
             calcEndHeight()
             love.graphics.printf(p, pos, pos - scrollOffset, love.graphics.getWidth() - pos * 2)
+            if scrollOffset ~= endHeight then
+            love.graphics.polygon("fill", love.graphics.getWidth() - (pos / 2), love.graphics.getHeight() - arrowSize,
+                love.graphics.getWidth() - (pos / 2) + arrowSize, love.graphics.getHeight() - (arrowSize * 2),
+                love.graphics.getWidth() - (pos / 2) - arrowSize, love.graphics.getHeight() - (arrowSize * 2))
+            end
+            if scrollOffset ~= 0 then
+            love.graphics.polygon("fill", love.graphics.getWidth() - (pos / 2), arrowSize,
+                love.graphics.getWidth() - (pos / 2) + arrowSize, arrowSize * 2,
+                love.graphics.getWidth() - (pos / 2) - arrowSize, arrowSize * 2)
+            end
             love.graphics.present()
         end
 
@@ -694,6 +700,8 @@ function injectStackTrace()
 
     end
 end
+
+injectStackTrace()
 
 -- ----------------------------------------------
 -- --------MOD CORE API STACKTRACE END-----------
