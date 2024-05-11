@@ -1486,7 +1486,7 @@ function loadAPIs()
             local royal = true
             for j = 1, #scoring_hand do
                 local rank = SMODS.Ranks[scoring_hand[j].base.value]
-                royal = royal and not (rank.key == 'Ace' or rank.key == '10' or rank.face)
+                royal = royal and (rank.key == 'Ace' or rank.key == '10' or rank.face)
             end
             if royal then
                 disp_text = 'Royal Flush'
@@ -1929,4 +1929,33 @@ function loadAPIs()
         shiny = true,
         loc_txt = {}
     }):register()
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Tag
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Tags = {}
+    SMODS.Tag = SMODS.GameObject:extend {
+        obj_table = SMODS.Tags,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'name',
+            'loc_txt'
+        },
+        discovered = false,
+        min_ante = nil,
+        atlas = 'tags',
+        prefix = 'tag',
+        pos = { x = 0, y = 0 },
+        config = {},
+        get_obj = function(key) return G.P_TAGS[key] end,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.descriptions.Tag, self.key, self.loc_txt)
+        end,
+        inject = function(self)
+            G.P_TAGS[self.key] = self
+            SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
+        end
+    }
 end

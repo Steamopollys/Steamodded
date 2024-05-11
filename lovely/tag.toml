@@ -1,0 +1,66 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Tag API
+# Tag:apply_to_run()
+[[patches]]
+[patches.regex]
+target = "tag.lua"
+pattern = "(?<indent>[\t ]*)if (?<cond>_context.type == 'eval' then)"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local obj = SMODS.Tags[self.key]
+local res
+if obj and obj.apply and type(obj.apply) == 'function' then
+	res = obj.apply(self, _context)
+end
+if res then
+	return res
+elseif $cond
+'''
+
+# create_UIBox_your_collection_tags()
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = "(?<indent>[\t ]*)local tag_matrix = \\{(\n.*){6}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local tag_matrix = {}
+local counter = 0
+local tag_tab = {}
+for k, v in pairs(G.P_TAGS) do
+	counter = counter + 1
+	tag_tab[#tag_tab+1] = v
+end
+for i = 1, math.ceil(counter / 6) do
+	table.insert(tag_matrix, {})
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = "(?<indent>[\t ]*)(?<t>local t = create_UIBox_generic_options\\(\\{ back_func = 'your_collection', contents = \\{\n[\t ]*\\{n=G\\.UIT\\.C, config=\\{align = \"cm\", r = 0\\.1, colour = G\\.C\\.BLACK, padding = 0\\.1, emboss = 0\\.05\\}, nodes=\\{(\n.*?){2}nodes=)\\{(\n.*){5}"
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+local table_nodes = {}
+for i = 1, math.ceil(counter / 6) do
+	table.insert(table_nodes, {n=G.UIT.R, config={align = "cm"}, nodes=tag_matrix[i]})
+end
+$t table_nodes
+}
+'''
+
+# Tag:generate_UI()
+[[patches]]
+[patches.regex]
+target = "tag.lua"
+pattern = 'G.ASSET_ATLAS\["tags"\]'
+position = 'at'
+payload = 'G.ASSET_ATLAS[(not self.hide_ability) and G.P_TAGS[self.key].atlas or "tags"]'

@@ -68,7 +68,7 @@ position = 'at'
 payload = '''
 local obj = self.config.center
 if obj.loc_def and type(obj.loc_def) == 'function' then
-	loc_vars, main_start, main_end = obj.loc_def(self)
+	loc_vars, main_end, main_start = obj.loc_def(self)
 elseif $rest
 '''
 
@@ -81,7 +81,7 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 elseif _c.loc_def and type(_c.loc_def) == 'function' then
-	loc_vars, main_start, main_end = _c:loc_def(info_queue)
+	loc_vars, main_end, main_start = _c:loc_def(info_queue)
 	localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
 '''
 

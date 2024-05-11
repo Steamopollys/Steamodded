@@ -51,7 +51,7 @@ match_indent = true
 overwrite = false
 payload = '''
 	local obj = self.effect.center
-	if obj.apply_to_run and type(obj.apply_to_run) == 'function' then
-		obj.apply_to_run(self)
+	if obj.apply and type(obj.apply) == 'function' then
+		obj.apply(self)
 	end
 '''
