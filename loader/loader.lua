@@ -25,17 +25,59 @@ NFS = nativefs
 function loadMods(modsDirectory)
     SMODS.Mods = {}
     local header_components = {
-        name         = { pattern = '%-%-%- MOD_NAME: ([^\n]+)\n', required = true },
-        id           = { pattern = '%-%-%- MOD_ID: ([^ \n]+)\n', required = true },
-        author       = { pattern = '%-%-%- MOD_AUTHOR: %[(.-)%]\n', required = true, parse_array = true },
-        description  = { pattern = '%-%-%- MOD_DESCRIPTION: (.-)\n', required = true },
-        priority     = { pattern = '%-%-%- PRIORITY: (%-?%d+)\n', handle = function(x) return x and x + 0 or 0 end },
-        badge_colour = { pattern = '%-%-%- BADGE_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or '666666FF') end },
-        display_name = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
-        dependencies = { pattern = '%-%-%- DEPENDENCIES: %[(.-)%]\n', parse_array = true },
-        conflicts    = { pattern = '%-%-%- CONFLICTS: %[(.-)%]\n', parse_array = true },
-        icon_atlas   = { pattern = '%-%-%- ICON_ATLAS: (.-)\n', handle = function(x) return x or 'tags' end },
-        prefix       = { pattern = '%-%-%- PREFIX: (.-)\n' },
+        name          = { pattern = '%-%-%- MOD_NAME: ([^\n]+)\n', required = true },
+        id            = { pattern = '%-%-%- MOD_ID: ([^ \n]+)\n', required = true },
+        author        = { pattern = '%-%-%- MOD_AUTHOR: %[(.-)%]\n', required = true, parse_array = true },
+        description   = { pattern = '%-%-%- MOD_DESCRIPTION: (.-)\n', required = true },
+        priority      = { pattern = '%-%-%- PRIORITY: (%-?%d+)\n', handle = function(x) return x and x + 0 or 0 end },
+        badge_colour  = { pattern = '%-%-%- BADGE_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or '666666FF') end },
+        display_name  = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
+        dependencies  = {
+            pattern = '%-%-%- DEPENDENCIES: %[(.-)%]\n',
+            parse_array = true,
+            handle = function(x)
+                local t = {}
+                for _, v in ipairs(x) do
+                    table.insert(t, {
+                        id = v:match '(.-)[<>$]',
+                        v_geq = v:match '>=([^<>]+)',
+                        v_leq = v:match '<=([^<>]+)',
+                    })
+                end
+                return t
+            end,
+        },
+        conflicts     = {
+            pattern = '%-%-%- CONFLICTS: %[(.-)%]\n',
+            parse_array = true,
+            handle = function(x)
+                local t = {}
+                for _, v in ipairs(x) do
+                    table.insert(t, {
+                        id = v:match '(.-)[<>]',
+                        v_geq = v:match '>=([^<>]+)',
+                        v_leq = v:match '<=([^<>]+)',
+                    })
+                end
+                return t
+            end
+        },
+        icon_atlas    = { pattern = '%-%-%- ICON_ATLAS: (.-)\n', handle = function(x) return x or 'tags' end },
+        prefix        = { pattern = '%-%-%- PREFIX: (.-)\n' },
+        version       = { pattern = '%-%-%- VERSION: (.-)\n', handle = function(x) return x or '0.0.0' end },
+        l_version_geq = {
+            pattern = '%-%-%- LOADER_VERSION_GEQ: (.-)\n',
+            handle = function(x)
+                return x and x:gsub('%-STEAMODDED', '')
+            end
+        },
+        l_version_leq = {
+            pattern = '%-%-%- LOADER_VERSION_LEQ: (.-)\n',
+            handle = function(x)
+                return x and x:gsub('%-STEAMODDED', '')
+            end
+        },
+        outdated      = { pattern = 'SMODS%.INIT' }
     }
 
     -- Function to process each directory (including subdirectories) with depth tracking
@@ -60,7 +102,7 @@ function loadMods(modsDirectory)
                 -- Check the header lines using string.match
                 local headerLine = file_content:match("^(.-)\n")
                 if headerLine == "--- STEAMODDED HEADER" then
-                    boot_print_stage('Processing Mod File: '.. filename)
+                    boot_print_stage('Processing Mod File: ' .. filename)
                     local mod = {}
                     local sane = true
                     for k, v in pairs(header_components) do
@@ -88,9 +130,9 @@ function loadMods(modsDirectory)
                         sane = false
                         sendWarnMessage("Duplicate Mod ID: " .. mod.id, 'Loader')
                     end
-                    
+
                     if sane then
-                        boot_print_stage('Saving Mod Info: '..mod.id)
+                        boot_print_stage('Saving Mod Info: ' .. mod.id)
                         mod.path = directory .. '/'
                         mod.display_name = mod.display_name or mod.name
                         mod.prefix = mod.prefix or mod.id:lower():sub(1, 4)
@@ -119,7 +161,7 @@ function loadMods(modsDirectory)
         keyset[#keyset + 1] = k
     end
     table.sort(keyset)
-    
+
     local function check_dependencies(mod, seen)
         if not (mod.can_load == nil) then return mod.can_load end
         seen = seen or {}
@@ -130,26 +172,48 @@ function loadMods(modsDirectory)
             dependencies = {},
             conflicts = {},
         }
-        for _,v in ipairs(mod.conflicts or {}) do
+        for _, v in ipairs(mod.conflicts or {}) do
             -- block load even if the conflict is also blocked
-            if SMODS.Mods[v] then
+            if
+                SMODS.Mods[v.id] and
+                (not v.v_leq or SMODS.Mods[v.id].version <= v.v_leq) and
+                (not v.v_geq or SMODS.Mods[v.id].version >= v.v_geq)
+            then
                 can_load = false
-                table.insert(load_issues.conflicts, v)
+                table.insert(load_issues.conflicts, v.id..(v.v_leq and '<='..v.v_leq or '')..(v.v_geq and '>='..v.v_geq or ''))
             end
         end
         for _, v in ipairs(mod.dependencies or {}) do
             -- recursively check dependencies of dependencies to make sure they are actually fulfilled
-            if not SMODS.Mods[v] or not check_dependencies(SMODS.Mods[v], seen) then
+            if
+                not SMODS.Mods[v.id] or
+                not check_dependencies(SMODS.Mods[v.id], seen) or
+                (v.v_leq and SMODS.Mods[v.id].version > v.v_leq) or
+                (v.v_geq and SMODS.Mods[v.id].version < v.v_geq)
+            then
                 can_load = false
-                table.insert(load_issues.dependencies, v)
+                table.insert(load_issues.dependencies,
+                    v.id .. (v.v_geq and '>=' .. v.v_geq or '') .. (v.v_leq and '<=' .. v.v_leq or ''))
             end
+        end
+        if mod.outdated then
+            can_load = false
+            load_issues.outdated = true
+        end
+        local loader_version = MODDED_VERSION:gsub('%-STEAMODDED', '')
+        if
+            (mod.l_version_geq and loader_version < mod.l_version_geq) or
+            (mod.l_version_leq and loader_version > mod.l_version_geq)
+        then
+            can_load = false
+            load_issues.version_mismatch = ''..(mod.l_version_geq and '>='..mod.l_version_geq or '')..(mod.l_version_leq and '<='..mod.l_version_leq or '')
         end
         if not can_load then
             mod.load_issues = load_issues
             return false
         end
         for _, v in ipairs(mod.dependencies) do
-            SMODS.Mods[v].can_load = true
+            SMODS.Mods[v.id].can_load = true
         end
         return true
     end
@@ -165,11 +229,13 @@ function loadMods(modsDirectory)
                 assert(load(mod.content))()
             else
                 boot_print_stage('Failed to load Mod: ' .. mod.id)
-                sendWarnMessage(string.format("Mod %s was unable to load: %s%s", mod.id,
+                sendWarnMessage(string.format("Mod %s was unable to load: %s%s%s", mod.id,
+                    mod.load_issues.outdated and
+                    'Outdated: Steamodded versions 0.9.8 and below are no longer supported!\n' or '',
                     next(mod.load_issues.dependencies) and
-                    'Missing Dependencies: ' .. inspect(mod.load_issues.dependencies) or '',
+                    ('Missing Dependencies: ' .. inspect(mod.load_issues.dependencies) .. '\n') or '',
                     next(mod.load_issues.conflicts) and
-                    'Unresolved Conflicts: ' .. inspect(mod.load_issues.conflicts) or ''
+                    ('Unresolved Conflicts: ' .. inspect(mod.load_issues.conflicts) .. '\n') or ''
                 ))
             end
         end

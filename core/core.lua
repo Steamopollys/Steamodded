@@ -307,6 +307,11 @@ function buildModtag(mod)
             tag_message = tag_message .. '_c'
             table.insert(specific_vars, concatAuthors(mod.load_issues.conflicts))
         end
+        if mod.load_issues.outdated then tag_message = 'load_failure_o' end
+		if mod.load_issues.version_mismatch then
+            tag_message = 'load_failure_i'
+			specific_vars = {mod.load_issues.version_mismatch, MODDED_VERSION:gsub('-STEAMODDED', '')}
+		end
     end
 
 
@@ -357,7 +362,7 @@ end
 
 
 -- Helper function to create a clickable mod box
-local function createClickableModBox(modInfo, scale)
+local function createClickableModBox(modInfo, scale, warn)
     return { n = G.UIT.R, config = { padding = 0, align = "cm" }, nodes = {
         { n = G.UIT.C, config = { align = "cm" }, nodes = {
             buildModtag(modInfo)
@@ -367,7 +372,8 @@ local function createClickableModBox(modInfo, scale)
                 label = {" " .. modInfo.name .. " ", " By: " .. concatAuthors(modInfo.author) .. " "},
                 shadow = true,
                 scale = scale,
-                colour = G.C.BOOSTER,
+                colour = not warn and G.C.BOOSTER or G.C.RED,
+				text_colour = warn and G.C.BLACK or nil,
                 button = "openModUI_" .. modInfo.id,
                 minh = 0.8,
                 minw = 7
@@ -888,10 +894,24 @@ function SMODS.GUI.dynamicModListContent(page)
         })
     else
         local modCount = 0
-        for id, modInfo in ipairs(SMODS.mod_list) do
-            if id >= startIndex and id <= endIndex then
-                table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
-                modCount = modCount + 1
+		local id = 0
+        for _, modInfo in ipairs(SMODS.mod_list) do
+            if not modInfo.can_load then
+                id = id + 1
+                if id >= startIndex and id <= endIndex then
+                    table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5, true))
+                    modCount = modCount + 1
+                end
+                if modCount >= modsPerPage then break end
+            end
+        end
+        for _, modInfo in ipairs(SMODS.mod_list) do
+            if modInfo.can_load then
+                id = id + 1
+                if id >= startIndex and id <= endIndex then
+                    table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
+                    modCount = modCount + 1
+                end
                 if modCount >= modsPerPage then break end
             end
         end
@@ -1008,7 +1028,6 @@ function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
 end
 
 function SMODS.insert_pool(pool, center, replace)
-	sendTraceMessage(string.format('Inserting to pool: %s', center.key))
 	if replace == nil then replace = center.taken_ownership end
 	if replace then
 		for k, v in ipairs(pool) do

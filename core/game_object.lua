@@ -20,13 +20,17 @@ function loadAPIs()
     end
 
     function SMODS.GameObject:__call(o)
+        local should_prefix_atlas = o.atlas and not o.raw_atlas_key and not (self.set == 'Sprite')
         setmetatable(o, self)
         o.mod = SMODS.current_mod
         for _, v in ipairs(o.required_params or {}) do
-            assert(not (o[v] == nil), string.format('Missing required parameter for %s declaration: %s', o.set, v))
+            assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
         end
         if not o.omit_prefix then
-            o.key = string.format('%s_%s_%s', o.prefix, o.mod.prefix, o.key)
+            o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
+        end
+        if should_prefix_atlas and o.mod then
+            o.atlas = ('%s_%s'):format(o.mod.prefix, o.atlas)
         end
         o:register()
         return o
@@ -60,8 +64,8 @@ function loadAPIs()
         local o = nil
         for i, key in ipairs(self.obj_buffer) do
             o = self.obj_table[key]
-            boot_print_stage(string.format('Injecting %s: %s', o.set, o.key))
-            o.atlas = o.atlas or SMODS.Sprites[key] and o.key or o.set
+            boot_print_stage(('Injecting %s: %s'):format(o.set, o.key))
+            o.atlas = o.atlas or o.set
 
             -- Add centers to pools
             o:inject(i)
@@ -69,21 +73,22 @@ function loadAPIs()
             -- Setup Localize text
             o:process_loc_text()
 
-            sendInfoMessage(string.format(
-                'Registered game object %s of type %s with key %s',
-                o.name or o.key, o.set, o.key), o.set or 'GameObject')
+            sendInfoMessage(
+                ('Registered game object %s of type %s with key %s')
+                :format(o.name or o.key, o.set, o.key), o.set or 'GameObject')
         end
     end
 
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
     function SMODS.GameObject:take_ownership(key, obj)
         key = (self.omit_prefix or key:sub(1, #self.prefix + 1) == self.prefix .. '_') and key or
-            string.format('%s_%s', self.prefix, key)
+            ('%s_%s'):format(self.prefix, key)
         local o = self.obj_table[key] or self:get_obj(key)
         if not o then
-            error(
-                string.format('Cannot take ownership of %s %s: Does not exist.', self.set or self.__name, key)
+            sendWarnMessage(
+                ('Cannot take ownership of %s %s: Does not exist.'):format(self.set or self.__name, key)
             )
+            return
         end
         setmetatable(o, self)
         if o.mod then
@@ -139,6 +144,24 @@ function loadAPIs()
     }
 
     -------------------------------------------------------------------------------------------------
+    ----- INTERNAL API CODE GameObject._Loc
+    -------------------------------------------------------------------------------------------------
+
+    SMODS._Loc = SMODS.GameObject:extend {
+        obj_table = {},
+        obj_buffer = {},
+        silent = true,
+        __call = function() error('INTERNAL CLASS, DO NOT CALL') end,
+        injector = function()
+            for _, mod in ipairs(SMODS.mod_list) do
+                if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
+                    mod.process_loc_text()
+                end
+            end
+        end
+    }
+
+    -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Sprite
     -------------------------------------------------------------------------------------------------
 
@@ -153,10 +176,14 @@ function loadAPIs()
             'px',
             'py'
         },
+        set = 'Sprite',
         omit_prefix = true,
         register = function(self)
+            if not self.raw_key and self.mod then
+                self.key = ('%s_%s'):format(self.mod.prefix, self.key)
+            end
             if self.language then
-                self.key = string.format('%s_%s', self.key, self.language)
+                self.key = ('%s_%s'):format(self.key, self.language)
             end
             self.super.register(self)
         end,
@@ -166,7 +193,7 @@ function loadAPIs()
             if file_path == 'DEFAULT' then return end
             -- language specific sprites override fully defined sprites only if that language is set
             if self.language and not (G.SETTINGS.language == self.language) then return end
-            if not self.language and self.obj_table[string.format('%s_%s', self.key, G.SETTINGS.language)] then return end
+            if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
             self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
                 'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
             local file_data = NFS.newFileData(self.full_path)
@@ -221,6 +248,20 @@ function loadAPIs()
                         'Unresolved {C:attention}conflicts!',
                         '#2#'
                     }
+                },
+                failure_o = {
+                    text = {
+                        '{C:attention}Outdated!{} Steamodded',
+                        'versions {C:money}0.9.8{} and below',
+                        'are no longer supported.'
+                    }
+                },
+                failure_i = {
+                    text = {
+                        '{C:attention}Incompatible!{} Needs version',
+                        '#1# of Steamodded,',
+                        'but #2# is installed.'
+                    }
                 }
             }
         },
@@ -229,6 +270,8 @@ function loadAPIs()
             SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_d', self.loc_txt, 'failure_d')
             SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_c', self.loc_txt, 'failure_c')
             SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_d_c', self.loc_txt, 'failure_d_c')
+            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_o', self.loc_txt, 'failure_o')
+            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_i', self.loc_txt, 'failure_i')
         end
     }
 
@@ -621,6 +664,7 @@ function loadAPIs()
         vars = {},
         dollars = 5,
         mult = 2,
+        atlas = 'blind_chips',
         discovered = false,
         pos = { x = 0, y = 0 },
         required_params = {
@@ -647,6 +691,7 @@ function loadAPIs()
         obj_buffer = {},
         rng_buffer = { 'Purple', 'Gold', 'Blue', 'Red' },
         set = 'Seal',
+        atlas = 'centers',
         discovered = false,
         badge_colour = HEX('FFFFFF'),
         required_params = {
@@ -768,7 +813,7 @@ function loadAPIs()
                     end
                 end
             end
-            if not card_key then error(string.format('Unable to find valid ID for %s: %s', self.set, self.key)) end
+            if not card_key then error(('Unable to find valid ID for %s: %s'):format(self.set, self.key)) end
             return card_key
         end,
         process_loc_text = function(self)
@@ -1633,23 +1678,6 @@ function loadAPIs()
     }
 
     -------------------------------------------------------------------------------------------------
-    ----- INTERNAL API CODE GameObject._Loc
-    -------------------------------------------------------------------------------------------------
-
-    SMODS._Loc = SMODS.GameObject:extend {
-        obj_table = {},
-        obj_buffer = {},
-        silent = true,
-        __call = function() error('INTERNAL CLASS, DO NOT CALL') end,
-        injector = function()
-            for _, mod in ipairs(SMODS.mod_list) do
-                if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
-                    mod.process_loc_text()
-                end
-            end
-        end
-    }
-    
     ----- API CODE GameObject.Stake
     -------------------------------------------------------------------------------------------------
 
