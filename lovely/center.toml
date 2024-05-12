@@ -50,6 +50,7 @@ if obj.update and type(obj.update) == 'function' then
 end
 '''
 
+# Card:generate_UIBox_ability_table()
 [[patches]]
 [patches.regex]
 target = 'card.lua'
@@ -58,7 +59,6 @@ root_capture = 'else'
 position = 'at'
 payload = 'elseif SMODS.end_calculate_context(context) then'
 
-# Card:generate_UIBox_ability_table()
 [[patches]]
 [patches.regex]
 target = 'card.lua'
@@ -153,6 +153,16 @@ if not card.unlocked and card.check_for_unlock and type(card.check_for_unlock) =
 end
 '''
 
+# Game:init_item_prototypes()
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = 'if TESTHELPER_unlocks then v.unlocked = true; v.discovered = true;v.alerted = true end --REMOVE THIS'
+position = 'before'
+overwrite = false
+match_indent = true
+payload = 'v._d, v._u = v.discovered, v.unlocked'
+
 #Card:use_consumable()
 [[patches]]
 [patches.regex]
@@ -193,7 +203,7 @@ payload = '''
 local obj = card.config.center
 $if
 	if obj and (obj.set_card_type_badge or obj.type and obj.type.set_card_type_badge) then
-		if type(obj.type.set_card_type_badge) == 'function' then
+		if obj.type and type(obj.type.set_card_type_badge) == 'function' then
 			obj.type.set_card_type_badge(card, badges)
 		end
 		if type(obj.set_card_type_badge) == 'function' then

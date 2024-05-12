@@ -420,12 +420,12 @@ function loadAPIs()
             end
         end,
         inject_card = function(self, center)
-            if self.rarities then
+            if self.rarities and self.rarity_pools[center.rarity] then
                 SMODS.insert_pool(self.rarity_pools[center.rarity], center)
             end
         end,
         delete_card = function(self, center)
-            if self.rarities then
+            if self.rarities and self.rarity_pools[center.rarity] then
                 SMODS.remove_pool(self.rarity_pools[center.rarity], center)
             end
         end,
