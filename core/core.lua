@@ -292,7 +292,7 @@ end
 
 
 function buildModtag(mod)
-    local tag_pos, tag_message, tag_atlas = {x = 0, y = 0}, "load_success", mod.icon_atlas
+    local tag_pos, tag_message, tag_atlas = { x = 0, y = 0 }, "load_success", mod.prefix .. '_modicon'
     local specific_vars = {}
 
     if not mod.can_load then
@@ -317,7 +317,7 @@ function buildModtag(mod)
 
     local tag_sprite_tab = nil
     
-    local tag_sprite = Sprite(0, 0, 0.8*1, 0.8*1, G.ASSET_ATLAS[tag_atlas], tag_pos)
+    local tag_sprite = Sprite(0, 0, 0.8*1, 0.8*1, G.ASSET_ATLAS[tag_atlas] or G.ASSET_ATLAS['tags'], tag_pos)
     tag_sprite.T.scale = 1
     tag_sprite_tab = {n= G.UIT.C, config={align = "cm", padding = 0}, nodes={
         {n=G.UIT.O, config={w=0.8*1, h=0.8*1, colour = G.C.BLUE, object = tag_sprite, focus_with_object = true}},

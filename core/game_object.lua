@@ -67,6 +67,12 @@ function loadAPIs()
             boot_print_stage(('Injecting %s: %s'):format(o.set, o.key))
             o.atlas = o.atlas or o.set
 
+            if o._d == nil and o._u == nil then
+                o._d, o._u = o.discovered, o.unlocked
+            else
+                o.discovered, o.unlocked = o._d, o._u
+            end
+
             -- Add centers to pools
             o:inject(i)
 
@@ -413,6 +419,16 @@ function loadAPIs()
                 end
             end
         end,
+        inject_card = function(self, center)
+            if self.rarities then
+                SMODS.insert_pool(self.rarity_pools[center.rarity], center)
+            end
+        end,
+        delete_card = function(self, center)
+            if self.rarities then
+                SMODS.remove_pool(self.rarity_pools[center.rarity], center)
+            end
+        end,
         process_loc_text = function(self)
             if not next(self.loc_txt) then return end
             SMODS.process_loc_text(G.localization.misc.dictionary, 'k_' .. string.lower(self.key), self.loc_txt, 'name')
@@ -429,11 +445,13 @@ function loadAPIs()
         collection_rows = { 5, 6 },
         primary_colour = G.C.SET.Tarot,
         secondary_colour = G.C.SECONDARY_SET.Tarot,
-        inject_card = function(self)
-            SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], self)
+        inject_card = function(self, center)
+            SMODS.ConsumableType.inject_card(self, center)
+            SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], center)
         end,
-        delete_card = function(self)
-            SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], self.key)
+        delete_card = function(self, center)
+            SMODS.ConsumableType.delete_card(self, center)
+            SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
     }
@@ -442,11 +460,13 @@ function loadAPIs()
         collection_rows = { 6, 6 },
         primary_colour = G.C.SET.Planet,
         secondary_colour = G.C.SECONDARY_SET.Planet,
-        inject_card = function(self)
-            SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], self)
+        inject_card = function(self, center)
+            SMODS.ConsumableType.inject_card(self, center)
+            SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], center)
         end,
-        delete_card = function(self)
-            SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], self.key)
+        delete_card = function(self, center)
+            SMODS.ConsumableType.delete_card(self, center)
+            SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
     }
@@ -568,15 +588,14 @@ function loadAPIs()
                 self.soul_set = self.soul_set or 'Spectral'
                 self.soul_rate = self.soul_rate or 0.003
                 table.insert(self.legendaries, self)
-                    
             end
             if self.type and self.type.inject_card and type(self.type.inject_card) == 'function' then
-                self.type.inject_card(self)
+                self.type:inject_card(self)
             end
         end,
         delete = function(self)
             if self.type and self.type.delete_card and type(self.type.delete_card) == 'function' then
-                self.type.delete_card(self)
+                self.type:delete_card(self)
             end
             SMODS.remove_pool(G.P_CENTER_POOLS['Consumeables'], self.key)
             self.super.delete(self)

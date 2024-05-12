@@ -62,7 +62,6 @@ function loadMods(modsDirectory)
                 return t
             end
         },
-        icon_atlas    = { pattern = '%-%-%- ICON_ATLAS: (.-)\n', handle = function(x) return x or 'tags' end },
         prefix        = { pattern = '%-%-%- PREFIX: (.-)\n' },
         version       = { pattern = '%-%-%- VERSION: (.-)\n', handle = function(x) return x or '0.0.0' end },
         l_version_geq = {
@@ -79,6 +78,8 @@ function loadMods(modsDirectory)
         },
         outdated      = { pattern = 'SMODS%.INIT' }
     }
+    
+    local used_prefixes = {}
 
     -- Function to process each directory (including subdirectories) with depth tracking
     local function processDirectory(directory, depth)
@@ -130,12 +131,18 @@ function loadMods(modsDirectory)
                         sane = false
                         sendWarnMessage("Duplicate Mod ID: " .. mod.id, 'Loader')
                     end
+                
+                    mod.prefix = mod.prefix or (mod.id or ''):lower():sub(1, 4)
+                    if used_prefixes[mod.prefix] then
+                        sane = false
+                        sendWarnMessage(('Duplicate Mod prefix %s used by %s, %s'):format(mod.prefix, mod.id, used_prefixes[mod.prefix]))
+                    end
 
                     if sane then
                         boot_print_stage('Saving Mod Info: ' .. mod.id)
                         mod.path = directory .. '/'
                         mod.display_name = mod.display_name or mod.name
-                        mod.prefix = mod.prefix or mod.id:lower():sub(1, 4)
+                        used_prefixes[mod.prefix] = mod.id
                         mod.content = file_content
                         mod.optional_dependencies = {}
                         SMODS.Mods[mod.id] = mod

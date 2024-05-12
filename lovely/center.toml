@@ -72,7 +72,25 @@ if obj.loc_def and type(obj.loc_def) == 'function' then
 elseif $rest
 '''
 
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = 'return generate_card_ui(self.config.center, nil, loc_vars, card_type, badges, hide_desc, main_start, main_end)'
+position = 'at'
+overwrite = false
+match_indent = true
+payload = 'return generate_card_ui(self.config.center, nil, loc_vars, card_type, badges, hide_desc, main_start, main_end, self)'
+
 # generate_card_ui()
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = 'function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)'
+position = 'at'
+overwrite = false
+match_indent = true
+payload = 'function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end, card)'
+
 [[patches]]
 [patches.regex]
 target = 'functions/common_events.lua'
@@ -81,8 +99,9 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 elseif _c.loc_def and type(_c.loc_def) == 'function' then
-	loc_vars, main_end, main_start = _c:loc_def(info_queue)
-	localize{type = 'descriptions', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
+	local key
+	loc_vars, main_end, main_start, key = _c:loc_def(info_queue, card)
+	localize{type = 'descriptions', key = key or _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
 '''
 
 [[patches]]
@@ -105,7 +124,7 @@ line_prepend = '$indent'
 position = 'at'
 payload = '''
 if _c.tooltip and type(_c.tooltip) == 'function' then
-	main_end = _c:tooltip(info_queue)
+	main_end, main_start = _c:tooltip(info_queue)
 elseif $rest
 '''
 
@@ -118,6 +137,7 @@ position = 'before'
 payload = '''
 if SMODS.Seals[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end
 '''
+
 # check_for_unlock()
 [[patches]]
 [patches.regex]
@@ -172,8 +192,13 @@ position = 'at'
 payload = '''
 local obj = card.config.center
 $if
-	if obj and obj.set_card_type_badge and type(obj.set_card_type_badge) == 'function' then
-		obj.set_card_type_badge(card, badges)
+	if obj and (obj.set_card_type_badge or obj.type and obj.type.set_card_type_badge) then
+		if type(obj.type.set_card_type_badge) == 'function' then
+			obj.type.set_card_type_badge(card, badges)
+		end
+		if type(obj.set_card_type_badge) == 'function' then
+			obj.set_card_type_badge(card, badges)
+		end
 	else
 		$rest
 	end
@@ -415,4 +440,37 @@ local obj = self.config.center
 if obj and obj.remove_from_deck and type(obj.obj.remove_from_deck) == 'function' then
 	obj.remove_from_deck(self, from_debuff)
 end
+'''
+
+# G.FUNCS.use_card()
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = "if card.area then card.area:remove_card(card) end"
+match_indent = true
+overwrite = false
+position = 'at'
+payload = '''
+local nc
+if card.ability.consumeable then
+    local obj = card.config.center
+    	if obj.keep_on_use and type(obj.keep_on_use) == 'function' then
+        	nc = obj.keep_on_use(card)
+      	end
+    end
+if not nc and card.area then card.area:remove_card(card) end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = "else draw_card(G.hand, G.play, 1, 'up', true, card, nil, mute) end"
+match_indent = true
+overwrite = false
+position = 'before'
+payload = '''
+elseif nc then
+    area:remove_from_highlighted(card)
+    play_sound('cardSlide2', nil, 0.3)
+    dont_dissolve = true
 '''
