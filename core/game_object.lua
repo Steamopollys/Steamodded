@@ -185,13 +185,18 @@ function loadAPIs()
         set = 'Sprite',
         omit_prefix = true,
         register = function(self)
+            local key = self.key
             if not self.raw_key and self.mod then
-                self.key = ('%s_%s'):format(self.mod.prefix, self.key)
+                key = ('%s_%s'):format(self.mod.prefix, key)
             end
             if self.language then
-                self.key = ('%s_%s'):format(self.key, self.language)
+                key = ('%s_%s'):format(key, self.language)
             end
-            self.super.register(self)
+            if self:check_dependencies() and not self.obj_table[key] then
+                self.key = key
+                self.obj_table[self.key] = self
+                self.obj_buffer[#self.obj_buffer + 1] = self.key
+            end
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
@@ -1966,6 +1971,7 @@ function loadAPIs()
         min_ante = nil,
         atlas = 'tags',
         prefix = 'tag',
+        set = 'Tag',
         pos = { x = 0, y = 0 },
         config = {},
         get_obj = function(key) return G.P_TAGS[key] end,

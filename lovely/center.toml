@@ -7,17 +7,16 @@ priority = 0
 
 # Card:set_ability()
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "card.lua"
-pattern = "if not G.OVERLAY_MENU then "
+pattern = "(?<indent>[\t ]*)if not G\\.OVERLAY_MENU then \n"
 position = 'before'
 payload = '''
 local obj = self.config.center
 if obj.set_ability and type(obj.set_ability) == 'function' then
 	obj.set_ability(self, center, initial, delay_sprites)
 end'''
-overwrite = false
-match_indent = true
+line_prepend = '$indent'
 
 # Card:calculate_joker()
 [[patches]]
