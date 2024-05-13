@@ -20,17 +20,18 @@ function loadAPIs()
     end
 
     function SMODS.GameObject:__call(o)
-        local should_prefix_atlas = o.atlas and not o.raw_atlas_key and not (self.set == 'Sprite')
-        setmetatable(o, self)
         o.mod = SMODS.current_mod
+        if o.mod and not o.raw_atlas_key and not (self.set == 'Sprite') then
+            for _, v in ipairs({'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas'}) do
+                if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
+            end
+        end
+        setmetatable(o, self)
         for _, v in ipairs(o.required_params or {}) do
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
         end
         if not o.omit_prefix then
             o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
-        end
-        if should_prefix_atlas and o.mod then
-            o.atlas = ('%s_%s'):format(o.mod.prefix, o.atlas)
         end
         o:register()
         return o
@@ -845,6 +846,8 @@ function loadAPIs()
             if next(self.loc_txt) then
                 SMODS.process_loc_text(G.localization.misc.suits_plural, self.key, self.loc_txt, 'plural')
                 SMODS.process_loc_text(G.localization.misc.suits_singular, self.key, self.loc_txt, 'singular')
+                if type(self.lc_colour) == 'string' then self.lc_colour = HEX(self.lc_colour) end
+                if type(self.hc_colour) == 'string' then self.hc_colour = HEX(self.hc_colour) end
                 G.C.SO_1[self.key] = self.lc_colour
                 G.C.SO_2[self.key] = self.hc_colour
                 G.C.SUITS[self.key] = G.C["SO_" .. (G.SETTINGS.colourblind_option and 2 or 1)][self.key]
@@ -879,7 +882,6 @@ function loadAPIs()
         ui_pos = { x = 3, y = 1 },
         loc_txt = {},
     }
-
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Rank
     -------------------------------------------------------------------------------------------------

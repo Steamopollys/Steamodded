@@ -47,7 +47,7 @@ SMODS.UndiscoveredSprites[_center.set].pos)
 [[patches]]
 [patches.regex]
 target = 'card.lua' 
-pattern = '(?<start>.*)G.ASSET_ATLAS\[_front.atlas\](?<end>.*)'
+pattern = '(?<start>.*?)(_front\.atlas and )?G.ASSET_ATLAS\[_front\.atlas\](?<end>.*)'
 position = 'at'
 payload = '$start G.ASSET_ATLAS[G.SETTINGS.colourblind_option and _front.hc_atlas or _front.lc_atlas] or G.ASSET_ATLAS[_front.atlas]$end'
 

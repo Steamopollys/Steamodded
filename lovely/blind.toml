@@ -16,9 +16,8 @@ overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.atlas then
-	sendWarnMessage(obj.atlas)
 	self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[obj.atlas]
-	self.children.animatedSprite:reset()
+	--self.children.animatedSprite:reset()
 end
 '''
 

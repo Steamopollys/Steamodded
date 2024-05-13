@@ -39,7 +39,7 @@ function loadMods(modsDirectory)
                 local t = {}
                 for _, v in ipairs(x) do
                     table.insert(t, {
-                        id = v:match '(.-)[<>$]',
+                        id = v:match '(.-)[<>]' or v,
                         v_geq = v:match '>=([^<>]+)',
                         v_leq = v:match '<=([^<>]+)',
                     })

@@ -338,13 +338,18 @@ position = 'before'
 payload = '''
 elseif SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].rarities then
 	local rarities = SMODS.ConsumableTypes[_type].rarities
-	local rarity = _rarity or pseudorandom('rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
-	for _, v in ipairs(rarities) do
-		if rarity <= v.rate then
-			rarity = v.key
-			break
-		else
-			rarity = rarity - v.rate
+	local rarity
+	if _legendary and rarities.legendary then
+		rarity = rarities.legendary.key
+	else
+		rarity = _rarity or pseudorandom('rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
+		for _, v in ipairs(rarities) do
+			if rarity <= v.rate then
+				rarity = v.key
+				break
+			else
+				rarity = rarity - v.rate
+			end
 		end
 	end
 	_starting_pool, _pool_key = SMODS.ConsumableTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')
@@ -482,4 +487,33 @@ elseif nc then
     area:remove_from_highlighted(card)
     play_sound('cardSlide2', nil, 0.3)
     dont_dissolve = true
+'''
+
+# Card:set_sprites()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = "if not self.children.back then"
+match_indent = true
+overwrite = false
+position = 'before'
+payload = '''
+if _center.set_sprites and type(_center.set_sprites) == 'function' then
+	_center.set_sprites(self, _center, _front)
+end
+'''
+
+# Card:load()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = 'if self.config.center.name == "Half Joker" then'
+match_indent = true
+overwrite = false
+position = 'at'
+payload = '''
+local obj = self.config.center
+if obj.load and type(obj.load) == 'function' then
+	obj.load(self, cardTable, other_card)
+elseif self.config.center.name == "Half Joker" then
 '''
