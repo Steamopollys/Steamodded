@@ -100,7 +100,7 @@ For this one, go to the [release page](https://github.com/Steamopollys/steamodde
 
 - **CLOSE THE GAME !**
 - Make sure you have python3, pip3, MPocate/PLocate, 7zip-full, and the python requests library.
-- run `git clone https://github.com/Steamopollys/Steamodded.git && cd Steamodded && python3 steamodded_injector.py $($HOME/.local/share/Steam/steamapps/common/Balatro/Balatro.exe | head -n 1) $HOME/.local/share/Steam/steamapps/common/Balatro/Balatro.exe`
+- run `git clone -b dev https://github.com/Steamopollys/Steamodded.git && cd Steamodded && python3 steamodded_injector.py $($HOME/.local/share/Steam/steamapps/common/Balatro/Balatro.exe | head -n 1) $HOME/.local/share/Steam/steamapps/common/Balatro/Balatro.exe`
 - Wait for it to finish
 - And that's it! Balatro is now ready to be Modded.
 
@@ -110,7 +110,7 @@ For this one, go to the [release page](https://github.com/Steamopollys/steamodde
 
 - **CLOSE THE GAME !**
 - Make sure you have python3, pip3, MPocate/PLocate, 7zip-full, and the python requests library.
-- run `git clone https://github.com/Steamopollys/Steamodded.git && cd Steamodded && python3 steamodded_injector.py` and drag in Balatro.love from within the Package Contents of the Balatro app before hitting enter! (Should look something like `git clone https://github.com/Steamopollys/Steamodded.git && cd Steamodded && python3 steamodded_injector.py ~/Library/Application\ Support/Steam/steamapps/common/Balatro/Balatro.app/Contents/Resources/Balatro.love`)
+- run `git clone -b dev https://github.com/Steamopollys/Steamodded.git && cd Steamodded && python3 steamodded_injector.py` and drag in Balatro.love from within the Package Contents of the Balatro app before hitting enter! (Should look something like `git clone https://github.com/Steamopollys/Steamodded.git && cd Steamodded && python3 steamodded_injector.py ~/Library/Application\ Support/Steam/steamapps/common/Balatro/Balatro.app/Contents/Resources/Balatro.love`)
 - Wait for it to finish
 - And that's it! Balatro is now ready to be Modded.
 
