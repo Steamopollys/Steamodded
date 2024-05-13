@@ -1042,11 +1042,24 @@ function SMODS.insert_pool(pool, center, replace)
 end
 
 function SMODS.remove_pool(pool, key)
-	local j
-	for i, v in ipairs(pool) do
-		if v.key == key then j = i end
-	end
-	if j then return table.remove(pool, j) end
+    local j
+    for i, v in ipairs(pool) do
+        if v.key == key then j = i end
+    end
+    if j then return table.remove(pool, j) end
+end
+
+function SMODS.eval_this(_card, effects)
+    if effects then 
+        local extras = {mult = false, hand_chips = false}
+        if effects.mult_mod then mult = mod_mult(mult + effects.mult_mod);extras.mult = true end
+        if effects.chip_mod then hand_chips = mod_chips(hand_chips + effects.chip_mod);extras.hand_chips = true end
+        if effects.Xmult_mod then mult = mod_mult(mult*effects.Xmult_mod);extras.mult = true  end
+        update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult})
+        if effects.message then
+            card_eval_status_text(_card, 'jokers', nil, nil, nil, effects)
+        end
+    end
 end
 
 ----------------------------------------------

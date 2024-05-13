@@ -1985,4 +1985,36 @@ function loadAPIs()
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
         end
     }
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Sticker
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Stickers = {}
+    SMODS.Sticker = SMODS.GameObject:extend {
+        obj_table = SMODS.Stickers,
+        obj_buffer = {},
+        set = 'Sticker',
+        required_params = {
+            'key',
+            'loc_txt'
+        },
+        prefix = 'st',
+        rate = 0.3,
+        atlas = 'stickers',
+        pos = { x = 0, y = 0 },
+        colour = HEX 'FFFFFF',
+        default_compat = true,
+        compat_exceptions = {},
+        sets = { Joker = true },
+        needs_enable_flag = true,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt, 'description')
+            SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'label')
+        end,
+        inject = function() end,
+        set_sticker = function(self, card, val)
+            card.ability[self.key] = val
+        end
+    }
 end

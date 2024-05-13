@@ -13,43 +13,55 @@ pattern = "(?<indent>[\t ]*)if self.sticker then loc_vars = loc_vars or \\{\\}; 
 position = "before"
 line_prepend = "$indent"
 payload = '''
-for k, v in pairs(SMODS.Stickers) do
-	if self.ability[v.key] then
-        if v.set_badges and type(v.set_badges) == 'function' then v.set_badges(self, badges) end
+for k, v in ipairs(SMODS.Sticker.obj_buffer) do
+	if self.ability[v] then
+        badges[#badges+1] = v
     end
 end
 '''
 
 # generate_card_ui()
 [[patches]]
-[patches.regex]
+[patches.pattern]
 target = "functions/common_events.lua"
-pattern = "(?<indent>[\t ]*)if main_end then"
-position = "before"
-line_prepend = "$indent"
+pattern = "if v == 'pinned_left' then info_queue[#info_queue+1] = {key = 'pinned_left', set = 'Other'} end"
+match_indent = true
+overwrite = false
+position = "after"
 payload = '''
-if first_pass and not (_c.set == 'Edition') and badges and next(badges) then
-	for k, v in ipairs(badges) do
-        if SMODS.Stickers[v] and SMODS.Stickers[v].set_tooltip and type(SMODS.Stickers[v].set_tooltip) == 'function' then SMODS.Stickers[v].set_tooltip(_c, info_queue) end
+local sticker = SMODS.Stickers[v]
+if sticker then
+    if sticker.tooltip and type(sticker.tooltip) == 'function' then
+        sticker:tooltip(_c, info_queue)
+    else
+        info_queue[#info_queue+1] = { key = v, set = 'Other' }
     end
 end
 '''
 
 # create_card()
 [[patches]]
-[patches.regex]
+[patches.pattern]
 target = "functions/common_events.lua"
-pattern = '''(?<indent>[\t ]*)card:set_rental\(true\)\n[\s][\s][\s][\s][\s][\s][\s][\s][\s][\s][\s][\s]end'''
+pattern = "if card.ability.consumeable and not skip_materialize then card:start_materialize() end"
 position = "after"
-line_prepend = "$indent"
+match_indent = true
+overwrite = false
 payload = '''
---asdf
-for k, v in pairs(SMODS.Stickers) do
-    if pseudorandom('ssj'..v.key..G.GAME.round_resets.ante) > (1-v.chance) then
-        local sticker_obj = SMODS.Stickers[v.key]
-        if sticker_obj and sticker_obj.set_sticker and type(sticker_obj.set_sticker) == 'function' then
-            sticker_obj.set_sticker(card, true)
-        end
+for k, v in ipairs(SMODS.Sticker.obj_buffer) do
+    local sticker = SMODS.Stickers[v]
+    if
+        sticker.sets[_type] and
+        (
+            -- is center compatible
+            center[v..'_compat'] or -- explicit marker
+            (sticker.default_compat and not sticker.compat_exceptions[center.key]) or -- default yes with no exception
+            (not sticker.default_compat and sticker.compat_exceptions[center.key]) -- default no with exception
+        ) and
+        (not sticker.needs_enable_flag or G.GAME.modifiers['enable_'..v]) and
+        pseudorandom((area == G.pack_cards and 'packssj' or 'shopssj')..v..G.GAME.round_resets.ante) > (1-sticker.rate)
+    then
+        sticker:set_sticker(card, true)
     end
 end
 '''
@@ -62,15 +74,10 @@ pattern = '''(?<indent>[\t ]*)boot_timer\('splash prep', 'end',1\)'''
 position = "after"
 line_prepend = "$indent"
 payload = '''
---asdf
-for _, key in ipairs(SMODS.BUFFERS.Stickers) do
-    local asset_atlas = SMODS.Stickers[key].atlas
-    local atlas_pos = SMODS.Stickers[key].pos
-    if asset_atlas ~= "" then
-        self.shared_stickers[key] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS[asset_atlas], atlas_pos)
-    else
-        self.shared_stickers[key] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS["stickers"], atlas_pos)
-    end
+for _, key in ipairs(SMODS.Sticker.obj_buffer) do
+    local atlas = SMODS.Stickers[key].atlas
+    local pos = SMODS.Stickers[key].pos
+    self.shared_stickers[key] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS[atlas] or self.ASSET_ATLAS['stickers'], pos)
 end
 '''
 
@@ -86,7 +93,7 @@ payload = '''
 for k, v in pairs(SMODS.Stickers) do
     if self.ability[v.key] then
         if v and v.set_shader and type(v.set_shader) == 'function' then
-            v.set_shader(self)
+            v:set_shader(self)
         else
             G.shared_stickers[v.key].role.draw_major = self
             G.shared_stickers[v.key]:draw_shader('dissolve', nil, nil, nil, self.children.center)
@@ -100,14 +107,13 @@ end
 [[patches]]
 [patches.pattern]
 target = "card.lua"
-pattern = "if self.debuff then return nil end"
-position = 'before'
+pattern = "function Card:calculate_joker(context)"
+position = 'after'
 payload = '''
---asdf
 for k, v in pairs(SMODS.Stickers) do
     if self.ability[v.key] then
         if v.calculate and type(v.calculate) == 'function' then
-            v.calculate(self, context)
+            v:calculate(self, context)
         end
     end
 end
