@@ -15,10 +15,7 @@ match_indent = true
 overwrite = false
 payload = '''
 local obj = self.config.blind
-if obj.atlas then
-	self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[obj.atlas]
-	--self.children.animatedSprite:reset()
-end
+self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[obj.atlas] or G.ANIMATION_ATLAS['blind_chips']
 '''
 
 [[patches]]
@@ -179,7 +176,7 @@ match_indent = true
 overwrite = false
 payload = '''
 local obj = self.config.blind
-if obj.loc_def and type(obj.def) == 'function' then
+if obj.loc_def and type(obj.loc_def) == 'function' then
 	loc_vars = obj.loc_def(self)
 end
 '''
@@ -199,17 +196,17 @@ end
 '''
 
 
-# create_UIBox_blind_choice
-# create_UIBox_round_scores_row
+# create_UIBox_blind_choice()
+# create_UIBox_round_scores_row()
 [[patches]]
 [patches.regex]
 target = 'functions/UI_definitions.lua'
-pattern = "(?<indent>[\t ]*)blind_choice.animation = AnimatedSprite\\(0,0, 1.4, 1.4, G.ANIMATION_ATLAS\\[(?<atlas>'blind_chips')\\],  blind_choice.config.pos\\)"
+pattern = "(?<indent>[\t ]*)blind_choice.animation = AnimatedSprite\\(0,0, 1.4, 1.4, (?<atlas>G.ANIMATION_ATLAS\\['blind_chips'\\]),  blind_choice.config.pos\\)"
 position = 'at'
 root_capture = 'atlas'
-payload = "blind_choice.config.atlas or 'blind_chips'"
+payload = "G.ANIMATION_ATLAS[blind_choice.config.atlas] or G.ANIMATION_ATLAS['blind_chips']"
 
-# create_UIBox_your_collection_blinds
+# create_UIBox_your_collection_blinds()
 [[patches]]
 [patches.regex]
 target = 'functions/UI_definitions.lua'
@@ -257,11 +254,15 @@ payload = '''
 table.sort(blind_tab, function(a, b) return a.order + (a.boss and a.boss.showdown and 100 or 0) < b.order + (b.boss and b.boss.showdown and 100 or 0) end)
 '''
 
-# add_round_eval_row
+# add_round_eval_row()
 [[patches]]
-[patches.regex]
+[patches.pattern]
 target = 'function/common_events.lua'
-pattern = "(?<indent>[\t ]*)local blind_sprite = AnimatedSprite\\(0, 0, 1.2,1.2, G.ANIMATION_ATLAS\\[(?<atlas>'blind_chips')\\], copy_table\\(G.GAME.blind.pos\\)\\)"
-root_capture = 'atlas'
+pattern = "local blind_sprite = AnimatedSprite(0, 0, 1.2,1.2, G.ANIMATION_ATLAS['blind_chips'], copy_table(G.GAME.blind.pos))"
+match_indent = true
+overwrite = true
 position = 'at'
-payload = "G.GAME.blind.config.blind.atlas or 'blind_chips'"
+payload = '''
+local obj = G.GAME.blind.config.blind
+local blind_sprite = AnimatedSprite(0, 0, 1.2, 1.2, G.ANIMATION_ATLAS[obj.atlas] or G.ANIMATION_ATLAS['blind_chips'], copy_table(G.GAME.blind.pos))
+'''
