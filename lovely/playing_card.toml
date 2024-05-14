@@ -32,6 +32,17 @@ payload = 'cards_played = cards_played,'
 [[patches]]
 [patches.pattern]
 target = "game.lua"
+pattern = "if self.GAME.starting_params.erratic_suits_and_ranks then _, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic')) end"
+position = 'at'
+match_indent = true
+overwrite = true
+payload = '''if self.GAME.starting_params.erratic_suits_and_ranks then _, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic'))
+v = G.P_CARDS[k] end'''
+
+# Game:start_run()
+[[patches]]
+[patches.pattern]
+target = "game.lua"
 pattern = 'local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)'
 position = 'at'
 match_indent = true

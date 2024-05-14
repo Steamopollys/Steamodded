@@ -1441,7 +1441,7 @@ function loadAPIs()
             local royal = true
             for j = 1, #scoring_hand do
                 local rank = SMODS.Ranks[scoring_hand[j].base.value]
-                royal = royal and not (rank.key == 'Ace' or rank.key == '10' or rank.face)
+                royal = royal and (rank.key == 'Ace' or rank.key == '10' or rank.face)
             end
             if royal then
                 disp_text = 'Royal Flush'
