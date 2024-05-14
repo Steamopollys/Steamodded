@@ -1750,11 +1750,7 @@ function loadAPIs()
                 end
                 -- Sticker sprites (stake_ prefix is removed for vanilla compatiblity)
                 if self.sticker_pos ~= nil then
-                    if self.sticker_atlas ~= nil then
-                        G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.sticker_atlas], self.sticker_pos)
-                    else
-                        G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS["stickers"], self.sticker_pos)
-                    end
+                    G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.sticker_atlas] or G.ASSET_ATLAS["stickers"], self.sticker_pos)
                     G.sticker_map[self.stake_level] = self.key:sub(7)
                 else
                     G.sticker_map[self.stake_level] = nil
