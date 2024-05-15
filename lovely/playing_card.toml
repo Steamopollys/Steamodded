@@ -156,7 +156,7 @@ position = 'at'
 line_prepend = '$indent'
 payload = '''
 local rank = SMODS.Ranks[self.base.value]
-if id > 0 and rank.face or next(find_joker("Pareidolia")) then
+if (id > 0 and rank.face) or next(find_joker("Pareidolia")) then
 '''
 
 # G.UIDEF.view_deck()
