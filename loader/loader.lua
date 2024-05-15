@@ -94,7 +94,7 @@ function loadMods(modsDirectory)
             if NFS.getInfo(file_path).type == "directory" then
                 -- If it's a directory and depth is within limit, recursively process it
                 processDirectory(file_path, depth + 1)
-            elseif filename:match("%.lua$") then -- Check if the file is a .lua file
+            elseif filename:lower():match("%.lua$") then -- Check if the file is a .lua file
                 local file_content = NFS.read(file_path)
 
                 -- Convert CRLF in LF

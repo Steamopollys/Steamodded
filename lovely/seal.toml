@@ -31,7 +31,7 @@ match_indent = true
 overwrite = false
 payload = '''
 for k, v in pairs(SMODS.Seals) do
-	G.BADGE_COL[k] = v.badge_colour
+	G.BADGE_COL[k:lower()..'_seal'] = v.colour
 end
 '''
 
@@ -63,4 +63,16 @@ if obj.get_p_dollars and type(obj.get_p_dollars) == 'function' then
 	ret = ret + obj.get_p_dollars(self)
 elseif $cond
 
+'''
+
+# generate_card_ui()
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if v == 'eternal'"
+line_prepend = '$indent'
+position = 'before'
+payload = '''
+
+if SMODS.Seal.reverse_lookup[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end
 '''

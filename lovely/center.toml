@@ -134,6 +134,7 @@ pattern = "(?<indent>[\t ]*)if v == 'eternal'"
 line_prepend = '$indent'
 position = 'before'
 payload = '''
+
 if SMODS.Seals[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end
 '''
 
@@ -146,11 +147,29 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 
+local custom_check
 if not card.unlocked and card.check_for_unlock and type(card.check_for_unlock) == 'function' then
 	ret = card:check_for_unlock(args)
 	if ret then unlock_card(card) end
+	custom_check = true
 end
 '''
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if(?<a> )not card.unlocked and card.unlock_condition and args.type == 'career_stat' then"
+position = 'at'
+root_capture = 'a'
+payload = ' not custom_check and '
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = "(?<indent>[\t ]*)if(?<a> )not card.unlocked and card.unlock_condition and card.unlock_condition.type == args.type then"
+position = 'at'
+root_capture = 'a'
+payload = ' not custom_check and '
 
 # Game:init_item_prototypes()
 [[patches]]
@@ -451,7 +470,7 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 local obj = self.config.center
-if obj and obj.remove_from_deck and type(obj.obj.remove_from_deck) == 'function' then
+if obj and obj.remove_from_deck and type(obj.remove_from_deck) == 'function' then
 	obj.remove_from_deck(self, from_debuff)
 end
 '''
