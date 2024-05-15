@@ -22,7 +22,7 @@ function loadAPIs()
     function SMODS.GameObject:__call(o)
         o.mod = SMODS.current_mod
         if o.mod and not o.raw_atlas_key and not (self.set == 'Sprite') then
-            for _, v in ipairs({'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas'}) do
+            for _, v in ipairs({'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas'}) do
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
         end
@@ -279,12 +279,9 @@ function loadAPIs()
             }
         },
         process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_success', self.loc_txt, 'success')
-            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_d', self.loc_txt, 'failure_d')
-            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_c', self.loc_txt, 'failure_c')
-            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_d_c', self.loc_txt, 'failure_d_c')
-            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_o', self.loc_txt, 'failure_o')
-            SMODS.process_loc_text(G.localization.descriptions.Other, 'load_failure_i', self.loc_txt, 'failure_i')
+            for k, _ in pairs(self.loc_txt['en-us']) do
+                SMODS.process_loc_text(G.localization.descriptions.Other, 'load_'..k, self.loc_txt, k)
+            end
         end
     }
 
