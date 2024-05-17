@@ -46,12 +46,19 @@ function Custom_Play_Sound(sound_code, stop_previous_instance, volume, pitch)
         stop_previous_instance = stop_previous_instance and true
         volume = volume or 1
         s.sound:setPitch(pitch or 1)
-        local sound_vol = volume * (G.SETTINGS.SOUND.volume / 100.0) * (G.SETTINGS.SOUND.music_volume / 100.0)
+        
+        local sound_vol = volume * (G.SETTINGS.SOUND.volume / 100.0)
+        if string.find(s.sound_code,'music') then
+            sound_vol = sound_vol * (G.SETTINGS.SOUND.game_sounds_volume / 100.0)
+        else
+            sound_vol = sound_vol * (G.SETTINGS.SOUND.music_volume / 100.0)
+        end
         if sound_vol <= 0 then
             s.sound:setVolume(0)
         else
             s.sound:setVolume(sound_vol)
         end
+        
         if stop_previous_instance and s.sound:isPlaying() then
             s.sound:stop()
         end
