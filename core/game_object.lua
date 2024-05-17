@@ -283,7 +283,7 @@ function loadAPIs()
                 if next(self.loc_txt) then
                 local applied_text = "{s:0.8}Applies "
                 for _, v in pairs(self.applied_stakes) do
-                    applied_text = applied_text .. G.P_STAKES[self.prefix.."_"..v].name .. ", "
+                    applied_text = applied_text .. (G.P_STAKES[self.prefix.."_"..v].loc_txt and G.P_STAKES[self.prefix.."_"..v].loc_txt.name or G.P_STAKES[self.prefix.."_"..v].name) .. ", "
                 end
                 applied_text = applied_text:sub(1, -3)
                 if (applied_text == "{s:0.8}Applie") then applied_text = "{s:0.8}" end
