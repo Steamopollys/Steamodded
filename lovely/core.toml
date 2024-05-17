@@ -10,7 +10,6 @@ pattern = "self.SPEEDFACTOR = 1"
 position = "after"
 payload = "initSteamodded()"
 match_indent = true
-overwrite = false
 
 [[patches]]
 [patches.copy]

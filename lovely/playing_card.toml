@@ -12,7 +12,6 @@ target = 'game.lua'
 pattern = 'function Game:init_game_object()'
 position = 'after'
 match_indent = true
-overwrite = false
 payload = '''
 	local cards_played = {}
 	for _,v in ipairs(SMODS.Rank.obj_buffer) do
@@ -35,7 +34,6 @@ target = "game.lua"
 pattern = "if self.GAME.starting_params.erratic_suits_and_ranks then _, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic')) end"
 position = 'at'
 match_indent = true
-overwrite = true
 payload = '''if self.GAME.starting_params.erratic_suits_and_ranks then _, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic'))
 v = G.P_CARDS[k] end'''
 
@@ -46,7 +44,6 @@ target = "game.lua"
 pattern = 'local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)'
 position = 'at'
 match_indent = true
-overwrite = true
 payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].card_key'
 
 # loc_colour()
@@ -56,7 +53,6 @@ target = 'functions/misc_functions.lua'
 pattern = 'return G.ARGS.LOC_COLOURS[_c] or _default or G.C.UI.TEXT_DARK'
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 	for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
 		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SECONDARY_SET[v] 
@@ -85,7 +81,6 @@ target = 'functions/misc_functions.lua'
 pattern = 'local vals = {{},{},{},{},{},{},{},{},{},{},{},{},{},{}}'
 position = 'at'
 match_indent = true
-overwrite = false
 payload = '''
 local vals = {}
 for i = 1, SMODS.Rank.max_id.value do
@@ -262,7 +257,6 @@ target = 'functions/UI_definitions.lua'
 pattern = 'for i = 13, 1, -1 do'
 position = 'at'
 match_indent = true
-overwrite = false
 payload = '''
 for i = #rank_name_mapping, 1, -1 do
 '''
@@ -355,7 +349,6 @@ target = 'functions/UI_definitions.lua'
 pattern = 'function tally_sprite(pos, value, tooltip)'
 position = 'at'
 match_indent = true
-overwrite = false
 payload = 'function tally_sprite(pos, value, tooltip, suit)'
 
 # G.UIDEF.challenge_description_tab()
@@ -381,7 +374,6 @@ target = "functions/UI_definitions.lua"
 pattern = 'local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)'
 position = 'at'
 match_indent = true
-overwrite = true
 payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].card_key'
 
 [[patches]]

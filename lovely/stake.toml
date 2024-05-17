@@ -11,7 +11,6 @@ pattern = "if G.PROFILES[G.SETTINGS.profile].all_unlocked then max_stake = 8 end
 position = "at"
 payload = "if G.PROFILES[G.SETTINGS.profile].all_unlocked then max_stake = #G.P_CENTER_POOLS['Stake'] end"
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -20,7 +19,6 @@ pattern = "for i = 1, math.min(max_stake+1, 8) do"
 position = "at"
 payload = "for i = 1, math.min(max_stake+1, #G.P_CENTER_POOLS['Stake']) do"
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -29,7 +27,6 @@ pattern = "if G.GAME.stake >= 8 then"
 position = "at"
 payload = "if G.GAME.stake >= #G.P_CENTER_POOLS['Stake'] then"
 match_indent = true
-overwrite = true
 
 # Stake modifier API
 [[patches]]
@@ -39,7 +36,6 @@ pattern = "if self.GAME.stake >= 2 then"
 position = "before"
 payload = "if false then"
 match_indent = true
-overwrite = false
 
 [[patches]]
 [patches.pattern]
@@ -48,7 +44,6 @@ pattern = "if self.GAME.stake >= 8 then self.GAME.modifiers.enable_rentals_in_sh
 position = "after"
 payload = "end SMODS.setup_stake(self.GAME.stake)"
 match_indent = true
-overwrite = false
 
 # Stake shininess API
 [[patches]]
@@ -58,7 +53,6 @@ pattern = "if _stake == 8 then"
 position = "at"
 payload = "if G.P_CENTER_POOLS['Stake'][_stake].shiny then"
 match_indent = true
-overwrite = true
 
 # Override stake listing to make room for our recursive version
 [[patches]]
@@ -68,7 +62,6 @@ pattern = "for i = G.GAME.stake-1, 2, -1 do"
 position = "before"
 payload = "if false then"
 match_indent = true
-overwrite = false
 
 [[patches]]
 [patches.pattern]
@@ -77,7 +70,6 @@ pattern = 'other_col = {n=G.UIT.R, config={align = "cm", padding = 0.05, r = 0.1
 position = "before"
 payload = "end SMODS.applied_stakes_UI(G.GAME.stake, stake_desc_rows)"
 match_indent = true
-overwrite = false
 
 # Set win stake to that specified in unlocked stake
 [[patches]]
@@ -91,7 +83,6 @@ payload = '''for i = 1,
 do
 '''
 match_indent = true
-overwrite = true
 
 # Stake Sprites
 [[patches]]
@@ -101,7 +92,6 @@ pattern = 'local stake_sprite = Sprite(0,0,_scale*1,_scale*1,G.ASSET_ATLAS["chip
 position = "at"
 payload = 'local stake_sprite = Sprite(0,0,_scale*1,_scale*1,G.ASSET_ATLAS[G.P_CENTER_POOLS.Stake[_stake].atlas], G.P_CENTER_POOLS.Stake[_stake].pos)'
 match_indent = true
-overwrite = true
 
 # Achievements and unlocks
 [[patches]]
@@ -111,7 +101,6 @@ pattern = 'if highest_win >= 2 then'
 position = "at"
 payload = 'if highest_win >= G.P_STAKES["stake_red"].stake_level then'
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -120,7 +109,6 @@ pattern = 'if highest_win >= 4 then'
 position = "at"
 payload = 'if highest_win >= G.P_STAKES["stake_black"].stake_level then'
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -129,7 +117,6 @@ pattern = 'if highest_win >= 8 then'
 position = "at"
 payload = 'if highest_win >= G.P_STAKES["stake_gold"].stake_level then'
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -138,7 +125,6 @@ pattern = 'stake = 2'
 position = "at"
 payload = 'stake = G.P_STAKES["stake_red"].stake_level'
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -147,7 +133,6 @@ pattern = 'stake=3'
 position = "at"
 payload = 'stake = "stake_green"'
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -156,7 +141,6 @@ pattern = 'stake = 4'
 position = "at"
 payload = 'stake = "stake_black"'
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -165,7 +149,6 @@ pattern = 'stake=5'
 position = "at"
 payload = 'stake = "stake_blue"'
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -174,4 +157,3 @@ pattern = 'stake=7'
 position = "at"
 payload = 'stake = "stake_orange"'
 match_indent = true
-overwrite = true

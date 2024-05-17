@@ -12,7 +12,6 @@ target = 'blind.lua'
 pattern = "G.GAME.last_blind = G.GAME.last_blind or {}"
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[obj.atlas] or G.ANIMATION_ATLAS['blind_chips']
@@ -24,7 +23,6 @@ target = 'blind.lua'
 pattern = '--add new debuffs'
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.set_blind and type(obj.set_blind) == 'function' then
@@ -39,7 +37,6 @@ target = 'blind.lua'
 pattern = "if self.name == 'The Water' then"
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.disable and type(obj.disable) == 'function' then
@@ -54,7 +51,6 @@ target = 'blind.lua'
 pattern = "if self.name == 'The Manacle' and not self.disabled then"
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.defeat and type(obj.defeat) == 'function' then
@@ -69,7 +65,6 @@ target = 'blind.lua'
 pattern = "if self.debuff and not self.disabled and card.area ~= G.jokers then"
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.debuff_card and type(obj.debuff_card) == 'function' then
@@ -84,7 +79,6 @@ target = 'blind.lua'
 pattern = "if area == G.hand then"
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.stay_flipped and type(obj.stay_flipped) == 'function' then
@@ -113,7 +107,6 @@ target = 'blind.lua'
 pattern = "if self.debuff then"
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.debuff_hand and type(obj.debuff_hand) == 'function' then
@@ -128,7 +121,6 @@ target = 'blind.lua'
 pattern = "if self.disabled then return mult, hand_chips, false end"
 position = 'after'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.modify_hand and type(obj.modify_hand) == 'function' then
@@ -143,7 +135,6 @@ target = 'blind.lua'
 pattern = 'if self.name == "The Hook" then'
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.press_play and type(obj.press_play) == 'function' then
@@ -158,7 +149,6 @@ target = 'blind.lua'
 pattern = 'return disp_text'
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.get_loc_debuff_text and type(obj.get_loc_debuff_text) == 'function' then
@@ -173,7 +163,6 @@ target = 'blind.lua'
 pattern = 'local loc_vars = nil'
 position = 'after'
 match_indent = true
-overwrite = false
 payload = '''
 local obj = self.config.blind
 if obj.loc_def and type(obj.loc_def) == 'function' then
@@ -188,7 +177,6 @@ target = 'blind.lua'
 pattern = 'if G.P_BLINDS[blindTable.config_blind] then'
 position = 'after'
 match_indent = true
-overwrite = false
 payload = '''
 if self.config.blind.atlas then
 	self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[self.config.blind.atlas]
@@ -219,7 +207,6 @@ payload = "discovered and v.atlas or 'blind_chips'"
 [patches.pattern]
 target = 'functions/UI_definitions.lua'
 pattern = 'blind_matrix[math.ceil((k-1)/5+0.001)][1+((k-1)%5)] = {n=G.UIT.C, config={align = "cm", padding = 0.1}, nodes={'
-overwrite = true
 match_indent = true
 position = 'at'
 payload = '''
@@ -247,7 +234,6 @@ payload = ''
 [patches.pattern]
 target = 'functions/UI_definitions.lua'
 pattern = 'table.sort(blind_tab, function (a, b) return a.order < b.order end)'
-overwrite = true
 match_indent = true
 position = 'at'
 payload = '''
@@ -260,7 +246,6 @@ table.sort(blind_tab, function(a, b) return a.order + (a.boss and a.boss.showdow
 target = 'function/common_events.lua'
 pattern = "local blind_sprite = AnimatedSprite(0, 0, 1.2,1.2, G.ANIMATION_ATLAS['blind_chips'], copy_table(G.GAME.blind.pos))"
 match_indent = true
-overwrite = true
 position = 'at'
 payload = '''
 local obj = G.GAME.blind.config.blind

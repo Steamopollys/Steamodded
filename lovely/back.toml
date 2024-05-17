@@ -12,7 +12,6 @@ target = 'back.lua'
 pattern = "if not selected_back then selected_back = G.P_CENTERS.b_red end"
 position = 'after'
 match_indent = true
-overwrite = false
 payload = "self.atlas = selected_back.atlas"
 
 # Back:change_to()
@@ -23,7 +22,6 @@ target = 'back.lua'
 pattern = "if not new_back then new_back = G.P_CENTERS.b_red end"
 position = 'after'
 match_indent = true
-overwrite = false
 payload = "self.atlas = new_back.atlas"
 
 # G.FUNCS.change_viewed_back
@@ -33,7 +31,6 @@ target = 'functions/button_callbacks.lua'
 pattern = "G.PROFILES[G.SETTINGS.profile].MEMORY.deck = args.to_val"
 position = 'after'
 match_indent = true
-overwrite = false
 payload = '''
 for key, val in pairs(G.sticker_card.area.cards) do
 	val.children.back = false
@@ -48,7 +45,6 @@ target = 'back.lua'
 pattern = "function Back:apply_to_run()"
 position = 'after'
 match_indent = true
-overwrite = false
 payload = '''
 	local obj = self.effect.center
 	if obj.apply and type(obj.apply) == 'function' then

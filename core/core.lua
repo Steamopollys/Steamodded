@@ -362,18 +362,27 @@ end
 
 
 -- Helper function to create a clickable mod box
-local function createClickableModBox(modInfo, scale, warn)
+local function createClickableModBox(modInfo, scale)
+	local col, text_col
+    if modInfo.can_load then
+        col = G.C.BOOSTER
+    elseif modInfo.disabled then
+        col = G.C.INACTIVE
+    else
+        col = G.C.RED
+        text_col = G.C.BLACK
+    end
     return { n = G.UIT.R, config = { padding = 0, align = "cm" }, nodes = {
         { n = G.UIT.C, config = { align = "cm" }, nodes = {
             buildModtag(modInfo)
         }},
         { n = G.UIT.C, config = { padding = 0, align = "cm", }, nodes = {
             UIBox_button({
-                label = {" " .. modInfo.name .. " ", " By: " .. concatAuthors(modInfo.author) .. " "},
+                label = {" " .. modInfo.name .. " ", localize('b_by') .. concatAuthors(modInfo.author) .. " "},
                 shadow = true,
                 scale = scale,
-                colour = not warn and G.C.BOOSTER or G.C.RED,
-				text_colour = warn and G.C.BLACK or nil,
+                colour = col,
+				text_colour = text_col,
                 button = "openModUI_" .. modInfo.id,
                 minh = 0.8,
                 minw = 7
@@ -536,26 +545,7 @@ function create_UIBox_mods_button()
 													{
 														n = G.UIT.T,
 														config = {
-															text = localize('b_github_bugs_1'),
-															shadow = true,
-															scale = scale * 0.5,
-															colour = G.C.UI.TEXT_LIGHT
-														}
-                                                    },
-													
-												}
-                                            },
-											{
-												n = G.UIT.R,
-												config = {
-													padding = 0.2,
-													align = "cm"
-												},
-												nodes = {
-													{
-														n = G.UIT.T,
-														config = {
-															text = localize('b_github_bugs_2'),
+															text = localize('b_github_bugs_1')..'\n'..localize('b_github_bugs_2'),
 															shadow = true,
 															scale = scale * 0.5,
 															colour = G.C.UI.TEXT_LIGHT
@@ -800,7 +790,7 @@ local function recalculateModsList(page)
 	local currentPage = localize('k_page') .. ' ' .. page .. "/" .. totalPages
 	local pageOptions = {}
 	for i = 1, totalPages do
-		table.insert(pageOptions, (loalize('k_page') .. ' ' .. tostring(i) .. "/" .. totalPages))
+		table.insert(pageOptions, (localize('k_page') .. ' ' .. tostring(i) .. "/" .. totalPages))
 	end
 	local showingList = #SMODS.mod_list > 0
 
@@ -959,23 +949,33 @@ function SMODS.GUI.dynamicModListContent(page)
         local modCount = 0
 		local id = 0
         for _, modInfo in ipairs(SMODS.mod_list) do
-            if not modInfo.can_load then
+			if modCount >= modsPerPage then break end
+            if not modInfo.can_load and not modInfo.disabled then
                 id = id + 1
                 if id >= startIndex and id <= endIndex then
-                    table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5, true))
+                    table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
                     modCount = modCount + 1
                 end
-                if modCount >= modsPerPage then break end
             end
         end
         for _, modInfo in ipairs(SMODS.mod_list) do
+			if modCount >= modsPerPage then break end
             if modInfo.can_load then
                 id = id + 1
                 if id >= startIndex and id <= endIndex then
                     table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
                     modCount = modCount + 1
                 end
-                if modCount >= modsPerPage then break end
+            end
+        end
+		for _, modInfo in ipairs(SMODS.mod_list) do
+			if modCount >= modsPerPage then break end
+            if modInfo.disabled then
+                id = id + 1
+                if id >= startIndex and id <= endIndex then
+                    table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
+                    modCount = modCount + 1
+                end
             end
         end
     end
@@ -1087,12 +1087,11 @@ function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
     local target = (type(loc_txt) == 'table') and
     (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
     if key and (type(target) == 'table') then target = target[key] end
-    if not (type(target) == 'string' or next(target)) then return end
+    if not (type(target) == 'string' or target and next(target)) then return end
     ref_table[ref_value] = target
 end
 SMODS._loc_txt = {
     {
-		default = {},
 		['en-us'] = {
 			success = {
 				text = {
@@ -1142,7 +1141,6 @@ SMODS._loc_txt = {
 		end
     },
     {
-		default = {},
         ['en-us'] = {
             b_mods = 'Mods',
 			b_mods_cap = 'MODS',
@@ -1162,7 +1160,8 @@ SMODS._loc_txt = {
             b_disable_mod_badges = 'Disable Mod Badges',
             b_author = 'Author',
 			b_authors = 'Authors',
-			b_unknown = 'Unknown'
+            b_unknown = 'Unknown',
+			b_by = ' By: '
         },
 		load = function(self)
 			for k, _ in pairs(self['en-us']) do

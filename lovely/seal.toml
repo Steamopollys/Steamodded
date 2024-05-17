@@ -28,7 +28,6 @@ target = 'functions/UI_definitions.lua'
 pattern = 'return G.BADGE_COL[key] or {1, 0, 0, 1}'
 position = 'before'
 match_indent = true
-overwrite = false
 payload = '''
 for k, v in pairs(SMODS.Seals) do
 	G.BADGE_COL[k:lower()..'_seal'] = v.colour

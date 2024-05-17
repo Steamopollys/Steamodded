@@ -1,8 +1,6 @@
 --- STEAMODDED CORE
 --- MODULE MODLOADER
 
-SMODS.mod_priorities = {}
-SMODS.mod_list = {}
 -- Attempt to require nativefs
 local nfs_success, nativefs = pcall(require, "nativefs")
 local lovely_success, lovely = pcall(require, "lovely")
@@ -24,6 +22,8 @@ NFS = nativefs
 
 function loadMods(modsDirectory)
     SMODS.Mods = {}
+    SMODS.mod_priorities = {}
+    SMODS.mod_list = {}
     local header_components = {
         name          = { pattern = '%-%-%- MOD_NAME: ([^\n]+)\n', required = true },
         id            = { pattern = '%-%-%- MOD_ID: ([^ \n]+)\n', required = true },
@@ -127,6 +127,9 @@ function loadMods(modsDirectory)
                         end
                         mod[k] = component
                     end
+                    if NFS.getInfo(directory..'/.lovelyignore') then
+                        mod.disabled = true
+                    end
                     if SMODS.Mods[mod.id] then
                         sane = false
                         sendWarnMessage("Duplicate Mod ID: " .. mod.id, 'Loader')
@@ -207,6 +210,10 @@ function loadMods(modsDirectory)
             can_load = false
             load_issues.outdated = true
         end
+        if mod.disabled then
+            can_load = false
+            load_issues.disabled = true
+        end
         local loader_version = MODDED_VERSION:gsub('%-STEAMODDED', '')
         if
             (mod.l_version_geq and loader_version < mod.l_version_geq) or
@@ -269,6 +276,7 @@ local function initializeModUIFunctions()
 end
 
 function initSteamodded()
+    SMODS.current_mod = nil
     boot_print_stage("Loading APIs")
     loadAPIs()
     boot_print_stage("Loading Mods")

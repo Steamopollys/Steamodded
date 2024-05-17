@@ -16,7 +16,6 @@ for _,v in ipairs(SMODS.PokerHand.obj_buffer) do
 	results[v] = {}
 end
 '''
-overwrite = false
 match_indent = true
 
 [[patches]]
@@ -31,7 +30,6 @@ for _,_hand in pairs(SMODS.PokerHands) do
 	end
 end
 '''
-overwrite = false
 match_indent = true
 
 [[patches]]
@@ -61,5 +59,4 @@ for _, v in ipairs(G.handlist) do
 	end
 end
 '''
-overwrite = false
 match_indent = true

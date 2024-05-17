@@ -26,7 +26,6 @@ end
 target = "functions/common_events.lua"
 pattern = "if v == 'pinned_left' then info_queue[#info_queue+1] = {key = 'pinned_left', set = 'Other'} end"
 match_indent = true
-overwrite = false
 position = "after"
 payload = '''
 local sticker = SMODS.Stickers[v]
@@ -46,7 +45,6 @@ target = "functions/common_events.lua"
 pattern = "if card.ability.consumeable and not skip_materialize then card:start_materialize() end"
 position = "after"
 match_indent = true
-overwrite = false
 payload = '''
 for k, v in ipairs(SMODS.Sticker.obj_buffer) do
     local sticker = SMODS.Stickers[v]
@@ -118,5 +116,4 @@ for k, v in pairs(SMODS.Stickers) do
     end
 end
 '''
-overwrite = false
 match_indent = true

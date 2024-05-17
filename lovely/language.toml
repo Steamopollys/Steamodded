@@ -13,7 +13,6 @@ pattern = "G.SETTINGS.language = 'en-us'"
 position = 'before'
 payload = 'self.temp_language = self.SETTINGS.language'
 match_indent = true
-overwrite = false
 
 [[patches]]
 [patches.pattern]
@@ -22,7 +21,6 @@ pattern = "self.LANG = self.LANGUAGES[self.SETTINGS.language] or self.LANGUAGES[
 position = 'before'
 payload = 'if self.temp_language then self.SETTINGS.language = self.temp_language end'
 match_indent = true
-overwrite = false
 
 
 [[patches]]
@@ -32,7 +30,6 @@ pattern = "local localization = love.filesystem.getInfo('localization/'..G.SETTI
 position = 'at'
 payload = "local localization = self.LANG.full_path and NFS.getInfo(self.LANG.full_path) or love.filesystem.getInfo('localization/'..G.SETTINGS.language..'.lua')"
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -41,4 +38,3 @@ pattern = "self.localization = assert(loadstring(love.filesystem.read('localizat
 position = 'at'
 payload = "self.localization = assert(loadstring(self.LANG.full_path and NFS.read(self.LANG.full_path) or love.filesystem.read('localization/'..G.SETTINGS.language..'.lua')))()"
 match_indent = true
-overwrite = true
