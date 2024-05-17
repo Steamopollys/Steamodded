@@ -21,7 +21,7 @@ function loadAPIs()
 
     function SMODS.GameObject:__call(o)
         o.mod = SMODS.current_mod
-        if o.mod and not o.raw_atlas_key and not (self.set == 'Sprite') then
+        if o.mod and not o.raw_atlas_key then
             for _, v in ipairs({'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas'}) do
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
@@ -176,32 +176,29 @@ function loadAPIs()
     ----- API CODE GameObject.Sprite
     -------------------------------------------------------------------------------------------------
 
-    SMODS.Sprites = {}
-    SMODS.Sprite = SMODS.GameObject:extend {
-        obj_table = SMODS.Sprites,
+    SMODS.Atlases = {}
+    SMODS.Atlas = SMODS.GameObject:extend {
+        obj_table = SMODS.Atlases,
         obj_buffer = {},
         required_params = {
             'key',
-            'atlas',
             'path',
             'px',
             'py'
         },
-        set = 'Sprite',
+        atlas_table = 'ASSET_ATLAS',
+        set = 'Atlas',
         omit_prefix = true,
         register = function(self)
-            local key = self.key
+            if self.obj_table[self.key] then return end
             if not self.raw_key and self.mod then
-                key = ('%s_%s'):format(self.mod.prefix, key)
+                self.key = ('%s_%s'):format(self.mod.prefix, self.key)
             end
             if self.language then
-                key = ('%s_%s'):format(key, self.language)
+                self.key_noloc = self.key
+                self.key = ('%s_%s'):format(self.key, self.language)
             end
-            if self:check_dependencies() and not self.obj_table[key] then
-                self.key = key
-                self.obj_table[self.key] = self
-                self.obj_buffer[#self.obj_buffer + 1] = self.key
-            end
+            self.super.register(self)
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
@@ -226,12 +223,12 @@ function loadAPIs()
                 self.image = love.graphics.newImage(self.full_path,
                     { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             end
-            G[self.atlas:upper()][self.key] = self
+            G[self.atlas_table][self.key_noloc or self.key] = self
         end,
         process_loc_text = function() end
     }
 
-    SMODS.Sprite {
+    SMODS.Atlas {
         key = 'tag_error',
         atlas = 'ASSET_ATLAS',
         path = 'tag_error.png',
