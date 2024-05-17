@@ -1865,4 +1865,52 @@ function loadAPIs()
         custom_message_config = { message = nil, color = nil, scale = nil },
         inject = function() end,
     }
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Enhancement
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Enhancement = SMODS.Center:extend {
+        set = 'Enhanced',
+        prefix = 'm',
+        atlas = 'centers',
+        required_params = {
+            'key',
+            -- table with keys `name` and `text`
+            'loc_txt'
+        },
+    }
+    -- Note: `name`, `effect`, and `label` all serve the same purpose as
+    -- the name of the enhancement. In theory, `effect` serves to allow reusing
+    -- similar effects (ex. the Sinful jokers). But Balatro just uses them all
+    -- indiscriminately for enhancements.
+    -- `name` and `effect` are technically different for Bonus and Mult
+    -- cards but this never matters in practice; also `label` is a red herring,
+    -- I can't even find a single use of `label`.
+
+    -- It would be nice if the relevant functions for modding each class of object
+    -- would be documented.
+    -- For example, Card:set_ability sets the card's enhancement, which is not immediately
+    -- obvious.
+
+    -- TODO pos = { x = 0, y = 0 } should just be set as a default for all objects
+    -- with atlases
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Edition
+    -------------------------------------------------------------------------------------------------
+
+    -- TODO currently incomplete
+    SMODS.Edition = SMODS.Center:extend {
+        set = 'Edition',
+        prefix = 'e',
+        atlas = 'Jokers',
+        required_params = {
+            'key',
+            'loc_txt'
+        },
+        unlocked = true,
+        discovered = false,
+    }
+
 end
