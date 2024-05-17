@@ -134,7 +134,7 @@ function Game.update(arg_298_0, arg_298_1)
 		if var_298_0 and not var_298_0.children.alert then
 			var_298_0.children.alert = UIBox({
 				definition = create_UIBox_card_alert({
-					text = "Modded Version!",
+					text = localize('b_modded_version'),
 					no_bg = true,
 					scale = 0.4,
 					text_rot = -0.2
@@ -177,7 +177,7 @@ local function concatAuthors(authors)
 	if type(authors) == "table" then
 		return table.concat(authors, ", ")
 	end
-	return authors or "Unknown"
+	return authors or localize('b_unknown')
 end
 
 SMODS.customUIElements = {}
@@ -192,7 +192,7 @@ function create_UIBox_mods(arg_736_0)
 
 	local wrappedDescription = wrapText(G.ACTIVE_MOD_UI.description, maxCharsPerLine)
 
-	local authors = "Author" .. (#G.ACTIVE_MOD_UI.author > 1 and "s: " or ": ") .. concatAuthors(G.ACTIVE_MOD_UI.author)
+	local authors = localize('b_author'.. (#G.ACTIVE_MOD_UI.author > 1 and 's' or '')) .. ': ' .. concatAuthors(G.ACTIVE_MOD_UI.author)
 
 	return (create_UIBox_generic_options({
 		back_func = "mods_button",
@@ -413,7 +413,7 @@ function create_UIBox_mods_button()
 						colour = G.C.BOOSTER,
 						tabs = {
 							{
-								label = "Mods",
+								label = localize('b_mods'),
 								chosen = true,
 								tab_definition_function = function()
 									return SMODS.GUI.DynamicUIManager.initTab({
@@ -426,7 +426,7 @@ function create_UIBox_mods_button()
 							},
 							{
 
-								label = " Steamodded Credits ",
+								label = localize('b_steamodded_credits'),
 								tab_definition_function = function()
 									return {
 										n = G.UIT.ROOT,
@@ -450,7 +450,7 @@ function create_UIBox_mods_button()
 													{
 														n = G.UIT.T,
 														config = {
-															text = "Mod Loader",
+															text = localize('b_mod_loader'),
 															shadow = true,
 															scale = scale * 0.8,
 															colour = G.C.UI.TEXT_LIGHT
@@ -468,7 +468,7 @@ function create_UIBox_mods_button()
 													{
 														n = G.UIT.T,
 														config = {
-															text = "developed by ",
+															text = localize('b_developed_by'),
 															shadow = true,
 															scale = scale * 0.8,
 															colour = G.C.UI.TEXT_LIGHT
@@ -478,6 +478,33 @@ function create_UIBox_mods_button()
 														n = G.UIT.T,
 														config = {
 															text = "Steamo",
+															shadow = true,
+															scale = scale * 0.8,
+															colour = G.C.BLUE
+														}
+													}
+												}
+                                            },
+											{
+												n = G.UIT.R,
+												config = {
+													padding = 0,
+													align = "cm"
+												},
+												nodes = {
+													{
+														n = G.UIT.T,
+														config = {
+															text = localize('b_rewrite_by'),
+															shadow = true,
+															scale = scale * 0.8,
+															colour = G.C.UI.TEXT_LIGHT
+														}
+													},
+													{
+														n = G.UIT.T,
+														config = {
+															text = "Aure",
 															shadow = true,
 															scale = scale * 0.8,
 															colour = G.C.BLUE
@@ -495,9 +522,7 @@ function create_UIBox_mods_button()
 													UIBox_button({
 														minw = 3.85,
 														button = "steamodded_github",
-														label = {
-															"Github Project"
-														}
+														label = {localize('b_github_project')}
 													})
 												}
 											},
@@ -511,13 +536,51 @@ function create_UIBox_mods_button()
 													{
 														n = G.UIT.T,
 														config = {
-															text = "You can report any bugs there !",
+															text = localize('b_github_bugs_1'),
 															shadow = true,
 															scale = scale * 0.5,
 															colour = G.C.UI.TEXT_LIGHT
 														}
-													}
+                                                    },
+													
 												}
+                                            },
+											{
+												n = G.UIT.R,
+												config = {
+													padding = 0.2,
+													align = "cm"
+												},
+												nodes = {
+													{
+														n = G.UIT.T,
+														config = {
+															text = localize('b_github_bugs_2'),
+															shadow = true,
+															scale = scale * 0.5,
+															colour = G.C.UI.TEXT_LIGHT
+														}
+                                                    },
+													
+												}
+                                            },
+										}
+									}
+								end
+                            },
+                            {
+                                label = localize('b_steamodded_settings'),
+								tab_definition_function = function()
+                                    return {
+                                        n = G.UIT.ROOT,
+                                        config = {
+                                            align = "cm",
+                                            padding = 0.05,
+                                            colour = G.C.CLEAR,
+                                        },
+                                        nodes = {
+                                            create_toggle {
+												label = localize('b_disable_mod_badges')
 											}
 										}
 									}
@@ -552,7 +615,7 @@ function create_UIBox_main_menu_buttons()
 		col = true,
 		button = "mods_button",
 		colour = G.C.BOOSTER,
-		label = {"MODS"},
+		label = {localize('b_mods_cap')},
 		scale = 0.45 * 1.2
 	})
 	local menu = create_UIBox_main_menu_buttonsRef()
@@ -734,10 +797,10 @@ local function recalculateModsList(page)
 	local startIndex = (page - 1) * modsPerPage + 1
 	local endIndex = startIndex + modsPerPage - 1
 	local totalPages = math.ceil(#SMODS.mod_list / modsPerPage)
-	local currentPage = "Page " .. page .. "/" .. totalPages
+	local currentPage = localize('k_page') .. ' ' .. page .. "/" .. totalPages
 	local pageOptions = {}
 	for i = 1, totalPages do
-		table.insert(pageOptions, ("Page " .. i .. "/" .. totalPages))
+		table.insert(pageOptions, (loalize('k_page') .. ' ' .. tostring(i) .. "/" .. totalPages))
 	end
 	local showingList = #SMODS.mod_list > 0
 
@@ -782,7 +845,7 @@ function SMODS.GUI.staticModListContent()
 									{
 										n = G.UIT.T,
 										config = {
-											text = "List of Activated Mods",
+											text = localize('b_mod_list'),
 											shadow = true,
 											scale = scale * 0.6,
 											colour = G.C.UI.TEXT_LIGHT
@@ -866,7 +929,7 @@ function SMODS.GUI.dynamicModListContent(page)
                 {
                     n = G.UIT.T,
                     config = {
-                        text = "No mods have been detected...",
+                        text = localize('b_no_mods'),
                         shadow = true,
                         scale = scale * 0.5,
                         colour = G.C.UI.TEXT_DARK
@@ -882,7 +945,7 @@ function SMODS.GUI.dynamicModListContent(page)
             },
             nodes = {
                 UIBox_button({
-                    label = { "Open Mods directory" },
+                    label = { localize('b_open_mods_dir') },
                     shadow = true,
                     scale = scale,
                     colour = G.C.BOOSTER,
@@ -1021,11 +1084,93 @@ function SMODS.SAVE_UNLOCKS()
 end
 
 function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
-	local target = (type(loc_txt) == 'table') and (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
-	if key and (type(target) == 'table') then target = target[key] end
-	if not(type(target) == 'string' or next(target)) then return end
-	ref_table[ref_value] = target
+    local target = (type(loc_txt) == 'table') and
+    (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
+    if key and (type(target) == 'table') then target = target[key] end
+    if not (type(target) == 'string' or next(target)) then return end
+    ref_table[ref_value] = target
 end
+SMODS._loc_txt = {
+    {
+		default = {},
+		['en-us'] = {
+			success = {
+				text = {
+					'Mod loaded',
+					'{C:green}successfully!'
+				}
+			},
+			failure_d = {
+				text = {
+					'Missing {C:attention}dependencies!',
+					'#1#',
+				}
+			},
+			failure_c = {
+				text = {
+					'Unresolved {C:attention}conflicts!',
+					'#1#'
+				}
+			},
+			failure_d_c = {
+				text = {
+					'Missing {C:attention}dependencies!',
+					'#1#',
+					'Unresolved {C:attention}conflicts!',
+					'#2#'
+				}
+			},
+			failure_o = {
+				text = {
+					'{C:attention}Outdated!{} Steamodded',
+					'versions {C:money}0.9.8{} and below',
+					'are no longer supported.'
+				}
+			},
+			failure_i = {
+				text = {
+					'{C:attention}Incompatible!{} Needs version',
+					'#1# of Steamodded,',
+					'but #2# is installed.'
+				}
+			}
+        },
+		load = function(self)
+			for k, _ in pairs(self['en-us']) do
+				SMODS.process_loc_text(G.localization.descriptions.Other, 'load_'..k, self, k)
+			end
+		end
+    },
+    {
+		default = {},
+        ['en-us'] = {
+            b_mods = 'Mods',
+			b_mods_cap = 'MODS',
+            b_modded_version = 'Modded Version!',
+            b_steamodded = 'Steamodded',
+            b_steamodded_credits = ' Steamodded Credits ',
+            b_steamodded_settings = ' Steamodded Settings ',
+            b_open_mods_dir = 'Open Mods directory',
+            b_no_mods = 'No mods have been detected...',
+            b_mod_list = 'List of Activated Mods',
+            b_mod_loader = 'Mod Loader',
+            b_developed_by = 'developed by ',
+            b_rewrite_by = 'Rewrite by ',
+            b_github_project = 'Github Project',
+            b_github_bugs_1 = 'You can report bugs and',
+            b_github_bugs_2 = 'submit contributions there.',
+            b_disable_mod_badges = 'Disable Mod Badges',
+            b_author = 'Author',
+			b_authors = 'Authors',
+			b_unknown = 'Unknown'
+        },
+		load = function(self)
+			for k, _ in pairs(self['en-us']) do
+				SMODS.process_loc_text(G.localization.misc.dictionary, k, self, k)
+			end
+		end
+	}
+}
 
 function SMODS.insert_pool(pool, center, replace)
 	if replace == nil then replace = center.taken_ownership end
@@ -1050,16 +1195,29 @@ function SMODS.remove_pool(pool, key)
 end
 
 function SMODS.eval_this(_card, effects)
-    if effects then 
-        local extras = {mult = false, hand_chips = false}
-        if effects.mult_mod then mult = mod_mult(mult + effects.mult_mod);extras.mult = true end
-        if effects.chip_mod then hand_chips = mod_chips(hand_chips + effects.chip_mod);extras.hand_chips = true end
-        if effects.Xmult_mod then mult = mod_mult(mult*effects.Xmult_mod);extras.mult = true  end
-        update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult})
+    if effects then
+        local extras = { mult = false, hand_chips = false }
+        if effects.mult_mod then
+            mult = mod_mult(mult + effects.mult_mod); extras.mult = true
+        end
+        if effects.chip_mod then
+            hand_chips = mod_chips(hand_chips + effects.chip_mod); extras.hand_chips = true
+        end
+        if effects.Xmult_mod then
+            mult = mod_mult(mult * effects.Xmult_mod); extras.mult = true
+        end
+        update_hand_text({ delay = 0 }, { chips = extras.hand_chips and hand_chips, mult = extras.mult and mult })
         if effects.message then
             card_eval_status_text(_card, 'jokers', nil, nil, nil, effects)
         end
     end
+end
+
+function SMODS.init_settings()
+    SMODS.SETTINGS = {
+        no_mod_badges = false,
+    }
+	
 end
 
 ----------------------------------------------

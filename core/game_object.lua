@@ -161,6 +161,9 @@ function loadAPIs()
         silent = true,
         __call = function() error('INTERNAL CLASS, DO NOT CALL') end,
         injector = function()
+            for _, v in ipairs(SMODS._loc_txt) do
+                v:load()
+            end
             for _, mod in ipairs(SMODS.mod_list) do
                 if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
                     mod.process_loc_text()
@@ -234,55 +237,6 @@ function loadAPIs()
         path = 'tag_error.png',
         px = 34,
         py = 34,
-        loc_txt = {
-            ['en-us'] = {
-                success = {
-                    text = {
-                        'Mod loaded',
-                        '{C:green}successfully!'
-                    }
-                },
-                failure_d = {
-                    text = {
-                        'Missing {C:attention}dependencies!',
-                        '#1#',
-                    }
-                },
-                failure_c = {
-                    text = {
-                        'Unresolved {C:attention}conflicts!',
-                        '#1#'
-                    }
-                },
-                failure_d_c = {
-                    text = {
-                        'Missing {C:attention}dependencies!',
-                        '#1#',
-                        'Unresolved {C:attention}conflicts!',
-                        '#2#'
-                    }
-                },
-                failure_o = {
-                    text = {
-                        '{C:attention}Outdated!{} Steamodded',
-                        'versions {C:money}0.9.8{} and below',
-                        'are no longer supported.'
-                    }
-                },
-                failure_i = {
-                    text = {
-                        '{C:attention}Incompatible!{} Needs version',
-                        '#1# of Steamodded,',
-                        'but #2# is installed.'
-                    }
-                }
-            }
-        },
-        process_loc_text = function(self)
-            for k, _ in pairs(self.loc_txt['en-us']) do
-                SMODS.process_loc_text(G.localization.descriptions.Other, 'load_'..k, self.loc_txt, k)
-            end
-        end
     }
 
     -------------------------------------------------------------------------------------------------
