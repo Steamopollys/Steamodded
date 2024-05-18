@@ -30,7 +30,7 @@ function loadAPIs()
         for _, v in ipairs(o.required_params or {}) do
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
         end
-        if not o.omit_prefix then
+        if not o.omit_prefix and o.mod then
             o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
         end
         o:register()
@@ -97,6 +97,12 @@ function loadAPIs()
             )
             return
         end
+        local atlas_override = {}
+        if o.mod and not o.raw_atlas_key then
+            for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
+                if o[v] then atlas_override[v] = o[v] end
+            end
+        end
         setmetatable(o, self)
         if o.mod then
             o.dependencies = o.dependencies or {}
@@ -109,6 +115,11 @@ function loadAPIs()
             o.loc_txt = {}
         end
         for k, v in pairs(obj) do o[k] = v end
+        if o.mod and not o.raw_atlas_key then
+            for _, v in ipairs({'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas'}) do
+                if o[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
+            end
+        end
         o.taken_ownership = true
         o:register()
         return o
