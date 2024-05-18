@@ -1049,6 +1049,10 @@ function loadAPIs()
         obj_table = SMODS.Seals,
         obj_buffer = {},
         rng_buffer = { 'Purple', 'Gold', 'Blue', 'Red' },
+        -- I immediately thought this was a table where (key, value) pairs were (value, key) pairs.
+        -- I'd call this something like remove_suffix_table or something?
+        -- alternatively, the purpose seems to be to get the object key from the name of
+        -- a badge, so badge_to_key, maybe?
         reverse_lookup = {},
         set = 'Seal',
         prefix = 's',
@@ -1875,10 +1879,15 @@ function loadAPIs()
         prefix = 'm',
         atlas = 'centers',
         required_params = {
+            'name',
             'key',
             -- table with keys `name` and `text`
             'loc_txt'
         },
+        register = function(self)
+            self.effect = self.effect or self.name
+            SMODS.Enhancement.super.register(self)
+        end
     }
     -- Note: `name`, `effect`, and `label` all serve the same purpose as
     -- the name of the enhancement. In theory, `effect` serves to allow reusing
