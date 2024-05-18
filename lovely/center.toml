@@ -82,7 +82,7 @@ position = 'before'
 match_indent = true
 payload = '''
 elseif _c.generate_ui and type(_c.generate_ui) == 'function' then
-	_c:generate_ui(card, info_queue, desc_nodes, specific_vars)
+	_c:generate_ui(info_queue, card, desc_nodes, specific_vars)
 '''
 
 [[patches]]

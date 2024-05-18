@@ -735,7 +735,7 @@ function loadAPIs()
             self = nil
             return true
         end,
-        generate_ui = function(self, card, info_queue, desc_nodes, specific_vars)
+        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
             local target = {type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars = specific_vars or {}}
             local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
@@ -1972,7 +1972,7 @@ function loadAPIs()
             G.P_TAGS[self.key] = self
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
         end,
-        generate_ui = function(self, card, info_queue, desc_nodes, specific_vars)
+        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
             local target = {type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars = specific_vars}
             local res
             if self.loc_vars and type(self.loc_vars) == 'function' then
