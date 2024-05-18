@@ -104,6 +104,7 @@ function loadAPIs()
                 if o[v] then atlas_override[v] = o[v] end
             end
         end
+        if not o.loc_txt and not o.generate_ui then o.generate_ui = 0 end
         setmetatable(o, self)
         if o.mod then
             o.dependencies = o.dependencies or {}
@@ -1361,8 +1362,7 @@ function loadAPIs()
             }))
             delay(0.5)
         end,
-        generate_ui = 0,
-    })
+            })
     SMODS.Consumable:take_ownership('sigil', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1395,8 +1395,7 @@ function loadAPIs()
             end
             delay(0.5)
         end,
-        generate_ui = 0,
-    })
+            })
     SMODS.Consumable:take_ownership('ouija', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1425,8 +1424,7 @@ function loadAPIs()
             end
             delay(0.5)
         end,
-        generate_ui = 0,
-    })
+            })
     local function random_destroy(used_tarot)
         local destroyed_cards = {}
         destroyed_cards[#destroyed_cards + 1] = pseudorandom_element(G.hand.cards, pseudoseed('random_destroy'))
@@ -1493,8 +1491,7 @@ function loadAPIs()
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
         end,
-        generate_ui = 0,
-    })
+            })
     SMODS.Consumable:take_ownership('familiar', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1538,8 +1535,7 @@ function loadAPIs()
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
         end,
-        generate_ui = 0,
-    })
+            })
     SMODS.Consumable:take_ownership('incantation', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1583,8 +1579,7 @@ function loadAPIs()
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
         end,
-        generate_ui = 0,
-    })
+            })
     SMODS.Blind:take_ownership('eye', {
         set_blind = function(self, blind, reset, silent)
             if not reset then
