@@ -97,6 +97,7 @@ function loadAPIs()
             )
             return
         end
+        -- keep track of previous atlases in case of taking ownership multiple times
         local atlas_override = {}
         if o.mod and not o.raw_atlas_key then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
@@ -117,6 +118,7 @@ function loadAPIs()
         for k, v in pairs(obj) do o[k] = v end
         if o.mod and not o.raw_atlas_key then
             for _, v in ipairs({'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas'}) do
+                -- was a new atlas provided with this call?
                 if o[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
         end
@@ -731,6 +733,22 @@ function loadAPIs()
             if j then table.remove(self.obj_buffer, j) end
             self = nil
             return true
+        end,
+        generate_ui = function(self, card, info_queue, desc_nodes, specific_vars)
+            local target = {type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars = specific_vars or {}}
+            local res
+            if self.loc_def and type(self.loc_def) == 'function' then
+                res = self:loc_def(info_queue, card)
+                target.vars = res.vars or target.vars
+                target.key = res.key or target.key
+            end
+            if res.main_start then
+                desc_nodes[#desc_nodes+1] = res.main_start
+            end
+            localize(target)
+            if res.main_end then
+                desc_nodes[#desc_nodes+1] = res.main_end
+            end
         end
     }
 
@@ -1958,6 +1976,23 @@ function loadAPIs()
         inject = function(self)
             G.P_TAGS[self.key] = self
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
+        end,
+        generate_ui = function(self, card, info_queue, desc_nodes, specific_vars)
+            local target = {type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars = specific_vars}
+            local res
+            if self.loc_def and type(self.loc_def) == 'function' then
+                -- card is a dead arg here
+                res = self:loc_def(info_queue)
+                target.vars = res.vars or target.vars
+                target.key = res.key or target.key
+            end
+            if res.main_start then
+                desc_nodes[#desc_nodes+1] = res.main_start
+            end
+            localize(target)
+            if res.main_end then
+                desc_nodes[#desc_nodes+1] = res.main_end
+            end
         end
     }
 

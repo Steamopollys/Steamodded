@@ -59,4 +59,4 @@ target = 'game.lua'
 pattern = "self.ASSET_ATLAS.Spectral = self.ASSET_ATLAS.Tarot"
 position = 'after'
 match_indent = true
-payload = "if SMODS.booted then SMODS.injectObjects(SMODS.Sprites) end"
+payload = "if SMODS.booted then SMODS.injectObjects(SMODS.Atlases) end"

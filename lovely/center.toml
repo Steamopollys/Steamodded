@@ -56,18 +56,6 @@ root_capture = 'else'
 position = 'at'
 payload = 'elseif SMODS.end_calculate_context(context) then'
 
-[[patches]]
-[patches.regex]
-target = 'card.lua'
-pattern = "(?<indent>[\t ]*)if (?<rest>self.ability.name == 'Joker' then .*\n)"
-line_prepend = '$indent'
-position = 'at'
-payload = '''
-local obj = self.config.center
-if obj.loc_def and type(obj.loc_def) == 'function' then
-	loc_vars, main_end, main_start = obj.loc_def(self)
-elseif $rest
-'''
 
 [[patches]]
 [patches.pattern]
@@ -87,16 +75,14 @@ match_indent = true
 payload = 'function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end, card)'
 
 [[patches]]
-[patches.regex]
+[patches.pattern]
 target = 'functions/common_events.lua'
-pattern = "(?<indent>[\t ]*)elseif _c.set == 'Voucher' then"
-line_prepend = '$indent'
+pattern = "elseif _c.set == 'Joker' then"
 position = 'before'
+match_indent = true
 payload = '''
-elseif _c.loc_def and type(_c.loc_def) == 'function' then
-	local key
-	loc_vars, main_end, main_start, key = _c:loc_def(info_queue, card)
-	localize{type = 'descriptions', key = key or _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}
+elseif _c.generate_ui and type(_c.generate_ui) == 'function' then
+	_c:generate_ui(card, info_queue, desc_nodes, specific_vars)
 '''
 
 [[patches]]
@@ -108,18 +94,6 @@ position = 'at'
 payload = '''
 if _c.unlock_loc_def and type(_c.unlock_loc_def) == 'function' then
 	loc_vars = _c:unlock_loc_def(info_queue)
-elseif $rest
-'''
-
-[[patches]]
-[patches.regex]
-target = 'functions/common_events.lua'
-pattern = "(?<indent>[\t ]*)if (?<rest>_c.name == 'Stone Joker' .*\n)"
-line_prepend = '$indent'
-position = 'at'
-payload = '''
-if _c.tooltip and type(_c.tooltip) == 'function' then
-	main_end, main_start = _c:tooltip(info_queue)
 elseif $rest
 '''
 
