@@ -83,6 +83,8 @@ match_indent = true
 payload = '''
 elseif _c.generate_ui and type(_c.generate_ui) == 'function' then
 	_c:generate_ui(info_queue, card, desc_nodes, specific_vars)
+	if specific_vars and specific_vars.pinned then info_queue[#info_queue+1] = {key = 'pinned_left', set = 'Other'} end
+    if specific_vars and specific_vars.sticker then info_queue[#info_queue+1] = {key = string.lower(specific_vars.sticker)..'_sticker', set = 'Other'} end
 '''
 
 [[patches]]
