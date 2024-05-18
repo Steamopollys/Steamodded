@@ -165,8 +165,9 @@ position = 'after'
 match_indent = true
 payload = '''
 local obj = self.config.blind
-if obj.loc_def and type(obj.loc_def) == 'function' then
-	loc_vars = obj.loc_def(self)
+if obj.loc_vars and type(obj.loc_vars) == 'function' then
+	local res = obj:loc_vars(self) or {}
+	loc_vars = res.vars or {}
 end
 '''
 

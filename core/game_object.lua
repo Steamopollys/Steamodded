@@ -736,9 +736,9 @@ function loadAPIs()
         end,
         generate_ui = function(self, card, info_queue, desc_nodes, specific_vars)
             local target = {type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars = specific_vars or {}}
-            local res
-            if self.loc_def and type(self.loc_def) == 'function' then
-                res = self:loc_def(info_queue, card)
+            local res = {}
+            if self.loc_vars and type(self.loc_vars) == 'function' then
+                res = self:loc_vars(info_queue, card) or {}
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
@@ -836,7 +836,7 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Consumeables'], self.key)
             self.super.delete(self)
         end,
-        loc_def = function(self, info_queue)
+        loc_vars = function(self, info_queue)
             return {}
         end
     }
@@ -1361,7 +1361,7 @@ function loadAPIs()
             }))
             delay(0.5)
         end,
-        loc_def = 0,
+        generate_ui = 0,
     })
     SMODS.Consumable:take_ownership('sigil', {
         use = function(self, area, copier)
@@ -1395,7 +1395,7 @@ function loadAPIs()
             end
             delay(0.5)
         end,
-        loc_def = 0,
+        generate_ui = 0,
     })
     SMODS.Consumable:take_ownership('ouija', {
         use = function(self, area, copier)
@@ -1425,7 +1425,7 @@ function loadAPIs()
             end
             delay(0.5)
         end,
-        loc_def = 0,
+        generate_ui = 0,
     })
     local function random_destroy(used_tarot)
         local destroyed_cards = {}
@@ -1493,7 +1493,7 @@ function loadAPIs()
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
         end,
-        loc_def = 0,
+        generate_ui = 0,
     })
     SMODS.Consumable:take_ownership('familiar', {
         use = function(self, area, copier)
@@ -1538,7 +1538,7 @@ function loadAPIs()
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
         end,
-        loc_def = 0,
+        generate_ui = 0,
     })
     SMODS.Consumable:take_ownership('incantation', {
         use = function(self, area, copier)
@@ -1583,7 +1583,7 @@ function loadAPIs()
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
         end,
-        loc_def = 0,
+        generate_ui = 0,
     })
     SMODS.Blind:take_ownership('eye', {
         set_blind = function(self, blind, reset, silent)
@@ -1980,9 +1980,9 @@ function loadAPIs()
         generate_ui = function(self, card, info_queue, desc_nodes, specific_vars)
             local target = {type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars = specific_vars}
             local res
-            if self.loc_def and type(self.loc_def) == 'function' then
+            if self.loc_vars and type(self.loc_vars) == 'function' then
                 -- card is a dead arg here
-                res = self:loc_def(info_queue)
+                res = self:loc_vars(info_queue)
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
