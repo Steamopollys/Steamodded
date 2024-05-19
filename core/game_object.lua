@@ -1886,8 +1886,19 @@ function loadAPIs()
         },
         register = function(self)
             self.effect = self.effect or self.name
+            self.loc_txt.name = self.loc_txt.name or self.name
+            self.config = self.config or {}
             SMODS.Enhancement.super.register(self)
-        end
+        end,
+        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
+            if specific_vars.nominal_chips and not self.replace_base_card then 
+                localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
+            end
+            SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars)
+            if specific_vars.bonus_chips then
+                localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips}}
+            end
+        end,
     }
     -- Note: `name`, `effect`, and `label` all serve the same purpose as
     -- the name of the enhancement. In theory, `effect` serves to allow reusing
