@@ -99,10 +99,8 @@ function loadAPIs()
         end
         -- keep track of previous atlases in case of taking ownership multiple times
         local atlas_override = {}
-        if o.mod and not o.raw_atlas_key then
-            for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
-                if o[v] then atlas_override[v] = o[v] end
-            end
+        for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
+            if o[v] then atlas_override[v] = o[v] end
         end
         if not o.loc_txt and not o.generate_ui then o.generate_ui = 0 end
         setmetatable(o, self)
@@ -120,7 +118,7 @@ function loadAPIs()
         if o.mod and not o.raw_atlas_key then
             for _, v in ipairs({'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas'}) do
                 -- was a new atlas provided with this call?
-                if o[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
+                if obj[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then o[v] = ('%s_%s'):format(SMODS.current_mod.prefix, o[v]) end
             end
         end
         o.taken_ownership = true
