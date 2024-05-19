@@ -1,0 +1,31 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# Determines whether to draw the base card or not
+# Card:draw()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.children.front and self.ability.effect ~= 'Stone Card' then"
+match_indent = true
+position = "at"
+payload = "if self.children.front and self.ability.effect ~= 'Stone Card' and not self.config.center.replace_base_card then"
+
+# Card:generate_UIBox_ability_table()
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if (_c.name == 'Stone Card') then full_UI_table.name = true end"
+match_indent = true
+position = "at"
+payload = "if _c.name == 'Stone Card' or _c.replace_base_card then full_UI_table.name = true"
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if (specific_vars.playing_card and (_c.name ~= 'Stone Card')) then"
+match_indent = true
+position = "at"
+payload = "elseif specific_vars.playing_card then"
