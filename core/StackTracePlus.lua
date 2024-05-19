@@ -637,8 +637,26 @@ function injectStackTrace()
             p = p .. "\nCopied to clipboard!"
         end
 
+        p = p .. "\n\nPress R to restart the game"
         if love.system then
-            p = p .. "\n\nPress Ctrl+C or tap to copy this error"
+            p = p .. "\nPress Ctrl+C or tap to copy this error"
+        end
+
+        -- Kill threads (makes restarting possible)
+        if G.SOUND_MANAGER and G.SOUND_MANAGER.channel then
+            G.SOUND_MANAGER.channel:push({
+                type = 'kill'
+            })
+        end
+        if G.SAVE_MANAGER and G.SAVE_MANAGER.channel then
+            G.SAVE_MANAGER.channel:push({
+                type = 'kill'
+            })
+        end
+        if G.HTTP_MANAGER and G.HTTP_MANAGER.channel then
+            G.HTTP_MANAGER.channel:push({
+                type = 'kill'
+            })
         end
 
         return function()
@@ -651,6 +669,8 @@ function injectStackTrace()
                     return 1
                 elseif e == "keypressed" and a == "c" and love.keyboard.isDown("lctrl", "rctrl") then
                     copyToClipboard()
+                elseif e == "keypressed" and a == "r" then
+                    return "restart"
                 elseif e == "keypressed" and a == "down" then
                     scrollDown()
                 elseif e == "keypressed" and a == "up" then
@@ -670,6 +690,8 @@ function injectStackTrace()
                 elseif e == "gamepadpressed" and b == "dpup" then
                     scrollUp()
                 elseif e == "gamepadpressed" and b == "a" then
+                    return "restart"
+                elseif e == "gamepadpressed" and b == "x" then
                     copyToClipboard()
                 elseif e == "gamepadpressed" and (b == "b" or b == "back" or b == "start") then
                     return 1
@@ -678,14 +700,16 @@ function injectStackTrace()
                     if #name == 0 or name == "Untitled" then
                         name = "Game"
                     end
-                    local buttons = {"OK", "Cancel"}
+                    local buttons = {"OK", "Cancel", "Restart"}
                     if love.system then
-                        buttons[3] = "Copy to clipboard"
+                        buttons[4] = "Copy to clipboard"
                     end
                     local pressed = love.window.showMessageBox("Quit " .. name .. "?", "", buttons)
                     if pressed == 1 then
                         return 1
                     elseif pressed == 3 then
+                        return "restart"
+                    elseif pressed == 4 then
                         copyToClipboard()
                     end
                 end

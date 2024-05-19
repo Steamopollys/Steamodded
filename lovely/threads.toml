@@ -1,0 +1,30 @@
+# Necessary to kill threads which lets us restart the game.
+
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = "engine/save_manager.lua"
+pattern = "if request then"
+position = "after"
+payload = "if request.type == 'kill' then return end"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "engine/http_manager.lua"
+pattern = "if request then"
+position = "after"
+payload = "if request.type == 'kill' then return end"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "engine/sound_manager.lua"
+pattern = "if request then"
+position = "after"
+payload = "if request.type == 'kill' then return end"
+match_indent = true
