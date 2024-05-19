@@ -3,6 +3,7 @@
 --- MOD_ID: DeckOf4
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Create a special deck that only contains 4s!
+--- LOADER_VERSION_GEQ: 1.0.0
 
 ----------------------------------------------
 ------------MOD CODE -------------------------
@@ -30,17 +31,19 @@ function Back.apply_to_run(arg_56_0)
 	end
 end
 
-local loc_def = {
-	["name"]="Deck of fours",
-	["text"]={
-		[1]="Start with a Deck",
-		[2]="full of",
-		[3]="{C:attention}Fours{}"
+SMODS.Back{
+	name = "Deck of fours",
+	key = "fours",
+	pos = {x = 1, y = 3},
+	config = {only_one_rank = 4},
+	loc_txt = {
+		name ="Deck of fours",
+		text={
+			"Start with a Deck",
+			"full of {C:attention}Fours{}",
+		},
 	},
 }
-
-local dfours = SMODS.Deck:new("Deck of fours", "fours", {only_one_rank = 4}, {x = 1, y = 3}, loc_def)
-dfours:register()
 
 ----------------------------------------------
 ------------MOD CODE END----------------------
