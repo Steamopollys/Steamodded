@@ -461,28 +461,6 @@ function loadAPIs()
         shiny = true,
         loc_txt = {}
     }
-    SMODS.Stake {
-        key = 'stake_cyan',
-        omit_prefix = true,
-        applied_stakes = { 'gold' },
-        pos = { x = 2, y = 1 },
-        sticker_pos = { x = 3, y = 1 },
-        modifiers = function()
-            sendWarnMessage('Funky stake')
-        end,
-        color = HEX('ABCDEF'),
-        shiny = true,
-        loc_txt = {
-            description = {
-                name = 'Cyan Stake',
-                text = { 'Funky stake' }
-            },
-            sticker = {
-                name = 'Cyan Sticker',
-                text = { 'No' }
-            }
-        }
-    }
 
 
     -------------------------------------------------------------------------------------------------
