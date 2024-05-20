@@ -110,7 +110,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if obj.debuff_hand and type(obj.debuff_hand) == 'function' then
-	obj.debuff_hand(self, cards, hand, handname, check)
+	return obj.debuff_hand(self, cards, hand, handname, check)
 end
 '''
 

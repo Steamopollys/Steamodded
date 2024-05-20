@@ -365,6 +365,21 @@ match_indent = true
 position = 'at'
 payload = "if v.name == 'Black Hole' or v.name == 'The Soul' or v.hidden then"
 
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if _type == 'Enhanced' then"
+match_indent = true
+position = 'at'
+payload = '''
+if v.add_to_pool and type(v.add_to_pool) == 'function' then
+	local res = v:add_to_pool()
+	if res.add and (not G.GAME.used_jokers[v.key] or res.allow_duplicates or next(find_joker("Showman"))) then
+		add = true
+	end
+elseif _type == 'Enhanced' then
+'''
+
 # create_card_for_shop()
 [[patches]]
 [patches.pattern]

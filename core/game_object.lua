@@ -321,12 +321,9 @@ function loadAPIs()
         end,
         process_loc_text = function(self)
             -- empty loc_txt indicates there are existing values that shouldn't be changed or it isn't necessary
-            if next(self.loc_txt) then
-                SMODS.process_loc_text(G.localization.descriptions[self.set], self.key, self.loc_txt)
-            end
-            if self.sticker_loc_txt and next(self.sticker_loc_txt) then
-                SMODS.process_loc_text(G.localization.descriptions["Other"], self.key:sub(7).."_sticker", self.sticker_loc_txt)
-            end
+            if not next(self.loc_txt) then return end
+            SMODS.process_loc_text(G.localization.descriptions[self.set], self.key, self.loc_txt, 'description')
+            SMODS.process_loc_text(G.localization.descriptions["Other"], self.key:sub(7).."_sticker", self.loc_txt, 'sticker')
         end,
         get_obj = function(self, key) return G.P_STAKES[key] end
     }
@@ -340,51 +337,6 @@ function loadAPIs()
         SMODS.setup_stake(G.P_STAKES["stake_"..v].stake_level)
         end
     end
-    end
-
-    function SMODS.applied_stakes_UI(i, stake_desc_rows, num_added)
-    if num_added == nil then num_added = {val = 0} end
-    if G.P_CENTER_POOLS['Stake'][i].applied_stakes then
-        for _, v in pairs(G.P_CENTER_POOLS['Stake'][i].applied_stakes) do
-        if v ~= "white" then
-            --todo: manage this with pages
-            if num_added.val < 8 then
-                local i = G.P_STAKES["stake_"..v].stake_level
-                local _stake_desc = {}
-                local _stake_center = G.P_CENTER_POOLS.Stake[i]
-                localize{type = 'descriptions', key = _stake_center.key, set = _stake_center.set, nodes = _stake_desc}
-                local _full_desc = {}
-                for k, v in ipairs(_stake_desc) do
-                _full_desc[#_full_desc+1] = {n=G.UIT.R, config={align = "cm"}, nodes=v}
-                end
-                _full_desc[#_full_desc] = nil
-                stake_desc_rows[#stake_desc_rows+1] = {n=G.UIT.R, config={align = "cm"}, nodes={
-                {n=G.UIT.C, config={align = 'cm'}, nodes ={{n=G.UIT.C, config={align = "cm", colour = get_stake_col(i), r = 0.1, minh = 0.35, minw = 0.35, emboss = 0.05}, nodes={}}, {n=G.UIT.B, config={w=0.1,h=0.1}}}},
-                {n=G.UIT.C, config={align = "cm", padding = 0.03, colour = G.C.WHITE, r = 0.1, minh = 0.7, minw = 4.8}, nodes=_full_desc},
-                }}
-            end
-            num_added.val = num_added.val + 1
-            num_added.val = SMODS.applied_stakes_UI(G.P_STAKES["stake_"..v].stake_level, stake_desc_rows, num_added)
-        end
-        end
-    end
-    end
-
-    -- We're overwriting so much that it's better to just remake this
-    function G.UIDEF.deck_stake_column(_deck_key)
-        local deck_usage = G.PROFILES[G.SETTINGS.profile].deck_usage[_deck_key]
-        local stake_col = {}
-        local valid_option = nil
-        local num_stakes = #G.P_CENTER_POOLS['Stake']
-        for i = #G.P_CENTER_POOLS['Stake'], 1, -1 do
-        local _wins = deck_usage and deck_usage.wins[i] or 0
-        if (deck_usage and deck_usage.wins[i-1]) or i == 1 or G.PROFILES[G.SETTINGS.profile].all_unlocked then valid_option = true end
-        stake_col[#stake_col+1] = {n=G.UIT.R, config={id = i, align = "cm", colour = _wins > 0 and G.C.GREY or G.C.CLEAR, outline = 0, outline_colour = G.C.WHITE, r = 0.1, minh = 2/num_stakes, minw = valid_option and 0.45 or 0.25, func = 'RUN_SETUP_check_back_stake_highlight'}, nodes={
-            {n=G.UIT.R, config={align = "cm", minh = valid_option and 1.36/num_stakes or 1.04/num_stakes, minw = valid_option and 0.37 or 0.13, colour = _wins > 0 and get_stake_col(i) or G.C.UI.TRANSPARENT_LIGHT, r = 0.1},nodes={}}
-        }}
-        if i > 1 then stake_col[#stake_col+1] = {n=G.UIT.R, config={align = "cm", minh = 0.8/num_stakes, minw = 0.04},nodes={}} end
-        end
-        return {n=G.UIT.ROOT, config={align = 'cm', colour = G.C.CLEAR}, nodes =stake_col}
     end
 
     --Register vanilla stakes
@@ -766,6 +718,7 @@ function loadAPIs()
         cost = 3,
         config = {},
         set = 'Joker',
+        atlas = 'Joker',
         prefix = 'j',
         required_params = {
             'key',
@@ -805,6 +758,7 @@ function loadAPIs()
         discovered = false,
         consumeable = true,
         pos = { x = 0, y = 0 },
+        atlas = 'Tarot',
         legendaries = {},
         cost = 3,
         config = {},
@@ -1040,6 +994,7 @@ function loadAPIs()
                 end
             end
             self.disabled = nil
+            if G.GAME then G.GAME.disabled_suits[self.key] = nil end
         end,
         inject = function(self)
             if not self.disabled then self:populate() end
@@ -1049,6 +1004,7 @@ function loadAPIs()
                 self:update_p_card(other, true)
             end
             self.disabled = true
+            if G.GAME then G.GAME.disabled_suits[self.key] = true end
         end,
         delete = function(self)
             self:disable()
@@ -1067,7 +1023,7 @@ function loadAPIs()
                 pos = { x = other.pos.x, y = other.suit_map[self.key] or self.pos.y },
                 lc_atlas = other.suit_map[self.key] and other.lc_atlas or self.lc_atlas,
                 hc_atlas = other.suit_map[self.key] and other.hc_atlas or self.hc_atlas,
-            }
+            } or nil
         end,
         get_card_key = function(self, card_key)
             local set = {}
@@ -1196,6 +1152,7 @@ function loadAPIs()
                 end
             end
             self.disabled = nil
+            if G.GAME then G.GAME.disabled_ranks[self.key] = nil end
         end,
         inject = SMODS.Suit.inject,
         disable = function(self)
@@ -1203,6 +1160,7 @@ function loadAPIs()
                 other:update_p_card(self, true)
             end
             self.disabled = true
+            if G.GAME then G.GAME.disabled_ranks[self.key] = true end
         end,
         delete = SMODS.Suit.delete,
     }
@@ -1587,85 +1545,7 @@ function loadAPIs()
             end
         end
     })
-
-    -- no point in using lovely for this, since no part of the original function is useful
-    function get_straight(hand)
-        local ret = {}
-        local four_fingers = next(find_joker('Four Fingers'))
-        local can_skip = next(find_joker('Shortcut'))
-        if #hand < (5 - (four_fingers and 1 or 0)) then return ret end
-        local t = {}
-        local RANKS = {}
-        for i = 1, #hand do
-            if hand[i]:get_id() > 0 then
-                local rank = hand[i].base.value
-                RANKS[rank] = RANKS[rank] or {}
-                RANKS[rank][#RANKS[rank] + 1] = hand[i]
-            end
-        end
-        local straight_length = 0
-        local straight = false
-        local skipped_rank = false
-        local vals = {}
-        for k, v in pairs(SMODS.Ranks) do
-            if v.straight_edge then
-                table.insert(vals, k)
-            end
-        end
-        local init_vals = {}
-        for _, v in ipairs(vals) do
-            init_vals[v] = true
-        end
-        if not next(vals) then table.insert(vals, 'Ace') end
-        local initial = true
-        local br = false
-        local end_iter = false
-        local i = 0
-        while 1 do
-            end_iter = false
-            if straight_length >= (5 - (four_fingers and 1 or 0)) then
-                straight = true
-            end
-            i = i + 1
-            if br or (i > #SMODS.Rank.obj_buffer + 1) then break end
-            if not next(vals) then break end
-            for _, val in ipairs(vals) do
-                if init_vals[val] and not initial then br = true end
-                if RANKS[val] then
-                    straight_length = straight_length + 1
-                    skipped_rank = false
-                    for _, vv in ipairs(RANKS[val]) do
-                        t[#t + 1] = vv
-                    end
-                    vals = SMODS.Ranks[val].next
-                    initial = false
-                    end_iter = true
-                    break
-                end
-            end
-            if not end_iter then
-                local new_vals = {}
-                for _, val in ipairs(vals) do
-                    for _, r in ipairs(SMODS.Ranks[val].next) do
-                        table.insert(new_vals, r)
-                    end
-                end
-                vals = new_vals
-                if can_skip and not skipped_rank then
-                    skipped_rank = true
-                else
-                    straight_length = 0
-                    skipped_rank = false
-                    if not straight then t = {} end
-                    if straight then break end
-                end
-            end
-        end
-        if not straight then return ret end
-        table.insert(ret, t)
-        return ret
-    end
-
+    
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.PokerHand
     -------------------------------------------------------------------------------------------------
@@ -1717,201 +1597,6 @@ function loadAPIs()
         end,
         inject = function(self) end
     }
-
-    -- this would be annoying to patch in with lovely
-    local init_game_object_ref = Game.init_game_object
-    function Game:init_game_object()
-        local t = init_game_object_ref(self)
-        for _, key in ipairs(SMODS.PokerHand.obj_buffer) do
-            t.hands[key] = {}
-            for k, v in pairs(SMODS.PokerHands[key]) do
-                -- G.GAME needs to be able to be serialized
-                if type(v) == 'number' or type(v) == 'boolean' or k == 'example' then
-                    t.hands[key][k] = v
-                end
-            end
-        end
-        return t
-    end
-    -- why bother patching when i basically change everything
-    function G.FUNCS.get_poker_hand_info(_cards)
-        local poker_hands = evaluate_poker_hand(_cards)
-        local scoring_hand = {}
-        local text, disp_text, loc_disp_text = 'NULL', 'NULL', 'NULL'
-        for _, v in ipairs(G.handlist) do
-            if next(poker_hands[v]) then
-                text = v
-                scoring_hand = poker_hands[v][1]
-                break
-            end
-        end
-        disp_text = text
-        local _hand = SMODS.PokerHands[text]
-        if text == 'Straight Flush' then
-            local royal = true
-            for j = 1, #scoring_hand do
-                local rank = SMODS.Ranks[scoring_hand[j].base.value]
-                royal = royal and (rank.key == 'Ace' or rank.key == '10' or rank.face)
-            end
-            if royal then
-                disp_text = 'Royal Flush'
-            end
-        elseif _hand and _hand.modify_display_text and type(_hand.modify_display_text) == 'function' then
-            disp_text = _hand.modify_display_text(_cards, scoring_hand) or disp_text
-        end
-        loc_disp_text = localize(disp_text, 'poker_hands')
-        return text, loc_disp_text, poker_hands, scoring_hand, disp_text
-    end
-
-    function create_UIBox_current_hands(simple)
-        G.current_hands = {}
-        local index = 0
-        for _, v in ipairs(G.handlist) do
-            local ui_element = create_UIBox_current_hand_row(v, simple)
-            G.current_hands[index + 1] = ui_element
-            if ui_element then
-                index = index + 1
-            end
-            if index >= 10 then
-                break
-            end
-        end
-
-        local visible_hands = {}
-        for _, v in ipairs(G.handlist) do
-            if G.GAME.hands[v].visible then
-                table.insert(visible_hands, v)
-            end
-        end
-
-        local hand_options = {}
-        for i = 1, math.ceil(#visible_hands / 10) do
-            table.insert(hand_options,
-                localize('k_page') .. ' ' .. tostring(i) .. '/' .. tostring(math.ceil(#visible_hands / 10)))
-        end
-
-        local object = {
-            n = G.UIT.ROOT,
-            config = { align = "cm", colour = G.C.CLEAR },
-            nodes = {
-                {
-                    n = G.UIT.R,
-                    config = { align = "cm", padding = 0.04 },
-                    nodes = G.current_hands
-                },
-                {
-                    n = G.UIT.R,
-                    config = { align = "cm", padding = 0 },
-                    nodes = {
-                        create_option_cycle({
-                            options = hand_options,
-                            w = 4.5,
-                            cycle_shoulders = true,
-                            opt_callback = 'your_hands_page',
-                            focus_args = { snap_to = true, nav = 'wide' },
-                            current_option = 1,
-                            colour = G.C.RED,
-                            no_pips = true
-                        })
-                    }
-                }
-            }
-        }
-
-        local t = {
-            n = G.UIT.ROOT,
-            config = { align = "cm", minw = 3, padding = 0.1, r = 0.1, colour = G.C.CLEAR },
-            nodes = {
-                {
-                    n = G.UIT.O,
-                    config = {
-                        id = 'hand_list',
-                        object = UIBox {
-                            definition = object,
-                            config = { offset = { x = 0, y = 0 }, align = 'cm' }
-                        }
-                    }
-                }
-            }
-        }
-        return t
-    end
-
-    G.FUNCS.your_hands_page = function(args)
-        if not args or not args.cycle_config then return end
-        G.current_hands = {}
-
-
-        local index = 0
-        for _, v in ipairs(G.handlist) do
-            local ui_element = create_UIBox_current_hand_row(v, simple)
-            if index >= (0 + 10 * (args.cycle_config.current_option - 1)) and index < 10 * args.cycle_config.current_option then
-                G.current_hands[index - (10 * (args.cycle_config.current_option - 1)) + 1] = ui_element
-            end
-
-            if ui_element then
-                index = index + 1
-            end
-
-            if index >= 10 * args.cycle_config.current_option then
-                break
-            end
-        end
-
-        local visible_hands = {}
-        for _, v in ipairs(G.handlist) do
-            if G.GAME.hands[v].visible then
-                table.insert(visible_hands, v)
-            end
-        end
-
-        local hand_options = {}
-        for i = 1, math.ceil(#visible_hands / 10) do
-            table.insert(hand_options,
-                localize('k_page') .. ' ' .. tostring(i) .. '/' .. tostring(math.ceil(#visible_hands / 10)))
-        end
-
-        local object = {
-            n = G.UIT.ROOT,
-            config = { align = "cm", colour = G.C.CLEAR },
-            nodes = {
-                {
-                    n = G.UIT.R,
-                    config = { align = "cm", padding = 0.04 },
-                    nodes = G.current_hands
-                },
-                {
-                    n = G.UIT.R,
-                    config = { align = "cm", padding = 0 },
-                    nodes = {
-                        create_option_cycle({
-                            options = hand_options,
-                            w = 4.5,
-                            cycle_shoulders = true,
-                            opt_callback =
-                            'your_hands_page',
-                            focus_args = { snap_to = true, nav = 'wide' },
-                            current_option = args.cycle_config.current_option,
-                            colour = G
-                                .C.RED,
-                            no_pips = true
-                        })
-                    }
-                }
-            }
-        }
-
-        local hand_list = G.OVERLAY_MENU:get_UIE_by_ID('hand_list')
-        if hand_list then
-            if hand_list.config.object then
-                hand_list.config.object:remove()
-            end
-            hand_list.config.object = UIBox {
-                definition = object,
-                config = { offset = { x = 0, y = 0 }, align = 'cm', parent = hand_list }
-            }
-        end
-    end
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Challenge
