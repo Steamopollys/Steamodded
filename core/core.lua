@@ -1214,6 +1214,26 @@ function SMODS.eval_this(_card, effects)
     end
 end
 
+-- Return an array of all (non-debuffed) jokers or consumables with key `key`.
+-- Debuffed jokers count if `count_debuffed` is true.
+-- This function replaces find_joker(); please use SMODS.find_card() instead
+-- to avoid name conflicts with other mods.
+function SMODS.find_card(key, count_debuffed)
+	local results = {}
+	if not G.jokers or not G.jokers.cards then return {} end
+	for k, v in pairs(G.jokers.cards) do
+	  if v and type(v) == 'table' and v.config.center.key == key and (count_debuffed or not v.debuff) then
+		table.insert(results, v)
+	  end
+	end
+	for k, v in pairs(G.consumeables.cards) do
+	  if v and type(v) == 'table' and v.config.center.key == key and (count_debuffed or not v.debuff) then
+		table.insert(results, v)
+	  end
+	end
+	return results
+end
+
 function SMODS.init_settings()
     SMODS.SETTINGS = {
         no_mod_badges = false,
