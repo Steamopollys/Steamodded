@@ -115,7 +115,6 @@ if string.find(config.name, 'payout_arg') and config.payout_arg.custom_message_c
                         {n=G.UIT.O, config={object = DynaText({string = localize(config.payout_arg.custom_message_config.message), colours = {config.payout_arg.custom_message_config.color}, shadow = true, pop_in = 0, scale = config.payout_arg.custom_message_config.scale, float = true})}}
                     }},
                     G.round_eval:get_UIE_by_ID('dollar_'..config.name))
-
             play_sound('coin3', 0.9+0.2*math.random(), 0.7) --asdf
             play_sound('coin6', 1.3, 0.8)
             return true
@@ -138,7 +137,7 @@ match_indent = true
 [[patches]]
 [patches.regex]
 target = "functions/common_events.lua"
-pattern = '''(?<indent>[\t ]*)trigger = 'before',delay = 0.38,\n[\t ]*func = function\(\)'''
+pattern = '''(?<indent>[\t ]*)trigger = 'before',delay = 0.38,\n[\s\S]{16}func = function\(\)'''
 position = "after"
 line_prepend = "$indent"
 payload = '''
@@ -188,7 +187,6 @@ if num_dollars < 0 then --if negative
                         }},
                         G.round_eval:get_UIE_by_ID('dollar_'..config.name))
             end
-
             play_sound('coin3', 0.9+0.2*math.random(), 0.7)
             play_sound('coin6', 1.3, 0.8)
             return true
