@@ -22,7 +22,7 @@ function loadAPIs()
     function SMODS.GameObject:__call(o)
         o.mod = SMODS.current_mod
         if o.mod and not o.raw_atlas_key then
-            for _, v in ipairs({'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas'}) do
+            for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
         end
@@ -81,8 +81,9 @@ function loadAPIs()
             o:process_loc_text()
 
             sendInfoMessage(
-                ('Registered game object %s of type %s with key %s')
-                :format(o.name or o.key, o.set, o.key), o.set or 'GameObject')
+                ('Registered game object %s of type %s')
+                :format(o.key, o.set), o.set or 'GameObject'
+            )
         end
     end
 
@@ -116,9 +117,10 @@ function loadAPIs()
         end
         for k, v in pairs(obj) do o[k] = v end
         if o.mod and not o.raw_atlas_key then
-            for _, v in ipairs({'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas'}) do
+            for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 -- was a new atlas provided with this call?
-                if obj[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then o[v] = ('%s_%s'):format(SMODS.current_mod.prefix, o[v]) end
+                if obj[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then o[v] = ('%s_%s'):format(
+                    SMODS.current_mod.prefix, o[v]) end
             end
         end
         o.taken_ownership = true
@@ -262,7 +264,7 @@ function loadAPIs()
         atlas = 'chips',
         injected = false,
         required_params = {
-            'name',
+            'key',
             'pos',
             'loc_txt',
             'applied_stakes'
@@ -275,32 +277,23 @@ function loadAPIs()
         inject = function(self)
             if not self.injected then
                 -- Inject stake in the correct spot
-                local count = #G.P_CENTER_POOLS[self.set]+1
+                local count = #G.P_CENTER_POOLS[self.set] + 1
                 if self.above_stake then
-                count = G.P_STAKES[self.prefix.."_"..self.above_stake].stake_level+1
+                    count = G.P_STAKES[self.prefix .. "_" .. self.above_stake].stake_level + 1
                 end
                 self.order = count
                 self.stake_level = count
                 for _, v in pairs(G.P_STAKES) do
-                if v.stake_level >= self.stake_level then
-                    v.stake_level = v.stake_level + 1
-                    v.order = v.stake_level
-                end
+                    if v.stake_level >= self.stake_level then
+                        v.stake_level = v.stake_level + 1
+                        v.order = v.stake_level
+                    end
                 end
                 G.P_STAKES[self.key] = self
-                -- Localization text for applying stakes
-                if next(self.loc_txt) then
-                local applied_text = "{s:0.8}Applies "
-                for _, v in pairs(self.applied_stakes) do
-                    applied_text = applied_text .. (G.P_STAKES[self.prefix.."_"..v].loc_txt and G.P_STAKES[self.prefix.."_"..v].loc_txt.name or G.P_STAKES[self.prefix.."_"..v].name) .. ", "
-                end
-                applied_text = applied_text:sub(1, -3)
-                if (applied_text == "{s:0.8}Applie") then applied_text = "{s:0.8}" end
-                self.loc_txt.text[#self.loc_txt.text+1] = applied_text
-                end
                 -- Sticker sprites (stake_ prefix is removed for vanilla compatiblity)
                 if self.sticker_pos ~= nil then
-                    G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.sticker_atlas] or G.ASSET_ATLAS["stickers"], self.sticker_pos)
+                    G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H,
+                        G.ASSET_ATLAS[self.sticker_atlas] or G.ASSET_ATLAS["stickers"], self.sticker_pos)
                     G.sticker_map[self.stake_level] = self.key:sub(7)
                 else
                     G.sticker_map[self.stake_level] = nil
@@ -310,9 +303,9 @@ function loadAPIs()
             end
             G.P_CENTER_POOLS[self.set] = {}
             for _, v in pairs(G.P_STAKES) do
-            SMODS.insert_pool(G.P_CENTER_POOLS[self.set], v)
+                SMODS.insert_pool(G.P_CENTER_POOLS[self.set], v)
             end
-            table.sort(G.P_CENTER_POOLS[self.set], function(a,b) return a.stake_level < b.stake_level end)
+            table.sort(G.P_CENTER_POOLS[self.set], function(a, b) return a.stake_level < b.stake_level end)
             G.C.STAKES = {}
             for i = 1, #G.P_CENTER_POOLS[self.set] do
                 G.C.STAKES[i] = G.P_CENTER_POOLS[self.set][i].color or G.C.WHITE
@@ -322,44 +315,61 @@ function loadAPIs()
         process_loc_text = function(self)
             -- empty loc_txt indicates there are existing values that shouldn't be changed or it isn't necessary
             if not next(self.loc_txt) then return end
-            SMODS.process_loc_text(G.localization.descriptions[self.set], self.key, self.loc_txt, 'description')
-            SMODS.process_loc_text(G.localization.descriptions["Other"], self.key:sub(7).."_sticker", self.loc_txt, 'sticker')
+            local target = self.loc_txt[G.SETTINGS.language] or self.loc_txt['default'] or self.loc_txt['en-us'] or
+            self.loc_txt
+            local applied_text = "{s:0.8}" .. localize('b_applies_stakes_1')
+            local any_applied
+            for _, v in pairs(self.applied_stakes) do
+                any_applied = true
+                applied_text = applied_text ..
+                localize{ set = self.set, key = self.prefix .. '_' .. v, type = 'name_text'} .. ', '
+            end
+            applied_text = applied_text:sub(1, -3)
+            if not any_applied then
+                applied_text = "{s:0.8}"
+            else
+                applied_text = applied_text..localize('b_applies_stakes_2')
+            end
+            local desc_target = copy_table(target.description)
+            table.insert(desc_target.text, applied_text)
+            G.localization.descriptions[self.set][self.key] = desc_target
+            SMODS.process_loc_text(G.localization.descriptions["Other"], self.key:sub(7) .. "_sticker", self.loc_txt, 'sticker')
         end,
         get_obj = function(self, key) return G.P_STAKES[key] end
     }
 
     function SMODS.setup_stake(i)
-    if G.P_CENTER_POOLS['Stake'][i].modifiers then
-        G.P_CENTER_POOLS['Stake'][i].modifiers()
-    end
-    if G.P_CENTER_POOLS['Stake'][i].applied_stakes then
-        for _, v in pairs(G.P_CENTER_POOLS['Stake'][i].applied_stakes) do
-        SMODS.setup_stake(G.P_STAKES["stake_"..v].stake_level)
+        if G.P_CENTER_POOLS['Stake'][i].modifiers then
+            G.P_CENTER_POOLS['Stake'][i].modifiers()
         end
-    end
+        if G.P_CENTER_POOLS['Stake'][i].applied_stakes then
+            for _, v in pairs(G.P_CENTER_POOLS['Stake'][i].applied_stakes) do
+                SMODS.setup_stake(G.P_STAKES["stake_" .. v].stake_level)
+            end
+        end
     end
 
     --Register vanilla stakes
-    SMODS.Stake{
+    SMODS.Stake {
         name = "White Stake",
         key = "stake_white",
         omit_prefix = true,
         unlocked_stake = "red",
         unlocked = true,
         applied_stakes = {},
-        pos = {x = 0, y = 0},
-        sticker_pos = {x = 1, y = 0},
+        pos = { x = 0, y = 0 },
+        sticker_pos = { x = 1, y = 0 },
         color = G.C.WHITE,
         loc_txt = {}
     }
-    SMODS.Stake{
+    SMODS.Stake {
         name = "Red Stake",
         key = "stake_red",
         omit_prefix = true,
         unlocked_stake = "green",
-        applied_stakes = {"white"},
-        pos = {x = 1, y = 0},
-        sticker_pos = {x = 2, y = 0},
+        applied_stakes = { "white" },
+        pos = { x = 1, y = 0 },
+        sticker_pos = { x = 2, y = 0 },
         modifiers = function()
             G.GAME.modifiers.no_blind_reward = G.GAME.modifiers.no_blind_reward or {}
             G.GAME.modifiers.no_blind_reward.Small = true
@@ -367,56 +377,56 @@ function loadAPIs()
         color = G.C.RED,
         loc_txt = {}
     }
-    SMODS.Stake{
+    SMODS.Stake {
         name = "Green Stake",
         key = "stake_green",
         omit_prefix = true,
         unlocked_stake = "black",
-        applied_stakes = {"red"},
-        pos = {x = 2, y = 0},
-        sticker_pos = {x = 3, y = 0},
+        applied_stakes = { "red" },
+        pos = { x = 2, y = 0 },
+        sticker_pos = { x = 3, y = 0 },
         modifiers = function()
             G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 2)
         end,
         color = G.C.GREEN,
         loc_txt = {}
     }
-    SMODS.Stake{
+    SMODS.Stake {
         name = "Black Stake",
         key = "stake_black",
         omit_prefix = true,
         unlocked_stake = "blue",
-        applied_stakes = {"green"},
-        pos = {x = 4, y = 0},
-        sticker_pos = {x = 0, y = 1},
+        applied_stakes = { "green" },
+        pos = { x = 4, y = 0 },
+        sticker_pos = { x = 0, y = 1 },
         modifiers = function()
             G.GAME.modifiers.enable_eternals_in_shop = true
         end,
         color = G.C.BLACK,
         loc_txt = {}
     }
-    SMODS.Stake{
+    SMODS.Stake {
         name = "Blue Stake",
         key = "stake_blue",
         omit_prefix = true,
         unlocked_stake = "purple",
-        applied_stakes = {"black"},
-        pos = {x = 3, y = 0},
-        sticker_pos = {x = 4, y = 0},
+        applied_stakes = { "black" },
+        pos = { x = 3, y = 0 },
+        sticker_pos = { x = 4, y = 0 },
         modifiers = function()
             G.GAME.starting_params.discards = G.GAME.starting_params.discards - 1
         end,
         color = G.C.BLUE,
         loc_txt = {}
     }
-    SMODS.Stake{
+    SMODS.Stake {
         name = "Purple Stake",
         key = "stake_purple",
         omit_prefix = true,
         unlocked_stake = "orange",
-        applied_stakes = {"blue"},
-        pos = {x = 0, y = 1},
-        sticker_pos = {x = 1, y = 1},
+        applied_stakes = { "blue" },
+        pos = { x = 0, y = 1 },
+        sticker_pos = { x = 1, y = 1 },
         modifiers = function()
             G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 3)
         end,
@@ -428,9 +438,9 @@ function loadAPIs()
         key = "stake_orange",
         omit_prefix = true,
         unlocked_stake = "gold",
-        applied_stakes = {"purple"},
-        pos = {x = 1, y = 1},
-        sticker_pos = {x = 2, y = 1},
+        applied_stakes = { "purple" },
+        pos = { x = 1, y = 1 },
+        sticker_pos = { x = 2, y = 1 },
         modifiers = function()
             G.GAME.modifiers.enable_perishables_in_shop = true
         end,
@@ -441,15 +451,37 @@ function loadAPIs()
         name = "Gold Stake",
         key = "stake_gold",
         omit_prefix = true,
-        applied_stakes = {"orange"},
-        pos = {x = 2, y = 1},
-        sticker_pos = {x = 3, y = 1},
+        applied_stakes = { "orange" },
+        pos = { x = 2, y = 1 },
+        sticker_pos = { x = 3, y = 1 },
         modifiers = function()
             G.GAME.modifiers.enable_rentals_in_shop = true
         end,
         color = G.C.GOLD,
         shiny = true,
         loc_txt = {}
+    }
+    SMODS.Stake {
+        key = 'stake_cyan',
+        omit_prefix = true,
+        applied_stakes = { 'gold' },
+        pos = { x = 2, y = 1 },
+        sticker_pos = { x = 3, y = 1 },
+        modifiers = function()
+            sendWarnMessage('Funky stake')
+        end,
+        color = HEX('ABCDEF'),
+        shiny = true,
+        loc_txt = {
+            description = {
+                name = 'Cyan Stake',
+                text = { 'Funky stake' }
+            },
+            sticker = {
+                name = 'Cyan Sticker',
+                text = { 'No' }
+            }
+        }
     }
 
 
@@ -585,7 +617,7 @@ function loadAPIs()
                     total = total + v.rate
                 end
                 for _, v in ipairs(self.rarities) do
-                    v.rate = v.rate/total
+                    v.rate = v.rate / total
                     self.rarity_pools[v.key] = {}
                 end
             end
@@ -659,7 +691,6 @@ function loadAPIs()
         return t
     end
 
-
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Center
     -------------------------------------------------------------------------------------------------
@@ -686,7 +717,8 @@ function loadAPIs()
             return true
         end,
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
-            local target = {type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars = specific_vars or {}}
+            local target = { type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars =
+            specific_vars or {} }
             local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
                 res = self:loc_vars(info_queue, card) or {}
@@ -694,11 +726,11 @@ function loadAPIs()
                 target.key = res.key or target.key
             end
             if res.main_start then
-                desc_nodes[#desc_nodes+1] = res.main_start
+                desc_nodes[#desc_nodes + 1] = res.main_start
             end
             localize(target)
             if res.main_end then
-                desc_nodes[#desc_nodes+1] = res.main_end
+                desc_nodes[#desc_nodes + 1] = res.main_end
             end
         end
     }
@@ -722,7 +754,6 @@ function loadAPIs()
         prefix = 'j',
         required_params = {
             'key',
-            'name',
             'loc_txt'
         },
         inject = function(self)
@@ -766,7 +797,6 @@ function loadAPIs()
         required_params = {
             'set',
             'key',
-            'name',
             'loc_txt'
         },
         inject = function(self)
@@ -810,7 +840,6 @@ function loadAPIs()
         prefix = 'v',
         required_params = {
             'key',
-            'name',
             'loc_txt',
         }
     }
@@ -830,7 +859,6 @@ function loadAPIs()
         prefix = 'b',
         required_params = {
             'key',
-            'name',
             'loc_txt'
         }
     }
@@ -890,7 +918,6 @@ function loadAPIs()
         pos = { x = 0, y = 0 },
         required_params = {
             'key',
-            'name',
             'loc_txt',
         },
         set = 'Blind',
@@ -923,8 +950,9 @@ function loadAPIs()
         },
         inject = function(self)
             G.P_SEALS[self.key] = self
-            G.shared_seals[self.key] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas] or G.ASSET_ATLAS['centers'], self.pos)
-            self.reverse_lookup[self.key:lower()..'_seal'] = self.key
+            G.shared_seals[self.key] = Sprite(0, 0, G.CARD_W, G.CARD_H,
+                G.ASSET_ATLAS[self.atlas] or G.ASSET_ATLAS['centers'], self.pos)
+            self.reverse_lookup[self.key:lower() .. '_seal'] = self.key
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
             self.rng_buffer[#self.rng_buffer + 1] = self.key
         end,
@@ -1318,7 +1346,7 @@ function loadAPIs()
             }))
             delay(0.5)
         end,
-            })
+    })
     SMODS.Consumable:take_ownership('sigil', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1351,7 +1379,7 @@ function loadAPIs()
             end
             delay(0.5)
         end,
-            })
+    })
     SMODS.Consumable:take_ownership('ouija', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1380,7 +1408,7 @@ function loadAPIs()
             end
             delay(0.5)
         end,
-            })
+    })
     local function random_destroy(used_tarot)
         local destroyed_cards = {}
         destroyed_cards[#destroyed_cards + 1] = pseudorandom_element(G.hand.cards, pseudoseed('random_destroy'))
@@ -1447,7 +1475,7 @@ function loadAPIs()
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
         end,
-            })
+    })
     SMODS.Consumable:take_ownership('familiar', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1491,7 +1519,7 @@ function loadAPIs()
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
         end,
-            })
+    })
     SMODS.Consumable:take_ownership('incantation', {
         use = function(self, area, copier)
             local used_tarot = copier or self
@@ -1535,7 +1563,7 @@ function loadAPIs()
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
         end,
-            })
+    })
     SMODS.Blind:take_ownership('eye', {
         set_blind = function(self, blind, reset, silent)
             if not reset then
@@ -1545,7 +1573,7 @@ function loadAPIs()
             end
         end
     })
-    
+
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.PokerHand
     -------------------------------------------------------------------------------------------------
@@ -1604,27 +1632,27 @@ function loadAPIs()
 
     SMODS.Challenges = {}
     SMODS.Challenge = SMODS.GameObject:extend {
-    obj_table = SMODS.Challenges,
-    obj_buffer = {},
-    set = "Challenge",
-    required_params = {
-        'name',
-        'key', 
-    },
-    deck = {type = "Challenge Deck"},
-    rules = {custom = {},modifiers = {}},
-    jokers = {},
-    consumeables = {},
-    vouchers = {},
-    restrictions = {banned_cards = {}, banned_tags = {}, banned_other = {}},
-    prefix = 'c',
-    process_loc_text = function(self)
-        SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.name)
-    end,
-    inject = function(self)
-        self.id = self.key
-        SMODS.insert_pool(G.CHALLENGES, self)
-    end,
+        obj_table = SMODS.Challenges,
+        obj_buffer = {},
+        set = "Challenge",
+        required_params = {
+            'loc_txt',
+            'key',
+        },
+        deck = { type = "Challenge Deck" },
+        rules = { custom = {}, modifiers = {} },
+        jokers = {},
+        consumeables = {},
+        vouchers = {},
+        restrictions = { banned_cards = {}, banned_tags = {}, banned_other = {} },
+        prefix = 'c',
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.loc_txt)
+        end,
+        inject = function(self)
+            self.id = self.key
+            SMODS.insert_pool(G.CHALLENGES, self)
+        end,
     }
 
     -------------------------------------------------------------------------------------------------
@@ -1637,7 +1665,6 @@ function loadAPIs()
         obj_buffer = {},
         required_params = {
             'key',
-            'name',
             'loc_txt'
         },
         discovered = false,
@@ -1656,7 +1683,8 @@ function loadAPIs()
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
         end,
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
-            local target = {type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars = specific_vars}
+            local target = { type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars =
+            specific_vars }
             local res
             if self.loc_vars and type(self.loc_vars) == 'function' then
                 -- card is a dead arg here
@@ -1665,11 +1693,11 @@ function loadAPIs()
                 target.key = res.key or target.key
             end
             if res.main_start then
-                desc_nodes[#desc_nodes+1] = res.main_start
+                desc_nodes[#desc_nodes + 1] = res.main_start
             end
             localize(target)
             if res.main_end then
-                desc_nodes[#desc_nodes+1] = res.main_end
+                desc_nodes[#desc_nodes + 1] = res.main_end
             end
         end
     }
@@ -1704,5 +1732,25 @@ function loadAPIs()
         set_sticker = function(self, card, val)
             card.ability[self.key] = val
         end
+    }
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.PayoutArg
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.PayoutArgs = {}
+    SMODS.PayoutArg = SMODS.GameObject:extend {
+        obj_buffer = {},
+        obj_table = {},
+        set = 'Payout Argument',
+        prefix = 'p',
+        required_params = {
+            'key'
+        },
+        config = {},
+        above_dot_bar = false,
+        symbol_config = {character = '$', color = G.C.MONEY, needs_localize = true},
+        custom_message_config = { message = nil, color = nil, scale = nil },
+        inject = function() end,
     }
 end

@@ -271,7 +271,7 @@ payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].car
 [[patches]]
 [patches.regex]
 target = 'functions/UI_definitions.lua'
-pattern = "(?<indent>[\t ]*)for j = 1, 4 do\n[\t ]*(?<mid>if.*(\n.*)*?)\n[\t ]*0.42\\*G.CARD_H,"
+pattern = '(?<indent>[\t ]*)for j = 1, 4 do\n[\t ]*(?<mid>if SUITS\[suit_map\[j\]\]\[1\] then\n[\t ]*table.sort.*(\n.*)*?)\n[\t ]*0\.42\*G.CARD_H,'
 position = 'at'
 line_prepend = '$indent'
 payload = '''

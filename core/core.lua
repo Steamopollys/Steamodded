@@ -1161,7 +1161,9 @@ SMODS._loc_txt = {
             b_author = 'Author',
 			b_authors = 'Authors',
             b_unknown = 'Unknown',
-			b_by = ' By: '
+            b_by = ' By: ',
+            b_applies_stakes_1 = 'Applies ',
+			b_applies_stakes_2 = '',
         },
 		load = function(self)
 			for k, _ in pairs(self['en-us']) do

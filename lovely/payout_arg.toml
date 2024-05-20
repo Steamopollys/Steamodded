@@ -4,18 +4,18 @@ dump_lua = true
 priority = 0
 
 ### calc_dollar_bonus add-on for jokers
-#calculate_dollar_bonus()
+# Card:calculate_dollar_bonus()
 [[patches]]
-[patches.regex]
+[patches.pattern]
 target = "card.lua"
-pattern = '''(?<indent>[\t ]*)if self\.ability\.name == 'Cloud 9' and self\.ability\.nine_tally and self\.ability\.nine_tally > 0 then'''
+pattern = "if self.ability.name == 'Cloud 9' and self.ability.nine_tally and self.ability.nine_tally > 0 then"
 position = "before"
-line_prepend = "$indent"
+match_indent = true
 payload = '''
 --asdf
-local joker_obj = self.config.center
-if joker_obj.calc_dollar_bonus and type(joker_obj.calc_dollar_bonus) == 'function' then
-    return joker_obj.calc_dollar_bonus(self)
+local obj = self.config.center
+if obj.calc_dollar_bonus and type(obj.calc_dollar_bonus) == 'function' then
+    return obj.calc_dollar_bonus(self)
 end
 '''
 
@@ -24,16 +24,15 @@ end
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
-pattern = '''(?<indent>[\t ]*)G\.E_MANAGER:add_event[\s\S]Event[\s\S][\s\S]\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]trigger = 'before',\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]delay = 1\.3\*math\.min\(G\.GAME\.blind\.dollars\+2, 7\)\/2\*0\.15 \+ 0\.5,'''
+pattern = '''(?<indent>[\t ]*)G\.E_MANAGER:add_event\(Event\(\{\n[\t ]*trigger = 'before',\n[\t ]*delay = 1\.3\*math\.min\(G\.GAME\.blind\.dollars\+2, 7\)\/2\*0\.15 \+ 0\.5,'''
 position = "before"
 line_prepend = "$indent"
 payload = '''
---asdf
-sendInfoMessage("Payout Args in pos 1 Passed")
-for k, v in pairs(SMODS.Payout_Args) do
-    if v and v.payout and type(v.payout) == 'function' and v.above_dot_bar == true then
-        money_gained = v.payout(v)
-        add_round_eval_row({dollars = money_gained, bonus = true, name='payout_arg'..v.key,pitch = pitch, payout_arg = v, above_dot_bar = true})
+
+for k, v in pairs(SMODS.PayoutArgs) do
+    if v and v.payout and type(v.payout) == 'function' and v.above_dot_bar then
+        money_gained = v:payout()
+        add_round_eval_row({dollars = money_gained, bonus = true, name='payout_arg_'..v.key,pitch = pitch, payout_arg = v, above_dot_bar = true})
         pitch = pitch + 0.06
         dollars = dollars + money_gained
     end
@@ -43,16 +42,15 @@ end
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
-pattern = '''(?<indent>[\t ]*)for i = 1, #G\.jokers\.cards do\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]local ret = G\.jokers\.cards'''
+pattern = '''(?<indent>[\t ]*)for i = 1, #G\.jokers\.cards do\n[\t ]*local ret = G\.jokers\.cards'''
 position = "before"
 line_prepend = "$indent"
 payload = '''
---asdf
-sendInfoMessage("Payout Args in pos 2 Passed")
-for k, v in pairs(SMODS.Payout_Args) do
-    if v and v.payout and type(v.payout) == 'function' and not v.above_dot_bar == true then
-        money_gained = v.payout(v)
-        add_round_eval_row({dollars = money_gained, bonus = true, name='payout_arg'..v.key,pitch = pitch, payout_arg = v})
+
+for k, v in pairs(SMODS.PayoutArgs) do
+    if v and v.payout and type(v.payout) == 'function' and not v.above_dot_bar then
+        money_gained = v:payout()
+        add_round_eval_row({dollars = money_gained, bonus = true, name='payout_arg_'..v.key,pitch = pitch, payout_arg = v})
         pitch = pitch + 0.06
         dollars = dollars + money_gained
     end
@@ -68,7 +66,6 @@ payload = '''
 add_round_eval_row({dollars = G.GAME.blind.dollars, name='blind1', pitch = pitch, above_dot_bar = true})
 '''
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -79,7 +76,6 @@ payload = '''
 add_round_eval_row({dollars = 0, name='blind1', pitch = pitch, saved = true, above_dot_bar = true})
 '''
 match_indent = true
-overwrite = true
 
 # add_round_eval_row()
 [[patches]]
@@ -91,7 +87,6 @@ payload = '''
 if config.above_dot_bar ~= true then
 '''
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -101,11 +96,9 @@ position = "before"
 payload = '''
 --asdf
 elseif string.find(config.name, 'payout_arg') then
-    sendInfoMessage("Adding Payout Arg Text: "..config.payout_arg.name)
-    config.payout_arg.table_left_text(config.payout_arg, config, left_text, scale)
+    config.payout_arg:table_left_text(config, left_text, scale)
 '''
 match_indent = true
-overwrite = false
 
 [[patches]]
 [patches.pattern]
@@ -131,7 +124,6 @@ if string.find(config.name, 'payout_arg') and config.payout_arg.custom_message_c
 else
 '''
 match_indent = true
-overwrite = false
 
 [[patches]]
 [patches.pattern]
@@ -142,12 +134,11 @@ payload = '''
 if num_dollars > 60 or num_dollars < -60 then
 '''
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.regex]
 target = "functions/common_events.lua"
-pattern = '''(?<indent>[\t ]*)trigger = 'before',delay = 0.38,\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]func = function\(\)'''
+pattern = '''(?<indent>[\t ]*)trigger = 'before',delay = 0.38,\n[\t ]*func = function\(\)'''
 position = "after"
 line_prepend = "$indent"
 payload = '''
@@ -171,7 +162,6 @@ payload = '''
 end
 '''
 match_indent = true
-overwrite = false
 
 [[patches]]
 [patches.pattern]
@@ -208,7 +198,6 @@ else --if positive
     dollar_string = localize('$')..num_dollars
 '''
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]
@@ -222,12 +211,11 @@ for i = 1, dollars_to_loop do
 
 '''
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.regex]
 target = "functions/common_events.lua"
-pattern = '''(?<indent>[\t ]*)else\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]local dollars_to_loop'''
+pattern = '''(?<indent>[\t ]*)else\n[\t ]*local dollars_to_loop'''
 position = "before"
 line_prepend = "$indent"
 payload = '''
@@ -247,8 +235,8 @@ if i == 1 and num_dollars < 0 then
     play_sound('coin3', 0.9+0.2*math.random(), 0.7 - (num_dollars < -20 and 0.2 or 0))
 else
     if string.find(config.name, 'payout_arg') then
-        if config.payout_arg.symbol_config.needs_localize == false then
-            sendInfoMessage("Does not need localize() function")
+        if not config.payout_arg.symbol_config.needs_localize then
+            --sendInfoMessage("Does not need localize() function")
             r = {n=G.UIT.T, config={text = config.payout_arg.symbol_config.character, colour = config.payout_arg.symbol_config.color, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
         else
             sendInfoMessage("Needs localize() function")
@@ -260,12 +248,11 @@ else
 end
 '''
 match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.regex]
 target = "functions/common_events.lua"
-pattern = '''(?<indent>[\t ]*)else\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]delay\(0\.4\)'''
+pattern = '''(?<indent>[\t ]*)else\n[\t ]*delay\(0\.4\)'''
 position = "before"
 line_prepend = "$indent"
 payload = '''
