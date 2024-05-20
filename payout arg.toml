@@ -1,0 +1,274 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### calc_dollar_bonus add-on for jokers
+#calculate_dollar_bonus()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''(?<indent>[\t ]*)if self\.ability\.name == 'Cloud 9' and self\.ability\.nine_tally and self\.ability\.nine_tally > 0 then'''
+position = "before"
+line_prepend = "$indent"
+payload = '''
+--asdf
+local joker_obj = self.config.center
+if joker_obj.calc_dollar_bonus and type(joker_obj.calc_dollar_bonus) == 'function' then
+    return joker_obj.calc_dollar_bonus(self)
+end
+'''
+
+### Payout Arg API
+# G.FUNCS.evaluate_play()
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''(?<indent>[\t ]*)G\.E_MANAGER:add_event[\s\S]Event[\s\S][\s\S]\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]trigger = 'before',\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]delay = 1\.3\*math\.min\(G\.GAME\.blind\.dollars\+2, 7\)\/2\*0\.15 \+ 0\.5,'''
+position = "before"
+line_prepend = "$indent"
+payload = '''
+--asdf
+sendInfoMessage("Payout Args in pos 1 Passed")
+for k, v in pairs(SMODS.Payout_Args) do
+    if v and v.payout and type(v.payout) == 'function' and v.above_dot_bar == true then
+        money_gained = v.payout(v)
+        add_round_eval_row({dollars = money_gained, bonus = true, name='payout_arg'..v.key,pitch = pitch, payout_arg = v, above_dot_bar = true})
+        pitch = pitch + 0.06
+        dollars = dollars + money_gained
+    end
+end
+'''
+
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''(?<indent>[\t ]*)for i = 1, #G\.jokers\.cards do\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]local ret = G\.jokers\.cards'''
+position = "before"
+line_prepend = "$indent"
+payload = '''
+--asdf
+sendInfoMessage("Payout Args in pos 2 Passed")
+for k, v in pairs(SMODS.Payout_Args) do
+    if v and v.payout and type(v.payout) == 'function' and not v.above_dot_bar == true then
+        money_gained = v.payout(v)
+        add_round_eval_row({dollars = money_gained, bonus = true, name='payout_arg'..v.key,pitch = pitch, payout_arg = v})
+        pitch = pitch + 0.06
+        dollars = dollars + money_gained
+    end
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "add_round_eval_row({dollars = G.GAME.blind.dollars, name='blind1', pitch = pitch})"
+position = "at"
+payload = '''
+add_round_eval_row({dollars = G.GAME.blind.dollars, name='blind1', pitch = pitch, above_dot_bar = true})
+'''
+match_indent = true
+overwrite = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "add_round_eval_row({dollars = 0, name='blind1', pitch = pitch, saved = true})"
+position = "at"
+payload = '''
+add_round_eval_row({dollars = 0, name='blind1', pitch = pitch, saved = true, above_dot_bar = true})
+'''
+match_indent = true
+overwrite = true
+
+# add_round_eval_row()
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if config.name ~= 'blind1' then"
+position = "at"
+payload = '''
+if config.above_dot_bar ~= true then
+'''
+match_indent = true
+overwrite = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "elseif config.name == 'interest' then"
+position = "before"
+payload = '''
+--asdf
+elseif string.find(config.name, 'payout_arg') then
+    sendInfoMessage("Adding Payout Arg Text: "..config.payout_arg.name)
+    config.payout_arg.table_left_text(config.payout_arg, config, left_text, scale)
+'''
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "local dollar_row = 0"
+position = "after"
+payload = '''
+--asdf
+if string.find(config.name, 'payout_arg') and config.payout_arg.custom_message_config.message then
+    G.E_MANAGER:add_event(Event({
+        trigger = 'before',delay = 0.38,func = function()
+            G.round_eval:add_child(
+                    {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
+                        {n=G.UIT.O, config={object = DynaText({string = localize(config.payout_arg.custom_message_config.message), colours = {config.payout_arg.custom_message_config.color}, shadow = true, pop_in = 0, scale = config.payout_arg.custom_message_config.scale, float = true})}}
+                    }},
+                    G.round_eval:get_UIE_by_ID('dollar_'..config.name))
+
+            play_sound('coin3', 0.9+0.2*math.random(), 0.7) --asdf
+            play_sound('coin6', 1.3, 0.8)
+            return true
+        end
+    }))
+else
+'''
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if num_dollars > 60 then"
+position = "at"
+payload = '''
+if num_dollars > 60 or num_dollars < -60 then
+'''
+match_indent = true
+overwrite = true
+
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '''(?<indent>[\t ]*)trigger = 'before',delay = 0.38,\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]func = function\(\)'''
+position = "after"
+line_prepend = "$indent"
+payload = '''
+--asdf
+if string.find(config.name, 'payout_arg') then
+G.round_eval:add_child(
+        {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
+            {n=G.UIT.O, config={object = DynaText({string = {localize('$')..num_dollars}, colours = {config.payout_arg.symbol_config.color}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
+        }},
+        G.round_eval:get_UIE_by_ID('dollar_'..config.name))
+else
+'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "play_sound('coin3', 0.9+0.2*math.random(), 0.7)"
+position = "before"
+payload = '''
+--asdf
+end
+'''
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "local dollar_string = localize('$')..num_dollars"
+position = "at"
+payload = '''
+local dollar_string
+if num_dollars < 0 then --if negative
+    dollar_string = '-'..localize('$')..(num_dollars*-1)
+    G.E_MANAGER:add_event(Event({
+        trigger = 'before',delay = 0.38,
+        func = function()
+            if string.find(config.name, 'payout_arg') then
+                G.round_eval:add_child(
+                        {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
+                            {n=G.UIT.O, config={object = DynaText({string = {'-'..localize('$')..(num_dollars*-1)}, colours = {config.payout_arg.symbol_config.color}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
+                        }},
+                        G.round_eval:get_UIE_by_ID('dollar_'..config.name))
+            else
+                G.round_eval:add_child(
+                        {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
+                            {n=G.UIT.O, config={object = DynaText({string = {localize('$')..(num_dollars*-1)}, colours = {G.C.MONEY}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
+                        }},
+                        G.round_eval:get_UIE_by_ID('dollar_'..config.name))
+            end
+
+            play_sound('coin3', 0.9+0.2*math.random(), 0.7)
+            play_sound('coin6', 1.3, 0.8)
+            return true
+        end
+    }))
+else --if positive
+    dollar_string = localize('$')..num_dollars
+'''
+match_indent = true
+overwrite = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "for i = 1, num_dollars or 1 do"
+position = "at"
+payload = '''
+local dollars_to_loop
+if num_dollars < 0 then dollars_to_loop = num_dollars*-1 else dollars_to_loop = num_dollars end
+for i = 1, dollars_to_loop do
+
+'''
+match_indent = true
+overwrite = true
+
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '''(?<indent>[\t ]*)else\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]local dollars_to_loop'''
+position = "before"
+line_prepend = "$indent"
+payload = '''
+--asdf
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "local r = {n=G.UIT.T, config={text = localize('$'), colour = G.C.MONEY, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}"
+position = "at"
+payload = '''
+local r
+if i == 1 and num_dollars < 0 then
+    r = {n=G.UIT.T, config={text = '-', colour = config.payout_arg.symbol_config.color, scale = ((num_dollars < -20 and 0.28) or (num_dollars < -9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
+    play_sound('coin3', 0.9+0.2*math.random(), 0.7 - (num_dollars < -20 and 0.2 or 0))
+else
+    if string.find(config.name, 'payout_arg') then
+        if config.payout_arg.symbol_config.needs_localize == false then
+            sendInfoMessage("Does not need localize() function")
+            r = {n=G.UIT.T, config={text = config.payout_arg.symbol_config.character, colour = config.payout_arg.symbol_config.color, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
+        else
+            sendInfoMessage("Needs localize() function")
+            r = {n=G.UIT.T, config={text = localize(config.payout_arg.symbol_config.character), colour = config.payout_arg.symbol_config.color, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
+        end
+    else
+        r = {n=G.UIT.T, config={text = localize('$'), colour = G.C.MONEY, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
+    end
+end
+'''
+match_indent = true
+overwrite = true
+
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '''(?<indent>[\t ]*)else\n[\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S][\s\S]delay\(0\.4\)'''
+position = "before"
+line_prepend = "$indent"
+payload = '''
+--asdf
+end
+'''
