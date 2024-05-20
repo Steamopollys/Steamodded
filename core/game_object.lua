@@ -1879,7 +1879,6 @@ function loadAPIs()
         prefix = 'm',
         atlas = 'centers',
         required_params = {
-            'name',
             'key',
             -- table with keys `name` and `text`
             'loc_txt'
