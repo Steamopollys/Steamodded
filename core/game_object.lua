@@ -1886,7 +1886,6 @@ function loadAPIs()
         },
         register = function(self)
             self.effect = self.effect or self.name
-            self.loc_txt.name = self.loc_txt.name or self.name
             self.config = self.config or {}
             SMODS.Enhancement.super.register(self)
         end,
