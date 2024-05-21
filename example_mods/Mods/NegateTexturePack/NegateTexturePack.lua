@@ -3,22 +3,17 @@
 --- MOD_ID: NegateTexturePack
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Negated Balatro... THIS IS AN EXAMPLE MOD, FEEL FREE TO USE IT AS A BASE
+--- LOADER_VERSION_GEQ: 1.0.0
 
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
-function SMODS.INIT.NegateTexturePack()
-    sendDebugMessage("Launching Negate Texture Pack!")
 
-    local negate_mod = SMODS.findModByID("NegateTexturePack")
-    local sprite_jkr = SMODS.Sprite:new("Joker", negate_mod.path, "Jokers-negate.png", 71, 95, "asset_atli")
-    local sprite_boost = SMODS.Sprite:new("Booster", negate_mod.path, "boosters-negate.png", 71, 95, "asset_atli")
-    local sprite_blind = SMODS.Sprite:new("blind_chips", negate_mod.path, "BlindChips-negate.png", 34, 34, "animation_atli", 21)
+sendDebugMessage("Launching Negate Texture Pack!")
 
-    sprite_jkr:register()
-    sprite_boost:register()
-    sprite_blind:register()
-end
+SMODS.Atlas{key = "Joker", path = "Jokers-negate.png", px = 71, py = 95, raw_key = true}
+SMODS.Atlas{key = "Booster", path = "boosters-negate.png", px = 71, py = 95, raw_key = true}
+SMODS.Atlas{key = "blind_chips", path = "BlindChips-negate.png", px = 34, py = 34, raw_key = true, atlas_table = 'ANIMATION_ATLAS', frames = 21}
 
 ----------------------------------------------
 ------------MOD CODE END----------------------

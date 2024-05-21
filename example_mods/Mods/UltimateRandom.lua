@@ -3,6 +3,7 @@
 --- MOD_ID: UltimateRandomDeck
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Ultimate Random Deck!
+--- LOADER_VERSION_GEQ: 1.0.0
 
 ----------------------------------------------
 ------------MOD CODE -------------------------
@@ -95,19 +96,20 @@ function Back.apply_to_run(arg_56_0)
 	end
 end
 
-function SMODS.INIT.UltimateRandomDeck()
-	local loc_def = {
-		["name"]="Ultimate Random",
-		["text"]={
-			[1]="Start with a Deck",
-			[2]="full of",
-			[3]="{C:attention}Random{} cards"
-		},
+SMODS.Back{
+	name = "Ultimate Random",
+	key = "ultimate",
+	pos = {x = 4, y = 3},
+	config = {random = true},
+	loc_txt = {
+		name = "Ultimate Random",
+		text ={
+			"Start with a Deck",
+			"full of",
+			"{C:attention}Random{} cards"
+		}
 	}
-
-	local absolute = SMODS.Deck:new("Ultimate Random", "ultimate", {random = true}, {x = 4, y = 3}, loc_def)
-	absolute:register()
-end
+}
 
 ----------------------------------------------
 ------------MOD CODE END----------------------

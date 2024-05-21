@@ -3,6 +3,7 @@
 --- MOD_ID: AbsoluteDeck
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Absolute Deck of PolyGlass!
+--- LOADER_VERSION_GEQ: 1.0.0
 
 ----------------------------------------------
 ------------MOD CODE -------------------------
@@ -29,17 +30,19 @@ function Back.apply_to_run(arg_56_0)
 	end
 end
 
-local loc_def = {
-	["name"]="Absolute Deck",
-	["text"]={
-		[1]="Start with a Deck",
-		[2]="full of",
-		[3]="{C:attention,T:e_polychrome}Poly{}{C:red,T:m_glass}glass{} cards"
+SMODS.Back{
+	name = "Absolute Deck",
+	key = "absolute",
+	pos = {x = 0, y = 3},
+	config = {polyglass = true},
+	loc_txt = {
+		name = "Absolute Deck",
+		text ={
+			"Start with a Deck",
+			"full of {C:attention,T:e_polychrome}Poly{}{C:red,T:m_glass}glass{} cards"
+		},
 	},
 }
-
-local absolute = SMODS.Deck:new("Absolute Deck", "absolute", {polyglass = true}, {x = 0, y = 3}, loc_def)
-absolute:register()
 
 ----------------------------------------------
 ------------MOD CODE END----------------------
