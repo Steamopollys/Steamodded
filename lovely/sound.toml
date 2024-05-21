@@ -1,0 +1,36 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern] 
+target = 'functions/misc_functions.lua'
+pattern = 'G.ARGS.push.ambient_control = G.SETTINGS.ambient_control'
+match_indent = true
+position = 'after'
+payload = '''
+local music_codes = { 'music1', 'music2', 'music3', 'music4', 'music5' }
+for _, sound_code in ipairs(music_codes) do
+	if not (sound_code == desired_track) then
+		local replace_sound = SMODS.Sound.replace_sounds[sound_code]
+        if replace_sound then
+			SMODS.Sounds[replace_sound.key]:play(1, 0, true);
+			SMODS.Sounds[replace_sound.key].sound:setVolume(0)
+        end
+	end
+end
+local replace_sound = SMODS.Sound.replace_sounds[desired_track]
+if replace_sound then
+	local sound = SMODS.Sounds[replace_sound.key]
+	if replace_sound.args then
+        local args = replace_sound.args
+        sound:play(args.pitch, args.volume*(G.SETTINGS.SOUND.volume/100.0)*(G.SETTINGS.SOUND.music_volume/100.0), args.stop_previous_instance)
+		if not args.continue_base_sound then return end
+	else
+        sound:play(nil, 1)
+		return
+    end
+end
+if SMODS.Sound.stop_sounds[desired_track] then return end
+'''

@@ -103,7 +103,7 @@ function loadAPIs()
         for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
             if o[v] then atlas_override[v] = o[v] end
         end
-        if not o.loc_txt and not o.generate_ui then o.generate_ui = 0 end
+        if not o.loc_txt and not o.generate_ui and not o.loc_vars then o.generate_ui = 0 end
         setmetatable(o, self)
         if o.mod then
             o.dependencies = o.dependencies or {}
@@ -249,6 +249,145 @@ function loadAPIs()
         px = 34,
         py = 34,
     }
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Sound
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Sounds = {}
+    SMODS.Sound = SMODS.GameObject:extend {
+        obj_buffer = {},
+        obj_table = SMODS.Sounds,
+        stop_sounds = {},
+        replace_sounds = {},
+        omit_prefix = true,
+        required_params = {
+            'key',
+            'path'
+        },
+        process_loc_text = function() end,
+        register = function(self)
+            if self.obj_table[self.key] then return end
+            if not self.raw_key and self.mod then
+                self.key = ('%s_%s'):format(self.mod.prefix, self.key)
+            end
+            if self.language then
+                self.key = ('%s_%s'):format(self.key, self.language)
+            end
+            self.sound_code = self.key
+            if self.replace then
+                local replace, times, args
+                if type(self.replace) == 'table' then
+                    replace, times, args = self.replace.key, self.replace.times or -1, self.replace.args
+                else
+                    replace, times = self.replace, -1
+                end
+                self.replace_sounds[replace] = { key = self.key, times = times, args = args}
+            end
+            self.super.register(self)
+        end,
+        inject = function(self)
+            local file_path = type(self.path) == 'table' and
+                (self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
+            if file_path == 'DEFAULT' then return end
+            -- language specific sounds override fully defined sounds only if that language is set
+            if self.language and not (G.SETTINGS.language == self.language) then return end
+            if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
+            self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
+                'assets/sounds' .. file_path
+            self.sound = love.audio.newSource(
+                self.full_path,
+                ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
+            )
+        end,
+        register_global = function(self)
+            local mod = SMODS.current_mod
+            if not mod then return end
+            for _, filename in ipairs(NFS.getDirectoryItems(mod.path ..'assets/sounds/')) do
+                local extension = string.sub(filename, -4)
+                if extension == '.ogg' or extension == '.mp3' or extension == '.wav' then -- please use .ogg or .wav files
+                    local sound_code = string.sub(filename, 1, -5)
+                    self {
+                        key = sound_code,
+                        path = filename,
+                    }
+                end
+            end
+        end,
+        play = function(self, pitch, volume, stop_previous_instance, key)
+            local sound = self or SMODS.Sounds[key]
+            if not sound then return false end
+
+            stop_previous_instance = stop_previous_instance and true
+            volume = volume or 1
+            sound.sound:setPitch(pitch or 1)
+
+            local sound_vol = volume * (G.SETTINGS.SOUND.volume / 100.0)
+            if string.find(sound.sound_code, 'music') then
+                sound_vol = sound_vol * (G.SETTINGS.SOUND.game_sounds_volume / 100.0)
+            else
+                sound_vol = sound_vol * (G.SETTINGS.SOUND.music_volume / 100.0)
+            end
+            if sound_vol <= 0 then
+                sound.sound:setVolume(0)
+            else
+                sound.sound:setVolume(sound_vol)
+            end
+
+            if stop_previous_instance and sound.sound:isPlaying() then
+                sound.sound:stop()
+            end
+            love.audio.play(sound.sound)
+        end,
+        create_stop_sound = function(self, key, times)
+            times = times or -1
+            self.stop_sounds[key] = times
+        end,
+        create_replace_sound = function(self, replace_sound)
+            self.replace = replace_sound
+            local replace, times, args
+            if type(self.replace) == 'table' then
+                replace, times, args = self.replace.key, self.replace.times or -1, self.replace.args
+            else
+                replace, times = self.replace, -1
+            end
+            self.replace_sounds[replace] = { key = self.key, times = times, args = args }
+        end
+    }
+
+    local play_sound_ref = play_sound
+    function play_sound(sound_code, per, vol)
+        local sound = SMODS.Sounds[sound_code]
+        if sound then
+            sound:play(per, vol, true)
+            return
+        end
+        local replace_sound = SMODS.Sound.replace_sounds[sound_code]
+        if replace_sound then
+            local sound = SMODS.Sounds[replace_sound.key]
+            local rt
+            if replace_sound.args then
+                local args = replace_sound.args
+                sound:play(args.pitch, args.volume, args.stop_previous_instance)
+                if not args.continue_base_sound then rt = true end
+            else
+                sound:play(per, vol)
+                rt = true
+            end
+            if replace_sound.times > 0 then replace_sound.times = replace_sound.times - 1 end
+            if replace_sound.times == 0 then SMODS.Sound.replace_sounds[sound_code] = nil end
+            if rt then return end
+        end
+        local stop_sound = SMODS.Sound.stop_sounds[sound_code]
+        if stop_sound then
+            if stop_sound > 0 then
+                SMODS.Sound.stop_sounds[sound_code] = stop_sound - 1
+            end
+            return
+        end
+
+        return play_sound_ref(sound_code, per, vol)
+    end
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Stake
@@ -918,6 +1057,7 @@ function loadAPIs()
         rng_buffer = { 'Purple', 'Gold', 'Blue', 'Red' },
         reverse_lookup = {},
         set = 'Seal',
+        prefix = 's',
         atlas = 'centers',
         discovered = false,
         colour = HEX('FFFFFF'),
