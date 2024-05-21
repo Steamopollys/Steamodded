@@ -103,7 +103,7 @@ function loadAPIs()
         for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
             if o[v] then atlas_override[v] = o[v] end
         end
-        if not o.loc_txt and not o.generate_ui and not o.loc_vars then o.generate_ui = 0 end
+        if not obj.loc_txt and not obj.generate_ui and not obj.loc_vars then obj.generate_ui = 0 end
         setmetatable(o, self)
         if o.mod then
             o.dependencies = o.dependencies or {}
