@@ -65,8 +65,8 @@ end
 -- no point in using lovely for this, since no part of the original function is useful
 function get_straight(hand)
 	local ret = {}
-	local four_fingers = next(find_joker('Four Fingers'))
-	local can_skip = next(find_joker('Shortcut'))
+	local four_fingers = next(SMODS.find_card('j_four_fingers'))
+	local can_skip = next(SMODS.find_card('j_shortcut'))
 	if #hand < (5 - (four_fingers and 1 or 0)) then return ret end
 	local t = {}
 	local RANKS = {}
