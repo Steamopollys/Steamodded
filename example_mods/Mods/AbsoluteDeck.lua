@@ -8,28 +8,6 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
-local Backapply_to_runRef = Back.apply_to_run
-function Back.apply_to_run(arg_56_0)
-	Backapply_to_runRef(arg_56_0)
-
-	if arg_56_0.effect.config.polyglass then
-		G.E_MANAGER:add_event(Event({
-			func = function()
-				for iter_57_0 = #G.playing_cards, 1, -1 do
-					sendDebugMessage(G.playing_cards[iter_57_0].base.id)
-
-					G.playing_cards[iter_57_0]:set_ability(G.P_CENTERS.m_glass)
-					G.playing_cards[iter_57_0]:set_edition({
-						polychrome = true
-					}, true, true)
-				end
-
-				return true
-			end
-		}))
-	end
-end
-
 SMODS.Back{
 	name = "Absolute Deck",
 	key = "absolute",
@@ -41,7 +19,20 @@ SMODS.Back{
 			"Start with a Deck",
 			"full of {C:attention,T:e_polychrome}Poly{}{C:red,T:m_glass}glass{} cards"
 		},
-	},
+    },
+	apply = function()
+		G.E_MANAGER:add_event(Event({
+			func = function()
+				for i = #G.playing_cards, 1, -1 do
+					G.playing_cards[i]:set_ability(G.P_CENTERS.m_glass)
+					G.playing_cards[i]:set_edition({
+						polychrome = true
+					}, true, true)
+				end
+				return true
+			end
+		}))
+	end
 }
 
 ----------------------------------------------

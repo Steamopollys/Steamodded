@@ -15,13 +15,13 @@ function Back.apply_to_run(arg_56_0)
 	if arg_56_0.effect.config.only_one_rank then
 		G.E_MANAGER:add_event(Event({
 			func = function()
-				for iter_57_0 = #G.playing_cards, 1, -1 do
-					sendDebugMessage(G.playing_cards[iter_57_0].base.id)
-					if G.playing_cards[iter_57_0].base.id ~= 4 then
-						local suit = string.sub(G.playing_cards[iter_57_0].base.suit, 1, 1) .. "_"
+				for i = #G.playing_cards, 1, -1 do
+					sendDebugMessage(G.playing_cards[i].base.id)
+					if G.playing_cards[i].base.id ~= 4 then
+						local suit = string.sub(G.playing_cards[i].base.suit, 1, 1) .. "_"
 						local rank = "4"
 
-						G.playing_cards[iter_57_0]:set_base(G.P_CARDS[suit .. rank])
+						G.playing_cards[i]:set_base(G.P_CARDS[suit .. rank])
 					end
 				end
 
@@ -42,7 +42,18 @@ SMODS.Back{
 			"Start with a Deck",
 			"full of {C:attention}Fours{}",
 		},
-	},
+    },
+	apply = function(back)
+		G.E_MANAGER:add_event(Event({
+			func = function()
+                for i = #G.playing_cards, 1, -1 do
+                    local suit_data = SMODS.Suits[G.playing_cards[i].base.suit]
+					G.playing_cards[i]:set_base(G.P_CARDS[suit_data.card_key .. '_' .. back.effect.config.only_one_rank])
+				end
+				return true
+			end
+		}))
+	end
 }
 
 ----------------------------------------------

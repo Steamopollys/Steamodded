@@ -19,11 +19,20 @@ function randomSelect(table)
     return table[randomIndex]
 end
 
-local Backapply_to_runRef = Back.apply_to_run
-function Back.apply_to_run(arg_56_0)
-	Backapply_to_runRef(arg_56_0)
-
-	if arg_56_0.effect.config.random then
+SMODS.Back{
+	name = "Ultimate Random",
+	key = "ultimate",
+	pos = {x = 4, y = 3},
+	config = {random = true},
+	loc_txt = {
+		name = "Ultimate Random",
+		text ={
+			"Start with a Deck",
+			"full of",
+			"{C:attention}Random{} cards"
+		}
+    },
+	apply = function()
 		G.E_MANAGER:add_event(Event({
 			func = function()
 				local trandom_m = {
@@ -71,22 +80,22 @@ function Back.apply_to_run(arg_56_0)
 					"Purple",
 					"NOTHING"
 				}
-				for iter_57_0 = #G.playing_cards, 1, -1 do
+				for i = #G.playing_cards, 1, -1 do
 					local random_m = randomSelect(trandom_m)
 					local random_e = randomSelect(trandom_e)
 					local random_r = randomSelect(trandom_r)
 					local random_s = randomSelect(trandom_s)
 					local random_g = randomSelect(trandom_g)
 
-					G.playing_cards[iter_57_0]:set_base(G.P_CARDS[random_s .. "_" .. random_r])
+					G.playing_cards[i]:set_base(G.P_CARDS[random_s .. "_" .. random_r])
 					if random_m  ~= "NOTHING" then
-						G.playing_cards[iter_57_0]:set_ability(random_m)
+						G.playing_cards[i]:set_ability(random_m)
 					end
 					if random_e ~= "NOTHING" then
-						G.playing_cards[iter_57_0]:set_edition(random_e, true, true)
+						G.playing_cards[i]:set_edition(random_e, true, true)
 					end
 					if random_g ~= "NOTHING" then
-						G.playing_cards[iter_57_0]:set_seal(random_g, true, true)
+						G.playing_cards[i]:set_seal(random_g, true, true)
 					end
 				end
 
@@ -94,21 +103,6 @@ function Back.apply_to_run(arg_56_0)
 			end
 		}))
 	end
-end
-
-SMODS.Back{
-	name = "Ultimate Random",
-	key = "ultimate",
-	pos = {x = 4, y = 3},
-	config = {random = true},
-	loc_txt = {
-		name = "Ultimate Random",
-		text ={
-			"Start with a Deck",
-			"full of",
-			"{C:attention}Random{} cards"
-		}
-	}
 }
 
 ----------------------------------------------

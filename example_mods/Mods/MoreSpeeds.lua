@@ -9,7 +9,7 @@
 
 
 
-setting_tabRef = G.UIDEF.settings_tab
+local setting_tabRef = G.UIDEF.settings_tab
 function G.UIDEF.settings_tab(tab)
     local setting_tab = setting_tabRef(tab)
 
@@ -67,8 +67,9 @@ function G.UIDEF.settings_tab(tab)
             }
         }
         setting_tab.nodes[1] = speeds
-        table.insert(setting_tab.nodes, 2, free_speed_text)
-        table.insert(setting_tab.nodes, 3, free_speed_box)
+        -- TODO fix this
+        --table.insert(setting_tab.nodes, 2, free_speed_text)
+        --table.insert(setting_tab.nodes, 3, free_speed_box)
     end
     return setting_tab
 end
