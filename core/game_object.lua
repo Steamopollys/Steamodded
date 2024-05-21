@@ -885,18 +885,6 @@ function loadAPIs()
         end
     }
 
-    function SMODS.end_calculate_context(c)
-        if not c.after and not c.before and not c.other_joker and not c.repetition and not c.individual and
-            not c.end_of_round and not c.discard and not c.pre_discard and not c.debuffed_hand and not c.using_consumeable and
-            not c.remove_playing_cards and not c.cards_destroyed and not c.destroying_card and not c.setting_blind and
-            not c.first_hand_drawn and not c.playing_card_added and not c.skipping_booster and not c.skip_blind and
-            not c.ending_shop and not c.reroll_shop and not c.selling_card and not c.selling_self and not c.buying_card and
-            not c.open_booster then
-            return true
-        end
-        return false
-    end
-
     -------------------------------------------------------------------------------------------------
     ------- API CODE GameObject.Center.Consumable
     -------------------------------------------------------------------------------------------------
