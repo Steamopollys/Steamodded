@@ -324,9 +324,9 @@ function loadAPIs()
 
             local sound_vol = volume * (G.SETTINGS.SOUND.volume / 100.0)
             if string.find(sound.sound_code, 'music') then
-                sound_vol = sound_vol * (G.SETTINGS.SOUND.game_sounds_volume / 100.0)
-            else
                 sound_vol = sound_vol * (G.SETTINGS.SOUND.music_volume / 100.0)
+            else
+                sound_vol = sound_vol * (G.SETTINGS.SOUND.game_sounds_volume / 100.0)
             end
             if sound_vol <= 0 then
                 sound.sound:setVolume(0)
