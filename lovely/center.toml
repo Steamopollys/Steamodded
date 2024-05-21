@@ -54,7 +54,7 @@ target = 'card.lua'
 pattern = "(?<else>else)\n[\t ]*if self.ability.name == 'Loyalty Card' then\n[\t ]*self.ability.loyalty_remaining"
 root_capture = 'else'
 position = 'at'
-payload = 'elseif SMODS.end_calculate_context(context) then'
+payload = 'elseif context.joker_main then'
 
 
 [[patches]]
@@ -494,11 +494,12 @@ elseif nc then
 target = 'card.lua'
 pattern = "if not self.children.back then"
 match_indent = true
-position = 'before'
+position = 'at'
 payload = '''
 if _center.set_sprites and type(_center.set_sprites) == 'function' then
 	_center.set_sprites(self, _center, _front)
 end
+if true then
 '''
 
 # Card:load()
