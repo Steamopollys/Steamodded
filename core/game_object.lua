@@ -937,6 +937,7 @@ function loadAPIs()
     SMODS.Voucher = SMODS.Center:extend {
         set = 'Voucher',
         cost = 10,
+        atlas = 'Voucher',
         discovered = false,
         unlocked = true,
         available = true,

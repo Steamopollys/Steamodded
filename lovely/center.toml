@@ -14,7 +14,7 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj.set_ability and type(obj.set_ability) == 'function' then
-	obj.set_ability(self, center, initial, delay_sprites)
+	obj:set_ability(self, initial, delay_sprites)
 end'''
 line_prepend = '$indent'
 
@@ -27,7 +27,7 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj.calculate and type(obj.calculate) == 'function' then
-	local o = obj.calculate(self, context)
+	local o = obj:calculate(self, context)
 	if o then return o end
 end
 '''
@@ -43,7 +43,7 @@ match_indent = true
 payload = '''
 local obj = self.config.center
 if obj.update and type(obj.update) == 'function' then
-	obj.update(self, dt)
+	obj:update(self, dt)
 end
 '''
 
@@ -164,7 +164,7 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj.use and type(obj.use) == 'function' then
-	obj.use(self, area, copier)
+	obj:use(self, area, copier)
 	return
 end
 '''
@@ -179,7 +179,7 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj.can_use and type(obj.can_use) == 'function' then
-	return obj.can_use(self)
+	return obj:can_use(self)
 end
 '''
 
@@ -195,17 +195,17 @@ local obj = card.config.center
 $if
 	if obj and (obj.set_card_type_badge or obj.type and obj.type.set_card_type_badge) then
 		if obj.type and type(obj.type.set_card_type_badge) == 'function' then
-			obj.type.set_card_type_badge(card, badges)
+			obj.type:set_card_type_badge(obj, card, badges)
 		end
 		if type(obj.set_card_type_badge) == 'function' then
-			obj.set_card_type_badge(card, badges)
+			obj:set_card_type_badge(card, badges)
 		end
 	else
 		$rest
 	end
 end
 if obj and obj.set_badges and type(obj.set_badges) == 'function' then
-	obj.set_badges(card, badges)
+	obj:set_badges(card, badges)
 end
 '''
 
@@ -313,7 +313,7 @@ position = 'before'
 payload = '''
 local obj = center or self.config.center
 if obj.redeem and type(obj.redeem) == 'function' then
-	obj:redeem()
+	obj:redeem(self)
 	return
 end
 '''
@@ -439,7 +439,7 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj and obj.add_to_deck and type(obj.add_to_deck) == 'function' then
-	obj.add_to_deck(self, from_debuff)
+	obj:add_to_deck(self, from_debuff)
 end
 '''
 
@@ -453,7 +453,7 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj and obj.remove_from_deck and type(obj.remove_from_deck) == 'function' then
-	obj.remove_from_deck(self, from_debuff)
+	obj:remove_from_deck(self, from_debuff)
 end
 '''
 
@@ -469,7 +469,7 @@ local nc
 if card.ability.consumeable then
     local obj = card.config.center
     	if obj.keep_on_use and type(obj.keep_on_use) == 'function' then
-        	nc = obj.keep_on_use(card)
+        	nc = obj:keep_on_use(card)
       	end
     end
 if not nc and card.area then card.area:remove_card(card) end
@@ -497,7 +497,7 @@ match_indent = true
 position = 'at'
 payload = '''
 if _center.set_sprites and type(_center.set_sprites) == 'function' then
-	_center.set_sprites(self, _center, _front)
+	_center:set_sprites(self, _front)
 end
 if true then
 '''
@@ -512,6 +512,6 @@ position = 'at'
 payload = '''
 local obj = self.config.center
 if obj.load and type(obj.load) == 'function' then
-	obj.load(self, cardTable, other_card)
+	obj:load(self, cardTable, other_card)
 elseif self.config.center.name == "Half Joker" then
 '''
