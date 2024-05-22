@@ -144,6 +144,7 @@ function loadMods(modsDirectory)
                     if sane then
                         boot_print_stage('Saving Mod Info: ' .. mod.id)
                         mod.path = directory .. '/'
+                        mod.main_file = filename
                         mod.display_name = mod.display_name or mod.name
                         used_prefixes[mod.prefix] = mod.id
                         mod.content = file_content
@@ -240,7 +241,7 @@ function loadMods(modsDirectory)
             if mod.can_load then
                 boot_print_stage('Loading Mod: ' .. mod.id)
                 SMODS.current_mod = mod
-                assert(load(mod.content))()
+                assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
             else
                 boot_print_stage('Failed to load Mod: ' .. mod.id)
                 sendWarnMessage(string.format("Mod %s was unable to load: %s%s%s", mod.id,
