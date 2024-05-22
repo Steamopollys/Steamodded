@@ -146,7 +146,7 @@ function loadStackTracePlus()
                 return "?"
             end
             return ParseLine(line)
-        elseif type(info.source) == "string" and info.source:sub(1, 1) == "=" then
+        elseif type(info.source) == "string" and info.source:sub(1, 6) == "=[love" then
             return "(Love2D Function)"
         else
             local line
@@ -278,14 +278,8 @@ function loadStackTracePlus()
                     end
                     -- for k,v in pairs(info) do print(k,v) end
                     fun_name = fun_name or GuessFunctionName(info)
-                    if info.source and info.source:sub(1, 21) == "--- STEAMODDED HEADER" then
-                        local modName, modID = info.source:match("%-%-%- MOD_NAME: ([^\n]+)\n%-%-%- MOD_ID: ([^\n]+)")
-                        self:add_f("%s%s = Lua function '%s' (defined at line %d of mod %s (%s))\r\n", prefix, name,
-                            fun_name, info.linedefined, modName, modID)
-                    else
-                        self:add_f("%s%s = Lua function '%s' (defined at line %d of chunk %s)\r\n", prefix, name,
-                            fun_name, info.linedefined, source)
-                    end
+                    self:add_f("%s%s = Lua function '%s' (defined at line %d of chunk %s)\r\n", prefix, name, fun_name,
+                        info.linedefined, source)
                 end
             elseif type(value) == "thread" then
                 self:add_f("%sthread %q = %s\r\n", prefix, name, tostring(value))
@@ -399,12 +393,26 @@ Stack Traceback
                     dumper:add_f("(%d) Lua %s '%s' at template '%s:%d'%s\r\n", level_to_show, function_type,
                         function_name, info.source:sub(2), info.currentline, was_guessed and " (best guess)" or "")
                 elseif info.source and info.source:sub(1, 1) == "=" then
-                    dumper:add_f("(%d) Love2D %s at file '%s:%d'%s\r\n", level_to_show, function_type,
-                        info.source:sub(9, -3), info.currentline, was_guessed and " (best guess)" or "")
-                elseif info.source and info.source:sub(1, 21) == "--- STEAMODDED HEADER" then
-                    local modName, modID = info.source:match("%-%-%- MOD_NAME: ([^\n]+)\n%-%-%- MOD_ID: ([^\n]+)")
-                    dumper:add_f("(%d) Lua %s '%s' at line %d of mod %s (%s) %s\r\n", level_to_show, function_type,
-                        function_name, info.currentline, modName, modID, was_guessed and " (best guess)" or "")
+                    local str = info.source:sub(3, -2)
+                    local props = {}
+                    -- Split by space
+                    for v in string.gmatch(str, "[^%s]+") do
+                        table.insert(props, v)
+                    end
+                    local source = table.remove(props, 1)
+                    if source == "love" then
+                        dumper:add_f("(%d) Love2D %s at file '%s:%d'%s\r\n", level_to_show, function_type,
+                            table.concat(props, " "):sub(2, -2), info.currentline, was_guessed and " (best guess)" or "")
+                    elseif source == "SMODS" then
+                        local modID = table.remove(props, 1)
+                        local fileName = table.concat(props, " ")
+                        dumper:add_f("(%d) Lua %s '%s' at file '%s:%d' (from mod with id %s)%s\r\n", level_to_show,
+                            function_type, function_name, fileName:sub(2, -2), info.currentline, modID,
+                            was_guessed and " (best guess)" or "")
+                    else
+                        dumper:add_f("(%d) Lua %s '%s' at line %d of chunk '%s'\r\n", level_to_show, function_type,
+                            function_name, info.currentline, source)
+                    end
                 else
                     dumper:add_f("(%d) Lua %s '%s' at line %d of chunk '%s'\r\n", level_to_show, function_type,
                         function_name, info.currentline, source)
