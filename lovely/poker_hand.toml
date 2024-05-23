@@ -42,6 +42,7 @@ for _,_hand in pairs(SMODS.PokerHands) do
 	if _hand.composite and type(_hand.composite) == 'function' then
 		local other_hands
 		results[_hand.key], other_hands = _hand.composite(parts)
+		results[_hand.key] = results[_hand.key] or {}
 		if other_hands and type(other_hands) == 'table' then
 			for k, v in pairs(other_hands) do
 				results[k] = v
