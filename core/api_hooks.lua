@@ -703,7 +703,7 @@ function G.FUNCS.get_poker_hand_info(_cards)
 			disp_text = 'Royal Flush'
 		end
 	elseif _hand and _hand.modify_display_text and type(_hand.modify_display_text) == 'function' then
-		disp_text = _hand.modify_display_text(_cards, scoring_hand) or disp_text
+		disp_text = _hand:modify_display_text(_cards, scoring_hand) or disp_text
 	end
 	loc_disp_text = localize(disp_text, 'poker_hands')
 	return text, loc_disp_text, poker_hands, scoring_hand, disp_text

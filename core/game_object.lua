@@ -1384,8 +1384,8 @@ function loadAPIs()
         end
     end
     SMODS.Consumable:take_ownership('strength', {
-        use = function(self, area, copier)
-            local used_tarot = copier or self
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
             G.E_MANAGER:add_event(Event({
                 trigger = 'after',
                 delay = 0.4,
@@ -1412,10 +1412,10 @@ function loadAPIs()
                     trigger = 'after',
                     delay = 0.1,
                     func = function()
-                        local card = G.hand.highlighted[i]
-                        local suit_data = SMODS.Suits[card.base.suit]
+                        local _card = G.hand.highlighted[i]
+                        local suit_data = SMODS.Suits[_card.base.suit]
                         local suit_prefix = suit_data.card_key
-                        local rank_data = SMODS.Ranks[card.base.value]
+                        local rank_data = SMODS.Ranks[_card.base.value]
                         local behavior = rank_data.strength_effect or { fixed = 1, ignore = false, random = false }
                         local rank_suffix = ''
                         if behavior.ignore or not next(rank_data.next) then
@@ -1455,8 +1455,8 @@ function loadAPIs()
         end,
     })
     SMODS.Consumable:take_ownership('sigil', {
-        use = function(self, area, copier)
-            local used_tarot = copier or self
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
             juice_flip(used_tarot)
             -- need reverse nominal order to preserve vanilla RNG
             local suit_list = {}
@@ -1467,9 +1467,9 @@ function loadAPIs()
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
-                        local card = G.hand.cards[i]
-                        local _rank = SMODS.Ranks[card.base.value]
-                        card:set_base(G.P_CARDS[_suit.card_key .. '_' .. _rank.card_key])
+                        local _card = G.hand.cards[i]
+                        local _rank = SMODS.Ranks[_card.base.value]
+                        _card:set_base(G.P_CARDS[_suit.card_key .. '_' .. _rank.card_key])
                         return true
                     end
                 }))
@@ -1488,16 +1488,16 @@ function loadAPIs()
         end,
     })
     SMODS.Consumable:take_ownership('ouija', {
-        use = function(self, area, copier)
-            local used_tarot = copier or self
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
             juice_flip(used_tarot)
             local _rank = SMODS.Ranks[pseudorandom_element(SMODS.Rank.obj_buffer, pseudoseed('ouija'))]
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
-                        local card = G.hand.cards[i]
-                        local _suit = SMODS.Suits[card.base.suit]
-                        card:set_base(G.P_CARDS[_suit.card_key .. '_' .. _rank.card_key])
+                        local _card = G.hand.cards[i]
+                        local _suit = SMODS.Suits[_card.base.suit]
+                        _card:set_base(G.P_CARDS[_suit.card_key .. '_' .. _rank.card_key])
                         return true
                     end
                 }))
@@ -1546,15 +1546,15 @@ function loadAPIs()
         return destroyed_cards
     end
     SMODS.Consumable:take_ownership('grim', {
-        use = function(self, area, copier)
-            local used_tarot = copier or self
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
             local destroyed_cards = random_destroy(used_tarot)
             G.E_MANAGER:add_event(Event({
                 trigger = 'after',
                 delay = 0.7,
                 func = function()
                     local cards = {}
-                    for i = 1, self.ability.extra do
+                    for i = 1, card.ability.extra do
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
@@ -1584,15 +1584,15 @@ function loadAPIs()
         end,
     })
     SMODS.Consumable:take_ownership('familiar', {
-        use = function(self, area, copier)
-            local used_tarot = copier or self
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
             local destroyed_cards = random_destroy(used_tarot)
             G.E_MANAGER:add_event(Event({
                 trigger = 'after',
                 delay = 0.7,
                 func = function()
                     local cards = {}
-                    for i = 1, self.ability.extra do
+                    for i = 1, card.ability.extra do
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
@@ -1628,22 +1628,22 @@ function loadAPIs()
         end,
     })
     SMODS.Consumable:take_ownership('incantation', {
-        use = function(self, area, copier)
-            local used_tarot = copier or self
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
             local destroyed_cards = random_destroy(used_tarot)
             G.E_MANAGER:add_event(Event({
                 trigger = 'after',
                 delay = 0.7,
                 func = function()
                     local cards = {}
-                    for i = 1, self.ability.extra do
+                    for i = 1, card.ability.extra do
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
                             suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
                         end
                         local numbers = {}
-                        for _RELEASE_MODE, v in ipairs(SMODS.Rank.obj_buffer) do
+                        for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
                             if v ~= 'Ace' and not r.face then table.insert(numbers, r.card_key) end
                         end
