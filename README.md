@@ -2,62 +2,7 @@
 
 ## Introduction
 
-Steamodded is a mod loader and injector for the game Balatro. It is developed using Lua for the injected code and Python for additional tools. Currently, Steamodded focuses on basic mod loading and injection functionalities and does not include a modding API.
-
-## Features
-
-- **Mod Loader:** Loads mods into the game.
-
-It will load every mods located at the path `C:\Users\<USER>\AppData\Roaming\Balatro` (or `%appdata%\Balatro\Mods`) into the game.
-If it's for now very simple, it will seach for an header at the top of the file that looks like this:
-
-```text
---- STEAMODDED HEADER
---- MOD_NAME: Your Mod Name
---- MOD_ID: YourModID
---- MOD_AUTHOR: [You, AnotherDev, AnotherOtherDev]
---- MOD_DESCRIPTION: The Description of your Mod
-```
-
-This header is mandatory and the mod loader will not load the mod without it.
-
-The `MOD_ID` must be unique and without spaces. The `MOD_AUTHOR` must be an array. Every part of the Header must be present.
-
-Additionally, the following segments may be present below your header in any order:
-
-```text
---- PRIORITY: -1000
---- DISPLAY_NAME: ShortName
---- BADGE_COLOUR: 123456
-```
-
-The priority value must be an integer and defaults to 0 if absent. A lower value will cause your mod to be loaded earlier.
-
-If a display name is present, it will replace your mod name on badges that identify your mod on custom game objects. Make sure to keep it short and recognizable. 
-
-If no badge colour is specified, a default colour of #666666 will be used for these badges. The colour must be a valid hex code.
-
-After the Header validation, the lua code of your mod will be loaded.
-
-- **Core Management:** Handles the overall management of mods.
-
-This is the hearth of the project, every parts depend on it.
-
-For now it's not doing much outside of displaying basic informations and offering a basic GUI for Steamodded. In the future it will be the most important part of the project.
-
-- **Debug Socket:** Provides a way to output debug data.
-
-The debug Socket is used to send debug informtions from the Game and the Mods outside of the Game. Since we can't launch Balatro linked with a console interface, it's the most efficient way to provide debug data.
-
-- **Injector:** Injects Steamodded into Balatro.
-
-The injector is coded in Python. It's used to inject every other parts of Steamodded into the base game.
-
-It use 2 external tools: [7zip](https://www.7-zip.org/) for is extreme capability in term of SFX ZIP, permiting Steamodded to modify the executable without breaking it, and [luajit-decompiler-v2](https://github.com/marsinator358/luajit-decompiler-v2) that is used for decompiling the code before reinjection. Big thanks to them, they made this project way easier to do.
-
-The code is NOT recompiled after injection. It might change in the future but it will stay like that for now.
-
-Another Injector is provided using Powershell. It can be used compiled or not compiled. This one also rely on 7zip but will let you handle in someway the installation.
+Steamodded is a mod loader and injector for the game Balatro. Much like the [LÖVE2D engine](https://love2d.org/wiki/Main_Page) itself, it is built using [Lua](https://www.lua.org/). It is made with modularity and extensibility in mind, providing a large selection of APIs and other features to facilitate bringing your ideas to life.
 
 ## Installation
 
@@ -75,6 +20,9 @@ To use the 1.0.0 pre-release version, install Steamodded [using Git](https://git
 - Put the mod into the directory (only the Mod File if there is only one file provided or all the files in a subdirectory)
 - Launch the game and enjoy!
 
+## Features
+
+Documentation for this project is currently incomplete. Information on features in version 0.9.8 can be found within the [Wiki](https://github.com/Steamopollys/Steamodded/wiki) pages that are not numbered, while complete and fully structured documentation for version 1.0 is still being assembled on the **numbered** pages. Any information found there is subject to change until the full release of version 1.0.0.
 
 ## Contributing
 
