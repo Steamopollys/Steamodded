@@ -49,12 +49,6 @@ jobs:
           core_lua_content = re.sub(r'MODDED_VERSION = "\d+\.\d+\.\d+-STEAMODDED"', f'MODDED_VERSION = "{version_number}-STEAMODDED"', core_lua_content)
           core_lua_path.write_text(core_lua_content)
 
-          # Update injector.ps1
-          injector_ps1_path = Path('injector.ps1')
-          injector_ps1_content = injector_ps1_path.read_text()
-          injector_ps1_content = re.sub(r'https://codeload.github.com/Steamopollys/Steamodded/zip/refs/tags/\d+\.\d+\.\d+', f'https://codeload.github.com/Steamopollys/Steamodded/zip/refs/tags/{version_number}', injector_ps1_content)
-          injector_ps1_path.write_text(injector_ps1_content)
-
           # Output version number for later steps
           print(f"::set-output name=version_number::{version_number}")
         id: bump-version
