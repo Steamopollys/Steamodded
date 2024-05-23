@@ -3,7 +3,7 @@ version = "1.0.0"
 dump_lua = true
 priority = 0
 
-# Determines whether to draw the base card or not
+# Determines whether to draw the base card's front or not
 # Card:draw()
 [[patches]]
 [patches.pattern]
@@ -14,6 +14,7 @@ position = "at"
 payload = "if self.children.front and self.ability.effect ~= 'Stone Card' and not self.config.center.replace_base_card then"
 
 # Card:generate_UIBox_ability_table()
+# replaces two consecutive lines
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
@@ -21,7 +22,6 @@ pattern = "if (_c.name == 'Stone Card') then full_UI_table.name = true end"
 match_indent = true
 position = "at"
 payload = "if _c.name == 'Stone Card' or _c.replace_base_card then full_UI_table.name = true"
-
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
@@ -29,3 +29,103 @@ pattern = "if (specific_vars.playing_card and (_c.name ~= 'Stone Card')) then"
 match_indent = true
 position = "at"
 payload = "elseif specific_vars.playing_card then"
+
+# eval_card()
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "function eval_card(card, context)"
+match_indent = true
+position = "after"
+payload = """
+    local enhancement_calculated = false
+    local center = card.config.center
+"""
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "local jokers = card:calculate_joker(context)"
+match_indent = true
+position = "before"
+payload = """
+if center.calculate_enhancement and type(center.calculate_enhancement) == 'function' then 
+    center:calculate_enhancement(context, ret)
+    enhancement_calculated = true
+end"""
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "local seals = card:calculate_seal(context)"
+match_indent = true
+position = "before"
+payload = """
+if center.calculate_enhancement and type(center.calculate_enhancement) == 'function' then 
+    center:calculate_enhancement(context, ret)
+    enhancement_calculated = true
+end"""
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
+match_indent = true
+position = "before"
+payload = """
+if not enhancement_calculated and center.calculate_enhancement and type(center.calculate_enhancement) == 'function' then 
+    center:calculate_enhancement(context, ret)
+    enhancement_calculated = true
+end
+local seals = card:calculate_seal(context)
+if seals then
+    ret.seals = seals
+end"""
+
+
+## Add additional eval_card() calls
+
+# Game:update_draw_to_hand()
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "G.GAME.current_round.discards_used == 0 and G.GAME.facing_blind then"
+match_indent = true
+position = "after"
+payload = """
+for i = 1, #G.hand.cards do
+    eval_card(G.hand.cards[i], {first_hand_drawn = true})
+end"""
+
+# G.FUNCS.discard_cards_from_highlighted()
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "inc_career_stat('c_cards_discarded', highlighted_count)"
+match_indent = true
+position = "after"
+payload = """
+for i = 1, #G.hand.cards do
+    eval_card(G.hand.cards[i], {pre_discard = true, full_hand = G.hand.highlighted, hook = hook})
+end"""
+# two consecutive lines
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "G.hand.highlighted[i]:calculate_seal({discard = true})"
+match_indent = true
+position = "at"
+payload = ""
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local removed = false"
+match_indent = true
+position = "after"
+payload = """
+local eval = nil
+eval = eval_card(G.hand.highlighted[i], {discard = true, full_hand = G.hand.highlighted})
+if eval and eval.remove then
+    removed = true
+    card_eval_status_text(G.hand.highlighted[i], 'jokers', nil, 1, nil, eval)
+end
+"""
