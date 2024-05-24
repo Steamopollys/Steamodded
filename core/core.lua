@@ -368,6 +368,7 @@ end
 -- Helper function to create a clickable mod box
 local function createClickableModBox(modInfo, scale)
 	local col, text_col
+	modInfo.should_enable = not modInfo.disabled
     if modInfo.can_load then
         col = G.C.BOOSTER
     elseif modInfo.disabled then
@@ -400,11 +401,50 @@ local function createClickableModBox(modInfo, scale)
             },
         })
     end
-    return { n = G.UIT.R, config = { padding = 0, align = "cm" }, nodes = {
-        { n = G.UIT.C, config = { align = "cm" }, nodes = {
-            buildModtag(modInfo)
-        }},
-        { n = G.UIT.C, config = { padding = 0, align = "cm", }, nodes = { but }}
+	return {
+		n = G.UIT.R,
+		config = { padding = 0, align = "cm" },
+		nodes = {
+			{
+				n = G.UIT.C,
+				config = { align = "cm" },
+				nodes = {
+					buildModtag(modInfo)
+				}
+            },
+			{
+				n = G.UIT.C,
+                config = { align = "cm", padding = 0.1 },
+				nodes = {},
+			},
+			{ n = G.UIT.C, config = { padding = 0, align = "cm" }, nodes = { but } },
+			create_toggle({
+				label = '',
+				ref_table = modInfo,
+				ref_value = 'should_enable',
+				col = true,
+				w = 0,
+				h = 0.5,
+				callback = (
+					function(_set_toggle)
+						if not modInfo.should_enable and not modInfo.disabled then
+							NFS.write(modInfo.path .. '.lovelyignore', '')
+							if NFS.getInfo(modInfo.path .. 'lovely') or NFS.getInfo(modInfo.path .. 'lovely.toml') then
+								SMODS.full_restart = true
+							else
+								SMODS.partial_reload = true
+							end
+						elseif modInfo.should_enable and modInfo.disabled then
+							NFS.remove(modInfo.path .. '.lovelyignore')
+							if NFS.getInfo(modInfo.path .. 'lovely') or NFS.getInfo(modInfo.path .. 'lovely.toml') then
+								SMODS.full_restart = true
+							else
+								SMODS.partial_reload = true
+							end
+						end
+					end
+				)
+			}),
     }}
 	
 end
@@ -998,7 +1038,7 @@ function SMODS.GUI.dynamicModListContent(page)
     end
 
     return {
-        n = G.UIT.R,
+        n = G.UIT.C,
         config = {
             r = 0.1,
             align = "cm",
@@ -1261,7 +1301,27 @@ function SMODS.init_settings()
     SMODS.SETTINGS = {
         no_mod_badges = false,
     }
-	
+end
+
+function SMODS.reload()
+	--local save_dir = NFS.getSaveDirectory()
+	local function recurse(dir)
+		local files = NFS.getDirectoryItems(dir)
+        for i, v in ipairs(files) do
+            local file = dir .. "/" .. v
+			sendTraceMessage(file)
+			if v == 'Mods' then
+			elseif NFS.isFile(file) then
+				lua_reload.ReloadFile(file)
+			elseif NFS.isDirectory(file) then
+				recurse(file)
+			end
+		end
+	end
+    recurse('')
+	SMODS.booted = false
+	G:init_item_prototypes()
+	initSteamodded()
 end
 
 ----------------------------------------------

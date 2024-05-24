@@ -966,7 +966,12 @@ function loadAPIs()
         required_params = {
             'key',
             'loc_txt'
-        }
+        },
+        register = function(self)
+            -- game expects a name, so ensure it's set
+            self.name = self.name or self.key
+            self.super.register(self)
+        end
     }
 
     local function stake_mod(stake)
