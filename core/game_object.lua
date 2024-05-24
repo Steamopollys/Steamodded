@@ -1883,6 +1883,9 @@ function loadAPIs()
             -- table with keys `name` and `text`
             'loc_txt'
         },
+        -- other fields:
+        -- replace_base_card
+        -- if true, don't draw base card sprite and don't give base card's chips
         register = function(self)
             self.effect = self.effect or self.name
             self.config = self.config or {}
@@ -1897,6 +1900,8 @@ function loadAPIs()
                 localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips}}
             end
         end,
+        -- other methods:
+        -- calculate_enhancement(self, context, effect)
     }
     -- Note: `name`, `effect`, and `label` all serve the same purpose as
     -- the name of the enhancement. In theory, `effect` serves to allow reusing
