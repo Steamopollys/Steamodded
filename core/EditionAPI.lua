@@ -10,7 +10,7 @@ SMODS.Editions = {}
 SMODS.Edition_List = {}
 SMODS.Edition = {
     name = "",
-    slug = "",
+    key = "",
     config = {},
     shader = "",
     loc_txt = {},
@@ -34,7 +34,7 @@ local base_game_edition_configs = {
     {
         base = true,
         name = "Foil",
-        slug = "foil",
+        key = "foil",
         config = { labels = {'chip_mod'}, values = {50} },
         shader = "/assets/shaders/foil.fs",
         loc_txt = { name = "Foil", text = {"{C:chips}+#1#{} chips"}},
@@ -46,12 +46,21 @@ local base_game_edition_configs = {
         apply_to_float = false,
         weight = 20,
         in_shop = true,
-        extra_cost = 2
+        extra_cost = 2,
+        calculate = function(self, context)
+            if context.edition or (context.cardarea == G.play and self.playing_card) then
+                ret = {}
+                for k, v in pairs(self.edition) do
+                    ret[k] = v
+                end
+                return ret
+            end
+        end
     },
     {
         base = true,
         name = "Holographic",
-        slug = "holo",
+        key = "holo",
         config = { labels = {'mult_mod'}, values = {10} },
         shader = "holo",
         loc_txt = { name = "Holographic", text = { "{C:mult}+#1#{} Mult" }},
@@ -63,12 +72,21 @@ local base_game_edition_configs = {
         apply_to_float = false,
         weight = 14,
         in_shop = true,
-        extra_cost = 3
+        extra_cost = 3,
+        calculate = function(self, context)
+            if context.edition or (context.cardarea == G.play and self.playing_card) then
+                ret = {}
+                for k, v in pairs(self.edition) do
+                    ret[k] = v
+                end
+                return ret
+            end
+        end
     },
     {   
         base = true,
         name = "Polychrome",
-        slug = "polychrome",
+        key = "polychrome",
         config = { labels = {'x_mult_mod'}, values = {1.5} },
         shader = "polychrome",
         loc_txt = { name = "Polychrome", text = { "{X:mult,C:white} X#1# {} Mult" }},
@@ -80,12 +98,21 @@ local base_game_edition_configs = {
         apply_to_float = false,
         weight = 3,
         in_shop = true,
-        extra_cost = 5
+        extra_cost = 5,
+        calculate = function(self, context)
+            if context.edition or (context.cardarea == G.play and self.playing_card) then
+                ret = {}
+                for k, v in pairs(self.edition) do
+                    ret[k] = v
+                end
+                return ret
+            end
+        end
     },
     {
         base = true,
         name = "Negative",
-        slug = "negative",
+        key = "negative",
         config = { labels = {'card_limit'}, values = {1} },
         shader = "negative",
         loc_txt = { name = "Negative", text = { "{C:dark_edition}+#1#{} Joker slot" }},
@@ -97,7 +124,16 @@ local base_game_edition_configs = {
         apply_to_float = false,
         weight = 3,
         in_shop = true,
-        extra_cost = 5
+        extra_cost = 5,
+        calculate = function(self, context)
+            if context.edition or (context.cardarea == G.play and self.playing_card) then
+                ret = {}
+                for k, v in pairs(self.edition) do
+                    ret[k] = v
+                end
+                return ret
+            end
+        end
     }
 }
 
@@ -107,20 +143,20 @@ function SMODS.Edition:new(options)
     self.__index = self
 
     if options.base then else
-        G.SHADERS[options.slug] = love.graphics.newShader(options.shader_path)
+        G.SHADERS[options.key] = love.graphics.newShader(options.shader_path)
     end
 
     o.base = options.base or nil
     o.loc_txt = options.loc_txt
     o.name = options.name
-    o.slug = "e_" .. options.slug
+    o.key = "e_" .. options.key
     o.config = options.config or { labels = {}, values = {}}
     o.discovered = options.discovered or false
     o.unlocked = options.unlocked
     o.unlock_condition = options.unlock_condition or {}
-    o.shader = options.slug
+    o.shader = options.key
     o.sound = options.sound or { sound = "foil1", per = 1.2, vol = 0.4 }
-    o.mod_name = SMODS._MOD_NAME
+    o.mod_name = SMODS.current_mod.name
     o.badge_colour = options.badge_colour or SMODS._BADGE_COLOUR or G.C.DARK_EDITION
     o.apply_to_float = options.apply_to_float or false
     o.weight = options.weight or 0
@@ -131,7 +167,7 @@ function SMODS.Edition:new(options)
 end
 
 function SMODS.Edition:register()
-    SMODS.Editions[self.slug:sub(3)] = self
+    SMODS.Editions[self.key:sub(3)] = self
     local minId = #G.P_CENTER_POOLS['Edition'] + 1
     local id = 0
     local i = 0
@@ -150,7 +186,7 @@ function SMODS.Edition:register()
         },
         atlas = 'Joker',
         order = id,
-        key = self.slug,
+        key = self.key,
         config = self.config,
         unlock_condition = self.unlock_condition,
         shader = self.shader,
@@ -163,20 +199,23 @@ function SMODS.Edition:register()
     }
 
     -- Populate pools
-    G.P_CENTERS[self.slug] = edition_obj
+    G.P_CENTERS[self.key] = edition_obj
     table.insert(G.P_CENTER_POOLS['Edition'], edition_obj)
 
     if self.in_shop then
-        table.insert(SMODS.Edition_List, self.slug:sub(3))
+        table.insert(SMODS.Edition_List, self.key:sub(3))
     end
 
     -- Setup Localize text
-    G.localization.descriptions['Edition'][self.slug] = self.loc_txt
-    G.localization.misc.labels[self.slug:sub(3)] = self.name
+    function SMODS.current_mod.process_loc_text()
+        G.localization.descriptions['Edition'][self.key] = self.loc_txt
+        G.localization.misc.labels[self.key:sub(3)] = self.name
+    end
     
 
-    sendInfoMessage("Registered " .. self.name .. " with the slug " .. self.slug .. " at ID " .. id .. ".",
+    sendInfoMessage("Registered " .. self.name .. " with the key " .. self.key .. " at ID " .. id .. ".",
         "EditionAPI")
+    
 end
 
 local create_UIBox_your_collection_editions_ref = create_UIBox_your_collection_editions
@@ -433,7 +472,7 @@ end
 
 local set_edition_ref = Card.set_edition
 -- self = pass the card
--- edition = { name_of_edition = true } (slug without e_)
+-- edition = { name_of_edition = true } (key without e_)
 -- immediate = boolean value
 -- silent = boolean value
 -- options = Table containing name and config. { name = edition_name, config = {config in here}}
@@ -600,7 +639,7 @@ end
 function SMODS.Edition:set_weight(value)
     self.weight = value
     for k,v in pairs(base_editions) do
-        if v.name == self.slug:sub(3) then
+        if v.name == self.key:sub(3) then
             v.weight = value
             break
         end
@@ -629,7 +668,7 @@ function SMODS.Edition:change_modifier(label, value)
 end
     
 function populate_base_edition(options)
-    SMODS.Editions[options.slug:sub(3)] = options
+    SMODS.Editions[options.key:sub(3)] = options
     local minId = #G.P_CENTER_POOLS['Edition'] + 1
     local id = 0
     local i = 0
@@ -648,7 +687,7 @@ function populate_base_edition(options)
         },
         atlas = 'Joker',
         order = id,
-        key = options.slug,
+        key = options.key,
         config = options.config or {
             chips = 0,
             mult = 0,
@@ -665,53 +704,56 @@ function populate_base_edition(options)
     }
 
     -- Populate pools
-    G.P_CENTERS[options.slug] = edition_obj
+    G.P_CENTERS[options.key] = edition_obj
     -- if options.name == "Negative" then
     --     G.P_CENTERS['e_negative_consumable'] = edition_obj
     -- end
     table.insert(G.P_CENTER_POOLS['Edition'], edition_obj)
 
     if options.in_shop then
-        table.insert(SMODS.Edition_List, options.slug:sub(3))
+        table.insert(SMODS.Edition_List, options.key:sub(3))
     end
 
     -- Setup Localize text
-    G.localization.descriptions['Edition'][options.slug] = options.loc_txt
-    G.localization.misc.labels[options.slug:sub(3)] = options.name
+    function SMODS.current_mod.process_loc_text()
+        G.localization.descriptions['Edition'][options.key] = options.loc_txt
+        G.localization.misc.labels[options.key:sub(3)] = options.name
+    end
 
-    sendInfoMessage("Registered " .. options.name .. " with the slug " .. options.slug .. " at ID " .. id .. ".",
+    sendInfoMessage("Registered " .. options.name .. " with the key " .. options.key .. " at ID " .. id .. ".",
         "EditionAPI")
 end
 
-function SMODS.INIT.EditionAPI()
-    E_ROWS = 2
-    E_COLS = 5
-    base_weight = 960
-    base_editions = {
-        { name = 'negative', weight = 3 },
-        { name = 'polychrome', weight = 3 },
-        { name = 'holo', weight = 14 },
-        { name = 'foil', weight = 20 }
-    }
-    base_editions_no_neg = {
-        { name = 'polychrome', weight = 3 },
-        { name = 'holo', weight = 14 },
-        { name = 'foil', weight = 20 }
-    }
-    sendInfoMessage("Size of Center Pools Edition: "..#G.P_CENTER_POOLS["Edition"], "EditionAPI")
-    local base = G.P_CENTER_POOLS["Edition"][1]
-    base.config = {labels = {}, values = {}}
-    G.P_CENTER_POOLS["Edition"] = {}
-    table.insert(G.P_CENTER_POOLS["Edition"], base)
-    for _,v in ipairs(base_game_edition_configs) do
-        populate_base_edition(SMODS.Edition:new(v))
-    end
-    sendInfoMessage("Size of Center Pools Edition: "..#G.P_CENTER_POOLS["Edition"], "EditionAPI")
-
-    G.localization.misc.v_dictionary['p_dollars'] = '+$#1#'
-
-    sendInfoMessage("Loaded!", 'EditionAPI')
+E_ROWS = 2
+E_COLS = 5
+base_weight = 960
+base_editions = {
+    { name = 'negative', weight = 3 },
+    { name = 'polychrome', weight = 3 },
+    { name = 'holo', weight = 14 },
+    { name = 'foil', weight = 20 }
+}
+base_editions_no_neg = {
+    { name = 'polychrome', weight = 3 },
+    { name = 'holo', weight = 14 },
+    { name = 'foil', weight = 20 }
+}
+sendInfoMessage("Size of Center Pools Edition: "..#G.P_CENTER_POOLS["Edition"], "EditionAPI")
+local base = G.P_CENTER_POOLS["Edition"][1]
+base.config = {labels = {}, values = {}}
+G.P_CENTER_POOLS["Edition"] = {}
+table.insert(G.P_CENTER_POOLS["Edition"], base)
+for _,v in ipairs(base_game_edition_configs) do
+    populate_base_edition(SMODS.Edition:new(v))
 end
+sendInfoMessage("Size of Center Pools Edition: "..#G.P_CENTER_POOLS["Edition"], "EditionAPI")
+
+function SMODS.current_mod.process_loc_text()
+    G.localization.misc.v_dictionary['p_dollars'] = '+$#1#'
+end
+
+sendInfoMessage("Loaded!", 'EditionAPI')
+
 
 
 
