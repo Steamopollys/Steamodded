@@ -33,46 +33,20 @@ SMODS.scoring_keys = {
 local base_game_edition_configs = {
     {
         base = true,
-        name = "Foil",
-        key = "foil",
-        config = { labels = {'chip_mod'}, values = {50} },
-        shader = "/assets/shaders/foil.fs",
-        loc_txt = { name = "Foil", text = {"{C:chips}+#1#{} chips"}},
-        sound = { sound = "foil1", per = 1.2, vol = 0.4 },
+        name = "Negative",
+        key = "negative",
+        config = { labels = {'card_limit'}, values = {1} },
+        shader = "negative",
+        loc_txt = { name = "Negative", text = { "{C:dark_edition}+#1#{} Joker slot" }},
+        sound = { sound = "negative", per = 1.5, vol = 0.4 },
         discovered = false,
         unlocked = true,
         unlock_condition = {},
         badge_colour = G.C.DARK_EDITION,
         apply_to_float = false,
-        weight = 20,
+        weight = 3,
         in_shop = true,
-        extra_cost = 2,
-        calculate = function(self, context)
-            if context.edition or (context.cardarea == G.play and self.playing_card) then
-                ret = {}
-                for k, v in pairs(self.edition) do
-                    ret[k] = v
-                end
-                return ret
-            end
-        end
-    },
-    {
-        base = true,
-        name = "Holographic",
-        key = "holo",
-        config = { labels = {'mult_mod'}, values = {10} },
-        shader = "holo",
-        loc_txt = { name = "Holographic", text = { "{C:mult}+#1#{} Mult" }},
-        sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
-        discovered = false,
-        unlocked = true,
-        unlock_condition = {},
-        badge_colour = G.C.DARK_EDITION,
-        apply_to_float = false,
-        weight = 14,
-        in_shop = true,
-        extra_cost = 3,
+        extra_cost = 5,
         calculate = function(self, context)
             if context.edition or (context.cardarea == G.play and self.playing_card) then
                 ret = {}
@@ -111,20 +85,46 @@ local base_game_edition_configs = {
     },
     {
         base = true,
-        name = "Negative",
-        key = "negative",
-        config = { labels = {'card_limit'}, values = {1} },
-        shader = "negative",
-        loc_txt = { name = "Negative", text = { "{C:dark_edition}+#1#{} Joker slot" }},
-        sound = { sound = "negative", per = 1.5, vol = 0.4 },
+        name = "Holographic",
+        key = "holo",
+        config = { labels = {'mult_mod'}, values = {10} },
+        shader = "holo",
+        loc_txt = { name = "Holographic", text = { "{C:mult}+#1#{} Mult" }},
+        sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
         discovered = false,
         unlocked = true,
         unlock_condition = {},
         badge_colour = G.C.DARK_EDITION,
         apply_to_float = false,
-        weight = 3,
+        weight = 14,
         in_shop = true,
-        extra_cost = 5,
+        extra_cost = 3,
+        calculate = function(self, context)
+            if context.edition or (context.cardarea == G.play and self.playing_card) then
+                ret = {}
+                for k, v in pairs(self.edition) do
+                    ret[k] = v
+                end
+                return ret
+            end
+        end
+    },
+    {
+        base = true,
+        name = "Foil",
+        key = "foil",
+        config = { labels = {'chip_mod'}, values = {50} },
+        shader = "/assets/shaders/foil.fs",
+        loc_txt = { name = "Foil", text = {"{C:chips}+#1#{} chips"}},
+        sound = { sound = "foil1", per = 1.2, vol = 0.4 },
+        discovered = false,
+        unlocked = true,
+        unlock_condition = {},
+        badge_colour = G.C.DARK_EDITION,
+        apply_to_float = false,
+        weight = 20,
+        in_shop = true,
+        extra_cost = 2,
         calculate = function(self, context)
             if context.edition or (context.cardarea == G.play and self.playing_card) then
                 ret = {}
@@ -469,6 +469,18 @@ function Card:get_edition(context)
     end
 end
 
+-- Decreases area size when negative is removed
+function removeCardLimitEffects(card)
+    if not (card.edition and card.edition.card_limit) then return end
+    if card.ability.consumeable then
+        G.consumeables.config.card_limit = G.consumeables.config.card_limit - card.edition.card_limit
+    elseif card.ability.set == 'Joker' then
+        G.jokers.config.card_limit = G.jokers.config.card_limit - card.edition.card_limit
+    -- elseif card.ability.set == 'Default' or card.ability.set == 'Enhanced' then
+    --     G.hand.config.card_limit = G.hand.config.card_limit - card.edition.card_limit
+    end
+end
+
 
 local set_edition_ref = Card.set_edition
 -- self = pass the card
@@ -477,6 +489,7 @@ local set_edition_ref = Card.set_edition
 -- silent = boolean value
 -- options = Table containing name and config. { name = edition_name, config = {config in here}}
 function Card.set_edition(self, edition, immediate, silent, options)
+    removeCardLimitEffects(self)
     self.edition = nil
     if not edition then
         G.E_MANAGER:add_event(Event({
@@ -523,13 +536,23 @@ function Card.set_edition(self, edition, immediate, silent, options)
         for k, v in ipairs(options.config.labels) do
             self.edition[v] = self.ability.edition[v] or options.config.values[k]
             if v == 'card_limit' then
-                for k2,v2 in pairs(self.ability) do
-                    sendDebugMessage(k2..": "..tostring(v2))
-                end
+                -- for k2,v2 in pairs(self.container) do
+                --     sendDebugMessage(k2..": "..tostring(v2))
+                -- end
                 if self.ability.consumeable then
                     G.consumeables.config.card_limit = G.consumeables.config.card_limit + options.config.values[k]
-                elseif self.set == 'Joker' then
+                elseif self.ability.set == 'Joker' then
                     G.jokers.config.card_limit = G.jokers.config.card_limit + options.config.values[k]
+                -- TO BE WORKED ON - NEGATIVE PLAYING CARDS --
+                -- elseif self.ability.set == 'Default' or self.ability.set == 'Enhanced' then
+                --     G.hand.config.card_limit = G.hand.config.card_limit + options.config.values[k]
+                --     G.E_MANAGER:add_event(Event({
+                --         trigger = 'immediate',
+                --         func = function()
+                --             G.FUNCS.draw_from_deck_to_hand()
+                --             return true
+                --         end
+                --     }))
                 end
             end
         end
@@ -568,7 +591,7 @@ end
 -- _mod = scale of chance against base card (does not change guaranteed weights)
 -- _no_neg = boolean value to disable negative edition
 -- _guaranteed = boolean value to determine whether an edition is guaranteed
--- _options = list of key values of editions to include in the poll
+-- _options = list of key values of editions to include in the poll,
 function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
     local _modifier = 1
     local edition_rate = 1
@@ -576,7 +599,7 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 
     -- Populate available editions for random selection
     local available_editions = {}
-    if _options then
+    if _options then -- A set of editions has been provided to the function, custom weights can be provided here too
         available_editions = _options
     elseif _key == "wheel_of_fortune" or _key == "aura" then -- set base game edition polling
         available_editions = {'polychrome', 'holo', 'foil'}
@@ -584,33 +607,48 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
         available_editions = SMODS.Edition_List
     end
 
-    -- Calculate total weight
+    -- Calculate total weight of editions
     local total_weight = 0
+    local custom_weight = 0
     for _,v in ipairs(available_editions) do
-        if not (v == 'negative' and _no_neg) then
-            total_weight = total_weight + (v.weight or SMODS.Editions[v].weight)
+        for k,v in pairs(v) do
+            sendDebugMessage(k..": "..tostring(v))
         end
+        if not ((v == 'negative' or v.name == 'negative') and _no_neg) then
+            custom_weight = custom_weight + (v.weight or SMODS.Editions[v].weight)
+        end 
     end
     
-    -- If not guaranteed (base game shop and packs) add base card weight to total weight
+    local base_card_rate = 960
+    -- If not guaranteed, calculate the base card rate to maintain 4% chance of editions (scales with vouchers)
     if not _guaranteed then
         edition_rate = G.GAME.edition_rate
         _modifier = _mod or 1
-        total_weight = total_weight*edition_rate*_modifier + base_weight
+        base_card_rate = custom_weight / 4 * 96
+        total_weight = custom_weight + base_card_rate -- total_weight*edition_rate*_modifier + base_weight
+    else
+        total_weight = custom_weight    
     end
-    -- sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
-    -- sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
-    -- sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
+    sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
+    sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
+    sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
     
     -- Calculate whether edition is selected
     local weight_i = 0
     for _,v in ipairs(available_editions) do
         if not (v == 'negative' and _no_neg) then
-            weight_i = weight_i + (v.weight or SMODS.Editions[v].weight)*edition_rate*_modifier
-            -- sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
-            if edition_poll > 1 - (weight_i)/total_weight*edition_rate*_modifier then
-                -- sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
+            if v == 'negative' then 
+                weight_i = weight_i + (SMODS.Editions[v].weight)*_modifier -- jank negative logic to not increase chance
+            else
+                weight_i = weight_i + (v.weight or SMODS.Editions[v].weight)*edition_rate*_modifier
+            end
+            sendDebugMessage("Checking for "..(v.name or v).." at "..(1 - (weight_i)/total_weight), "EditionAPI")
+            if edition_poll > 1 - (weight_i)/total_weight then
+                sendDebugMessage("Matched edition: "..(v.name or v), "EditionAPI")
                 return {[(v.name or v)] = true}
+            end
+            if v == 'negative' then
+                weight_i = weight_i + (SMODS.Editions[v].weight)*(edition_rate - 1)*_modifier -- jank negative logic to maintain chance for other editions
             end
         end
     end

@@ -341,14 +341,15 @@ SMODS.Consumable({
             delay = 0.4,
             func = function()
                 local selected_joker = pseudorandom_element(eligible_jokers, pseudoseed('seed'))
-                selected_joker.set_edition(selected_joker, { greyscale = true })
+                local selected_edition = poll_edition("custom_editions", nil, nil, true, {{name = "holo", weight = 1}, {name = "greyscale", weight = 1}, {name = "negative", weight = 1}, {name = "foil", weight = 1}})
+                selected_joker.set_edition(selected_joker, { negative = true })
                 used_tarot:juice_up(0.3, 0.5)
                 return true
             end
         }))
     end,
     loc_vars = function(self, info_queue)
-        info_queue[#info_queue+1] = G.P_CENTERS.e_foil
+        info_queue[#info_queue+1] = G.P_CENTERS.e_greyscale
         return {}
     end
 })
