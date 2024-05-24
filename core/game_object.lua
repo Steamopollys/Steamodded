@@ -1886,9 +1886,19 @@ function loadAPIs()
         -- other fields:
         -- replace_base_card
         -- if true, don't draw base card sprite and don't give base card's chips
+        -- no_suit
+        -- if true, enhanced card has no suit
+        -- no_rank
+        -- if true, enhanced card has no rank
+        -- any_suit
+        -- if true, enhanced card is any suit
+        -- always_scores
+        -- if true, card always scores
+        -- Future work: use ranks() and suits() for better control
         register = function(self)
             self.effect = self.effect or self.name
             self.config = self.config or {}
+            assert(not (self.no_suit and self.any_suit))
             SMODS.Enhancement.super.register(self)
         end,
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
