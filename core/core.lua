@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0523c-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0524a-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -297,7 +297,7 @@ function buildModtag(mod)
 
     if not mod.can_load then
         tag_message = "load_failure"
-        tag_atlas = "tag_error"
+        tag_atlas = "mod_tags"
         specific_vars = {}
         if next(mod.load_issues.dependencies) then
 			tag_message = tag_message..'_d'
@@ -311,6 +311,10 @@ function buildModtag(mod)
 		if mod.load_issues.version_mismatch then
             tag_message = 'load_failure_i'
 			specific_vars = {mod.load_issues.version_mismatch, MODDED_VERSION:gsub('-STEAMODDED', '')}
+		end
+		if mod.disabled then
+			tag_pos = {x = 1, y = 0}
+			tag_message = 'load_disabled'
 		end
     end
 
@@ -367,27 +371,40 @@ local function createClickableModBox(modInfo, scale)
     if modInfo.can_load then
         col = G.C.BOOSTER
     elseif modInfo.disabled then
-        col = G.C.INACTIVE
+        col = G.C.UI.BACKGROUND_INACTIVE
     else
-        col = G.C.RED
-        text_col = G.C.BLACK
+        col = mix_colours(G.C.RED, G.C.UI.BACKGROUND_INACTIVE, 0.7)
+        text_col = G.C.TEXT_DARK
+    end
+	local but = UIBox_button {
+        label = { " " .. modInfo.name .. " ", localize('b_by') .. concatAuthors(modInfo.author) .. " " },
+        shadow = true,
+        scale = scale,
+        colour = col,
+        text_colour = text_col,
+        button = "openModUI_" .. modInfo.id,
+        minh = 0.8,
+        minw = 7
+    }
+    if modInfo.version ~= '0.0.0' then
+		local function invert(c)
+			return {1-c[1], 1-c[2], 1-c[3], c[4]}
+		end
+        table.insert(but.nodes[1].nodes[1].nodes, {
+            n = G.UIT.T,
+            config = {
+                text = ('(%s)'):format(modInfo.version),
+                scale = scale*0.8,
+                colour = mix_colours(invert(col), G.C.UI.TEXT_INACTIVE, 0.8),
+                shadow = true,
+            },
+        })
     end
     return { n = G.UIT.R, config = { padding = 0, align = "cm" }, nodes = {
         { n = G.UIT.C, config = { align = "cm" }, nodes = {
             buildModtag(modInfo)
         }},
-        { n = G.UIT.C, config = { padding = 0, align = "cm", }, nodes = {
-            UIBox_button({
-                label = {" " .. modInfo.name .. " ", localize('b_by') .. concatAuthors(modInfo.author) .. " "},
-                shadow = true,
-                scale = scale,
-                colour = col,
-				text_colour = text_col,
-                button = "openModUI_" .. modInfo.id,
-                minh = 0.8,
-                minw = 7
-            })
-        }}
+        { n = G.UIT.C, config = { padding = 0, align = "cm", }, nodes = { but }}
     }}
 	
 end
@@ -1132,7 +1149,13 @@ SMODS._loc_txt = {
 					'#1# of Steamodded,',
 					'but #2# is installed.'
 				}
-			}
+			},
+			disabled = {
+                text = {
+                    'This mod has been',
+                    '{C:attention}disabled!{}'
+                }
+            }
         },
 		load = function(self)
 			for k, _ in pairs(self['en-us']) do

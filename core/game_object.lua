@@ -243,9 +243,9 @@ function loadAPIs()
     }
 
     SMODS.Atlas {
-        key = 'tag_error',
+        key = 'mod_tags',
         atlas = 'ASSET_ATLAS',
-        path = 'tag_error.png',
+        path = 'mod_tags.png',
         px = 34,
         py = 34,
     }
@@ -1427,7 +1427,7 @@ function loadAPIs()
                             local ii = (behavior.fixed and rank_data.next[behavior.fixed]) and behavior.fixed or 1
                             rank_suffix = SMODS.Ranks[rank_data.next[ii]].card_key
                         end
-                        card:set_base(G.P_CARDS[suit_prefix .. '_' .. rank_suffix])
+                        _card:set_base(G.P_CARDS[suit_prefix .. '_' .. rank_suffix])
                         return true
                     end
                 }))
