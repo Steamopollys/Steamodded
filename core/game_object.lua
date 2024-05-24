@@ -1913,22 +1913,4 @@ function loadAPIs()
 
     -- TODO pos = { x = 0, y = 0 } should just be set as a default for all objects
     -- with atlases
-
-    -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.Edition
-    -------------------------------------------------------------------------------------------------
-
-    -- TODO currently incomplete
-    SMODS.Edition = SMODS.Center:extend {
-        set = 'Edition',
-        prefix = 'e',
-        atlas = 'Jokers',
-        required_params = {
-            'key',
-            'loc_txt'
-        },
-        unlocked = true,
-        discovered = false,
-    }
-
 end
