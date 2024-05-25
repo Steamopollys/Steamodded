@@ -1049,8 +1049,19 @@ end
 -- silent = boolean value
 -- options = Table containing name and config. { name = edition_name, config = {config in here}}
 function Card.set_edition(self, edition, immediate, silent, options)
-    -- removeCardLimitEffects(self)
-    if not edition or edition.base then -- remove edition from card
+	-- Check to see if negative is being removed and reduce card_limit accordingly
+	if self.edition and self.edition.card_limit then
+		if self.ability.consumeable then
+			G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
+		elseif self.ability.set == 'Joker' then
+			G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit
+		-- elseif self.ability.set == 'Default' or self.ability.set == 'Enhanced' then
+		--     G.hand.config.card_limit = G.hand.config.card_limit - self.edition.card_limit
+		end
+	end
+	
+	
+	if not edition or edition.base then -- remove edition from card
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
             delay = not immediate and 0.2 or 0,
@@ -1102,20 +1113,20 @@ function Card.set_edition(self, edition, immediate, silent, options)
     end
     
     
-    if not self.edition then
+    if not self.edition and not (options.name == "Base") then
         self.edition = {}
         self.edition[options.name] = true
         self.edition.type = options.name
         for k, v in ipairs(options.config.labels) do
             self.edition[v] = self.ability.edition[v] or options.config.values[k]
-            if k == 'card_limit' then
+            if v == 'card_limit' then
                 -- for k2,v2 in pairs(self.container) do
                 --     sendDebugMessage(k2..": "..tostring(v2))
                 -- end
                 if self.ability.consumeable then
-                    G.consumeables.config.card_limit = G.consumeables.config.card_limit + v
+                    G.consumeables.config.card_limit = G.consumeables.config.card_limit + options.config.values[k]
                 elseif self.ability.set == 'Joker' then
-                    G.jokers.config.card_limit = G.jokers.config.card_limit + v
+                    G.jokers.config.card_limit = G.jokers.config.card_limit + options.config.values[k]
                 -- TO BE WORKED ON - NEGATIVE PLAYING CARDS --
                 -- elseif self.ability.set == 'Default' or self.ability.set == 'Enhanced' then
                 --     G.hand.config.card_limit = G.hand.config.card_limit + options.config.values[k]
