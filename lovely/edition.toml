@@ -108,12 +108,10 @@ target = "card.lua"
 pattern = "(self.edition.polychrome and 5 or 0) + (self.edition.negative and 5 or 0)"
 position = "after"
 payload = '''for k, v in pairs(G.P_CENTER_POOLS.Edition) do
-                if v.custom then
                     if self.edition[v.key:sub(3)] then
                         self.extra_cost = self.extra_cost + v.extra_cost
                         break
                     end
-                end
             end'''
 match_indent = true
 overwrite = false
