@@ -11,12 +11,12 @@ pattern = '''if v == 'foil' then info_queue[#info_queue+1] = G.P_CENTERS['e_foil
 position = "before"
 payload = '''
             local earlyReturn = false
-            if v == 'base' then
+            if _c.key == 'e_base' then
                 sendDebugMessage("Base detected")
             end
             for k2, v2 in pairs(G.P_CENTER_POOLS.Edition) do
-                if v == v2.name:lower() then
-                    info_queue[#info_queue + 1] = {key = v2.key, set = 'Edition', config = v2.config}
+                if v == v2.key then
+                    info_queue[#info_queue + 1] = G.P_CENTERS['e_'..v]
                     earlyReturn = true
                 end
             end
@@ -34,9 +34,11 @@ payload = '''
             if _c.key == "e_negative_consumable" then
                 loc_vars = {_c.config.extra}
             else
-                local editionConfig = G.P_CENTERS[_c.key].config
-                for _, v in ipairs(editionConfig.values) do
+                sendDebugMessage(_c.key)
+                if not _c.key == "e_base" then
+                for _, v in ipairs(G.P_CENTERS[_c.key].config.values) do
                     table.insert(loc_vars, v)
+                end
                 end
             end'''
 match_indent = true
@@ -49,12 +51,12 @@ target = "card.lua"
 pattern = "if self.edition or self.seal or self.ability.eternal or self.ability.rental or self.ability.perishable or self.sticker or self.ability.set == 'Spectral' or self.debuff or self.greyed or self.ability.name == 'The Soul' or self.ability.set == 'Voucher' or self.ability.set == 'Booster' or self.config.center.soul_pos or self.config.center.demo then"
 position = "after"
 payload = '''if self.edition then
-                for k, v in pairs(G.P_CENTER_POOLS.Edition) do
-                    if v.custom then
+                for k, v in pairs(G.P_CENTERS) do
+                    if v.shader_key then
                         if self.edition[v.key:sub(3)] then
-                            self.children.center:draw_shader(v.key:sub(3), nil, self.ARGS.send_to_shader)
+                            self.children.center:draw_shader(v.shader_key, nil, self.ARGS.send_to_shader)
                             if self.children.front and self.ability.effect ~= 'Stone Card' then
-                                self.children.front:draw_shader(v.key:sub(3), nil, self.ARGS.send_to_shader)
+                                self.children.front:draw_shader(v.shader_key, nil, self.ARGS.send_to_shader)
                             end
                         end
                     end

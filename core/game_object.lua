@@ -1873,22 +1873,112 @@ function loadAPIs()
         prefix = 'e',
         discovered = false,
         unlocked = true,
+        apply_to_float = false,
+        in_shop = false,
+        weight = nil,
+        extra_cost = nil,
+        config = {
+            labels = {},
+            values = {}
+        },
+        sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         required_params = {
             'key',
             'loc_txt',
+            'shader_name'
         },
         -- TODO badge colours. need to check how Steamodded already does badge colors
+        -- Tooltips that populate values
+        -- Tooltips on jokers in game
         -- other fields:
-        -- shader_key
-        -- a key for the G.SHADERS table, defaults to self.key
-        -- shader_path
-        -- path to your shader (.fs file), defaults to self.shader_key .. '.fs'
+        -- calculate function
         register = function(self)
-            self.shader_key = self.shader_key or self.key
-            self.shader_path = self.shader_path or (self.shader_key .. '.fs')
+            self.shader_key = self.shader_name
+            if not G.SHADERS[self.shader_key] then
+                self.shader_path = SMODS.current_mod.path .. "/assets/shaders/" .. self.shader_name .. ".fs" --self.shader_path or (self.shader_key .. '.fs')
+                G.SHADERS[self.shader_key] = love.graphics.newShader(self.shader_path)
+            end
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
-        end,
+        end
     }
+
+    -- if_edition = true to return jokers with no editions, false to return jokers without edition
+    function SMODS.Edition:getJokers(if_edition)
+        local jokers = {}
+        for k, v in pairs(G.jokers.cards) do
+            if v.ability.set == 'Joker' and (not v.edition and if_edition) or (v.edition and not if_edition) then
+                table.insert(jokers, v)
+                sendDebugMessage("Added "..k)                
+            end
+        end
+        return jokers
+    end
+
+
+    SMODS.Edition:take_ownership('e_foil',{key = "e_foil",
+        loc_txt = {
+            name = "Foil",
+            text = {
+                "{C:chips}+#1#{} chips"
+            }
+        },
+        discovered = true,
+        unlocked = true,
+        shader_name = 'foil',
+        config = { labels = {'chip_mod'}, values = {50} },
+        sound = { sound = "foil1", per = 1.2, vol = 0.4 },
+        in_shop = true,
+        weight = 20,
+        extra_cost = 2
+    })
+    SMODS.Edition:take_ownership('e_holo', {key = "e_holo",
+        loc_txt = {
+            name = "Holographic",
+            text = {
+                "{C:mult}+#1#{} Mult"
+            }
+        },
+        discovered = true,
+        unlocked = true,
+        shader_name = 'holo',
+        config = { labels = {'mult_mod'}, values = {10} },
+        sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
+        in_shop = true,
+        weight = 14,
+        extra_cost = 3
+    })
+    SMODS.Edition:take_ownership('e_polychrome', {key = "e_polychrome",
+        loc_txt = {
+            name = "Polychrome",
+            text = {
+                "{X:mult,C:white} X#1# {} Mult"
+            }
+        },
+        discovered = true,
+        unlocked = true,
+        shader_name = 'polychrome',
+        config = { labels = {'x_mult_mod'}, values = {1.5} },
+        sound = { sound = "polychrome1", per = 1.2, vol = 0.7 },
+        in_shop = true,
+        weight = 3,
+        extra_cost = 5
+    })
+    SMODS.Edition:take_ownership('e_negative', {key = "e_negative",
+        loc_txt = {
+            name = "Negative",
+            text = {
+                "{C:dark_edition}+#1#{} Joker slot"
+            }
+        },
+        discovered = true,
+        unlocked = true,
+        shader_name = 'negative',
+        config = { labels = {'card_limit'}, values = {1} },
+        sound = { sound = "negative", per = 1.5, vol = 0.4 },
+        in_shop = true,
+        weight = 3,
+        extra_cost = 5
+    })
 
 end

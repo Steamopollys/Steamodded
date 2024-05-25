@@ -858,3 +858,303 @@ G.FUNCS.your_hands_page = function(args)
 		}
 	end
 end
+
+
+-------------------------------------------------------------------------------------------------
+----- API HOOKS GameObject.Edition
+-------------------------------------------------------------------------------------------------
+
+function create_UIBox_your_collection_editions(exit)
+    local deck_tables = {}
+    local rows, cols = 2, 5
+    local page = 0
+
+    G.your_collection = {}
+    for j = 1, rows do
+        G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
+            {
+                card_limit = cols,
+                type = 'title',
+                highlight_limit = 0,
+                collection = true
+            })
+        table.insert(deck_tables, {
+            n = G.UIT.R,
+            config = {
+                align = "cm",
+                padding = 0,
+                no_fill = true
+            },
+            nodes = {{
+                n = G.UIT.O,
+                config = {
+                    object = G.your_collection[j]
+                }
+            }}
+        })
+    end
+
+	table.sort(G.P_CENTER_POOLS.Edition, function(a,b) return a.order < b.order end)
+
+    local count = math.min(cols * rows, #G.P_CENTER_POOLS["Edition"])
+    local index = 1 + (rows * cols * page)
+    for j = 1, rows do
+        for i = 1, cols do
+
+            local center = G.P_CENTER_POOLS.Edition[index]
+
+            if not center then
+                break
+            end
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+                G.CARD_W, G.CARD_H, nil, center)
+            card:start_materialize(nil, i > 1 or j > 1)
+            card:set_edition({
+                [center.key:sub(3)] = true
+            }, true, true, {
+                name = center.key:sub(3),
+                config = center.config
+            })
+            G.your_collection[j]:emplace(card)
+            index = index + 1
+        end
+        if index > count then
+            break
+        end
+    end
+
+    local edition_options = {}
+
+    local t = create_UIBox_generic_options({
+        infotip = localize('ml_edition_seal_enhancement_explanation'),
+        back_func = exit or 'your_collection',
+        snap_back = true,
+        contents = {{
+            n = G.UIT.R,
+            config = {
+                align = "cm",
+                minw = 2.5,
+                padding = 0.1,
+                r = 0.1,
+                colour = G.C.BLACK,
+                emboss = 0.05
+            },
+            nodes = deck_tables
+        }}
+    })
+
+    if #G.P_CENTER_POOLS["Edition"] > rows * cols then
+        for i = 1, math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) do
+            table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+                tostring(math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))))
+        end
+        t = create_UIBox_generic_options({
+            infotip = localize('ml_edition_seal_enhancement_explanation'),
+            back_func = exit or 'your_collection',
+            snap_back = true,
+            contents = {{
+                n = G.UIT.R,
+                config = {
+                    align = "cm",
+                    minw = 2.5,
+                    padding = 0.1,
+                    r = 0.1,
+                    colour = G.C.BLACK,
+                    emboss = 0.05
+                },
+                nodes = deck_tables
+            }, {
+                n = G.UIT.R,
+                config = {
+                    align = "cm"
+                },
+                nodes = {create_option_cycle({
+                    options = edition_options,
+                    w = 4.5,
+                    cycle_shoulders = true,
+                    opt_callback = 'your_collection_editions_page',
+                    focus_args = {
+                        snap_to = true,
+                        nav = 'wide'
+                    },
+                    current_option = 1,
+                    r = rows,
+                    c = cols,
+                    colour = G.C.RED,
+                    no_pips = true
+                })}
+            }}
+        })
+    end
+    return t
+end
+
+G.FUNCS.your_collection_editions_page = function(args)
+    if not args or not args.cycle_config then
+        return
+    end
+    local rows = E_ROWS
+    local cols = E_COLS
+    local page = args.cycle_config.current_option
+    if page > math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) then
+        page = page - math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))
+    end
+    sendDebugMessage(page .. " / " .. math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)), "EditionAPI")
+    local count = rows * cols
+    local offset = (rows * cols) * (page - 1)
+    sendDebugMessage("Page offset: " .. tostring(offset), "EditionAPI")
+
+    for j = 1, #G.your_collection do
+        for i = #G.your_collection[j].cards, 1, -1 do
+            if G.your_collection[j] ~= nil then
+                local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+                c:remove()
+                c = nil
+            end
+        end
+    end
+
+    for j = 1, rows do
+        for i = 1, cols do
+            if count % rows > 0 and i <= count % rows and j == cols then
+                offset = offset - 1
+                break
+            end
+            local idx = i + (j - 1) * cols + offset
+            if idx > #G.P_CENTER_POOLS["Edition"] then
+                sendDebugMessage("End of Edition table.", "EditionAPI")
+                return
+            end
+            sendDebugMessage("Loading Edition " .. tostring(idx), "EditionAPI")
+            local center = G.P_CENTER_POOLS["Edition"][idx]
+            sendDebugMessage("Edition " .. ((center and "loaded") or "did not load") .. " successfuly.", "EditionAPI")
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+                G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+            card:set_edition({
+                [center.key:sub(3)] = true
+            }, true, true, {
+                name = center.key:sub(3),
+                config = center.config
+            })
+            card:start_materialize(nil, i > 1 or j > 1)
+            G.your_collection[j]:emplace(card)
+        end
+    end
+    sendDebugMessage("All Editions of Page " .. page .. " loaded.", "EditionAPI")
+end
+
+-- self = pass the card
+-- edition = { name_of_edition = true } (key without e_)
+-- immediate = boolean value
+-- silent = boolean value
+-- options = Table containing name and config. { name = edition_name, config = {config in here}}
+function Card.set_edition(self, edition, immediate, silent, options)
+    -- removeCardLimitEffects(self)
+    if not edition or edition.base then -- remove edition from card
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = not immediate and 0.2 or 0,
+            blockable = not immediate,
+            func = function()
+                self.edition = nil
+                self:juice_up(1, 0.5)
+                play_sound('whoosh2', 1.2, 0.6)
+                return true
+            end
+        }))
+        return
+    end
+    
+    self.edition = nil
+    if not options then
+        for k,v in pairs(edition) do
+            if k == 'type' then
+                    if v then
+                        options = {
+							name = v,
+							sound = G.P_CENTERS["e_"..v].sound,
+							config = G.P_CENTERS["e_"..v].config
+						}
+                    end
+            else
+                if G.P_CENTERS["e_"..k] then
+                    if v then
+                        options = {
+							name = k,
+							sound = G.P_CENTERS["e_"..k].sound,
+							config = G.P_CENTERS["e_"..k].config
+						}
+                    end
+                end
+            end
+        end
+		if not options then
+			options = {
+				name = "Base",
+				sound = { sound = "whoosh2", per = 1.2, vol = 0.6 },
+				config = { labels = {}, values = {} }
+			}
+		end
+    end
+
+    if not self.ability.edition then
+        self.ability.edition = {}
+    end
+    
+    
+    if not self.edition then
+        self.edition = {}
+        self.edition[options.name] = true
+        self.edition.type = options.name
+        for k, v in ipairs(options.config.labels) do
+            self.edition[v] = self.ability.edition[v] or options.config.values[k]
+            if k == 'card_limit' then
+                -- for k2,v2 in pairs(self.container) do
+                --     sendDebugMessage(k2..": "..tostring(v2))
+                -- end
+                if self.ability.consumeable then
+                    G.consumeables.config.card_limit = G.consumeables.config.card_limit + v
+                elseif self.ability.set == 'Joker' then
+                    G.jokers.config.card_limit = G.jokers.config.card_limit + v
+                -- TO BE WORKED ON - NEGATIVE PLAYING CARDS --
+                -- elseif self.ability.set == 'Default' or self.ability.set == 'Enhanced' then
+                --     G.hand.config.card_limit = G.hand.config.card_limit + options.config.values[k]
+                --     G.E_MANAGER:add_event(Event({
+                --         trigger = 'immediate',
+                --         func = function()
+                --             G.FUNCS.draw_from_deck_to_hand()
+                --             return true
+                --         end
+                --     }))
+                end
+            end
+        end
+    end
+
+    if self.edition and not silent then
+        G.CONTROLLER.locks.edition = true
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = not immediate and 0.2 or 0,
+            blockable = not immediate,
+            func = function()
+                self:juice_up(1, 0.5)
+                if self.edition then 
+                    play_sound(options.sound.sound, options.sound.per, options.sound.vol)
+                end
+                return true
+            end
+        }))
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = 0.1,
+            func = function()
+                G.CONTROLLER.locks.edition = false
+                return true
+            end
+        }))
+    end
+
+    self:set_cost()
+
+end

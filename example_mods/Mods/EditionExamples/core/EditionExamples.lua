@@ -59,29 +59,6 @@ local mod_path = SMODS.current_mod.path
 --     end
 -- }
 
-local greyDef = {
-    name = "Greyscale",
-    key = "greyscale",
-    config = { labels = {'chip_mod','mult_mod','x_mult_mod'}, values = {200, 10, 2} },
-    shader_path = mod_path .. "/assets/shaders/greyscale.fs",
-    loc_txt = { name = "Greyscale", text = {"{C:chips}+#1#{} chips, {C:mult}+#2#{} Mult", "and {X:mult,C:white}X#3#{} Mult"}},
-    discovered = true,
-    unlocked = true,
-    unlock_condition = {},
-    apply_to_float = true,
-    weight = 8,
-    in_shop = true,
-    extra_cost = 6,
-    calculate = function(self, context)
-        if context.edition or (context.cardarea == G.play and self.playing_card) then
-            ret = {}
-            for k, v in pairs(self.edition) do
-                ret[k] = v
-            end
-            return ret
-        end
-    end
-}
 
 -- local anaglyphDef = {
 --     name = "Anaglyphic",
@@ -152,7 +129,7 @@ local greyDef = {
 --     end
 -- }
 
-SMODS.Edition:new(greyDef):register()
+-- SMODS.Edition:new(greyDef):register()
 -- SMODS.Edition:new(anaglyphDef):register()
 -- SMODS.Edition:new(overexposedDef):register()
 -- SMODS.Edition:new(fluorDef):register()
@@ -328,21 +305,21 @@ SMODS.Consumable({
     can_use = function(self, card)
         if G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT or
         any_state then
-            if next(SMODS.Edition:get_editionless_jokers({})) then
+            if next(SMODS.Edition:getJokers(true)) then
                 return true
             end
         end
     end,
     use = function(card, area, copier)
         local used_tarot = (copier or card)
-        local eligible_jokers = SMODS.Edition:get_editionless_jokers({})
+        local eligible_jokers = SMODS.Edition:getJokers(true)
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
             delay = 0.4,
             func = function()
                 local selected_joker = pseudorandom_element(eligible_jokers, pseudoseed('seed'))
-                local selected_edition = poll_edition("custom_editions", nil, nil, true, {{name = "holo", weight = 1}, {name = "greyscale", weight = 1}, {name = "negative", weight = 1}, {name = "foil", weight = 1}})
-                selected_joker.set_edition(selected_joker, { negative = true })
+                -- local selected_edition = poll_edition("custom_editions", nil, nil, true, {{name = "holo", weight = 1}, {name = "greyscale", weight = 1}, {name = "negative", weight = 1}, {name = "foil", weight = 1}})
+                selected_joker.set_edition(selected_joker, { edex_greyscale = true })
                 used_tarot:juice_up(0.3, 0.5)
                 return true
             end
@@ -370,12 +347,51 @@ SMODS.Back({
     unlocked = true
 })
 
-if G.P_CENTERS['b_edex_test_deck'] then
-    sendInfoMessage("Test Deck loaded", "Edition Example")
-else
-    sendInfoMessage("Test Deck not loaded", "Edition Example")
-end
+SMODS.Edition({
+    key = "greyscale",
+    loc_txt = {
+        name = "Greyscale",
+        text = {
+            "{C:chips}+#1#{} chips, {C:mult}+#2#{} Mult",
+            "and {X:mult,C:white}X#3#{} Mult"
+        }
+    },
+    discovered = true,
+    unlocked = true,
+    shader_path = mod_path .. "/assets/shaders/greyscale.fs",
+    shader_name = 'greyscale',
+    config = { labels = {'chip_mod','mult_mod','x_mult_mod'}, values = {200, 10, 2} },
+    sound = { sound = "foil1", per = 1.2, vol = 0.4 },
+    in_shop = true,
+    weight = 8,
+    extra_cost = 6
+})
 
+
+-- local greyDef = {
+--     name = "Greyscale",
+--     key = "greyscale",
+--     config = { labels = {'chip_mod','mult_mod','x_mult_mod'}, values = {200, 10, 2} },
+--     shader_path = mod_path .. "/assets/shaders/greyscale.fs",
+    
+--     loc_txt = { name = "Greyscale", text = {"{C:chips}+#1#{} chips, {C:mult}+#2#{} Mult", "and {X:mult,C:white}X#3#{} Mult"}},
+--     discovered = true,
+--     unlocked = true,
+--     unlock_condition = {},
+--     apply_to_float = true,
+--     weight = 8,
+--     in_shop = true,
+--     extra_cost = 6,
+--     calculate = function(self, context)
+--         if context.edition or (context.cardarea == G.play and self.playing_card) then
+--             ret = {}
+--             for k, v in pairs(self.edition) do
+--                 ret[k] = v
+--             end
+--             return ret
+--         end
+--     end
+-- }
 
 
 
