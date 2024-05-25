@@ -1860,4 +1860,35 @@ function loadAPIs()
         custom_message_config = { message = nil, color = nil, scale = nil },
         inject = function() end,
     }
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Edition
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Edition = SMODS.Center:extend {
+        set = 'Edition',
+        -- atlas only matters for displaying editions in the collection
+        atlas = 'Joker',
+        pos = { x = 0, y = 0 },
+        prefix = 'e',
+        discovered = false,
+        unlocked = true,
+        required_params = {
+            'key',
+            'loc_txt',
+        },
+        -- TODO badge colours. need to check how Steamodded already does badge colors
+        -- other fields:
+        -- shader_key
+        -- a key for the G.SHADERS table, defaults to self.key
+        -- shader_path
+        -- path to your shader (.fs file), defaults to self.shader_key .. '.fs'
+        register = function(self)
+            self.shader_key = self.shader_key or self.key
+            self.shader_path = self.shader_path or (self.shader_key .. '.fs')
+            self.config = self.config or {}
+            SMODS.Edition.super.register(self)
+        end,
+    }
+
 end
