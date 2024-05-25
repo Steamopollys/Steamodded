@@ -1909,7 +1909,6 @@ function loadAPIs()
         for k, v in pairs(G.jokers.cards) do
             if v.ability.set == 'Joker' and (not v.edition and if_edition) or (v.edition and not if_edition) then
                 table.insert(jokers, v)
-                sendDebugMessage("Added "..k)                
             end
         end
         return jokers
