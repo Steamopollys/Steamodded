@@ -10,7 +10,7 @@ target = "engine/controller.lua"
 pattern = '''foil = not _card.edition,'''
 position = "before"
 payload = '''
-base = _card.edition and _card.edition.negative,'''
+base = _card.edition and not (_card.edition.foil or _card.edition.holo or _card.edition.polychrome),'''
 match_indent = true
 
 # Inject edition badge declaration
@@ -43,7 +43,6 @@ payload = '''
 if _c.key == "e_negative_consumable" then
     loc_vars = {_c.config.extra}
 else
-    sendDebugMessage(_c.key)
     if not _c.key == "e_base" then
     for _, v in ipairs(G.P_CENTERS[_c.key].config.values) do
         table.insert(loc_vars, v)

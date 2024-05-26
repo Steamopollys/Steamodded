@@ -1875,6 +1875,7 @@ function loadAPIs()
         unlocked = true,
         apply_to_float = false,
         in_shop = false,
+        weight = 0,
         -- default sound is foil sound
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         required_params = {
@@ -1883,8 +1884,8 @@ function loadAPIs()
             'shader_name'
         },
         -- other fields:
-        -- weight
         -- extra_cost
+
         -- TODO badge colours. need to check how Steamodded already does badge colors
         -- Tooltips that populate values
         -- Tooltips on jokers in game
@@ -1965,7 +1966,7 @@ function loadAPIs()
         --     }
         -- },
         shader_name = 'negative',
-        config = { card_limit = 1 },
+        config = { card_limit = 10 },
         sound = { sound = "negative", per = 1.5, vol = 0.4 },
         in_shop = true,
         weight = 3,

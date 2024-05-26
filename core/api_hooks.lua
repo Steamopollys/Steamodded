@@ -1166,3 +1166,103 @@ function Card.set_edition(self, edition, immediate, silent)
     self:set_cost()
 
 end
+
+
+-- _key = key value for random seed
+-- _mod = scale of chance against base card (does not change guaranteed weights)
+-- _no_neg = boolean value to disable negative edition
+-- _guaranteed = boolean value to determine whether an edition is guaranteed
+-- _options = list of keys of editions to include in the poll
+-- OR list of tables { name = string (key without e_), weight = number }
+function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
+    local _modifier = 1
+    local edition_rate = 1
+    local edition_poll = pseudorandom(pseudoseed(_key or 'edition_generic'))
+
+	if _key == "wheel_of_fortune" or _key == "aura" then -- set base game edition polling
+        _options = {'negative', 'polychrome', 'holo', 'foil'}
+	end
+
+    -- Populate available editions for random selection
+    local available_editions = {}
+    if _options then -- A set of editions has been provided to the function, custom weights can be provided here too
+		for _,v in ipairs(_options) do
+			local edition_option = {}
+			if type(v) == 'string' then
+				local negative_weight = 0
+				if v == "negative" and _no_neg then
+				else
+					if v == "polychrome" and _no_neg then
+						edition_option = { name = v, weight = (G.P_CENTERS["e_"..v].weight + G.P_CENTERS["e_negative"].weight) }
+					else
+						edition_option = { name = v, weight = G.P_CENTERS["e_"..v].weight }
+					end
+					table.insert(available_editions, edition_option)
+				end
+			elseif type(v) == 'table' then
+				edition_option = { name = v.name, weight = v.weight }
+				table.insert(available_editions, edition_option)
+			end
+
+		end
+    else
+		local negative_weight = 0
+		for _,v in ipairs(G.P_CENTER_POOLS.Edition) do
+			local edition_option = {}
+			if v.key == "e_base" then
+			elseif v.key == "e_negative" and _no_neg then
+				negative_weight = v.weight
+			else
+				if v.in_shop then
+					if v.key == "e_polychrome" and _no_neg then
+						edition_option = { name = v.key:sub(3), weight = v.weight + G.P_CENTERS["e_negative"].weight }
+					else
+						edition_option = { name = v.key:sub(3), weight = v.weight }
+					end
+					table.insert(available_editions, edition_option)
+				end
+			end
+		end
+	end
+
+    -- Calculate total weight of editions
+    local total_weight = 0
+    local custom_weight = 0
+    for _,v in ipairs(available_editions) do
+		custom_weight = custom_weight + (v.weight) -- total all the weights of the polled editions
+    end
+    -- sendDebugMessage("Edition weights: "..custom_weight, "EditionAPI")
+    -- If not guaranteed, calculate the base card rate to maintain 4% chance of editions (scales with vouchers)
+    if not _guaranteed then
+        edition_rate = G.GAME.edition_rate
+        _modifier = _mod or 1
+        local base_card_rate = custom_weight / 4 * 96
+        total_weight = custom_weight + base_card_rate -- total_weight*edition_rate*_modifier + base_weight
+    else
+        total_weight = custom_weight    
+    end
+    -- sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
+    -- sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
+    -- sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
+    
+    -- Calculate whether edition is selected
+    local weight_i = 0
+    for _,v in ipairs(available_editions) do
+        if not (v == 'negative' and _no_neg) then
+            if v == 'negative' then 
+                weight_i = weight_i + v.weight*_modifier -- jank negative logic to not increase chance
+            else
+                weight_i = weight_i + v.weight*edition_rate*_modifier
+            end
+            sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
+            if edition_poll > 1 - (weight_i)/total_weight then
+                sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
+                return {[v.name] = true}
+            end
+            if v == 'negative' then
+                weight_i = weight_i + v.weight*(edition_rate - 1)*_modifier -- jank negative logic to maintain chance for other editions
+            end
+        end
+    end
+    return nil
+end
