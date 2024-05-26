@@ -1259,7 +1259,7 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
             sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
             if edition_poll > 1 - (weight_i)/total_weight then
                 sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
-                return {[v.name] = true}
+                return v.name
             end
             if v.name == 'negative' then
                 weight_i = weight_i + v.weight*_modifier -- jank negative logic to maintain chance for other editions
