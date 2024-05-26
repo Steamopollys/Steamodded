@@ -3,6 +3,16 @@ version = "1.0.0"
 dump_lua = true
 priority = 0
 
+# Fix debug mode edition cycling
+[[patches]]
+[patches.pattern]
+target = "engine/controller.lua"
+pattern = '''foil = not _card.edition,'''
+position = "before"
+payload = '''
+base = _card.edition and _card.edition.negative,'''
+match_indent = true
+
 # Inject edition badge declaration
 [[patches]]
 [patches.pattern]
@@ -101,15 +111,18 @@ match_indent = true
 
 # Inject change to edition cost in shop
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "card.lua"
-pattern = "(self.edition.polychrome and 5 or 0) + (self.edition.negative and 5 or 0)"
-position = "after"
+pattern = '(?<indent>[\t ]*)self.ex([a-z._\s=+(0-9)]*)\n([\t ]*)([a-z._\s=+(0-9)]*)or 0\)'
+position = "at"
 payload = '''
 for k, v in pairs(G.P_CENTER_POOLS.Edition) do
     if self.edition[v.key:sub(3)] then
-        self.extra_cost = self.extra_cost + v.extra_cost
-        break
+        if v.extra_cost then
+            self.extra_cost = self.extra_cost + v.extra_cost
+        else
+            self.extra_cost = 0
+        end
     end
 end'''
 match_indent = true
