@@ -1084,10 +1084,12 @@ function Card.set_edition(self, edition, immediate, silent)
             func = function()
                 self.edition = nil
                 self:juice_up(1, 0.5)
-                play_sound('whoosh2', 1.2, 0.6)
+				self:set_cost()
+                if not silent then play_sound('whoosh2', 1.2, 0.6) end
                 return true
             end
         }))
+		
         return
     end
     
@@ -1142,9 +1144,8 @@ function Card.set_edition(self, edition, immediate, silent)
             blockable = not immediate,
             func = function()
                 self:juice_up(1, 0.5)
-                if self.edition then 
-                    play_sound(self.sound.sound, self.sound.per, self.sound.vol)
-                end
+				local ed = G.P_CENTERS['e_'..(self.edition.type)]
+                play_sound(ed.sound.sound, ed.sound.per, ed.sound.vol)
                 return true
             end
         }))
