@@ -1899,6 +1899,13 @@ function loadAPIs()
             end
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
+        end,
+        calc_weight = function(self, given_weight)
+            if given_weight then
+                return given_weight
+            else
+                return self.weight
+            end
         end
     }
 
@@ -1928,7 +1935,14 @@ function loadAPIs()
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         in_shop = true,
         weight = 20,
-        extra_cost = 2
+        extra_cost = 2,
+        calc_weight = function(self, given_weight)
+            if given_weight then
+                return given_weight * G.GAME.edition_rate
+            else
+                return self.weight
+            end
+        end
     })
     SMODS.Edition:take_ownership('holo', {
         -- loc_txt = {
@@ -1942,7 +1956,14 @@ function loadAPIs()
         sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
         in_shop = true,
         weight = 14,
-        extra_cost = 3
+        extra_cost = 3,
+        calc_weight = function(self, given_weight)
+            if given_weight then
+                return given_weight * G.GAME.edition_rate
+            else
+                return self.weight
+            end
+        end
     })
     SMODS.Edition:take_ownership('polychrome', {
         -- loc_txt = {
@@ -1956,7 +1977,14 @@ function loadAPIs()
         sound = { sound = "polychrome1", per = 1.2, vol = 0.7 },
         in_shop = true,
         weight = 3,
-        extra_cost = 5
+        extra_cost = 5,
+        calc_weight = function(self, given_weight)
+            if given_weight then
+                return given_weight * G.GAME.edition_rate
+            else
+                return self.weight
+            end
+        end
     })
     SMODS.Edition:take_ownership('negative', {
         -- loc_txt = {
@@ -1970,7 +1998,14 @@ function loadAPIs()
         sound = { sound = "negative", per = 1.5, vol = 0.4 },
         in_shop = true,
         weight = 3,
-        extra_cost = 5
+        extra_cost = 5,
+        calc_weight = function(self, given_weight)
+            if given_weight then
+                return given_weight * (G.GAME.edition_rate - 1)
+            else
+                return self.weight
+            end
+        end
     })
 
 end

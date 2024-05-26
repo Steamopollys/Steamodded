@@ -1193,9 +1193,9 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 				if v == "negative" and _no_neg then
 				else
 					if v == "polychrome" and _no_neg then
-						edition_option = { name = v, weight = (G.P_CENTERS["e_"..v].weight + G.P_CENTERS["e_negative"].weight) }
+						edition_option = { name = v, weight = (G.P_CENTERS["e_"..v].calc_weight(G.P_CENTERS["e_"..v]) + G.P_CENTERS["e_negative"].calc_weight(G.P_CENTERS["e_negative"])) }
 					else
-						edition_option = { name = v, weight = G.P_CENTERS["e_"..v].weight }
+						edition_option = { name = v, weight = G.P_CENTERS["e_"..v].calc_weight(G.P_CENTERS["e_"..v]) }
 					end
 					table.insert(available_editions, edition_option)
 				end
@@ -1211,13 +1211,12 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 			local edition_option = {}
 			if v.key == "e_base" then
 			elseif v.key == "e_negative" and _no_neg then
-				negative_weight = v.weight
 			else
 				if v.in_shop then
 					if v.key == "e_polychrome" and _no_neg then
-						edition_option = { name = v.key:sub(3), weight = v.weight + G.P_CENTERS["e_negative"].weight }
+						edition_option = { name = v.key:sub(3), weight = v.calc_weight(v) + G.P_CENTERS["e_negative"].calc_weight(G.P_CENTERS["e_negative"]) }
 					else
-						edition_option = { name = v.key:sub(3), weight = v.weight }
+						edition_option = { name = v.key:sub(3), weight = v.calc_weight(v) }
 					end
 					table.insert(available_editions, edition_option)
 				end
@@ -1238,6 +1237,9 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
         _modifier = _mod or 1
         local base_card_rate = custom_weight / 4 * 96
         total_weight = custom_weight + base_card_rate -- total_weight*edition_rate*_modifier + base_weight
+		for _,v in ipairs(available_editions) do
+			v.weight = G.P_CENTERS["e_"..v.name].calc_weight(G.P_CENTERS["e_"..v.name], v.weight)
+		end
     else
         total_weight = custom_weight    
     end
@@ -1248,19 +1250,19 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
     -- Calculate whether edition is selected
     local weight_i = 0
     for _,v in ipairs(available_editions) do
-        if not (v == 'negative' and _no_neg) then
-            if v == 'negative' then 
+        if not (v.name == 'negative' and _no_neg) then
+            if v.name == 'negative' then 
                 weight_i = weight_i + v.weight*_modifier -- jank negative logic to not increase chance
             else
-                weight_i = weight_i + v.weight*edition_rate*_modifier
+                weight_i = weight_i + v.weight*_modifier
             end
             sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
             if edition_poll > 1 - (weight_i)/total_weight then
                 sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
                 return {[v.name] = true}
             end
-            if v == 'negative' then
-                weight_i = weight_i + v.weight*(edition_rate - 1)*_modifier -- jank negative logic to maintain chance for other editions
+            if v.name == 'negative' then
+                weight_i = weight_i + v.weight*_modifier -- jank negative logic to maintain chance for other editions
             end
         end
     end
