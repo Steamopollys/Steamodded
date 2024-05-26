@@ -19,13 +19,3 @@ payload = '''
 lua_reload = require('lua_reload')
 lua_reload.Inject()
 '''
-
-[[patches]]
-[patches.pattern]
-target = 'functions/button_callbacks.lua'
-pattern = 'love.event.quit()'
-position = 'at'
-match_indent = true
-payload = '''
-SMODS.reload()
-'''

@@ -427,14 +427,14 @@ local function createClickableModBox(modInfo, scale)
 				h = 0.5,
 				callback = (
 					function(_set_toggle)
-						if not modInfo.should_enable and not modInfo.disabled then
+						if not modInfo.should_enable then
 							NFS.write(modInfo.path .. '.lovelyignore', '')
 							if NFS.getInfo(modInfo.path .. 'lovely') or NFS.getInfo(modInfo.path .. 'lovely.toml') then
 								SMODS.full_restart = true
 							else
 								SMODS.partial_reload = true
 							end
-						elseif modInfo.should_enable and modInfo.disabled then
+						else
 							NFS.remove(modInfo.path .. '.lovelyignore')
 							if NFS.getInfo(modInfo.path .. 'lovely') or NFS.getInfo(modInfo.path .. 'lovely.toml') then
 								SMODS.full_restart = true
@@ -458,14 +458,29 @@ function G.FUNCS.openModsDirectory(options)
 end
 
 function G.FUNCS.mods_buttons_page(options)
-	if not options or not options.cycle_config then
-		return
-	end
+    if not options or not options.cycle_config then
+        return
+    end
+end
+
+function G.FUNCS.exit_mods(e)
+    if SMODS.full_restart then
+		if love.system.getOS() ~= 'OS X' then
+        	love.system.openURL('steam://rungameid/2379780')
+		else
+			os.execute('/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh')
+		end
+		love.event.quit()
+    elseif SMODS.partial_reload then
+        SMODS.reload()
+    end
+	G.FUNCS.exit_overlay_menu(e)
 end
 
 function create_UIBox_mods_button()
 	local scale = 0.75
 	return (create_UIBox_generic_options({
+		back_func = 'exit_mods',
 		contents = {
 			{
 				n = G.UIT.R,
@@ -1304,16 +1319,17 @@ function SMODS.init_settings()
 end
 
 function SMODS.reload()
-	--local save_dir = NFS.getSaveDirectory()
+	local lfs = love.filesystem
 	local function recurse(dir)
-		local files = NFS.getDirectoryItems(dir)
+		local files = lfs.getDirectoryItems(dir)
         for i, v in ipairs(files) do
-            local file = dir .. "/" .. v
+            local file = (dir == '') and v or (dir .. '/' .. v)
 			sendTraceMessage(file)
-			if v == 'Mods' then
-			elseif NFS.isFile(file) then
+			if v == 'Mods' or v:len() == 1 then
+				-- exclude save files
+			elseif lfs.isFile(file) then
 				lua_reload.ReloadFile(file)
-			elseif NFS.isDirectory(file) then
+			elseif lfs.isDirectory(file) then
 				recurse(file)
 			end
 		end
