@@ -1097,10 +1097,7 @@ function Card.set_edition(self, edition, immediate, silent)
         self.edition = {}
         self.edition[edition_key] = true
         self.edition.type = edition_key
-		for k, v in pairs(G.P_CENTERS['e_'..edition_key]) do
-			print(("k: %s, v: %s").format(k, v))
-		end
-        for k, v in ipairs(G.P_CENTERS['e_'..edition_key].config) do
+        for k, v in pairs(G.P_CENTERS['e_'..edition_key].config) do
             self.edition[k] = v
             if k == 'card_limit' then
                 -- for k2,v2 in pairs(self.container) do

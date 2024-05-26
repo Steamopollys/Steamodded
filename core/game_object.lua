@@ -1923,7 +1923,7 @@ function loadAPIs()
         --     }
         -- },
         shader_name = 'foil',
-        config = { chip_mod = 50 },
+        config = { chips = 50 },
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         in_shop = true,
         weight = 20,
@@ -1937,7 +1937,7 @@ function loadAPIs()
         --     }
         -- },
         shader_name = 'holo',
-        config = { mult_mod = 10 },
+        config = { mult = 10 },
         sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
         in_shop = true,
         weight = 14,
@@ -1951,7 +1951,7 @@ function loadAPIs()
         --     }
         -- },
         shader_name = 'polychrome',
-        config = { x_mult_mod = 1.5 },
+        config = { x_mult = 1.5 },
         sound = { sound = "polychrome1", per = 1.2, vol = 0.7 },
         in_shop = true,
         weight = 3,
