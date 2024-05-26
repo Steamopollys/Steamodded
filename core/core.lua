@@ -468,7 +468,7 @@ function G.FUNCS.exit_mods(e)
 		if love.system.getOS() ~= 'OS X' then
         	love.system.openURL('steam://rungameid/2379780')
 		else
-			os.execute('/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh')
+			os.execute('sh /Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh')
 		end
 		love.event.quit()
     elseif SMODS.partial_reload then
