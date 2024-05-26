@@ -10,19 +10,18 @@ target = "functions/common_events.lua"
 pattern = '''if v == 'foil' then info_queue[#info_queue+1] = G.P_CENTERS['e_foil'] end'''
 position = "before"
 payload = '''
-            local earlyReturn = false
-            if _c.key == 'e_base' then
-                sendDebugMessage("Base detected")
-            end
-            for k2, v2 in pairs(G.P_CENTER_POOLS.Edition) do
-                if v == v2.key then
-                    info_queue[#info_queue + 1] = G.P_CENTERS['e_'..v]
-                    earlyReturn = true
-                end
-            end
-            if earlyReturn then break end'''
+local earlyReturn = false
+if _c.key == 'e_base' then
+    sendDebugMessage("Base detected")
+end
+for k2, v2 in pairs(G.P_CENTER_POOLS.Edition) do
+    if v == v2.key then
+        info_queue[#info_queue + 1] = G.P_CENTERS['e_'..v]
+        earlyReturn = true
+    end
+end
+if earlyReturn then break end'''
 match_indent = true
-overwrite = false
 
 # Inject variable edition tooltips
 [[patches]]
@@ -31,18 +30,17 @@ target = "functions/common_events.lua"
 pattern = '''loc_vars = {_c.config.extra}'''
 position = "at"
 payload = '''
-            if _c.key == "e_negative_consumable" then
-                loc_vars = {_c.config.extra}
-            else
-                sendDebugMessage(_c.key)
-                if not _c.key == "e_base" then
-                for _, v in ipairs(G.P_CENTERS[_c.key].config.values) do
-                    table.insert(loc_vars, v)
-                end
-                end
-            end'''
+if _c.key == "e_negative_consumable" then
+    loc_vars = {_c.config.extra}
+else
+    sendDebugMessage(_c.key)
+    if not _c.key == "e_base" then
+    for _, v in ipairs(G.P_CENTERS[_c.key].config.values) do
+        table.insert(loc_vars, v)
+    end
+    end
+end'''
 match_indent = true
-overwrite = false
 
 # Inject shaders applying to cards
 [[patches]]
@@ -50,20 +48,20 @@ overwrite = false
 target = "card.lua"
 pattern = "if self.edition or self.seal or self.ability.eternal or self.ability.rental or self.ability.perishable or self.sticker or self.ability.set == 'Spectral' or self.debuff or self.greyed or self.ability.name == 'The Soul' or self.ability.set == 'Voucher' or self.ability.set == 'Booster' or self.config.center.soul_pos or self.config.center.demo then"
 position = "after"
-payload = '''if self.edition then
-                for k, v in pairs(G.P_CENTERS) do
-                    if v.shader_key then
-                        if self.edition[v.key:sub(3)] then
-                            self.children.center:draw_shader(v.shader_key, nil, self.ARGS.send_to_shader)
-                            if self.children.front and self.ability.effect ~= 'Stone Card' then
-                                self.children.front:draw_shader(v.shader_key, nil, self.ARGS.send_to_shader)
-                            end
-                        end
-                    end
+payload = '''
+if self.edition then
+    for k, v in pairs(G.P_CENTERS) do
+        if v.shader_key then
+            if self.edition[v.key:sub(3)] then
+                self.children.center:draw_shader(v.shader_key, nil, self.ARGS.send_to_shader)
+                if self.children.front and self.ability.effect ~= 'Stone Card' then
+                    self.children.front:draw_shader(v.shader_key, nil, self.ARGS.send_to_shader)
                 end
-            end'''
+            end
+        end
+    end
+end'''
 match_indent = true
-overwrite = false
 
 # Inject shaders applying to floating sprite shadows
 [[patches]]
@@ -71,17 +69,17 @@ overwrite = false
 target = "card.lua"
 pattern = "self.children.floating_sprite:draw_shader('hologram', nil, self.ARGS.send_to_shader, nil, self.children.center, 2*scale_mod, 2*rotate_mod)"
 position = "after"
-payload = '''if self.edition then 
-                for k, v in pairs(G.P_CENTER_POOLS.Edition) do
-                    if v.apply_to_float then
-                        if self.edition[v.key:sub(3)] then
-                            self.children.floating_sprite:draw_shader(v.key:sub(3), nil, self.ARGS.send_to_shader, nil, self.children.center, 2*scale_mod, 2*rotate_mod)
-                        end
-                    end
-                end
-            end'''
+payload = '''
+if self.edition then 
+    for k, v in pairs(G.P_CENTER_POOLS.Edition) do
+        if v.apply_to_float then
+            if self.edition[v.key:sub(3)] then
+                self.children.floating_sprite:draw_shader(v.key:sub(3), nil, self.ARGS.send_to_shader, nil, self.children.center, 2*scale_mod, 2*rotate_mod)
+            end
+        end
+    end
+end'''
 match_indent = true
-overwrite = false
 
 # Inject shaders applying to floating sprites
 [[patches]]
@@ -89,17 +87,17 @@ overwrite = false
 target = "card.lua"
 pattern = "self.children.floating_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)"
 position = "after"
-payload = '''if self.edition then 
-                for k, v in pairs(G.P_CENTER_POOLS.Edition) do
-                    if v.apply_to_float then
-                        if self.edition[v.key:sub(3)] then
-                            self.children.floating_sprite:draw_shader(v.key:sub(3), nil, nil, nil, self.children.center, scale_mod, rotate_mod)
-                        end
-                    end
-                end
-            end'''
+payload = '''
+if self.edition then 
+    for k, v in pairs(G.P_CENTER_POOLS.Edition) do
+        if v.apply_to_float then
+            if self.edition[v.key:sub(3)] then
+                self.children.floating_sprite:draw_shader(v.key:sub(3), nil, nil, nil, self.children.center, scale_mod, rotate_mod)
+            end
+        end
+    end
+end'''
 match_indent = true
-overwrite = false
 
 # Inject change to edition cost in shop
 [[patches]]
@@ -107,14 +105,14 @@ overwrite = false
 target = "card.lua"
 pattern = "(self.edition.polychrome and 5 or 0) + (self.edition.negative and 5 or 0)"
 position = "after"
-payload = '''for k, v in pairs(G.P_CENTER_POOLS.Edition) do
-                    if self.edition[v.key:sub(3)] then
-                        self.extra_cost = self.extra_cost + v.extra_cost
-                        break
-                    end
-            end'''
+payload = '''
+for k, v in pairs(G.P_CENTER_POOLS.Edition) do
+    if self.edition[v.key:sub(3)] then
+        self.extra_cost = self.extra_cost + v.extra_cost
+        break
+    end
+end'''
 match_indent = true
-overwrite = false
 
 # Alternate scoring effects for editions
 
@@ -124,40 +122,40 @@ overwrite = false
 target = "functions/state_events.lua" # line 763
 pattern = '''hand_chips = mod_chips(hand_chips + (effects[ii].edition.chip_mod or 0))'''
 position = "before"
-payload = '''if effects[ii].edition.chip_mod then
-                hand_chips = mod_chips(hand_chips + effects[ii].edition.chip_mod)
-                local key_switch = (effects[ii].edition.chip_mod > 0 and 'a_chips' or 'a_chips_minus')
-                card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
-                    message = localize{type='variable', key=key_switch, vars={math.abs(effects[ii].edition.chip_mod)}},
-                    chip_mod = true,
-                    colour = G.C.DARK_EDITION,
-                    edition = true
-                })
-                update_hand_text({delay = 0}, {chips = hand_chips})
-            end
-            if effects[ii].edition.mult_mod then
-                mult = mult + effects[ii].edition.mult_mod
-                card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
-                    message = localize{type='variable', key='a_mult', vars={effects[ii].edition.mult_mod}},
-                    mult_mod = true,
-                    colour = G.C.DARK_EDITION,
-                    edition = true
-                })
-                update_hand_text({delay = 0}, {mult = mult})
-            end
-            if effects[ii].edition.x_mult_mod then
-                mult = mult * effects[ii].edition.x_mult_mod
-                card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
-                    message = localize{type='variable', key='a_xmult', vars={effects[ii].edition.x_mult_mod}},
-                    x_mult_mod = true,
-                    colour = G.C.DARK_EDITION,
-                    edition = true
-                })
-                update_hand_text({delay = 0}, {mult = mult})
-            end
-        if not effects[ii].edition then'''
+payload = '''
+if effects[ii].edition.chip_mod then
+    hand_chips = mod_chips(hand_chips + effects[ii].edition.chip_mod)
+    local key_switch = (effects[ii].edition.chip_mod > 0 and 'a_chips' or 'a_chips_minus')
+    card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
+        message = localize{type='variable', key=key_switch, vars={math.abs(effects[ii].edition.chip_mod)}},
+        chip_mod = true,
+        colour = G.C.DARK_EDITION,
+        edition = true
+    })
+    update_hand_text({delay = 0}, {chips = hand_chips})
+end
+if effects[ii].edition.mult_mod then
+    mult = mult + effects[ii].edition.mult_mod
+    card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
+        message = localize{type='variable', key='a_mult', vars={effects[ii].edition.mult_mod}},
+        mult_mod = true,
+        colour = G.C.DARK_EDITION,
+        edition = true
+    })
+    update_hand_text({delay = 0}, {mult = mult})
+end
+if effects[ii].edition.x_mult_mod then
+    mult = mult * effects[ii].edition.x_mult_mod
+    card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
+        message = localize{type='variable', key='a_xmult', vars={effects[ii].edition.x_mult_mod}},
+        x_mult_mod = true,
+        colour = G.C.DARK_EDITION,
+        edition = true
+    })
+    update_hand_text({delay = 0}, {mult = mult})
+end
+if not effects[ii].edition then'''
 match_indent = true
-overwrite = false
 
 # Add played dollars to jokers
 [[patches]]
@@ -167,7 +165,6 @@ pattern = '''                                edition = true\}\)'''
 position = "after"
 payload = '''end'''
 match_indent = true
-overwrite = false
 
 [[patches]]
 [patches.regex]
@@ -177,18 +174,16 @@ position = "at"
 payload = '''                        card_eval_status_text((reps[j].jokers or reps[j].seals or reps[j].edition).card, 'jokers', nil, nil, nil, (reps[j].jokers or reps[j].seals or reps[j].edition))
 end'''
 match_indent = true
-overwrite = false
 
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua" # line 763
 pattern = "local eval = eval_card(scoring_hand[i], {repetition_only = true,cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true})"
-position = "before"
-payload = '''local eval = eval_card(scoring_hand[i], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true})
-if next(eval) and eval.edition then 
-                        for h = 1, eval.edition.repetitions do
-                            reps[#reps+1] = eval
-                        end
-                    end'''
+position = "after"
+payload = '''
+if next(eval) and eval.edition.repetitions then 
+    for h = 1, eval.edition.repetitions do
+        reps[#reps+1] = eval
+    end
+end'''
 match_indent = true
-overwrite = false

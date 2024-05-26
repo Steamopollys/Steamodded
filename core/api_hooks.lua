@@ -1044,13 +1044,15 @@ G.FUNCS.your_collection_editions_page = function(args)
 end
 
 -- self = pass the card
--- edition = { name_of_edition = true } (key without e_)
+-- edition =
+-- nil (removes edition)
+-- OR key without e_, as a string
+-- OR { name_of_edition = true } (key without e_). This is from the base game, prefer using a string.
 -- immediate = boolean value
 -- silent = boolean value
--- options = Table containing name and config. { name = edition_name, config = {config in here}}
-function Card.set_edition(self, edition, immediate, silent, options)
+function Card.set_edition(self, edition, immediate, silent)
 	-- Check to see if negative is being removed and reduce card_limit accordingly
-	if self.edition and self.edition.card_limit then
+	if self.edition and self.edition.card_limit and self.added_to_deck then
 		if self.ability.consumeable then
 			G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
 		elseif self.ability.set == 'Joker' then
@@ -1060,8 +1062,21 @@ function Card.set_edition(self, edition, immediate, silent, options)
 		end
 	end
 	
+	local edition_key = nil
+	if type(edition) == 'string' then
+		edition_key = edition
+	elseif not edition then
+		edition_key = nil
+	elseif type(edition) == 'table' then
+		for k, v in pairs(edition) do
+			if v then
+				assert(not edition_key)
+				edition_key = k
+			end
+		end
+	end
 	
-	if not edition or edition.base then -- remove edition from card
+	if not edition or edition_key == 'base' then -- remove edition from card
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
             delay = not immediate and 0.2 or 0,
@@ -1077,56 +1092,24 @@ function Card.set_edition(self, edition, immediate, silent, options)
     end
     
     self.edition = nil
-    if not options then
-        for k,v in pairs(edition) do
-            if k == 'type' then
-                    if v then
-                        options = {
-							name = v,
-							sound = G.P_CENTERS["e_"..v].sound,
-							config = G.P_CENTERS["e_"..v].config
-						}
-                    end
-            else
-                if G.P_CENTERS["e_"..k] then
-                    if v then
-                        options = {
-							name = k,
-							sound = G.P_CENTERS["e_"..k].sound,
-							config = G.P_CENTERS["e_"..k].config
-						}
-                    end
-                end
-            end
-        end
-		if not options then
-			options = {
-				name = "Base",
-				sound = { sound = "whoosh2", per = 1.2, vol = 0.6 },
-				config = { labels = {}, values = {} }
-			}
-		end
-    end
-
-    if not self.ability.edition then
-        self.ability.edition = {}
-    end
     
-    
-    if not self.edition and not (options.name == "Base") then
+    if not self.edition then
         self.edition = {}
-        self.edition[options.name] = true
-        self.edition.type = options.name
-        for k, v in ipairs(options.config.labels) do
-            self.edition[v] = self.ability.edition[v] or options.config.values[k]
-            if v == 'card_limit' then
+        self.edition[edition_key] = true
+        self.edition.type = edition_key
+		for k, v in pairs(G.P_CENTERS['e_'..edition_key]) do
+			print(("k: %s, v: %s").format(k, v))
+		end
+        for k, v in ipairs(G.P_CENTERS['e_'..edition_key].config) do
+            self.edition[k] = v
+            if k == 'card_limit' then
                 -- for k2,v2 in pairs(self.container) do
                 --     sendDebugMessage(k2..": "..tostring(v2))
                 -- end
                 if self.ability.consumeable then
-                    G.consumeables.config.card_limit = G.consumeables.config.card_limit + options.config.values[k]
+                    G.consumeables.config.card_limit = G.consumeables.config.card_limit + v
                 elseif self.ability.set == 'Joker' then
-                    G.jokers.config.card_limit = G.jokers.config.card_limit + options.config.values[k]
+                    G.jokers.config.card_limit = G.jokers.config.card_limit + v
                 -- TO BE WORKED ON - NEGATIVE PLAYING CARDS --
                 -- elseif self.ability.set == 'Default' or self.ability.set == 'Enhanced' then
                 --     G.hand.config.card_limit = G.hand.config.card_limit + options.config.values[k]
@@ -1142,6 +1125,18 @@ function Card.set_edition(self, edition, immediate, silent, options)
         end
     end
 
+    if self.area and self.area == G.jokers then 
+        if self.edition then
+            if not G.P_CENTERS['e_'..(self.edition.type)].discovered then 
+                discover_card(G.P_CENTERS['e_'..(self.edition.type)])
+            end
+        else
+            if not G.P_CENTERS['e_base'].discovered then 
+                discover_card(G.P_CENTERS['e_base'])
+            end
+        end
+    end
+
     if self.edition and not silent then
         G.CONTROLLER.locks.edition = true
         G.E_MANAGER:add_event(Event({
@@ -1151,7 +1146,7 @@ function Card.set_edition(self, edition, immediate, silent, options)
             func = function()
                 self:juice_up(1, 0.5)
                 if self.edition then 
-                    play_sound(options.sound.sound, options.sound.per, options.sound.vol)
+                    play_sound(self.sound.sound, self.sound.per, self.sound.vol)
                 end
                 return true
             end
@@ -1164,6 +1159,10 @@ function Card.set_edition(self, edition, immediate, silent, options)
                 return true
             end
         }))
+    end
+
+	if G.jokers and self.area == G.jokers then 
+        check_for_unlock({type = 'modify_jokers'})
     end
 
     self:set_cost()

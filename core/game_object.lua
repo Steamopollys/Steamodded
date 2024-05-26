@@ -1875,23 +1875,21 @@ function loadAPIs()
         unlocked = true,
         apply_to_float = false,
         in_shop = false,
-        weight = nil,
-        extra_cost = nil,
-        config = {
-            labels = {},
-            values = {}
-        },
+        -- default sound is foil sound
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         required_params = {
             'key',
             'loc_txt',
             'shader_name'
         },
+        -- other fields:
+        -- weight
+        -- extra_cost
         -- TODO badge colours. need to check how Steamodded already does badge colors
         -- Tooltips that populate values
         -- Tooltips on jokers in game
-        -- other fields:
-        -- calculate function
+        -- other methods:
+        -- calculate(self)
         register = function(self)
             self.shader_key = self.shader_name
             if not G.SHADERS[self.shader_key] then
@@ -1904,9 +1902,11 @@ function loadAPIs()
     }
 
     -- if_edition = true to return jokers with no editions, false to return jokers without edition
+    -- TODO the above seems wrong?
+    -- TODO also, this should probably be a utility method in core
     function SMODS.Edition:getJokers(if_edition)
         local jokers = {}
-        for k, v in pairs(G.jokers.cards) do
+        for _, v in ipairs(G.jokers.cards) do
             if v.ability.set == 'Joker' and (not v.edition and if_edition) or (v.edition and not if_edition) then
                 table.insert(jokers, v)
             end
@@ -1915,65 +1915,57 @@ function loadAPIs()
     end
 
 
-    SMODS.Edition:take_ownership('e_foil',{key = "e_foil",
-        loc_txt = {
-            name = "Foil",
-            text = {
-                "{C:chips}+#1#{} chips"
-            }
-        },
-        discovered = true,
-        unlocked = true,
+    SMODS.Edition:take_ownership('foil',{
+        -- loc_txt = {
+        --     name = "Foil",
+        --     text = {
+        --         "{C:chips}+#1#{} chips"
+        --     }
+        -- },
         shader_name = 'foil',
-        config = { labels = {'chip_mod'}, values = {50} },
+        config = { chip_mod = 50 },
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         in_shop = true,
         weight = 20,
         extra_cost = 2
     })
-    SMODS.Edition:take_ownership('e_holo', {key = "e_holo",
-        loc_txt = {
-            name = "Holographic",
-            text = {
-                "{C:mult}+#1#{} Mult"
-            }
-        },
-        discovered = true,
-        unlocked = true,
+    SMODS.Edition:take_ownership('holo', {
+        -- loc_txt = {
+        --     name = "Holographic",
+        --     text = {
+        --         "{C:mult}+#1#{} Mult"
+        --     }
+        -- },
         shader_name = 'holo',
-        config = { labels = {'mult_mod'}, values = {10} },
+        config = { mult_mod = 10 },
         sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
         in_shop = true,
         weight = 14,
         extra_cost = 3
     })
-    SMODS.Edition:take_ownership('e_polychrome', {key = "e_polychrome",
-        loc_txt = {
-            name = "Polychrome",
-            text = {
-                "{X:mult,C:white} X#1# {} Mult"
-            }
-        },
-        discovered = true,
-        unlocked = true,
+    SMODS.Edition:take_ownership('polychrome', {
+        -- loc_txt = {
+        --     name = "Polychrome",
+        --     text = {
+        --         "{X:mult,C:white} X#1# {} Mult"
+        --     }
+        -- },
         shader_name = 'polychrome',
-        config = { labels = {'x_mult_mod'}, values = {1.5} },
+        config = { x_mult_mod = 1.5 },
         sound = { sound = "polychrome1", per = 1.2, vol = 0.7 },
         in_shop = true,
         weight = 3,
         extra_cost = 5
     })
-    SMODS.Edition:take_ownership('e_negative', {key = "e_negative",
-        loc_txt = {
-            name = "Negative",
-            text = {
-                "{C:dark_edition}+#1#{} Joker slot"
-            }
-        },
-        discovered = true,
-        unlocked = true,
+    SMODS.Edition:take_ownership('negative', {
+        -- loc_txt = {
+        --     name = "Negative",
+        --     text = {
+        --         "{C:dark_edition}+#1#{} Joker slot"
+        --     }
+        -- },
         shader_name = 'negative',
-        config = { labels = {'card_limit'}, values = {1} },
+        config = { card_limit = 1 },
         sound = { sound = "negative", per = 1.5, vol = 0.4 },
         in_shop = true,
         weight = 3,
