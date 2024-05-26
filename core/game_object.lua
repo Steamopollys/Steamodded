@@ -1901,17 +1901,17 @@ function loadAPIs()
         end
     }
 
-    -- if_edition = true to return jokers with no editions, false to return jokers without edition
-    -- TODO the above seems wrong?
     -- TODO also, this should probably be a utility method in core
-    function SMODS.Edition:getJokers(if_edition)
-        local jokers = {}
-        for _, v in ipairs(G.jokers.cards) do
-            if v.ability.set == 'Joker' and (not v.edition and if_edition) or (v.edition and not if_edition) then
-                table.insert(jokers, v)
+    -- card_area = pass the card area
+    -- edition = boolean value
+    function SMODS.Edition:get_edition_cards(card_area, edition)
+        local cards = {}
+        for _, v in ipairs(card_area.cards) do
+            if (not v.edition and edition) or (v.edition and not edition) then
+                table.insert(cards, v)
             end
         end
-        return jokers
+        return cards
     end
 
 

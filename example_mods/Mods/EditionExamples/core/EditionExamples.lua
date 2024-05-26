@@ -305,22 +305,67 @@ SMODS.Consumable({
     can_use = function(self, card)
         if G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT or
         any_state then
-            if next(SMODS.Edition:getJokers(true)) then
+            if next(SMODS.Edition:get_edition_cards(G.jokers, true)) then
                 return true
             end
         end
     end,
     use = function(card, area, copier)
         local used_tarot = (copier or card)
-        local eligible_jokers = SMODS.Edition:getJokers(true)
+        local eligible_jokers = SMODS.Edition:get_edition_cards(G.jokers, true)
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
             delay = 0.4,
             func = function()
                 local selected_joker = pseudorandom_element(eligible_jokers, pseudoseed('seed'))
                 -- local selected_edition = poll_edition("custom_editions", nil, nil, true, {{name = "holo", weight = 1}, {name = "greyscale", weight = 1}, {name = "negative", weight = 1}, {name = "foil", weight = 1}})
-                selected_joker.set_edition(selected_joker, { edex_greyscale = true })
-                used_tarot:juice_up(0.3, 0.5)
+                selected_joker.set_edition(selected_joker, 'edex_greyscale')
+                return true
+            end
+        }))
+    end,
+    loc_vars = function(self, info_queue)
+        info_queue[#info_queue+1] = G.P_CENTERS.e_greyscale
+        return {}
+    end
+})
+
+SMODS.Consumable({
+    set = "Spectral",
+    key = "neon_crad",
+    pos = {
+        x = 1,
+        y = 0
+    },
+    loc_txt = {
+        name = "Neon",
+        text = {
+            "Remove any edition from", 
+            "selected joker"
+        }
+    },
+    atlas = 'edition_example',
+    cost = 4,
+    discovered = true,
+    can_use = function(self, card)
+        if G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT or
+        any_state then
+            for k,v in pairs(G.jokers.highlighted) do
+                sendDebugMessage(k..": "..tostring(v))
+            end
+            if #G.jokers.highlighted == 1 and G.jokers.highlighted[1].edition then
+                return true
+            end
+        end
+    end,
+    use = function(card, area, copier)
+        local used_tarot = (copier or card)
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = 0.4,
+            func = function()
+                G.jokers.highlighted[1].set_edition(G.jokers.highlighted[1])
+                G.jokers:unhighlight_all()
                 return true
             end
         }))
@@ -360,8 +405,7 @@ SMODS.Edition({
     unlocked = true,
     shader_path = mod_path .. "/assets/shaders/greyscale.fs",
     shader_name = 'greyscale',
-    config = { labels = {'chip_mod','mult_mod','x_mult_mod'}, values = {200, 10, 2} },
-    sound = { sound = "foil1", per = 1.2, vol = 0.4 },
+    config = { chips = 200, mult = 10, x_mult = 2 },
     in_shop = true,
     weight = 8,
     extra_cost = 6
