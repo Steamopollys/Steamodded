@@ -1797,7 +1797,7 @@ function loadAPIs()
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
             local target = { type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars =
             specific_vars }
-            local res
+            local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
                 -- card is a dead arg here
                 res = self:loc_vars(info_queue)
