@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0526b-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0527a-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -465,13 +465,15 @@ end
 
 function G.FUNCS.exit_mods(e)
     if SMODS.full_restart then
+		-- launch a new instance of the game and quit the current one
 		if love.system.getOS() ~= 'OS X' then
         	love.system.openURL('steam://rungameid/2379780')
 		else
-			os.execute('sh /Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh')
+			os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
 		end
 		love.event.quit()
     elseif SMODS.partial_reload then
+		-- re-initialize steamodded
         SMODS.reload()
     end
 	G.FUNCS.exit_overlay_menu(e)

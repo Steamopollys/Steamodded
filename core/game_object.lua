@@ -212,6 +212,8 @@ function loadAPIs()
                 self.key_noloc = self.key
                 self.key = ('%s_%s'):format(self.key, self.language)
             end
+            -- needed for changing high contrast settings, apparently
+            self.name = self.key
             self.super.register(self)
         end,
         inject = function(self)

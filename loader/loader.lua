@@ -91,10 +91,14 @@ function loadMods(modsDirectory)
             local file_path = directory .. "/" .. filename
 
             -- Check if the current file is a directory
-            if NFS.getInfo(file_path).type == "directory" then
+            local file_type = NFS.getInfo(file_path).type
+            if file_type == 'directory' or file_type == 'symlink' then
                 -- If it's a directory and depth is within limit, recursively process it
                 processDirectory(file_path, depth + 1)
             elseif filename:lower():match("%.lua$") then -- Check if the file is a .lua file
+                if depth == 1 then
+                    sendWarnMessage(('Found lone Lua file %s in Mods directory :: Please place the files for each mod in its own subdirectory.'):format(filename))
+                end
                 local file_content = NFS.read(file_path)
 
                 -- Convert CRLF in LF
