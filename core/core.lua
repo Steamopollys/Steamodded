@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0523c-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0527a-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -297,7 +297,7 @@ function buildModtag(mod)
 
     if not mod.can_load then
         tag_message = "load_failure"
-        tag_atlas = "tag_error"
+        tag_atlas = "mod_tags"
         specific_vars = {}
         if next(mod.load_issues.dependencies) then
 			tag_message = tag_message..'_d'
@@ -311,6 +311,10 @@ function buildModtag(mod)
 		if mod.load_issues.version_mismatch then
             tag_message = 'load_failure_i'
 			specific_vars = {mod.load_issues.version_mismatch, MODDED_VERSION:gsub('-STEAMODDED', '')}
+		end
+		if mod.disabled then
+			tag_pos = {x = 1, y = 0}
+			tag_message = 'load_disabled'
 		end
     end
 
@@ -364,30 +368,83 @@ end
 -- Helper function to create a clickable mod box
 local function createClickableModBox(modInfo, scale)
 	local col, text_col
+	modInfo.should_enable = not modInfo.disabled
     if modInfo.can_load then
         col = G.C.BOOSTER
     elseif modInfo.disabled then
-        col = G.C.INACTIVE
+        col = G.C.UI.BACKGROUND_INACTIVE
     else
-        col = G.C.RED
-        text_col = G.C.BLACK
+        col = mix_colours(G.C.RED, G.C.UI.BACKGROUND_INACTIVE, 0.7)
+        text_col = G.C.TEXT_DARK
     end
-    return { n = G.UIT.R, config = { padding = 0, align = "cm" }, nodes = {
-        { n = G.UIT.C, config = { align = "cm" }, nodes = {
-            buildModtag(modInfo)
-        }},
-        { n = G.UIT.C, config = { padding = 0, align = "cm", }, nodes = {
-            UIBox_button({
-                label = {" " .. modInfo.name .. " ", localize('b_by') .. concatAuthors(modInfo.author) .. " "},
+	local but = UIBox_button {
+        label = { " " .. modInfo.name .. " ", localize('b_by') .. concatAuthors(modInfo.author) .. " " },
+        shadow = true,
+        scale = scale,
+        colour = col,
+        text_colour = text_col,
+        button = "openModUI_" .. modInfo.id,
+        minh = 0.8,
+        minw = 7
+    }
+    if modInfo.version ~= '0.0.0' then
+		local function invert(c)
+			return {1-c[1], 1-c[2], 1-c[3], c[4]}
+		end
+        table.insert(but.nodes[1].nodes[1].nodes, {
+            n = G.UIT.T,
+            config = {
+                text = ('(%s)'):format(modInfo.version),
+                scale = scale*0.8,
+                colour = mix_colours(invert(col), G.C.UI.TEXT_INACTIVE, 0.8),
                 shadow = true,
-                scale = scale,
-                colour = col,
-				text_colour = text_col,
-                button = "openModUI_" .. modInfo.id,
-                minh = 0.8,
-                minw = 7
-            })
-        }}
+            },
+        })
+    end
+	return {
+		n = G.UIT.R,
+		config = { padding = 0, align = "cm" },
+		nodes = {
+			{
+				n = G.UIT.C,
+				config = { align = "cm" },
+				nodes = {
+					buildModtag(modInfo)
+				}
+            },
+			{
+				n = G.UIT.C,
+                config = { align = "cm", padding = 0.1 },
+				nodes = {},
+			},
+			{ n = G.UIT.C, config = { padding = 0, align = "cm" }, nodes = { but } },
+			create_toggle({
+				label = '',
+				ref_table = modInfo,
+				ref_value = 'should_enable',
+				col = true,
+				w = 0,
+				h = 0.5,
+				callback = (
+					function(_set_toggle)
+						if not modInfo.should_enable then
+							NFS.write(modInfo.path .. '.lovelyignore', '')
+							if NFS.getInfo(modInfo.path .. 'lovely') or NFS.getInfo(modInfo.path .. 'lovely.toml') then
+								SMODS.full_restart = true
+							else
+								SMODS.partial_reload = true
+							end
+						else
+							NFS.remove(modInfo.path .. '.lovelyignore')
+							if NFS.getInfo(modInfo.path .. 'lovely') or NFS.getInfo(modInfo.path .. 'lovely.toml') then
+								SMODS.full_restart = true
+							else
+								SMODS.partial_reload = true
+							end
+						end
+					end
+				)
+			}),
     }}
 	
 end
@@ -401,14 +458,31 @@ function G.FUNCS.openModsDirectory(options)
 end
 
 function G.FUNCS.mods_buttons_page(options)
-	if not options or not options.cycle_config then
-		return
-	end
+    if not options or not options.cycle_config then
+        return
+    end
+end
+
+function G.FUNCS.exit_mods(e)
+    if SMODS.full_restart then
+		-- launch a new instance of the game and quit the current one
+		if love.system.getOS() ~= 'OS X' then
+        	love.system.openURL('steam://rungameid/2379780')
+		else
+			os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
+		end
+		love.event.quit()
+    elseif SMODS.partial_reload then
+		-- re-initialize steamodded
+        SMODS.reload()
+    end
+	G.FUNCS.exit_overlay_menu(e)
 end
 
 function create_UIBox_mods_button()
 	local scale = 0.75
 	return (create_UIBox_generic_options({
+		back_func = 'exit_mods',
 		contents = {
 			{
 				n = G.UIT.R,
@@ -981,7 +1055,7 @@ function SMODS.GUI.dynamicModListContent(page)
     end
 
     return {
-        n = G.UIT.R,
+        n = G.UIT.C,
         config = {
             r = 0.1,
             align = "cm",
@@ -1132,7 +1206,13 @@ SMODS._loc_txt = {
 					'#1# of Steamodded,',
 					'but #2# is installed.'
 				}
-			}
+			},
+			disabled = {
+                text = {
+                    'This mod has been',
+                    '{C:attention}disabled!{}'
+                }
+            }
         },
 		load = function(self)
 			for k, _ in pairs(self['en-us']) do
@@ -1238,7 +1318,28 @@ function SMODS.init_settings()
     SMODS.SETTINGS = {
         no_mod_badges = false,
     }
-	
+end
+
+function SMODS.reload()
+	local lfs = love.filesystem
+	local function recurse(dir)
+		local files = lfs.getDirectoryItems(dir)
+        for i, v in ipairs(files) do
+            local file = (dir == '') and v or (dir .. '/' .. v)
+			sendTraceMessage(file)
+			if v == 'Mods' or v:len() == 1 then
+				-- exclude save files
+			elseif lfs.isFile(file) then
+				lua_reload.ReloadFile(file)
+			elseif lfs.isDirectory(file) then
+				recurse(file)
+			end
+		end
+	end
+    recurse('')
+	SMODS.booted = false
+	G:init_item_prototypes()
+	initSteamodded()
 end
 
 ----------------------------------------------

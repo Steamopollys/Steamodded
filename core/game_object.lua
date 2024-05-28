@@ -212,6 +212,8 @@ function loadAPIs()
                 self.key_noloc = self.key
                 self.key = ('%s_%s'):format(self.key, self.language)
             end
+            -- needed for changing high contrast settings, apparently
+            self.name = self.key
             self.super.register(self)
         end,
         inject = function(self)
@@ -243,9 +245,9 @@ function loadAPIs()
     }
 
     SMODS.Atlas {
-        key = 'tag_error',
+        key = 'mod_tags',
         atlas = 'ASSET_ATLAS',
-        path = 'tag_error.png',
+        path = 'mod_tags.png',
         px = 34,
         py = 34,
     }
@@ -966,7 +968,12 @@ function loadAPIs()
         required_params = {
             'key',
             'loc_txt'
-        }
+        },
+        register = function(self)
+            -- game expects a name, so ensure it's set
+            self.name = self.name or self.key
+            self.super.register(self)
+        end
     }
 
     local function stake_mod(stake)
@@ -1427,7 +1434,7 @@ function loadAPIs()
                             local ii = (behavior.fixed and rank_data.next[behavior.fixed]) and behavior.fixed or 1
                             rank_suffix = SMODS.Ranks[rank_data.next[ii]].card_key
                         end
-                        card:set_base(G.P_CARDS[suit_prefix .. '_' .. rank_suffix])
+                        _card:set_base(G.P_CARDS[suit_prefix .. '_' .. rank_suffix])
                         return true
                     end
                 }))
@@ -1792,7 +1799,7 @@ function loadAPIs()
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
             local target = { type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars =
             specific_vars }
-            local res
+            local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
                 -- card is a dead arg here
                 res = self:loc_vars(info_queue)

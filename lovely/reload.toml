@@ -19,37 +19,3 @@ payload = '''
 lua_reload = require('lua_reload')
 lua_reload.Inject()
 '''
-
-[[patches]]
-[patches.pattern]
-target = 'functions/button_callbacks.lua'
-pattern = 'love.event.quit()'
-position = 'at'
-match_indent = true
-payload = '''
-for _, s in ipairs{
-	'back.lua',
-	'blind.lua',
-	'card_character.lua',
-	'card.lua',
-	'cardarea.lua',
-	'challenges.lua',
-	'conf.lua',
-	'game.lua',
-	'globals.lua',
-	'tag.lua',
-	'functions/button_callbacks.lua',
-	'functions/common_events.lua',
-	'functions/misc_functions.lua',
-	'functions/state_events.lua',
-	'functions/test_functions.lua',
-	'functions/UI_definitions.lua',
-	'main.lua'
-} do
-	lua_reload.ReloadFile(s)
-end
-
-SMODS.booted = false
-G:init_item_prototypes()
-initSteamodded()
-'''
