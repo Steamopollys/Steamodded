@@ -1878,6 +1878,7 @@ function loadAPIs()
         atlas = 'Joker',
         pos = { x = 0, y = 0 },
         prefix = 'e',
+        reverse_lookup = {},
         discovered = false,
         unlocked = true,
         apply_to_float = false,
@@ -1899,6 +1900,7 @@ function loadAPIs()
         -- other methods:
         -- calculate(self)
         register = function(self)
+            self.badge_colour = self.badge_colour or G.C.DARK_EDITION
             self.shader_key = self.shader_name
             if not G.SHADERS[self.shader_key] then
                 self.shader_path = SMODS.current_mod.path .. "/assets/shaders/" .. self.shader_name .. ".fs" --self.shader_path or (self.shader_key .. '.fs')
@@ -1906,6 +1908,13 @@ function loadAPIs()
             end
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
+        end,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.descriptions.Edition, self.key, self.loc_txt, 'text')
+            SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'name')
+            sendDebugMessage(self.key..(G.localization.descriptions.Edition[self.key] and " is present" or " is not present"))
+            sendDebugMessage(tostring(G.localization.descriptions.Edition["e_foil"].text_parsed))
+            sendDebugMessage(self.key..(G.localization.misc.labels[self.key] and " label is present" or " label is not present"))
         end,
         calc_weight = function(self, given_weight)
             if given_weight then
@@ -1949,6 +1958,9 @@ function loadAPIs()
             else
                 return self.weight
             end
+        end,
+        loc_vars = function(self, info_queue, center)
+            return { vars = { self.config.chips } }
         end
     })
     SMODS.Edition:take_ownership('holo', {
@@ -1970,6 +1982,9 @@ function loadAPIs()
             else
                 return self.weight
             end
+        end,
+        loc_vars = function(self, info_queue, center)
+            return { vars = { self.config.mult } }
         end
     })
     SMODS.Edition:take_ownership('polychrome', {
@@ -1991,6 +2006,9 @@ function loadAPIs()
             else
                 return self.weight
             end
+        end,
+        loc_vars = function(self, info_queue, center)
+            return { vars = { self.config.x_mult } }
         end
     })
     SMODS.Edition:take_ownership('negative', {
@@ -2012,6 +2030,9 @@ function loadAPIs()
             else
                 return self.weight
             end
+        end,
+        loc_vars = function(self, info_queue, center)
+            return { vars = { self.config.card_limit } }
         end
     })
 

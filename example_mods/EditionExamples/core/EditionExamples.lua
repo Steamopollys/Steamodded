@@ -318,7 +318,7 @@ SMODS.Consumable({
             delay = 0.4,
             func = function()
                 local selected_joker = pseudorandom_element(eligible_jokers, pseudoseed('seed'))
-                -- local selected_edition = poll_edition("custom_editions", nil, nil, true, {{name = "holo", weight = 1}, {name = "greyscale", weight = 1}, {name = "negative", weight = 1}, {name = "foil", weight = 1}})
+                local selected_edition = poll_edition("aura", nil, true, false)
                 selected_joker.set_edition(selected_joker, 'edex_greyscale')
                 return true
             end
@@ -350,8 +350,8 @@ SMODS.Consumable({
     can_use = function(self, card)
         if G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT or
         any_state then
-            for k,v in pairs(G.jokers.highlighted) do
-                sendDebugMessage(k..": "..tostring(v))
+            if G.localization.misc.labels["edex_greyscale"] then
+                sendDebugMessage(G.localization.misc.labels["edex_greyscale"])
             end
             if #G.jokers.highlighted == 1 and G.jokers.highlighted[1].edition then
                 return true
@@ -387,6 +387,7 @@ SMODS.Back({
     },
     config = {
         consumables = {'c_edex_grey_card'},
+        vouchers = {'v_hone'}
     },
     discovered = true,
     unlocked = true
@@ -408,7 +409,11 @@ SMODS.Edition({
     config = { chips = 200, mult = 10, x_mult = 2 },
     in_shop = true,
     weight = 8,
-    extra_cost = 6
+    extra_cost = 6,
+    apply_to_float = true,
+    loc_vars = function(self, info_queue, center)
+        return { vars = { self.config.chips, self.config.mult, self.config.x_mult } }
+    end
 })
 
 

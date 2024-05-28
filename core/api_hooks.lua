@@ -878,19 +878,8 @@ function create_UIBox_your_collection_editions(exit)
                 highlight_limit = 0,
                 collection = true
             })
-        table.insert(deck_tables, {
-            n = G.UIT.R,
-            config = {
-                align = "cm",
-                padding = 0,
-                no_fill = true
-            },
-            nodes = {{
-                n = G.UIT.O,
-                config = {
-                    object = G.your_collection[j]
-                }
-            }}
+        table.insert(deck_tables, { n = G.UIT.R, config = { align = "cm", padding = 0, no_fill = true },
+            nodes = {{ n = G.UIT.O, config = { object = G.your_collection[j] } }}
         })
     end
 
@@ -909,12 +898,7 @@ function create_UIBox_your_collection_editions(exit)
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
                 G.CARD_W, G.CARD_H, nil, center)
             card:start_materialize(nil, i > 1 or j > 1)
-            card:set_edition({
-                [center.key:sub(3)] = true
-            }, true, true, {
-                name = center.key:sub(3),
-                config = center.config
-            })
+            card:set_edition(center.key:sub(3), true, true)
             G.your_collection[j]:emplace(card)
             index = index + 1
         end
@@ -926,21 +910,9 @@ function create_UIBox_your_collection_editions(exit)
     local edition_options = {}
 
     local t = create_UIBox_generic_options({
-        infotip = localize('ml_edition_seal_enhancement_explanation'),
-        back_func = exit or 'your_collection',
-        snap_back = true,
-        contents = {{
-            n = G.UIT.R,
-            config = {
-                align = "cm",
-                minw = 2.5,
-                padding = 0.1,
-                r = 0.1,
-                colour = G.C.BLACK,
-                emboss = 0.05
-            },
-            nodes = deck_tables
-        }}
+        infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
+        contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
+            nodes = deck_tables }}
     })
 
     if #G.P_CENTER_POOLS["Edition"] > rows * cols then
@@ -948,35 +920,16 @@ function create_UIBox_your_collection_editions(exit)
             table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
                 tostring(math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))))
         end
-        t = create_UIBox_generic_options({
-            infotip = localize('ml_edition_seal_enhancement_explanation'),
-            back_func = exit or 'your_collection',
-            snap_back = true,
-            contents = {{
-                n = G.UIT.R,
-                config = {
-                    align = "cm",
-                    minw = 2.5,
-                    padding = 0.1,
-                    r = 0.1,
-                    colour = G.C.BLACK,
-                    emboss = 0.05
-                },
+        t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
+            contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
                 nodes = deck_tables
-            }, {
-                n = G.UIT.R,
-                config = {
-                    align = "cm"
-                },
+            }, { n = G.UIT.R, config = { align = "cm" },
                 nodes = {create_option_cycle({
                     options = edition_options,
                     w = 4.5,
                     cycle_shoulders = true,
                     opt_callback = 'your_collection_editions_page',
-                    focus_args = {
-                        snap_to = true,
-                        nav = 'wide'
-                    },
+                    focus_args = { snap_to = true, nav = 'wide' },
                     current_option = 1,
                     r = rows,
                     c = cols,
@@ -999,10 +952,8 @@ G.FUNCS.your_collection_editions_page = function(args)
     if page > math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) then
         page = page - math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))
     end
-    sendDebugMessage(page .. " / " .. math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)), "EditionAPI")
     local count = rows * cols
     local offset = (rows * cols) * (page - 1)
-    sendDebugMessage("Page offset: " .. tostring(offset), "EditionAPI")
 
     for j = 1, #G.your_collection do
         for i = #G.your_collection[j].cards, 1, -1 do
@@ -1021,26 +972,15 @@ G.FUNCS.your_collection_editions_page = function(args)
                 break
             end
             local idx = i + (j - 1) * cols + offset
-            if idx > #G.P_CENTER_POOLS["Edition"] then
-                sendDebugMessage("End of Edition table.", "EditionAPI")
-                return
-            end
-            sendDebugMessage("Loading Edition " .. tostring(idx), "EditionAPI")
+            if idx > #G.P_CENTER_POOLS["Edition"] then return end
             local center = G.P_CENTER_POOLS["Edition"][idx]
-            sendDebugMessage("Edition " .. ((center and "loaded") or "did not load") .. " successfuly.", "EditionAPI")
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
                 G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
-            card:set_edition({
-                [center.key:sub(3)] = true
-            }, true, true, {
-                name = center.key:sub(3),
-                config = center.config
-            })
+            card:set_edition(center.key:sub(3), true, true)
             card:start_materialize(nil, i > 1 or j > 1)
             G.your_collection[j]:emplace(card)
         end
     end
-    sendDebugMessage("All Editions of Page " .. page .. " loaded.", "EditionAPI")
 end
 
 -- self = pass the card

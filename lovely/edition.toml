@@ -13,43 +13,63 @@ payload = '''
 base = _card.edition and not (_card.edition.foil or _card.edition.holo or _card.edition.polychrome),'''
 match_indent = true
 
-# Inject edition badge declaration
+
+# generate_card_ui()
+# Adds tooltips for all editions
 [[patches]]
 [patches.pattern]
-target = "functions/common_events.lua"
-pattern = '''if v == 'foil' then info_queue[#info_queue+1] = G.P_CENTERS['e_foil'] end'''
-position = "before"
+target = 'functions/common_events.lua'
+pattern = "if v == 'foil' then info_queue[#info_queue+1] = G.P_CENTERS['e_foil'] end"
+position = 'before'
 payload = '''
 local earlyReturn = false
-if _c.key == 'e_base' then
-    sendDebugMessage("Base detected")
-end
-for k2, v2 in pairs(G.P_CENTER_POOLS.Edition) do
-    if v == v2.key then
-        info_queue[#info_queue + 1] = G.P_CENTERS['e_'..v]
+for _, v2 in ipairs(G.P_CENTER_POOLS.Edition) do
+    if v == v2.key:sub(3) then
+    for x,y in pairs(v2) do
+        sendDebugMessage(x..": "..tostring(y))
+    end
+        info_queue[#info_queue + 1] = {key = v2.key:sub(3), set = 'Edition', config = v2.config}
         earlyReturn = true
     end
 end
-if earlyReturn then break end'''
+if earlyReturn then break end
+'''
 match_indent = true
 
-# Inject variable edition tooltips
+# get_badge_colour()
 [[patches]]
 [patches.pattern]
-target = "functions/common_events.lua"
-pattern = '''loc_vars = {_c.config.extra}'''
-position = "at"
-payload = '''
-if _c.key == "e_negative_consumable" then
-    loc_vars = {_c.config.extra}
-else
-    if not _c.key == "e_base" then
-    for _, v in ipairs(G.P_CENTERS[_c.key].config.values) do
-        table.insert(loc_vars, v)
-    end
-    end
-end'''
+target = 'functions/UI_definitions.lua'
+pattern = 'return G.BADGE_COL[key] or {1, 0, 0, 1}'
+position = 'before'
 match_indent = true
+payload = '''
+for _, v in ipairs(G.P_CENTER_POOLS.Edition) do
+	G.BADGE_COL[v.key] = v.badge_colour
+end
+'''
+
+# # Inject variable edition tooltips
+# [[patches]]
+# [patches.pattern]
+# target = "functions/common_events.lua"
+# pattern = '''loc_vars = {_c.config.extra}'''
+# position = "at"
+# payload = '''
+# for k,v in pairs(_c) do
+#             sendDebugMessage(k..": "..tostring(v), "tooltips pls")
+#         end
+# for k,v in pairs(_c.loc_vars(_c).vars) do
+#     sendDebugMessage(k..": "..tostring(v), "tooltips pls")
+# end
+# if _c.key == "e_negative_consumable" then
+#     loc_vars = {_c.loc_vars(_c).vars}
+# else
+#     if not _c.key == "e_base" then
+#     loc_vars = _c.loc_vars(_c).vars
+#     end
+# end'''
+# match_indent = true
 
 # Inject shaders applying to cards
 [[patches]]
@@ -57,6 +77,7 @@ match_indent = true
 target = "card.lua"
 pattern = "if self.edition or self.seal or self.ability.eternal or self.ability.rental or self.ability.perishable or self.sticker or self.ability.set == 'Spectral' or self.debuff or self.greyed or self.ability.name == 'The Soul' or self.ability.set == 'Voucher' or self.ability.set == 'Booster' or self.config.center.soul_pos or self.config.center.demo then"
 position = "after"
+line_prepend = '$indent'
 payload = '''
 if self.edition then
     for k, v in pairs(G.P_CENTERS) do
@@ -83,7 +104,7 @@ if self.edition then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if v.apply_to_float then
             if self.edition[v.key:sub(3)] then
-                self.children.floating_sprite:draw_shader(v.key:sub(3), nil, self.ARGS.send_to_shader, nil, self.children.center, 2*scale_mod, 2*rotate_mod)
+                self.children.floating_sprite:draw_shader(v.shader_key, nil, self.ARGS.send_to_shader, nil, self.children.center, 2*scale_mod, 2*rotate_mod)
             end
         end
     end
@@ -101,7 +122,7 @@ if self.edition then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if v.apply_to_float then
             if self.edition[v.key:sub(3)] then
-                self.children.floating_sprite:draw_shader(v.key:sub(3), nil, nil, nil, self.children.center, scale_mod, rotate_mod)
+                self.children.floating_sprite:draw_shader(v.shader_key, nil, nil, nil, self.children.center, scale_mod, rotate_mod)
             end
         end
     end
