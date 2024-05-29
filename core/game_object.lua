@@ -173,7 +173,7 @@ function loadAPIs()
         obj_table = {},
         obj_buffer = {},
         silent = true,
-        __call = function() error('INTERNAL CLASS, DO NOT CALL') end,
+        register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         injector = function()
             for _, v in ipairs(SMODS._loc_txt) do
                 v:load()
@@ -187,7 +187,7 @@ function loadAPIs()
     }
 
     -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.Sprite
+    ----- API CODE GameObject.Atlas
     -------------------------------------------------------------------------------------------------
 
     SMODS.Atlases = {}
@@ -976,6 +976,7 @@ function loadAPIs()
         end
     }
 
+    -- set the correct stake level for unlocks when injected (spares me from completely overwriting the unlock checks)
     local function stake_mod(stake)
         return {
             inject = function(self)
@@ -1037,7 +1038,9 @@ function loadAPIs()
         get_obj = function(self, key) return G.P_BLINDS[key] end,
         inject = function(self, i)
             -- no pools to query length of, so we assign order manually
-            self.order = 30 + i
+            if not self.taken_ownership then
+                self.order = 30 + i
+            end
             G.P_BLINDS[self.key] = self
         end
     }
