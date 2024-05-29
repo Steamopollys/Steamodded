@@ -986,7 +986,7 @@ end
 -- self = pass the card
 -- edition =
 -- nil (removes edition)
--- OR key without e_, as a string
+-- OR key as string
 -- OR { name_of_edition = true } (key without e_). This is from the base game, prefer using a string.
 -- immediate = boolean value
 -- silent = boolean value
@@ -1004,19 +1004,22 @@ function Card.set_edition(self, edition, immediate, silent)
 	
 	local edition_key = nil
 	if type(edition) == 'string' then
-		edition_key = edition
-	elseif not edition then
-		edition_key = nil
+		assert(string.sub(edition, 1, 2) == 'e_')
+		edition_key = string.sub(edition, 3)
 	elseif type(edition) == 'table' then
-		for k, v in pairs(edition) do
-			if v then
-				assert(not edition_key)
-				edition_key = k
+		if edition.type then
+			edition_key = edition.type
+		else
+			for k, v in pairs(edition) do
+				if v then
+					assert(not edition_key)
+					edition_key = k
+				end
 			end
 		end
 	end
 	
-	if not edition or edition_key == 'base' then -- remove edition from card
+	if not edition_key or edition_key == 'base' then -- remove edition from card
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
             delay = not immediate and 0.2 or 0,
