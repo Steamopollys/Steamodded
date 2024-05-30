@@ -898,7 +898,7 @@ function create_UIBox_your_collection_editions(exit)
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
                 G.CARD_W, G.CARD_H, nil, center)
             card:start_materialize(nil, i > 1 or j > 1)
-            card:set_edition(center.key:sub(3), true, true)
+            card:set_edition(center.key, true, true)
             G.your_collection[j]:emplace(card)
             index = index + 1
         end
@@ -976,7 +976,7 @@ G.FUNCS.your_collection_editions_page = function(args)
             local center = G.P_CENTER_POOLS["Edition"][idx]
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
                 G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
-            card:set_edition(center.key:sub(3), true, true)
+            card:set_edition(center.key, true, true)
             card:start_materialize(nil, i > 1 or j > 1)
             G.your_collection[j]:emplace(card)
         end

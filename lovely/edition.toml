@@ -54,10 +54,10 @@ pattern = '''
 [\t ]*if v == 'negative' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_negative'\] end'''
 position = 'at'
 payload = '''
-if G.P_CENTERS[v] and G.P_CENTERS[v].set == 'Edition' then
-    info_queue[#info_queue + 1] = G.P_CENTERS[v]
-elseif SMODS.Edition.reverse_lookup[v] then
-    info_queue[#info_queue + 1] = G.P_CENTERS[SMODS.Edition.reverse_lookup[v]]
+sendDebugMessage(tostring(v))
+v = (v == 'holographic' and 'holo' or v)
+if G.P_CENTERS['e_'..v] and G.P_CENTERS['e_'..v].set == 'Edition' then
+    info_queue[#info_queue + 1] = G.P_CENTERS['e_'..v]
 end'''
 line_prepend = "$indent"
 
@@ -82,7 +82,7 @@ pattern = "if self.edition or self.seal or self.ability.eternal or self.ability.
 position = "after"
 payload = '''
 if self.edition then
-    for k, v in pairs(G.P_CENTERS) do
+    for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if v.shader then
             if self.edition[v.key:sub(3)] then
                 self.children.center:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
