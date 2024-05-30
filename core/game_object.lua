@@ -852,7 +852,9 @@ function loadAPIs()
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
-            full_UI_table.name = localize{type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name}
+            if not full_UI_table.name then
+                full_UI_table.name = localize{type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name}
+            end
             if res.main_start then
                 desc_nodes[#desc_nodes + 1] = res.main_start
             end
@@ -1916,6 +1918,10 @@ function loadAPIs()
             assert(not (self.no_suit and self.any_suit))
             SMODS.Enhancement.super.register(self)
         end,
+        -- Produces the description of the whole playing card
+        -- (including chips from the rank of the card and permanent bonus chips).
+        -- You will probably want to override this if your enhancement interacts with
+        -- those parts of the base card.
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars.nominal_chips and not self.replace_base_card then 
                 localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
@@ -1943,4 +1949,18 @@ function loadAPIs()
 
     -- TODO pos = { x = 0, y = 0 } should just be set as a default for all objects
     -- with atlases
+
+    SMODS.Enhancement:take_ownership('m_stone', {
+        replace_base_card = true,
+        no_suit = true,
+        no_rank = true,
+        always_scores = true,
+        loc_txt = {
+            name = "Stone Card",
+            text = {
+                "{C:chips}+#1#{} Chips",
+                "no rank or suit"
+            }
+        },
+    })
 end
