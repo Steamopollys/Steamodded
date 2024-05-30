@@ -237,6 +237,7 @@ if AUT.card_type ~= 'Locked' and AUT.card_type ~= 'Undiscovered' then
 	if card.config and card.config.tag then
 		SMODS.create_mod_badges(SMODS.Tags[card.config.tag.key], badges)
 	end
+	badges.mod_set = nil
 end
 '''
 

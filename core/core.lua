@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0530d-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0530e-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -1346,6 +1346,7 @@ function SMODS.reload()
 end
 
 function SMODS.create_mod_badges(obj, badges)
+	if true then return end
 	if not G.SETTINGS.no_mod_badges and obj and obj.mod and obj.mod.display_name then
         local mods = { obj.mod }
         badges.mod_set = badges.mod_set or {}
