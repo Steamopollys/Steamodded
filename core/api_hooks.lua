@@ -1019,20 +1019,21 @@ function Card.set_edition(self, edition, immediate, silent)
 		end
 	end
 	
-	if not edition_key or edition_key == 'base' then -- remove edition from card
-        G.E_MANAGER:add_event(Event({
-            trigger = 'after',
-            delay = not immediate and 0.2 or 0,
-            blockable = not immediate,
-            func = function()
-                self.edition = nil
-                self:juice_up(1, 0.5)
-				self:set_cost()
-                if not silent then play_sound('whoosh2', 1.2, 0.6) end
-                return true
-            end
-        }))
-		
+	if not edition_key or edition_key == 'base' then
+		self.edition = nil -- remove edition from card
+		self:set_cost()
+		if not silent then
+			G.E_MANAGER:add_event(Event({
+				trigger = 'after',
+				delay = not immediate and 0.2 or 0,
+				blockable = not immediate,
+				func = function()
+					self:juice_up(1, 0.5)
+					play_sound('whoosh2', 1.2, 0.6)
+					return true
+				end
+			}))
+		end
         return
     end
     
