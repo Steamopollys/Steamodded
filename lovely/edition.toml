@@ -5,36 +5,64 @@ priority = 0
 
 # Fix debug mode edition cycling
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "engine/controller.lua"
-pattern = '''foil = not _card.edition,'''
-position = "before"
+pattern = '''
+(?<indent>[\t ]*)local _edition = \{
+[\t ]*foil = not _card\.edition,
+[\t ]*holo = _card\.edition and _card\.edition\.foil,
+[\t ]*polychrome = _card\.edition and _card\.edition\.holo,
+[\t ]*negative = _card\.edition and _card\.edition\.polychrome,
+[\t ]*\}'''
+position = "at"
 payload = '''
-base = _card.edition and not (_card.edition.foil or _card.edition.holo or _card.edition.polychrome),'''
+local found_index = 1
+if _card.edition then
+    for i, v in ipairs(G.P_CENTER_POOLS.Edition) do
+        if v.key == _card.edition.key then
+            found_index = i
+            break
+        end
+    end
+end
+found_index = found_index + 1
+if found_index > #G.P_CENTER_POOLS.Edition then found_index = found_index - #G.P_CENTER_POOLS.Edition end
+local _edition = G.P_CENTER_POOLS.Edition[found_index].key
+print(("debug setting edition: %s"):format(_edition))'''
+line_prepend = "$indent"
+
+
+# Sort P_CENTER_POOLS["Editions"]
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = 'table.sort(self.P_CENTER_POOLS["Enhanced"], function (a, b) return a.order < b.order end)'
+position = 'after'
+payload = 'table.sort(self.P_CENTER_POOLS["Edition"], function (a, b) return a.order < b.order end)'
 match_indent = true
 
 
 # generate_card_ui()
 # Adds tooltips for all editions
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = 'functions/common_events.lua'
-pattern = "if v == 'foil' then info_queue[#info_queue+1] = G.P_CENTERS['e_foil'] end"
-position = 'before'
+pattern = '''
+(?<indent>[\t ]*)if v == 'foil' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_foil'\] end
+[\t ]*if v == 'holographic' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_holo'\] end
+[\t ]*if v == 'polychrome' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_polychrome'\] end
+[\t ]*if v == 'negative' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_negative'\] end'''
+position = 'at'
 payload = '''
-local earlyReturn = false
 for _, v2 in ipairs(G.P_CENTER_POOLS.Edition) do
     if v == v2.key:sub(3) then
-    for x,y in pairs(v2) do
-        sendDebugMessage(x..": "..tostring(y))
+        for x,y in pairs(v2) do
+            sendDebugMessage(x..": "..tostring(y))
+        end
+        info_queue[#info_queue + 1] = v2
     end
-        info_queue[#info_queue + 1] = {key = v2.key:sub(3), set = 'Edition', config = v2.config}
-        earlyReturn = true
-    end
-end
-if earlyReturn then break end
-'''
-match_indent = true
+end'''
+line_prepend = "$indent"
 
 # get_badge_colour()
 [[patches]]
@@ -77,7 +105,6 @@ end
 target = "card.lua"
 pattern = "if self.edition or self.seal or self.ability.eternal or self.ability.rental or self.ability.perishable or self.sticker or self.ability.set == 'Spectral' or self.debuff or self.greyed or self.ability.name == 'The Soul' or self.ability.set == 'Voucher' or self.ability.set == 'Booster' or self.config.center.soul_pos or self.config.center.demo then"
 position = "after"
-line_prepend = '$indent'
 payload = '''
 if self.edition then
     for k, v in pairs(G.P_CENTERS) do
@@ -145,7 +172,7 @@ for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         end
     end
 end'''
-match_indent = true
+line_prepend = "$indent"
 
 # Alternate scoring effects for editions
 
@@ -197,16 +224,15 @@ target = "functions/state_events.lua"
 pattern = '''                                edition = true\}\)'''
 position = "after"
 payload = '''end'''
-match_indent = true
 
+# Repetitions
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
-pattern = '''                        card_eval_status_text\(\(reps\[j].jokers or reps\[j].seals\).card, 'jokers', nil, nil, nil, \(reps\[j].jokers or reps\[j].seals\)\)\n\s+end'''
+pattern = '''card_eval_status_text\(\(reps\[j].jokers or reps\[j].seals\).card, 'jokers', nil, nil, nil, \(reps\[j].jokers or reps\[j].seals\)\)\n\s+end'''
 position = "at"
-payload = '''                        card_eval_status_text((reps[j].jokers or reps[j].seals or reps[j].edition).card, 'jokers', nil, nil, nil, (reps[j].jokers or reps[j].seals or reps[j].edition))
+payload = '''card_eval_status_text((reps[j].jokers or reps[j].seals or reps[j].edition).card, 'jokers', nil, nil, nil, (reps[j].jokers or reps[j].seals or reps[j].edition))
 end'''
-match_indent = true
 
 [[patches]]
 [patches.pattern]
