@@ -41,9 +41,14 @@ function loadAPIs()
     end
 
     function SMODS.GameObject:register()
+        if self.registered then
+            sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+            return
+        end
         if self:check_dependencies() and not self.obj_table[self.key] then
             self.obj_table[self.key] = self
             self.obj_buffer[#self.obj_buffer + 1] = self.key
+            self.registered = true
         end
     end
 
@@ -207,7 +212,10 @@ function loadAPIs()
         set = 'Atlas',
         omit_prefix = true,
         register = function(self)
-            if self.obj_table[self.key] then return end
+            if self.registered then 
+                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+                return
+            end
             if not self.raw_key and self.mod then
                 self.key = ('%s_%s'):format(self.mod.prefix, self.key)
             end
