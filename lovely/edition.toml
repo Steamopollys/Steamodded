@@ -80,7 +80,7 @@ end
 [patches.regex]
 target = "card.lua"
 pattern = '''
-(?<indent>[\t ]*)if self.edition[A-z\.\:\n\t _(',)~=]*me', nil, self.ARGS.send_to_shader\)
+(?<indent>[\t ]*)if self\.edition and self\.editi[A-z\.\:\n\t _(',)~=]*me', nil, self.ARGS.send_to_shader\)
 [\t ]*end
 [\t ]*end'''
 position = "at"
@@ -94,26 +94,8 @@ if self.edition then
             end
         end
     end
-'''
-line_prepend = "$indent"
-
-# Inject shaders applying to floating sprite shadows
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = "self.children.floating_sprite:draw_shader('hologram', nil, self.ARGS.send_to_shader, nil, self.children.center, 2*scale_mod, 2*rotate_mod)"
-position = "after"
-payload = '''
-if self.edition then 
-    for k, v in pairs(G.P_CENTER_POOLS.Edition) do
-        if v.apply_to_float then
-            if self.edition[v.key:sub(3)] then
-                self.children.floating_sprite:draw_shader(v.shader, nil, self.ARGS.send_to_shader, nil, self.children.center, 2*scale_mod, 2*rotate_mod)
-            end
-        end
-    end
 end'''
-match_indent = true
+line_prepend = "$indent"
 
 # Inject shaders applying to floating sprites
 [[patches]]

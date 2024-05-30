@@ -1047,7 +1047,7 @@ function Card.set_edition(self, edition, immediate, silent)
         self.edition.key = 'e_'..edition_type
         for k, v in pairs(G.P_CENTERS['e_'..edition_type].config) do
             self.edition[k] = v
-            if k == 'card_limit' then
+            if k == 'card_limit' and G.jokers and G.consumeables then
                 -- for k2,v2 in pairs(self.container) do
                 --     sendDebugMessage(k2..": "..tostring(v2))
                 -- end
