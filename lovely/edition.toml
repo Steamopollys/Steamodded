@@ -74,28 +74,6 @@ for _, v in ipairs(G.P_CENTER_POOLS.Edition) do
 end
 '''
 
-# # Inject variable edition tooltips
-# [[patches]]
-# [patches.pattern]
-# target = "functions/common_events.lua"
-# pattern = '''loc_vars = {_c.config.extra}'''
-# position = "at"
-# payload = '''
-# for k,v in pairs(_c) do
-#             sendDebugMessage(k..": "..tostring(v), "tooltips pls")
-#         end
-# for k,v in pairs(_c.loc_vars(_c).vars) do
-#     sendDebugMessage(k..": "..tostring(v), "tooltips pls")
-# end
-# if _c.key == "e_negative_consumable" then
-#     loc_vars = {_c.loc_vars(_c).vars}
-# else
-#     if not _c.key == "e_base" then
-#     loc_vars = _c.loc_vars(_c).vars
-#     end
-# end'''
-# match_indent = true
-
 # Inject shaders applying to cards
 [[patches]]
 [patches.pattern]
