@@ -1912,6 +1912,9 @@ function loadAPIs()
         -- if true, enhanced card is any suit
         -- always_scores
         -- if true, card always scores
+        -- loc_subtract_extra_chips
+        -- During tooltip generation, number of chips to subtract from displayed extra chips.
+        -- Use if enhancement already displays its own chips.
         -- Future work: use ranks() and suits() for better control
         register = function(self)
             self.config = self.config or {}
@@ -1928,7 +1931,10 @@ function loadAPIs()
             end
             SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars.bonus_chips then
-                localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips}}
+                local remaining_bonus_chips = specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)
+                if remaining_bonus_chips > 0 then
+                    localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)}}
+                end
             end
         end,
         -- other methods:
@@ -1950,17 +1956,23 @@ function loadAPIs()
     -- TODO pos = { x = 0, y = 0 } should just be set as a default for all objects
     -- with atlases
 
-    SMODS.Enhancement:take_ownership('m_stone', {
-        replace_base_card = true,
-        no_suit = true,
-        no_rank = true,
-        always_scores = true,
-        loc_txt = {
-            name = "Stone Card",
-            text = {
-                "{C:chips}+#1#{} Chips",
-                "no rank or suit"
-            }
-        },
-    })
+    -- local stone_card = SMODS.Enhancement:take_ownership('m_stone', {
+    --     replace_base_card = true,
+    --     no_suit = true,
+    --     no_rank = true,
+    --     always_scores = true,
+    --     loc_txt = {
+    --         name = "Stone Card",
+    --         text = {
+    --             "{C:chips}+#1#{} Chips",
+    --             "no rank or suit"
+    --         }
+    --     },
+    --     loc_vars = function(self)
+    --         return {
+    --             vars = { self.config.bonus }
+    --         }
+    --     end
+    -- })
+    -- stone_card.loc_subtract_extra_chips = stone_card.config.bonus
 end
