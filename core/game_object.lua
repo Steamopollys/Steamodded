@@ -38,9 +38,14 @@ function loadAPIs()
     end
 
     function SMODS.GameObject:register()
+        if self.registered then
+            sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+            return
+        end
         if self:check_dependencies() and not self.obj_table[self.key] then
             self.obj_table[self.key] = self
             self.obj_buffer[#self.obj_buffer + 1] = self.key
+            self.registered = true
         end
     end
 
@@ -173,7 +178,7 @@ function loadAPIs()
         obj_table = {},
         obj_buffer = {},
         silent = true,
-        __call = function() error('INTERNAL CLASS, DO NOT CALL') end,
+        register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         injector = function()
             for _, v in ipairs(SMODS._loc_txt) do
                 v:load()
@@ -187,7 +192,7 @@ function loadAPIs()
     }
 
     -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.Sprite
+    ----- API CODE GameObject.Atlas
     -------------------------------------------------------------------------------------------------
 
     SMODS.Atlases = {}
@@ -204,7 +209,10 @@ function loadAPIs()
         set = 'Atlas',
         omit_prefix = true,
         register = function(self)
-            if self.obj_table[self.key] then return end
+            if self.registered then 
+                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+                return
+            end
             if not self.raw_key and self.mod then
                 self.key = ('%s_%s'):format(self.mod.prefix, self.key)
             end
@@ -212,6 +220,8 @@ function loadAPIs()
                 self.key_noloc = self.key
                 self.key = ('%s_%s'):format(self.key, self.language)
             end
+            -- needed for changing high contrast settings, apparently
+            self.name = self.key
             self.super.register(self)
         end,
         inject = function(self)
@@ -974,6 +984,7 @@ function loadAPIs()
         end
     }
 
+    -- set the correct stake level for unlocks when injected (spares me from completely overwriting the unlock checks)
     local function stake_mod(stake)
         return {
             inject = function(self)
@@ -1035,7 +1046,9 @@ function loadAPIs()
         get_obj = function(self, key) return G.P_BLINDS[key] end,
         inject = function(self, i)
             -- no pools to query length of, so we assign order manually
-            self.order = 30 + i
+            if not self.taken_ownership then
+                self.order = 30 + i
+            end
             G.P_BLINDS[self.key] = self
         end
     }

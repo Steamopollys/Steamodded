@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0526a-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0530a-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -465,13 +465,15 @@ end
 
 function G.FUNCS.exit_mods(e)
     if SMODS.full_restart then
+		-- launch a new instance of the game and quit the current one
 		if love.system.getOS() ~= 'OS X' then
         	love.system.openURL('steam://rungameid/2379780')
 		else
-			os.execute('/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh')
+			os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
 		end
 		love.event.quit()
     elseif SMODS.partial_reload then
+		-- re-initialize steamodded
         SMODS.reload()
     end
 	G.FUNCS.exit_overlay_menu(e)
@@ -1322,25 +1324,47 @@ function SMODS.init_settings()
 end
 
 function SMODS.reload()
-	local lfs = love.filesystem
-	local function recurse(dir)
-		local files = lfs.getDirectoryItems(dir)
+    local lfs = love.filesystem
+    local function recurse(dir)
+        local files = lfs.getDirectoryItems(dir)
         for i, v in ipairs(files) do
             local file = (dir == '') and v or (dir .. '/' .. v)
-			sendTraceMessage(file)
-			if v == 'Mods' or v:len() == 1 then
-				-- exclude save files
-			elseif lfs.isFile(file) then
-				lua_reload.ReloadFile(file)
-			elseif lfs.isDirectory(file) then
-				recurse(file)
+            sendTraceMessage(file)
+            if v == 'Mods' or v:len() == 1 then
+                -- exclude save files
+            elseif lfs.isFile(file) then
+                lua_reload.ReloadFile(file)
+            elseif lfs.isDirectory(file) then
+                recurse(file)
+            end
+        end
+    end
+    recurse('')
+    SMODS.booted = false
+    G:init_item_prototypes()
+    initSteamodded()
+end
+
+function SMODS.create_mod_badges(obj, badges)
+	if not G.SETTINGS.no_mod_badges and obj and obj.mod and obj.mod.display_name then
+        local mods = { obj.mod }
+		local set = { [obj.mod.id] = true }
+		if obj.dependencies then
+            for _, v in ipairs(obj.dependencies) do
+				local m = SMODS.Mods[v]
+				if not set[m.id] then
+					table.insert(mods, SMODS.Mods[v])
+					set[m.id] = true
+				end
 			end
 		end
+		for i, mod in ipairs(mods) do
+			local mod_name = string.sub(mod.display_name, 1, 16)
+			local len = string.len(mod_name)
+			local size = 0.9 - (len > 6 and 0.02*(len-6) or 0)
+			badges[#badges + 1] = create_badge(mod_name, mod.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil, size)
+		end
 	end
-    recurse('')
-	SMODS.booted = false
-	G:init_item_prototypes()
-	initSteamodded()
 end
 
 ----------------------------------------------

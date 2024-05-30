@@ -48,6 +48,6 @@ match_indent = true
 payload = '''
 	local obj = self.effect.center
 	if obj.apply and type(obj.apply) == 'function' then
-		obj.apply(self)
+		obj:apply()
 	end
 '''
