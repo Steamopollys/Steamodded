@@ -75,11 +75,30 @@ end
 '''
 
 # Inject shaders applying to cards
+# Card:draw()
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "card.lua"
-pattern = "if self.edition or self.seal or self.ability.eternal or self.ability.rental or self.ability.perishable or self.sticker or self.ability.set == 'Spectral' or self.debuff or self.greyed or self.ability.name == 'The Soul' or self.ability.set == 'Voucher' or self.ability.set == 'Booster' or self.config.center.soul_pos or self.config.center.demo then"
-position = "after"
+pattern = '''
+(?<indent>[\t ]*)if self\.edition and self\.edition\.holo then
+[\t ]*self\.children\.center\:draw_shader\('holo', nil, self\.ARGS\.send_to_shader\)
+[\t ]*if self\.children\.front and self\.ability\.effect ~= 'Stone Card' then
+[\t ]*self\.children\.front\:draw_shader\('holo', nil, self\.ARGS\.send_to_shader\)
+[\t ]*end
+[\t ]*end
+[\t ]*if self\.edition and self\.edition\.foil then
+[\t ]*self\.children\.center\:draw_shader\('foil', nil, self\.ARGS\.send_to_shader\)
+[\t ]*if self\.children\.front and self\.ability\.effect ~= 'Stone Card' then
+[\t ]*self\.children\.front\:draw_shader\('foil', nil, self\.ARGS\.send_to_shader\)
+[\t ]*end
+[\t ]*end
+[\t ]*if self\.edition and self\.edition\.polychrome then
+[\t ]*self\.children\.center\:draw_shader\('polychrome', nil, self\.ARGS\.send_to_shader\)
+[\t ]*if self\.children\.front and self\.ability\.effect ~= 'Stone Card' then
+[\t ]*self\.children\.front\:draw_shader\('polychrome', nil, self\.ARGS\.send_to_shader\)
+[\t ]*end
+[\t ]*end'''
+position = "at"
 payload = '''
 if self.edition then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
@@ -93,7 +112,7 @@ if self.edition then
         end
     end
 end'''
-match_indent = true
+line_prepend = "$indent"
 
 # Inject shaders applying to floating sprite shadows
 [[patches]]
