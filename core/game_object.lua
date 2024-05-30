@@ -26,6 +26,9 @@ function loadAPIs()
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
         end
+        if o.mod and not o.raw_shader_key then
+            if o['shader'] then o['shader'] = ('%s_%s'):format(o.mod.prefix, o[v]) end
+        end
         setmetatable(o, self)
         for _, v in ipairs(o.required_params or {}) do
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
@@ -1888,6 +1891,12 @@ function loadAPIs()
         inject = function(self)
             assert(self.path:sub(-3) == ".fs")
             G.SHADERS[self.key] = love.graphics.newShader(SMODS.current_mod.path.."/assets/shaders/"..self.path)
+        end,
+        register = function(self)
+            if not self.raw_key and self.mod then
+                self.key = ('%s_%s'):format(self.mod.prefix, self.key)
+            end
+            SMODS.Shader.super.register(self)
         end,
         process_loc_text = function() end
     }
