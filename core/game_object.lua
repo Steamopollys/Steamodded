@@ -1950,13 +1950,6 @@ function loadAPIs()
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
         end,
-        process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.descriptions.Edition, self.key, self.loc_txt, 'text')
-            SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'name')
-            sendDebugMessage(self.key..(G.localization.descriptions.Edition[self.key] and " is present" or " is not present"))
-            sendDebugMessage(tostring(G.localization.descriptions.Edition["e_foil"].text_parsed))
-            sendDebugMessage(self.key..(G.localization.misc.labels[self.key] and " label is present" or " label is not present"))
-        end,
         calc_weight = function(self, given_weight)
             if given_weight then
                 return given_weight
@@ -1981,12 +1974,6 @@ function loadAPIs()
 
 
     SMODS.Edition:take_ownership('foil',{
-        -- loc_txt = {
-        --     name = "Foil",
-        --     text = {
-        --         "{C:chips}+#1#{} chips"
-        --     }
-        -- },
         shader = 'foil',
         config = { chips = 50 },
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
@@ -2005,12 +1992,6 @@ function loadAPIs()
         end
     })
     SMODS.Edition:take_ownership('holo', {
-        -- loc_txt = {
-        --     name = "Holographic",
-        --     text = {
-        --         "{C:mult}+#1#{} Mult"
-        --     }
-        -- },
         shader = 'holo',
         config = { mult = 10 },
         sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
@@ -2029,12 +2010,6 @@ function loadAPIs()
         end
     })
     SMODS.Edition:take_ownership('polychrome', {
-        -- loc_txt = {
-        --     name = "Polychrome",
-        --     text = {
-        --         "{X:mult,C:white} X#1# {} Mult"
-        --     }
-        -- },
         shader = 'polychrome',
         config = { x_mult = 1.5 },
         sound = { sound = "polychrome1", per = 1.2, vol = 0.7 },
@@ -2053,12 +2028,6 @@ function loadAPIs()
         end
     })
     SMODS.Edition:take_ownership('negative', {
-        -- loc_txt = {
-        --     name = "Negative",
-        --     text = {
-        --         "{C:dark_edition}+#1#{} Joker slot"
-        --     }
-        -- },
         shader = 'negative',
         config = { card_limit = 1 },
         sound = { sound = "negative", per = 1.5, vol = 0.4 },
