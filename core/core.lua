@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0530c-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0530d-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -1348,13 +1348,14 @@ end
 function SMODS.create_mod_badges(obj, badges)
 	if not G.SETTINGS.no_mod_badges and obj and obj.mod and obj.mod.display_name then
         local mods = { obj.mod }
-		local set = { [obj.mod.id] = true }
+        badges.mod_set = badges.mod_set or {}
+		badges.mod_set[obj.mod.id] = true
 		if obj.dependencies then
             for _, v in ipairs(obj.dependencies) do
 				local m = SMODS.Mods[v]
-				if not set[m.id] then
-					table.insert(mods, SMODS.Mods[v])
-					set[m.id] = true
+				if not badges.mod_set[m.id] then
+					table.insert(mods, m)
+					badges.mod_set[m.id] = true
 				end
 			end
 		end
