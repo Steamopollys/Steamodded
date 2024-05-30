@@ -1876,17 +1876,24 @@ function loadAPIs()
     -------------------------------------------------------------------------------------------------
 
     SMODS.Edition = SMODS.Center:extend {
+        -- TODO this name really needs to be changed to something like badge_to_key
+        reverse_lookup = {
+            foil = 'e_foil',
+            holographic = 'e_holo',
+            polychrome = 'e_polychrome',
+            negative = 'e_negative'
+        },
         set = 'Edition',
         -- atlas only matters for displaying editions in the collection
         atlas = 'Joker',
         pos = { x = 0, y = 0 },
         prefix = 'e',
-        reverse_lookup = {},
         discovered = false,
         unlocked = true,
         apply_to_float = false,
         in_shop = false,
         weight = 0,
+        badge_colour = G.C.DARK_EDITION,
         -- default sound is foil sound
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         required_params = {
@@ -1903,7 +1910,6 @@ function loadAPIs()
         -- other methods:
         -- calculate(self)
         register = function(self)
-            self.badge_colour = self.badge_colour or G.C.DARK_EDITION
             self.shader_key = self.shader_name
             if not G.SHADERS[self.shader_key] then
                 self.shader_path = SMODS.current_mod.path .. "/assets/shaders/" .. self.shader_name .. ".fs" --self.shader_path or (self.shader_key .. '.fs')

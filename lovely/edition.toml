@@ -54,13 +54,10 @@ pattern = '''
 [\t ]*if v == 'negative' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_negative'\] end'''
 position = 'at'
 payload = '''
-for _, v2 in ipairs(G.P_CENTER_POOLS.Edition) do
-    if v == v2.key:sub(3) then
-        for x,y in pairs(v2) do
-            sendDebugMessage(x..": "..tostring(y))
-        end
-        info_queue[#info_queue + 1] = v2
-    end
+if G.P_CENTERS[v] and G.P_CENTERS[v].set == 'Edition' then
+    info_queue[#info_queue + 1] = G.P_CENTERS[v]
+elseif SMODS.Edition.reverse_lookup[v] then
+    info_queue[#info_queue + 1] = G.P_CENTERS[SMODS.Edition.reverse_lookup[v]]
 end'''
 line_prepend = "$indent"
 
