@@ -988,6 +988,7 @@ end
 -- nil (removes edition)
 -- OR key as string
 -- OR { name_of_edition = true } (key without e_). This is from the base game, prefer using a string.
+-- OR edition object
 -- immediate = boolean value
 -- silent = boolean value
 function Card.set_edition(self, edition, immediate, silent)
@@ -1002,24 +1003,24 @@ function Card.set_edition(self, edition, immediate, silent)
 		end
 	end
 	
-	local edition_key = nil
+	local edition_type = nil
 	if type(edition) == 'string' then
 		assert(string.sub(edition, 1, 2) == 'e_')
-		edition_key = string.sub(edition, 3)
+		edition_type = string.sub(edition, 3)
 	elseif type(edition) == 'table' then
 		if edition.type then
-			edition_key = edition.type
+			edition_type = edition.type
 		else
 			for k, v in pairs(edition) do
 				if v then
-					assert(not edition_key)
-					edition_key = k
+					assert(not edition_type)
+					edition_type = k
 				end
 			end
 		end
 	end
 	
-	if not edition_key or edition_key == 'base' then
+	if not edition_type or edition_type == 'base' then
 		self.edition = nil -- remove edition from card
 		self:set_cost()
 		if not silent then
@@ -1041,9 +1042,10 @@ function Card.set_edition(self, edition, immediate, silent)
     
     if not self.edition then
         self.edition = {}
-        self.edition[edition_key] = true
-        self.edition.type = edition_key
-        for k, v in pairs(G.P_CENTERS['e_'..edition_key].config) do
+        self.edition[edition_type] = true
+        self.edition.type = edition_type
+        self.edition.key = 'e_'..edition_type
+        for k, v in pairs(G.P_CENTERS['e_'..edition_type].config) do
             self.edition[k] = v
             if k == 'card_limit' then
                 -- for k2,v2 in pairs(self.container) do
