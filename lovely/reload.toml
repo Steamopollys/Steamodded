@@ -19,3 +19,26 @@ payload = '''
 lua_reload = require('lua_reload')
 lua_reload.Inject()
 '''
+
+[[patches]]
+[patches.pattern]
+target = 'engine/controller.lua'
+pattern = 'if key == "r" and not G.SETTINGS.paused then'
+position = 'at'
+match_indent = true
+payload = '''
+if key == 'm' then
+	if self.held_key_times[key] > 0.9 then
+		if G.STAGE == G.STAGES.RUN then G.FUNCS.go_to_menu() end
+		SMODS.reload()
+	else
+		self.held_key_times[key] = self.held_key_times[key] + dt
+	end
+elseif key == 'q' then
+	if self.held_key_times[key] > 1.2 then
+		SMODS.restart_game()
+	else
+		self.held_key_times[key] = self.held_key_times[key] + dt
+	end
+elseif key == "r" and not G.SETTINGS.paused then
+'''
