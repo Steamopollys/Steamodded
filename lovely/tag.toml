@@ -19,8 +19,7 @@ if obj and obj.apply and type(obj.apply) == 'function' then
 end
 if res then
 	return res
-elseif $cond
-'''
+elseif $cond'''
 
 # create_UIBox_your_collection_tags()
 [[patches]]
@@ -39,8 +38,7 @@ for k, v in pairs(G.P_TAGS) do
 end
 for i = 1, math.ceil(counter / 6) do
 	table.insert(tag_matrix, {})
-end
-'''
+end'''
 
 [[patches]]
 [patches.regex]
@@ -54,8 +52,7 @@ for i = 1, math.ceil(counter / 6) do
 	table.insert(table_nodes, {n=G.UIT.R, config={align = "cm"}, nodes=tag_matrix[i]})
 end
 $t table_nodes
-}
-'''
+}'''
 
 # Tag:generate_UI()
 [[patches]]

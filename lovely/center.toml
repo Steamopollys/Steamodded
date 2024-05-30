@@ -29,8 +29,7 @@ local obj = self.config.center
 if obj.calculate and type(obj.calculate) == 'function' then
 	local o = obj:calculate(self, context)
 	if o then return o end
-end
-'''
+end'''
 match_indent = true
 
 # Card:update()
@@ -44,8 +43,7 @@ payload = '''
 local obj = self.config.center
 if obj.update and type(obj.update) == 'function' then
 	obj:update(self, dt)
-end
-'''
+end'''
 
 # Card:generate_UIBox_ability_table()
 [[patches]]
@@ -83,8 +81,7 @@ match_indent = true
 payload = '''
 if not _c.generate_ui or type(_c.generate_ui) ~= 'function' then
 	full_UI_table.name = localize{type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name}
-end
-'''
+end'''
 
 [[patches]]
 [patches.pattern]
@@ -96,13 +93,12 @@ payload = '''
 elseif _c.generate_ui and type(_c.generate_ui) == 'function' then
 	_c:generate_ui(info_queue, card, desc_nodes, specific_vars, full_UI_table)
 	if specific_vars and specific_vars.pinned then info_queue[#info_queue+1] = {key = 'pinned_left', set = 'Other'} end
-    if specific_vars and specific_vars.sticker then info_queue[#info_queue+1] = {key = string.lower(specific_vars.sticker)..'_sticker', set = 'Other'} end
-'''
+    if specific_vars and specific_vars.sticker then info_queue[#info_queue+1] = {key = string.lower(specific_vars.sticker)..'_sticker', set = 'Other'} end'''
 
 [[patches]]
 [patches.regex]
 target = 'functions/common_events.lua'
-pattern = "(?<indent>[\t ]*)if (?<rest>_c.name == 'Golden Ticket' then)\n"
+pattern = "(?<indent>[\t ]*)if (?<rest>_c.name == 'Golden Ticket' then)"
 line_prepend = '$indent'
 position = 'at'
 payload = '''
@@ -110,8 +106,7 @@ if _c.locked_loc_vars and type(_c.locked_loc_vars) == 'function' then
 	local res = _c:locked_loc_vars(info_queue) or {}
 	loc_vars = res.vars or {}
 	specific_vars.not_hidden = res.not_hidden or specific_vars.not_hidden
-elseif $rest
-'''
+elseif $rest'''
 
 [[patches]]
 [patches.regex]
@@ -121,8 +116,7 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 
-if SMODS.Seals[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end
-'''
+if SMODS.Seals[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end'''
 
 # check_for_unlock()
 [[patches]]
@@ -138,8 +132,7 @@ if not card.unlocked and card.check_for_unlock and type(card.check_for_unlock) =
 	ret = card:check_for_unlock(args)
 	if ret then unlock_card(card) end
 	custom_check = true
-end
-'''
+end'''
 
 [[patches]]
 [patches.regex]
@@ -178,8 +171,7 @@ local obj = self.config.center
 if obj.use and type(obj.use) == 'function' then
 	obj:use(self, area, copier)
 	return
-end
-'''
+end'''
 
 # Card:can_use_consumable()
 [[patches]]
@@ -192,8 +184,7 @@ payload = '''
 local obj = self.config.center
 if obj.can_use and type(obj.can_use) == 'function' then
 	return obj:can_use(self)
-end
-'''
+end'''
 
 # G.UIDEF.card_h_popup()
 [[patches]]
@@ -218,8 +209,7 @@ $if
 end
 if obj and obj.set_badges and type(obj.set_badges) == 'function' then
 	obj:set_badges(card, badges)
-end
-'''
+end'''
 
 [[patches]]
 [patches.regex]
@@ -238,25 +228,23 @@ if AUT.card_type ~= 'Locked' and AUT.card_type ~= 'Undiscovered' then
 		SMODS.create_mod_badges(SMODS.Tags[card.config.tag.key], badges)
 	end
 	badges.mod_set = nil
-end
-'''
+end'''
 
 # G.UIDEF.settings_tab()
 [[patches]]
 [patches.regex]
 target = 'functions/UI_definitions.lua'
-pattern = "(?<indent>[\t ]*)G.F_CRASH_REPORTS.*\n"
+pattern = "(?<indent>[\t ]*)G.F_CRASH_REPORTS.*"
 line_prepend = '$indent'
 position = 'after'
 payload = '''
-create_toggle { label = 'Disable Mod Badges', ref_table = G.SETTINGS, ref_value = 'no_mod_badges' },
-'''
+create_toggle { label = 'Disable Mod Badges', ref_table = G.SETTINGS, ref_value = 'no_mod_badges' },'''
 
 # set_discover_tallies()
 [[patches]]
 [patches.regex]
 target = 'functions/misc_functions.lua'
-pattern = "(?<indent>[\t ]*)if v.set == 'Planet' then\n([\t ]*.*\n){15}"
+pattern = "(?<indent>[\t ]*)if v.set == 'Planet' then(\n[\t ]*.*){15}"
 line_prepend = '$indent'
 position = 'at'
 payload = '''
@@ -266,8 +254,7 @@ if tally then
 	if v.discovered then
 		tally.tally = tally.tally + 1
 	end
-end
-'''
+end'''
 
 [[patches]]
 [patches.regex]
@@ -280,14 +267,13 @@ payload = ''
 [[patches]]
 [patches.regex]
 target = 'functions/misc_functions.lua'
-pattern = "(?<indent>[\t ]*)for _, v in pairs\\(G.DISCOVER_TALLIES\\) do\n"
+pattern = "(?<indent>[\t ]*)for _, v in pairs\\(G.DISCOVER_TALLIES\\) do"
 line_prepend = '$indent'
 position = 'before'
 payload = '''
 for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
 	G.DISCOVER_TALLIES[v:lower()..'s'] = {tally = 0, of = 0}
-end
-'''
+end'''
 
 # create_UIBox_your_collection()
 [[patches]]
@@ -301,8 +287,7 @@ local consumable_nodes = {}
 for _, key in ipairs(SMODS.ConsumableType.obj_buffer) do
 	local id = 'your_collection_'..key:lower()..'s'
 	consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
-end
-'''
+end'''
 
 [[patches]]
 [patches.regex]
@@ -324,8 +309,7 @@ local obj = center or self.config.center
 if obj.redeem and type(obj.redeem) == 'function' then
 	obj:redeem(self)
 	return
-end
-'''
+end'''
 
 # get_current_pool()
 [[patches]]
@@ -351,8 +335,7 @@ elseif SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].rarities th
 			end
 		end
 	end
-	_starting_pool, _pool_key = SMODS.ConsumableTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')
-'''
+	_starting_pool, _pool_key = SMODS.ConsumableTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')'''
 
 [[patches]]
 [patches.pattern]
@@ -363,8 +346,7 @@ position = 'at'
 payload = '''
 if SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].default and G.P_CENTERS[SMODS.ConsumableTypes[_type].default] then
 	_pool[#_pool+1] = SMODS.ConsumableTypes[_type].default
-elseif _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1] = "c_strength"
-'''
+elseif _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1] = "c_strength"'''
 
 [[patches]]
 [patches.pattern]
@@ -386,8 +368,7 @@ if v.add_to_pool and type(v.add_to_pool) == 'function' then
 	if res.add and (not G.GAME.used_jokers[v.key] or res.allow_duplicates or next(find_joker("Showman"))) then
 		add = true
 	end
-elseif _type == 'Enhanced' then
-'''
+elseif _type == 'Enhanced' then'''
 
 # create_card_for_shop()
 [[patches]]
@@ -400,13 +381,12 @@ payload = '''
 local total_rate = G.GAME.joker_rate + G.GAME.playing_card_rate
 for _,v in ipairs(SMODS.ConsumableType.obj_buffer) do
 	total_rate = total_rate + G.GAME[v:lower()..'_rate']
-end
-'''
+end'''
 
 [[patches]]
 [patches.regex]
 target = 'functions/UI_definitions.lua'
-pattern = '(?<indent>[\t ]*)for _, v in ipairs\((?<li>\{\n(.*\n){5}[\t ]*\})\) do\n'
+pattern = '(?<indent>[\t ]*)for _, v in ipairs\((?<li>\{\n(.*\n){5}[\t ]*\})\) do'
 line_prepend = '$indent'
 position = 'at'
 payload = '''
@@ -417,9 +397,7 @@ for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
 		table.insert(rates, { type = v, val = G.GAME[v:lower()..'_rate'] })
 	end
 end
-for _, v in ipairs(rates) do
-
-'''
+for _, v in ipairs(rates) do'''
 
 # create_card()
 [[patches]]
@@ -435,8 +413,7 @@ payload = '''
 				forced_key = v.key
 			end
 		end
-	end
-'''
+	end'''
 
 # Card:add_to_deck()
 [[patches]]
@@ -449,8 +426,7 @@ payload = '''
 local obj = self.config.center
 if obj and obj.add_to_deck and type(obj.add_to_deck) == 'function' then
 	obj:add_to_deck(self, from_debuff)
-end
-'''
+end'''
 
 # Card:remove_from_deck()
 [[patches]]
@@ -463,8 +439,7 @@ payload = '''
 local obj = self.config.center
 if obj and obj.remove_from_deck and type(obj.remove_from_deck) == 'function' then
 	obj:remove_from_deck(self, from_debuff)
-end
-'''
+end'''
 
 # G.FUNCS.use_card()
 [[patches]]
@@ -481,8 +456,7 @@ if card.ability.consumeable then
         	nc = obj:keep_on_use(card)
       	end
     end
-if not nc and card.area then card.area:remove_card(card) end
-'''
+if not nc and card.area then card.area:remove_card(card) end'''
 
 [[patches]]
 [patches.pattern]
@@ -494,8 +468,7 @@ payload = '''
 elseif nc then
     area:remove_from_highlighted(card)
     play_sound('cardSlide2', nil, 0.3)
-    dont_dissolve = true
-'''
+    dont_dissolve = true'''
 
 # Card:set_sprites()
 [[patches]]
@@ -508,8 +481,7 @@ payload = '''
 if _center.set_sprites and type(_center.set_sprites) == 'function' then
 	_center:set_sprites(self, _front)
 end
-if true then
-'''
+if true then'''
 
 # Card:load()
 [[patches]]
@@ -522,5 +494,4 @@ payload = '''
 local obj = self.config.center
 if obj.load and type(obj.load) == 'function' then
 	obj:load(self, cardTable, other_card)
-elseif self.config.center.name == "Half Joker" then
-'''
+elseif self.config.center.name == "Half Joker" then'''

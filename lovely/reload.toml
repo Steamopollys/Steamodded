@@ -17,5 +17,4 @@ position = 'after'
 match_indent = true
 payload = '''
 lua_reload = require('lua_reload')
-lua_reload.Inject()
-'''
+lua_reload.Inject()'''

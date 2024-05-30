@@ -14,8 +14,7 @@ position = 'before'
 payload = '''
 for _,v in ipairs(SMODS.PokerHand.obj_buffer) do
 	results[v] = {}
-end
-'''
+end'''
 match_indent = true
 
 [[patches]]
@@ -28,8 +27,7 @@ for _,_hand in pairs(SMODS.PokerHands) do
 	if _hand.atomic_part and type(_hand.atomic_part) == 'function' then
 		parts[_hand.key] = _hand.atomic_part(hand)
 	end
-end
-'''
+end'''
 match_indent = true
 
 [[patches]]
@@ -58,6 +56,5 @@ for _, v in ipairs(G.handlist) do
 		results.top = results[v]
 		break
 	end
-end
-'''
+end'''
 match_indent = true

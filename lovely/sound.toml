@@ -32,5 +32,4 @@ if replace_sound then
 		return
     end
 end
-if SMODS.Sound.stop_sounds[desired_track] then return end
-'''
+if SMODS.Sound.stop_sounds[desired_track] then return end'''
