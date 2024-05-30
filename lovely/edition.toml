@@ -80,38 +80,21 @@ end
 [patches.regex]
 target = "card.lua"
 pattern = '''
-(?<indent>[\t ]*)if self\.edition and self\.edition\.holo then
-[\t ]*self\.children\.center\:draw_shader\('holo', nil, self\.ARGS\.send_to_shader\)
-[\t ]*if self\.children\.front and self\.ability\.effect ~= 'Stone Card' then
-[\t ]*self\.children\.front\:draw_shader\('holo', nil, self\.ARGS\.send_to_shader\)
-[\t ]*end
-[\t ]*end
-[\t ]*if self\.edition and self\.edition\.foil then
-[\t ]*self\.children\.center\:draw_shader\('foil', nil, self\.ARGS\.send_to_shader\)
-[\t ]*if self\.children\.front and self\.ability\.effect ~= 'Stone Card' then
-[\t ]*self\.children\.front\:draw_shader\('foil', nil, self\.ARGS\.send_to_shader\)
-[\t ]*end
-[\t ]*end
-[\t ]*if self\.edition and self\.edition\.polychrome then
-[\t ]*self\.children\.center\:draw_shader\('polychrome', nil, self\.ARGS\.send_to_shader\)
-[\t ]*if self\.children\.front and self\.ability\.effect ~= 'Stone Card' then
-[\t ]*self\.children\.front\:draw_shader\('polychrome', nil, self\.ARGS\.send_to_shader\)
+(?<indent>[\t ]*)if self.edition[A-z\.\:\n\t _(',)~=]*me', nil, self.ARGS.send_to_shader\)
 [\t ]*end
 [\t ]*end'''
 position = "at"
 payload = '''
 if self.edition then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
-        if v.shader then
-            if self.edition[v.key:sub(3)] then
-                self.children.center:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
-                if self.children.front and self.ability.effect ~= 'Stone Card' then
-                    self.children.front:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
-                end
+        if self.edition[v.key:sub(3)] then
+            self.children.center:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
+            if self.children.front and self.ability.effect ~= 'Stone Card' then
+                self.children.front:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
             end
         end
     end
-end'''
+'''
 line_prepend = "$indent"
 
 # Inject shaders applying to floating sprite shadows
