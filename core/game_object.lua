@@ -843,7 +843,7 @@ function loadAPIs()
             self = nil
             return true
         end,
-        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
+        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             local target = { type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars =
             specific_vars or {} }
             local res = {}
@@ -852,6 +852,7 @@ function loadAPIs()
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
+            full_UI_table.name = localize{type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name}
             if res.main_start then
                 desc_nodes[#desc_nodes + 1] = res.main_start
             end
@@ -1811,7 +1812,7 @@ function loadAPIs()
             G.P_TAGS[self.key] = self
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
         end,
-        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
+        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             local target = { type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars =
             specific_vars }
             local res = {}
@@ -1821,6 +1822,7 @@ function loadAPIs()
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
+            full_UI_table.name = localize{type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name}
             if res.main_start then
                 desc_nodes[#desc_nodes + 1] = res.main_start
             end
@@ -1891,6 +1893,7 @@ function loadAPIs()
         set = 'Enhanced',
         prefix = 'm',
         atlas = 'centers',
+        pos = { x = 0, y = 0 },
         required_params = {
             'key',
             -- table with keys `name` and `text`
@@ -1914,11 +1917,11 @@ function loadAPIs()
             assert(not (self.no_suit and self.any_suit))
             SMODS.Enhancement.super.register(self)
         end,
-        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
+        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars.nominal_chips and not self.replace_base_card then 
                 localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
             end
-            SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars)
+            SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars.bonus_chips then
                 localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips}}
             end
