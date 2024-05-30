@@ -1912,7 +1912,6 @@ function loadAPIs()
         -- if true, card always scores
         -- Future work: use ranks() and suits() for better control
         register = function(self)
-            self.effect = self.effect or self.name
             self.config = self.config or {}
             assert(not (self.no_suit and self.any_suit))
             SMODS.Enhancement.super.register(self)
