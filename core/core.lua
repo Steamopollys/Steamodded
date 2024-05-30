@@ -1262,7 +1262,10 @@ function SMODS.insert_pool(pool, center, replace)
             end
 		end
     else
-		center.order = #pool+1
+		local prev_order = (pool[#pool] and pool[#pool].order) or 0
+		if prev_order ~= nil then 
+			center.order = prev_order + 1
+		end
 		table.insert(pool, center)
 	end
 end

@@ -1062,6 +1062,10 @@ function loadAPIs()
         obj_table = SMODS.Seals,
         obj_buffer = {},
         rng_buffer = { 'Purple', 'Gold', 'Blue', 'Red' },
+        -- I immediately thought this was a table where (key, value) pairs were (value, key) pairs.
+        -- I'd call this something like remove_suffix_table or something?
+        -- alternatively, the purpose seems to be to get the object key from the name of
+        -- a badge, so badge_to_key, maybe?
         reverse_lookup = {},
         set = 'Seal',
         prefix = 's',
@@ -1878,4 +1882,63 @@ function loadAPIs()
         custom_message_config = { message = nil, color = nil, scale = nil },
         inject = function() end,
     }
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Enhancement
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Enhancement = SMODS.Center:extend {
+        set = 'Enhanced',
+        prefix = 'm',
+        atlas = 'centers',
+        required_params = {
+            'key',
+            -- table with keys `name` and `text`
+            'loc_txt'
+        },
+        -- other fields:
+        -- replace_base_card
+        -- if true, don't draw base card sprite and don't give base card's chips
+        -- no_suit
+        -- if true, enhanced card has no suit
+        -- no_rank
+        -- if true, enhanced card has no rank
+        -- any_suit
+        -- if true, enhanced card is any suit
+        -- always_scores
+        -- if true, card always scores
+        -- Future work: use ranks() and suits() for better control
+        register = function(self)
+            self.effect = self.effect or self.name
+            self.config = self.config or {}
+            assert(not (self.no_suit and self.any_suit))
+            SMODS.Enhancement.super.register(self)
+        end,
+        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars)
+            if specific_vars.nominal_chips and not self.replace_base_card then 
+                localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
+            end
+            SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars)
+            if specific_vars.bonus_chips then
+                localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips}}
+            end
+        end,
+        -- other methods:
+        -- calculate_enhancement(self, context, effect)
+    }
+    -- Note: `name`, `effect`, and `label` all serve the same purpose as
+    -- the name of the enhancement. In theory, `effect` serves to allow reusing
+    -- similar effects (ex. the Sinful jokers). But Balatro just uses them all
+    -- indiscriminately for enhancements.
+    -- `name` and `effect` are technically different for Bonus and Mult
+    -- cards but this never matters in practice; also `label` is a red herring,
+    -- I can't even find a single use of `label`.
+
+    -- It would be nice if the relevant functions for modding each class of object
+    -- would be documented.
+    -- For example, Card:set_ability sets the card's enhancement, which is not immediately
+    -- obvious.
+
+    -- TODO pos = { x = 0, y = 0 } should just be set as a default for all objects
+    -- with atlases
 end
