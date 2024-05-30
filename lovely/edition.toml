@@ -105,11 +105,11 @@ position = "after"
 payload = '''
 if self.edition then
     for k, v in pairs(G.P_CENTERS) do
-        if v.shader_key then
+        if v.shader then
             if self.edition[v.key:sub(3)] then
-                self.children.center:draw_shader(v.shader_key, nil, self.ARGS.send_to_shader)
+                self.children.center:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
                 if self.children.front and self.ability.effect ~= 'Stone Card' then
-                    self.children.front:draw_shader(v.shader_key, nil, self.ARGS.send_to_shader)
+                    self.children.front:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
                 end
             end
         end
@@ -128,7 +128,7 @@ if self.edition then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if v.apply_to_float then
             if self.edition[v.key:sub(3)] then
-                self.children.floating_sprite:draw_shader(v.shader_key, nil, self.ARGS.send_to_shader, nil, self.children.center, 2*scale_mod, 2*rotate_mod)
+                self.children.floating_sprite:draw_shader(v.shader, nil, self.ARGS.send_to_shader, nil, self.children.center, 2*scale_mod, 2*rotate_mod)
             end
         end
     end
@@ -146,7 +146,7 @@ if self.edition then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if v.apply_to_float then
             if self.edition[v.key:sub(3)] then
-                self.children.floating_sprite:draw_shader(v.shader_key, nil, nil, nil, self.children.center, scale_mod, rotate_mod)
+                self.children.floating_sprite:draw_shader(v.shader, nil, nil, nil, self.children.center, scale_mod, rotate_mod)
             end
         end
     end

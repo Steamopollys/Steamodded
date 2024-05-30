@@ -1872,6 +1872,27 @@ function loadAPIs()
     }
 
     -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Shader
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Shaders = {}
+    SMODS.Shader = SMODS.GameObject:extend {
+        obj_table = SMODS.Shaders,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'path',
+        },
+        set = 'Shader',
+        omit_prefix = true,
+        inject = function(self)
+            assert(self.path:sub(-3) == ".fs")
+            G.SHADERS[self.key] = love.graphics.newShader(SMODS.current_mod.path.."/assets/shaders/"..self.path)
+        end,
+        process_loc_text = function() end
+    }
+
+    -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Edition
     -------------------------------------------------------------------------------------------------
 
@@ -1898,23 +1919,17 @@ function loadAPIs()
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         required_params = {
             'key',
-            'loc_txt',
-            'shader_name'
+            'loc_txt'
         },
         -- other fields:
         -- extra_cost
+        -- shader
 
         -- TODO badge colours. need to check how Steamodded already does badge colors
-        -- Tooltips that populate values
-        -- Tooltips on jokers in game
         -- other methods:
         -- calculate(self)
         register = function(self)
-            self.shader_key = self.shader_name
-            if not G.SHADERS[self.shader_key] then
-                self.shader_path = SMODS.current_mod.path .. "/assets/shaders/" .. self.shader_name .. ".fs" --self.shader_path or (self.shader_key .. '.fs')
-                G.SHADERS[self.shader_key] = love.graphics.newShader(self.shader_path)
-            end
+            self.shader = self.shader or self.key
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
         end,
@@ -1955,7 +1970,7 @@ function loadAPIs()
         --         "{C:chips}+#1#{} chips"
         --     }
         -- },
-        shader_name = 'foil',
+        shader = 'foil',
         config = { chips = 50 },
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         in_shop = true,
@@ -1979,7 +1994,7 @@ function loadAPIs()
         --         "{C:mult}+#1#{} Mult"
         --     }
         -- },
-        shader_name = 'holo',
+        shader = 'holo',
         config = { mult = 10 },
         sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
         in_shop = true,
@@ -2003,7 +2018,7 @@ function loadAPIs()
         --         "{X:mult,C:white} X#1# {} Mult"
         --     }
         -- },
-        shader_name = 'polychrome',
+        shader = 'polychrome',
         config = { x_mult = 1.5 },
         sound = { sound = "polychrome1", per = 1.2, vol = 0.7 },
         in_shop = true,
@@ -2027,7 +2042,7 @@ function loadAPIs()
         --         "{C:dark_edition}+#1#{} Joker slot"
         --     }
         -- },
-        shader_name = 'negative',
+        shader = 'negative',
         config = { card_limit = 1 },
         sound = { sound = "negative", per = 1.5, vol = 0.4 },
         in_shop = true,
