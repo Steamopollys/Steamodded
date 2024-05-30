@@ -1135,13 +1135,12 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 		for _,v in ipairs(_options) do
 			local edition_option = {}
 			if type(v) == 'string' then
-				local negative_weight = 0
 				if v == "negative" and _no_neg then
 				else
 					if v == "polychrome" and _no_neg then
-						edition_option = { name = v, weight = (G.P_CENTERS["e_"..v].calc_weight(G.P_CENTERS["e_"..v]) + G.P_CENTERS["e_negative"].calc_weight(G.P_CENTERS["e_negative"])) }
+						edition_option = { name = v, weight = (G.P_CENTERS["e_"..v]:get_weight() + G.P_CENTERS["e_negative"]:get_weight()) }
 					else
-						edition_option = { name = v, weight = G.P_CENTERS["e_"..v].calc_weight(G.P_CENTERS["e_"..v]) }
+						edition_option = { name = v, weight = G.P_CENTERS["e_"..v]:get_weight() }
 					end
 					table.insert(available_editions, edition_option)
 				end
@@ -1152,17 +1151,15 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 
 		end
     else
-		local negative_weight = 0
 		for _,v in ipairs(G.P_CENTER_POOLS.Edition) do
 			local edition_option = {}
-			if v.key == "e_base" then
-			elseif v.key == "e_negative" and _no_neg then
+			if v.key == "e_base" or (v.key == "e_negative" and _no_neg) then
 			else
 				if v.in_shop then
 					if v.key == "e_polychrome" and _no_neg then
-						edition_option = { name = v.key:sub(3), weight = v.calc_weight(v) + G.P_CENTERS["e_negative"].calc_weight(G.P_CENTERS["e_negative"]) }
+						edition_option = { name = v.key:sub(3), weight = v:get_weight() + G.P_CENTERS["e_negative"]:get_weight() }
 					else
-						edition_option = { name = v.key:sub(3), weight = v.calc_weight(v) }
+						edition_option = { name = v.key:sub(3), weight = v:get_weight() }
 					end
 					table.insert(available_editions, edition_option)
 				end
@@ -1176,7 +1173,7 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
     for _,v in ipairs(available_editions) do
 		custom_weight = custom_weight + (v.weight) -- total all the weights of the polled editions
     end
-    -- sendDebugMessage("Edition weights: "..custom_weight, "EditionAPI")
+    sendDebugMessage("Edition weights: "..custom_weight, "EditionAPI")
     -- If not guaranteed, calculate the base card rate to maintain 4% chance of editions (scales with vouchers)
     if not _guaranteed then
         edition_rate = G.GAME.edition_rate
@@ -1184,14 +1181,14 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
         local base_card_rate = custom_weight / 4 * 96
         total_weight = custom_weight + base_card_rate -- total_weight*edition_rate*_modifier + base_weight
 		for _,v in ipairs(available_editions) do
-			v.weight = G.P_CENTERS["e_"..v.name].calc_weight(G.P_CENTERS["e_"..v.name], v.weight)
+			v.weight = G.P_CENTERS["e_"..v.name]:get_weight(v.weight)
 		end
     else
         total_weight = custom_weight    
     end
-    -- sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
-    -- sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
-    -- sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
+    sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
+    sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
+    sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
     
     -- Calculate whether edition is selected
     local weight_i = 0
@@ -1205,7 +1202,7 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
             sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
             if edition_poll > 1 - (weight_i)/total_weight then
                 sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
-                return v.name
+                return "e_"..v.name
             end
             if v.name == 'negative' then
                 weight_i = weight_i + v.weight*_modifier -- jank negative logic to maintain chance for other editions

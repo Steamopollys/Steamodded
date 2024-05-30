@@ -1937,9 +1937,10 @@ function loadAPIs()
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
         end,
-        calc_weight = function(self, given_weight)
-            if given_weight then
-                return given_weight
+        -- apply_modifier = true when G.GAME.edition_rate is to be applied
+        get_weight = function(self, apply_modifier)
+            if apply_modifier then
+                return self.weight -- make any modifications here when edition_rate is changed
             else
                 return self.weight
             end
@@ -1967,9 +1968,9 @@ function loadAPIs()
         in_shop = true,
         weight = 20,
         extra_cost = 2,
-        calc_weight = function(self, given_weight)
-            if given_weight then
-                return given_weight * G.GAME.edition_rate
+        get_weight = function(self, apply_modifier)
+            if apply_modifier then
+                return apply_modifier * G.GAME.edition_rate
             else
                 return self.weight
             end
@@ -1985,9 +1986,9 @@ function loadAPIs()
         in_shop = true,
         weight = 14,
         extra_cost = 3,
-        calc_weight = function(self, given_weight)
-            if given_weight then
-                return given_weight * G.GAME.edition_rate
+        get_weight = function(self, apply_modifier)
+            if apply_modifier then
+                return apply_modifier * G.GAME.edition_rate
             else
                 return self.weight
             end
@@ -2003,9 +2004,9 @@ function loadAPIs()
         in_shop = true,
         weight = 3,
         extra_cost = 5,
-        calc_weight = function(self, given_weight)
-            if given_weight then
-                return given_weight * G.GAME.edition_rate
+        get_weight = function(self, apply_modifier)
+            if apply_modifier then
+                return apply_modifier * G.GAME.edition_rate
             else
                 return self.weight
             end
@@ -2021,9 +2022,9 @@ function loadAPIs()
         in_shop = true,
         weight = 3,
         extra_cost = 5,
-        calc_weight = function(self, given_weight)
-            if given_weight then
-                return given_weight * (G.GAME.edition_rate - 1)
+        get_weight = function(self, apply_modifier)
+            if apply_modifier then
+                return apply_modifier * (G.GAME.edition_rate - 1)
             else
                 return self.weight
             end
