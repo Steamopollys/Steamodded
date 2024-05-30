@@ -2022,7 +2022,7 @@ function loadAPIs()
         --     }
         -- },
         shader_name = 'negative',
-        config = { card_limit = 10 },
+        config = { card_limit = 1 },
         sound = { sound = "negative", per = 1.5, vol = 0.4 },
         in_shop = true,
         weight = 3,
