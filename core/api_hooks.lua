@@ -993,13 +993,13 @@ end
 -- silent = boolean value
 function Card.set_edition(self, edition, immediate, silent)
 	-- Check to see if negative is being removed and reduce card_limit accordingly
-	if self.edition and self.edition.card_limit and self.added_to_deck then
-		if self.ability.consumeable then
+	if self.edition and self.edition.card_limit then
+		if self.ability.consumeable and self.area == G.consumeables then
 			G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
-		elseif self.ability.set == 'Joker' then
+		elseif self.ability.set == 'Joker' and self.area == G.jokers then
 			G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit
-		-- elseif self.ability.set == 'Default' or self.ability.set == 'Enhanced' then
-		--     G.hand.config.card_limit = G.hand.config.card_limit - self.edition.card_limit
+		elseif self.area == G.hand then
+			G.hand.config.card_limit = G.hand.config.card_limit - self.edition.card_limit
 		end
 	end
 	
@@ -1103,7 +1103,7 @@ function Card.set_edition(self, edition, immediate, silent)
 	if G.jokers and self.area == G.jokers then 
         check_for_unlock({type = 'modify_jokers'})
     end
-	
+
     self:set_cost()
 
 end
@@ -1206,3 +1206,4 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
     end
     return nil
 end
+
