@@ -1593,7 +1593,7 @@ function loadAPIs()
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('grim_create'))].card_key, 'A'
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
-                            if v.key ~= 'm_stone' then
+                            if v.key ~= 'm_stone' and not v.overrides_base_rank then
                                 cen_pool[#cen_pool + 1] = v
                             end
                         end
@@ -1637,7 +1637,7 @@ function loadAPIs()
                             pseudorandom_element(faces, pseudoseed('familiar_create'))
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
-                            if v.key ~= 'm_stone' then
+                            if v.key ~= 'm_stone' and not v.overrides_base_rank then
                                 cen_pool[#cen_pool + 1] = v
                             end
                         end
@@ -1681,7 +1681,7 @@ function loadAPIs()
                             pseudorandom_element(numbers, pseudoseed('incantation_create'))
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
-                            if v.key ~= 'm_stone' then
+                            if v.key ~= 'm_stone' and not v.overrides_base_rank then
                                 cen_pool[#cen_pool + 1] = v
                             end
                         end
@@ -1913,6 +1913,10 @@ function loadAPIs()
         -- if true, enhanced card has no suit
         -- no_rank
         -- if true, enhanced card has no rank
+        -- overrides_base_rank
+        -- Set to true if your enhancement overrides the base card's rank.
+        -- This prevents rank generators like Familiar creating cards
+        -- whose rank is overridden.
         -- any_suit
         -- if true, enhanced card is any suit
         -- always_scores
@@ -1924,6 +1928,7 @@ function loadAPIs()
         register = function(self)
             self.config = self.config or {}
             assert(not (self.no_suit and self.any_suit))
+            if self.no_rank then self.overrides_base_rank = true end
             SMODS.Enhancement.super.register(self)
         end,
         -- Produces the description of the whole playing card
