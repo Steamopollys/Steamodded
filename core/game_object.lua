@@ -1047,6 +1047,10 @@ function loadAPIs()
         },
         set = 'Blind',
         get_obj = function(self, key) return G.P_BLINDS[key] end,
+        register = function(self)
+            self.name = self.name or self.key
+            SMODS.Blind.super.register(self)
+        end,
         inject = function(self, i)
             -- no pools to query length of, so we assign order manually
             if not self.taken_ownership then
