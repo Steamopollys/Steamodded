@@ -160,9 +160,16 @@ position = 'at'
 payload = '''
 function Card:get_nominal(mod)
 	local mult = 1
+	local rank_mult = 1
 	if mod == 'suit' then mult = 10000 end
-	if self.ability.effect == 'Stone Card' then mult = -10000 end
-	return 10*self.base.nominal + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal + 0.000001*self.unique_val
+	if self.ability.effect == 'Stone Card' or (self.config.center.no_suit and self.config.center.no_rank) then 
+		mult = -10000
+	elseif self.config.center.no_suit then
+		mult = 0
+	elseif self.config.center.no_rank then
+		rank_mult = 0
+	end
+	return 10*self.base.nominal*rank_mult + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal*rank_mult + 0.000001*self.unique_val
 end'''
 
 # Card:set_base()
