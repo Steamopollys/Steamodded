@@ -1701,6 +1701,7 @@ function loadAPIs()
     SMODS.Blind:take_ownership('eye', {
         set_blind = function(self, blind, reset, silent)
             if not reset then
+                self.hands = {}
                 for _, v in ipairs(G.handlist) do
                     self.hands[v] = false
                 end
