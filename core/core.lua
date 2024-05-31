@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0530a-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0530h-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -466,12 +466,7 @@ end
 function G.FUNCS.exit_mods(e)
     if SMODS.full_restart then
 		-- launch a new instance of the game and quit the current one
-		if love.system.getOS() ~= 'OS X' then
-        	love.system.openURL('steam://rungameid/2379780')
-		else
-			os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
-		end
-		love.event.quit()
+		SMODS.restart_game()
     elseif SMODS.partial_reload then
 		-- re-initialize steamodded
         SMODS.reload()
@@ -1262,7 +1257,10 @@ function SMODS.insert_pool(pool, center, replace)
             end
 		end
     else
-		center.order = #pool+1
+		local prev_order = (pool[#pool] and pool[#pool].order) or 0
+		if prev_order ~= nil then 
+			center.order = prev_order + 1
+		end
 		table.insert(pool, center)
 	end
 end
@@ -1342,16 +1340,27 @@ function SMODS.reload()
     initSteamodded()
 end
 
+function SMODS.restart_game()
+	if love.system.getOS() ~= 'OS X' then
+		love.system.openURL('steam://rungameid/2379780')
+	else
+		os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
+	end
+	love.event.quit()
+end
+
 function SMODS.create_mod_badges(obj, badges)
 	if not G.SETTINGS.no_mod_badges and obj and obj.mod and obj.mod.display_name then
-        local mods = { obj.mod }
-		local set = { [obj.mod.id] = true }
+        local mods = {}
+        badges.mod_set = badges.mod_set or {}
+		if not badges.mod_set[obj.mod.id] then table.insert(mods, obj.mod) end
+		badges.mod_set[obj.mod.id] = true
 		if obj.dependencies then
             for _, v in ipairs(obj.dependencies) do
 				local m = SMODS.Mods[v]
-				if not set[m.id] then
-					table.insert(mods, SMODS.Mods[v])
-					set[m.id] = true
+				if not badges.mod_set[m.id] then
+					table.insert(mods, m)
+					badges.mod_set[m.id] = true
 				end
 			end
 		end

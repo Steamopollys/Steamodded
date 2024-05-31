@@ -77,12 +77,24 @@ payload = 'function generate_card_ui(_c, full_UI_table, specific_vars, card_type
 [[patches]]
 [patches.pattern]
 target = 'functions/common_events.lua'
+pattern = "full_UI_table.name = localize{type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name}"
+position = 'at'
+match_indent = true
+payload = '''
+if not _c.generate_ui or type(_c.generate_ui) ~= 'function' then
+	full_UI_table.name = localize{type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name}
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
 pattern = "elseif _c.set == 'Joker' then"
 position = 'before'
 match_indent = true
 payload = '''
 elseif _c.generate_ui and type(_c.generate_ui) == 'function' then
-	_c:generate_ui(info_queue, card, desc_nodes, specific_vars)
+	_c:generate_ui(info_queue, card, desc_nodes, specific_vars, full_UI_table)
 	if specific_vars and specific_vars.pinned then info_queue[#info_queue+1] = {key = 'pinned_left', set = 'Other'} end
     if specific_vars and specific_vars.sticker then info_queue[#info_queue+1] = {key = string.lower(specific_vars.sticker)..'_sticker', set = 'Other'} end
 '''
@@ -225,6 +237,7 @@ if AUT.card_type ~= 'Locked' and AUT.card_type ~= 'Undiscovered' then
 	if card.config and card.config.tag then
 		SMODS.create_mod_badges(SMODS.Tags[card.config.tag.key], badges)
 	end
+	badges.mod_set = nil
 end
 '''
 
