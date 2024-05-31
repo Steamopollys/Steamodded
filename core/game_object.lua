@@ -2017,6 +2017,10 @@ function loadAPIs()
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
         end,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.misc.labels, self.key:sub(3), self.loc_txt, 'label')
+            SMODS.Edition.super.process_loc_text(self)
+        end,
         -- apply_modifier = true when G.GAME.edition_rate is to be applied
         get_weight = function(self, apply_modifier)
             if apply_modifier then

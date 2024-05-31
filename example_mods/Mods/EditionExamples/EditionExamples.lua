@@ -322,6 +322,7 @@ SMODS.Edition({
     key = "greyscale",
     loc_txt = {
         name = "Greyscale",
+        label = "Greyscale",
         text = {
             "{C:chips}+#1#{} chips, {C:mult}+#2#{} Mult",
             "and {X:mult,C:white}X#3#{} Mult"
@@ -344,6 +345,7 @@ SMODS.Edition({
     key = "fluorescent",
     loc_txt = {
         name = "Fluorescent",
+        label = "Fluorescent",
         text = {
             "Earn {C:money}$#1#{} when this",
             "card is scored"
@@ -366,6 +368,7 @@ SMODS.Edition({
     key = "anaglyphic",
     loc_txt = {
         name = "Anaglyphic",
+        label = "Anaglyphic",
         text = {
             "{C:chips}+#1#{} Chips",
             "{C:red}+#2#{} Mult"
@@ -388,6 +391,7 @@ SMODS.Edition({
     key = "overexposed",
     loc_txt = {
         name = "Overexposed",
+        label = "Overexposed",
         text = {
             "{C:green}Retrigger{} this card"
         }
