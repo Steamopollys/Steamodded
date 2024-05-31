@@ -50,7 +50,8 @@ pattern = '''
 (?<indent>[\t ]*)if v == 'foil' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_foil'\] end
 [\t ]*if v == 'holographic' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_holo'\] end
 [\t ]*if v == 'polychrome' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_polychrome'\] end
-[\t ]*if v == 'negative' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_negative'\] end'''
+[\t ]*if v == 'negative' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_negative'\] end
+[\t ]*if v == 'negative_consumable' then info_queue\[#info_queue\+1\] = \{key = 'e_negative_consumable', set = 'Edition', config = \{extra = 1\}\} end'''
 position = 'at'
 payload = '''
 v = (v == 'holographic' and 'holo' or v)
@@ -60,7 +61,7 @@ end
 if G.P_CENTERS['e_'..v] and G.P_CENTERS['e_'..v].set == 'Edition' then
     info_queue[#info_queue + 1] = G.P_CENTERS['e_'..v]
 end
-if v == 'negative_playing_card' then info_queue[#info_queue+1] = {key = 'e_negative_playing_card', set = 'Edition', config = {extra = 1}} end'''
+if v:sub(1,9) == 'negative_' then info_queue[#info_queue+1] = {key = 'e_'..v, set = 'Edition', config = {extra = G.P_CENTERS['e_negative'].config.card_limit}} end'''
 line_prepend = "$indent"
 
 # get_badge_colour()
@@ -240,7 +241,7 @@ target = "cardarea.lua"
 pattern = "card:remove_from_area()"
 position = "before"
 payload = '''
-if card.edition and card.edition.card_limit then
+if card.edition and card.edition.card_limit and not self == G.deck then
     self.config.card_limit = self.config.card_limit - card.edition.card_limit
 end'''
 match_indent = true
