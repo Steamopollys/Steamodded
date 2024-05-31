@@ -855,7 +855,9 @@ function loadAPIs()
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
-            full_UI_table.name = localize{type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name}
+            if not full_UI_table.name then
+                full_UI_table.name = localize{type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name}
+            end
             if res.main_start then
                 desc_nodes[#desc_nodes + 1] = res.main_start
             end
