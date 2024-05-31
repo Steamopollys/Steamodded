@@ -59,7 +59,8 @@ if G.P_CENTERS[v] and G.P_CENTERS[v].set == 'Edition' then
 end
 if G.P_CENTERS['e_'..v] and G.P_CENTERS['e_'..v].set == 'Edition' then
     info_queue[#info_queue + 1] = G.P_CENTERS['e_'..v]
-end'''
+end
+if v == 'negative_playing_card' then info_queue[#info_queue+1] = {key = 'e_negative_playing_card', set = 'Edition', config = {extra = 1}} end'''
 line_prepend = "$indent"
 
 # get_badge_colour()
@@ -217,4 +218,46 @@ if next(eval) and eval.edition.repetitions then
         reps[#reps+1] = eval
     end
 end'''
+match_indent = true
+
+
+
+# Negative playing card logic
+[[patches]]
+[patches.pattern]
+target = "cardarea.lua"
+pattern = "self:emplace(card, nil, stay_flipped)"
+position = "before"
+payload = '''
+if card.edition and card.edition.card_limit then
+    self.config.card_limit = self.config.card_limit + card.edition.card_limit
+    self:draw_card_from(area, stay_flipped, discarded_only)
+end'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "cardarea.lua"
+pattern = "card:remove_from_area()"
+position = "before"
+payload = '''
+if card.edition and card.edition.card_limit then
+    self.config.card_limit = self.config.card_limit - card.edition.card_limit
+end'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "badges[#badges + 1] = 'negative_consumable'"
+position = "after"
+payload = '''
+elseif self.edition.type == 'negative' and self.playing_card then
+    badges[#badges + 1] = 'negative_playing_card'
+'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "if v == 'negative_consumable' then v = 'negative' end"
+position = "at"
+payload = '''if v == 'negative_consumable' or v == 'negative_playing_card' then v = 'negative' end'''
 match_indent = true

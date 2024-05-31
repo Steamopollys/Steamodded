@@ -2047,6 +2047,17 @@ function loadAPIs()
         return cards
     end
 
+    -- loc_txt for negative playing cards
+    -- should probably be in a utility method somewhere else
+    function SMODS.GameObject:process_loc_text()
+        SMODS.process_loc_text(G.localization.descriptions.Edition, "e_negative_playing_card", {
+            name = "Negative",
+            text = {
+                "{C:dark_edition}+#1#{} hand size"
+            }
+        })
+        SMODS.process_loc_text(G.localization.misc.labels, "e_negative_playing_card", {"+#1# hand size"})
+    end
 
     SMODS.Edition:take_ownership('foil',{
         shader = 'foil',

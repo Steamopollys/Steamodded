@@ -1048,23 +1048,19 @@ function Card.set_edition(self, edition, immediate, silent)
 	for k, v in pairs(G.P_CENTERS['e_'..edition_type].config) do
 		self.edition[k] = v
 		if k == 'card_limit' and G.jokers and G.consumeables then
-			-- for k2,v2 in pairs(self.container) do
-			--     sendDebugMessage(k2..": "..tostring(v2))
-			-- end
 			if self.ability.consumeable then
 				G.consumeables.config.card_limit = G.consumeables.config.card_limit + v
 			elseif self.ability.set == 'Joker' then
 				G.jokers.config.card_limit = G.jokers.config.card_limit + v
-			-- TO BE WORKED ON - NEGATIVE PLAYING CARDS --
-			-- elseif self.ability.set == 'Default' or self.ability.set == 'Enhanced' then
-			--     G.hand.config.card_limit = G.hand.config.card_limit + options.config.values[k]
-			--     G.E_MANAGER:add_event(Event({
-			--         trigger = 'immediate',
-			--         func = function()
-			--             G.FUNCS.draw_from_deck_to_hand()
-			--             return true
-			--         end
-			--     }))
+			elseif self.area == G.hand and not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) then
+			    G.hand.config.card_limit = G.hand.config.card_limit + v
+			    G.E_MANAGER:add_event(Event({
+			        trigger = 'immediate',
+			        func = function()
+			            G.FUNCS.draw_from_deck_to_hand()
+			            return true
+			        end
+			    }))
 			end
 		end
 	end
@@ -1107,7 +1103,7 @@ function Card.set_edition(self, edition, immediate, silent)
 	if G.jokers and self.area == G.jokers then 
         check_for_unlock({type = 'modify_jokers'})
     end
-
+	
     self:set_cost()
 
 end
