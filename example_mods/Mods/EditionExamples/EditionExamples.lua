@@ -12,77 +12,6 @@ local mod_path = SMODS.current_mod.path
 -- SMODS.Sprite:new("Neon", mod.path, "neon.png", 71, 95, "asset_atli"):register()
 -- SMODS.Sprite:new("Grey", mod.path, "grey.png", 71, 95, "asset_atli"):register()
 
--- local fluorDef = {
---     name = "Fluorescent",
---     slug = "fluorescent",
---     config = { labels = {'mult_mod'}, values = {100} },
---     shader_path = mod.path .. "/assets/shaders/fluorescent.fs",
---     loc_txt = { name = "Fluorescent", text = {"{C:mult}+#1#{} Mult"}},
---     discovered = true,
---     unlocked = true,
---     unlock_condition = {},
---     badge_colour = G.C.EDITION,
---     extra_cost = 5,
---     calculate = function(self, context)
---         if context.edition or (context.cardarea == G.play and self.playing_card) then
---             ret = {}
---             for k, v in pairs(self.edition) do
---                 ret[k] = v
---             end
---             return ret
---         end
---     end
--- }
-
--- local overexposedDef = {
---     name = "Overexposed",
---     slug = "overexposed",
---     config = { labels = {'repetitions'}, values = {1} },
---     shader_path = mod.path .. "/assets/shaders/overexposed.fs",
---     loc_txt = { name = "Overexposed", text = {"{C:money}+$#1#{} when a hand","is scored"}},
---     discovered = true,
---     unlocked = true,
---     unlock_condition = {},
---     apply_to_float = true,
---     badge_colour = G.C.DARK_EDITION,
---     weight = 5,
---     in_shop = true,
---     extra_cost = 4,
---     calculate = function(self, context)
---         if context.repetition then
---             return {
---                 message = localize('k_again_ex'),
---                 repetitions = 1,
---                 card = self
---             }
---         end
---     end
--- }
-
-
--- local anaglyphDef = {
---     name = "Anaglyphic",
---     slug = "anaglyphic",
---     config = { labels = {'chip_mod', 'mult_mod'}, values = {-50, 50} },
---     shader_path = mod.path .. "/assets/shaders/anaglyphic.fs",
---     loc_txt = { name = "Anaglyphic", text = {"{C:chips}#1#{} chips, {C:mult}+#2#{} Mult"}},
---     discovered = true,
---     unlocked = true,
---     unlock_condition = {},
---     badge_colour = G.C.DARK_EDITION,
---     weight = 10,
---     in_shop = true,
---     extra_cost = 1,
---     calculate = function(self, context)
---         if context.edition or (context.cardarea == G.play and self.playing_card) then
---             ret = {}
---             for k, v in pairs(self.edition) do
---                 ret[k] = v
---             end
---             return ret
---         end
---     end
--- }
 
 -- local flippedDef = {
 --     name = "Monochrome",
@@ -128,13 +57,6 @@ local mod_path = SMODS.current_mod.path
 --         end
 --     end
 -- }
-
--- SMODS.Edition:new(greyDef):register()
--- SMODS.Edition:new(anaglyphDef):register()
--- SMODS.Edition:new(overexposedDef):register()
--- SMODS.Edition:new(fluorDef):register()
--- SMODS.Edition:new(flippedDef):register()
--- SMODS.Edition:new(sepiaDef):register()    
     
 -- local c_high_exposure = SMODS.Spectral:new('High Exposure', 'high_exposure', {}, {
 --     x = 0,
@@ -319,7 +241,7 @@ SMODS.Consumable({
             func = function()
                 local selected_joker = pseudorandom_element(eligible_jokers, pseudoseed('seed'))
                 local selected_edition = poll_edition("aura", nil, true, false)
-                selected_joker.set_edition(selected_joker, 'edex_greyscale')
+                selected_joker.set_edition(selected_joker, 'e_edex_greyscale')
                 return true
             end
         }))
@@ -392,7 +314,10 @@ SMODS.Back({
     discovered = true,
     unlocked = true
 })
-
+SMODS.Shader({key = 'greyscale', path = 'greyscale.fs'})
+SMODS.Shader({key = 'fluorescent', path = 'fluorescent.fs'})
+SMODS.Shader({key = 'anaglyphic', path = 'anaglyphic.fs'})
+SMODS.Shader({key = 'overexposed', path = 'overexposed.fs'})
 SMODS.Edition({
     key = "greyscale",
     loc_txt = {
@@ -402,45 +327,83 @@ SMODS.Edition({
             "and {X:mult,C:white}X#3#{} Mult"
         }
     },
+    shader = "greyscale",
     discovered = true,
     unlocked = true,
-    shader_path = mod_path .. "/assets/shaders/greyscale.fs",
-    shader_name = 'greyscale',
     config = { chips = 200, mult = 10, x_mult = 2 },
     in_shop = true,
     weight = 8,
     extra_cost = 6,
     apply_to_float = true,
-    loc_vars = function(self, info_queue, center)
+    loc_vars = function(self)
         return { vars = { self.config.chips, self.config.mult, self.config.x_mult } }
     end
 })
 
+SMODS.Edition({
+    key = "fluorescent",
+    loc_txt = {
+        name = "Fluorescent",
+        text = {
+            "Earn {C:money}$#1#{} when this",
+            "card is scored"
+        }
+    },
+    discovered = true,
+    unlocked = true,
+    shader = 'fluorescent',
+    config = { p_dollars = 3 },
+    in_shop = true,
+    weight = 8,
+    extra_cost = 4,
+    apply_to_float = true,
+    loc_vars = function(self)
+        return { vars = {self.config.p_dollars}}
+    end
+})
 
--- local greyDef = {
---     name = "Greyscale",
---     key = "greyscale",
---     config = { labels = {'chip_mod','mult_mod','x_mult_mod'}, values = {200, 10, 2} },
---     shader_path = mod_path .. "/assets/shaders/greyscale.fs",
-    
---     loc_txt = { name = "Greyscale", text = {"{C:chips}+#1#{} chips, {C:mult}+#2#{} Mult", "and {X:mult,C:white}X#3#{} Mult"}},
---     discovered = true,
---     unlocked = true,
---     unlock_condition = {},
---     apply_to_float = true,
---     weight = 8,
---     in_shop = true,
---     extra_cost = 6,
---     calculate = function(self, context)
---         if context.edition or (context.cardarea == G.play and self.playing_card) then
---             ret = {}
---             for k, v in pairs(self.edition) do
---                 ret[k] = v
---             end
---             return ret
---         end
---     end
--- }
+SMODS.Edition({
+    key = "anaglyphic",
+    loc_txt = {
+        name = "Anaglyphic",
+        text = {
+            "{C:chips}+#1#{} Chips",
+            "{C:red}+#2#{} Mult"
+        }
+    },
+    discovered = true,
+    unlocked = true,
+    shader = 'anaglyphic',
+    config = { chips = 10, mult = 4 },
+    in_shop = true,
+    weight = 8,
+    extra_cost = 4,
+    apply_to_float = true,
+    loc_vars = function(self)
+        return { vars = {self.config.chips, self.config.mult}}
+    end
+})
+
+SMODS.Edition({
+    key = "overexposed",
+    loc_txt = {
+        name = "Overexposed",
+        text = {
+            "{C:green}Retrigger{} this card"
+        }
+    },
+    discovered = true,
+    unlocked = true,
+    shader = 'overexposed',
+    config = { repetitions = 1 },
+    in_shop = true,
+    weight = 8,
+    extra_cost = 4,
+    apply_to_float = true,
+    loc_vars = function(self)
+        return {}
+    end
+})
 
 
 

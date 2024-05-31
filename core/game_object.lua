@@ -26,6 +26,9 @@ function loadAPIs()
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
         end
+        if o.mod and not o.raw_shader_key then
+            if o['shader'] then o['shader'] = ('%s_%s'):format(o.mod.prefix, o['shader']) end
+        end
         setmetatable(o, self)
         for _, v in ipairs(o.required_params or {}) do
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
@@ -1888,16 +1891,23 @@ function loadAPIs()
         obj_table = SMODS.Shaders,
         obj_buffer = {},
         required_params = {
-            'name', -- this should be the name of the shader file
+            'key',
+            'path',
         },
         set = 'Shader',
         omit_prefix = true,
         inject = function(self)
-            G.SHADERS[self.name] = love.graphics.newShader(('%sassets/shaders/%s.fs'):format(SMODS.current_mod.path,self.name))
+            assert(self.path:sub(-3) == ".fs")
+            G.SHADERS[self.key] = love.graphics.newShader(SMODS.current_mod.path.."/assets/shaders/"..self.path)
         end,
         register = function(self)
+            if self.registered then 
+                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+                return
+            end
+            self.original_key = self.key
             if not self.raw_key and self.mod then
-                self.key = ('%s_%s'):format(self.mod.prefix, self.name)
+                self.key = ('%s_%s'):format(self.mod.prefix, self.key)
             end
             SMODS.Shader.super.register(self)
         end,

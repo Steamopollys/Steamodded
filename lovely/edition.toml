@@ -115,6 +115,18 @@ if self.edition then
 end'''
 match_indent = true
 
+# Remove prefix from shader key when calling send()
+[[patches]]
+[patches.pattern]
+target = "engine/sprite.lua"
+pattern = "if _send then G.SHADERS[_shader or 'dissolve']:send(_shader,_send) end"
+position = "at"
+payload = '''
+if _send then 
+    G.SHADERS[_shader or 'dissolve']:send((SMODS.Shaders[_shader or 'dissolve'] and SMODS.Shaders[_shader or 'dissolve'].original_key) or _shader,_send)
+end'''
+match_indent = true
+
 # Inject change to edition cost in shop
 [[patches]]
 [patches.regex]
