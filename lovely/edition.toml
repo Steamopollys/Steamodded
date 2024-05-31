@@ -54,8 +54,10 @@ pattern = '''
 [\t ]*if v == 'negative' then info_queue\[#info_queue\+1\] = G\.P_CENTERS\['e_negative'\] end'''
 position = 'at'
 payload = '''
-sendDebugMessage(tostring(v))
 v = (v == 'holographic' and 'holo' or v)
+if G.P_CENTERS[v] and G.P_CENTERS[v].set == 'Edition' then
+    info_queue[#info_queue + 1] = G.P_CENTERS[v]
+end
 if G.P_CENTERS['e_'..v] and G.P_CENTERS['e_'..v].set == 'Edition' then
     info_queue[#info_queue + 1] = G.P_CENTERS['e_'..v]
 end'''
