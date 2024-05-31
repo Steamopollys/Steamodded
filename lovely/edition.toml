@@ -70,7 +70,7 @@ position = 'before'
 match_indent = true
 payload = '''
 for _, v in ipairs(G.P_CENTER_POOLS.Edition) do
-	G.BADGE_COL[v.key] = v.badge_colour
+	G.BADGE_COL[v.key:sub(3)] = v.badge_colour
 end
 '''
 
