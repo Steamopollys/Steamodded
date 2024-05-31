@@ -27,8 +27,7 @@ if _card.edition then
 end
 found_index = found_index + 1
 if found_index > #G.P_CENTER_POOLS.Edition then found_index = found_index - #G.P_CENTER_POOLS.Edition end
-local _edition = G.P_CENTER_POOLS.Edition[found_index].key
-print(("debug setting edition: %s"):format(_edition))'''
+local _edition = G.P_CENTER_POOLS.Edition[found_index].key'''
 line_prepend = "$indent"
 
 
