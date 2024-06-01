@@ -2063,7 +2063,7 @@ function loadAPIs()
                 return self.weight
             end
         end,
-        loc_vars = function(self, info_queue, center)
+        loc_vars = function(self)
             return { vars = { self.config.chips } }
         end
     })
@@ -2081,7 +2081,7 @@ function loadAPIs()
                 return self.weight
             end
         end,
-        loc_vars = function(self, info_queue, center)
+        loc_vars = function(self)
             return { vars = { self.config.mult } }
         end
     })
@@ -2099,7 +2099,7 @@ function loadAPIs()
                 return self.weight
             end
         end,
-        loc_vars = function(self, info_queue, center)
+        loc_vars = function(self)
             return { vars = { self.config.x_mult } }
         end
     })
@@ -2117,7 +2117,7 @@ function loadAPIs()
                 return self.weight
             end
         end,
-        loc_vars = function(self, info_queue, center)
+        loc_vars = function(self)
             return { vars = { self.config.card_limit } }
         end,
         process_loc_text = function(self)
