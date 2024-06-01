@@ -55,13 +55,15 @@ pattern = '''
 position = 'at'
 payload = '''
 v = (v == 'holographic' and 'holo' or v)
+if v:sub(1,9) == 'negative_' then
+    info_queue[#info_queue+1] = {key = 'e_'..v, set = 'Edition', config = {extra = G.P_CENTERS['e_negative'].config.card_limit}}
+end
 if G.P_CENTERS[v] and G.P_CENTERS[v].set == 'Edition' then
     info_queue[#info_queue + 1] = G.P_CENTERS[v]
 end
 if G.P_CENTERS['e_'..v] and G.P_CENTERS['e_'..v].set == 'Edition' then
     info_queue[#info_queue + 1] = G.P_CENTERS['e_'..v]
-end
-if v:sub(1,9) == 'negative_' then info_queue[#info_queue+1] = {key = 'e_'..v, set = 'Edition', config = {extra = G.P_CENTERS['e_negative'].config.card_limit}} end'''
+end'''
 line_prepend = "$indent"
 
 # get_badge_colour()
