@@ -253,7 +253,7 @@ target = "card.lua"
 pattern = "badges[#badges + 1] = 'negative_consumable'"
 position = "after"
 payload = '''
-elseif self.edition.type == 'negative' and self.playing_card then
+elseif self.edition.type == 'negative' and (self.ability.set == 'Enhanced' or self.ability.set == 'Default') then
     badges[#badges + 1] = 'negative_playing_card'
 '''
 match_indent = true
