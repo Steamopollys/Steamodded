@@ -2127,9 +2127,7 @@ function loadAPIs()
                     "{C:dark_edition}+#1#{} hand size"
                 }
             })
-            SMODS.process_loc_text(G.localization.misc.labels, "e_negative_playing_card", {"+#1# hand size"})
-            SMODS.process_loc_text(G.localization.misc.labels, self.key:sub(3), self.loc_txt, 'label')
-            SMODS.Edition.super.process_loc_text(self)
+            SMODS.Edition.process_loc_text(self)
         end,
     })
 
