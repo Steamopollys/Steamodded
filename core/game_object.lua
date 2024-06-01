@@ -2081,7 +2081,7 @@ function loadAPIs()
         weight = 3,
         extra_cost = 5,
         get_weight = function(self, apply_modifier)
-            return (apply_modifier and G.P_CENTERS["e_negative"]. weight + G.GAME.edition_rate*self.weight or self.weight)
+            return (apply_modifier and (G.GAME.edition_rate - 1)*G.P_CENTERS["e_negative"]. weight + G.GAME.edition_rate*self.weight or self.weight)
         end,
         loc_vars = function(self)
             return { vars = { self.config.x_mult } }
