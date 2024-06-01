@@ -241,7 +241,7 @@ target = "cardarea.lua"
 pattern = "card:remove_from_area()"
 position = "before"
 payload = '''
-if card.edition and card.edition.card_limit and not self == G.deck then
+if card.edition and card.edition.card_limit and (card.area == G.hand or card.area == G.play) then
     self.config.card_limit = self.config.card_limit - card.edition.card_limit
 end'''
 match_indent = true
