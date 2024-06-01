@@ -281,14 +281,12 @@ local function initializeModUIFunctions()
 end
 
 function initSteamodded()
+    initGlobals()
     SMODS.current_mod = nil
     boot_print_stage("Loading APIs")
     loadAPIs()
     boot_print_stage("Loading Mods")
     loadMods(SMODS.MODS_DIR)
-
-    initGlobals()
-
     initializeModUIFunctions()
     boot_print_stage("Injecting Items")
     SMODS.injectItems()
