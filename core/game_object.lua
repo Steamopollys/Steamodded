@@ -2027,11 +2027,7 @@ function loadAPIs()
         end,
         -- apply_modifier = true when G.GAME.edition_rate is to be applied
         get_weight = function(self, apply_modifier)
-            if apply_modifier then
-                return self.weight -- make any modifications here when edition_rate is changed
-            else
-                return self.weight
-            end
+            return self.weight
         end
     }
 
@@ -2054,8 +2050,8 @@ function loadAPIs()
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         weight = 20,
         extra_cost = 2,
-        get_weight = function(self, apply_modifier)
-            return (apply_modifier and G.GAME.edition_rate*self.weight or self.weight)
+        get_weight = function(self)
+            return G.GAME.edition_rate*self.weight
         end,
         loc_vars = function(self)
             return { vars = { self.config.chips } }
@@ -2067,8 +2063,8 @@ function loadAPIs()
         sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
         weight = 14,
         extra_cost = 3,
-        get_weight = function(self, apply_modifier)
-            return (apply_modifier and G.GAME.edition_rate*self.weight or self.weight)
+        get_weight = function(self)
+            return G.GAME.edition_rate*self.weight
         end,
         loc_vars = function(self)
             return { vars = { self.config.mult } }
@@ -2080,8 +2076,8 @@ function loadAPIs()
         sound = { sound = "polychrome1", per = 1.2, vol = 0.7 },
         weight = 3,
         extra_cost = 5,
-        get_weight = function(self, apply_modifier)
-            return (apply_modifier and (G.GAME.edition_rate - 1)*G.P_CENTERS["e_negative"]. weight + G.GAME.edition_rate*self.weight or self.weight)
+        get_weight = function(self)
+            return (G.GAME.edition_rate - 1)*G.P_CENTERS["e_negative"].weight + G.GAME.edition_rate*self.weight 
         end,
         loc_vars = function(self)
             return { vars = { self.config.x_mult } }
@@ -2093,7 +2089,7 @@ function loadAPIs()
         sound = { sound = "negative", per = 1.5, vol = 0.4 },
         weight = 3,
         extra_cost = 5,
-        get_weight = function(self, apply_modifier)
+        get_weight = function(self)
             return self.weight
         end,
         loc_vars = function(self)

@@ -1114,20 +1114,20 @@ end
 -- _no_neg = boolean value to disable negative edition
 -- _guaranteed = boolean value to determine whether an edition is guaranteed
 -- _options = list of keys of editions to include in the poll
--- OR list of tables { name = string (key without e_), weight = number }
+-- OR list of tables { name = key, weight = number }
 function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
     local _modifier = 1
     local edition_poll = pseudorandom(pseudoseed(_key or 'edition_generic')) -- Generate the poll value
 	local available_editions = {} -- Table containing a list of editions and their weights
 
 	if not _options then
-		_options = {'negative', 'polychrome', 'holo', 'foil'}
+		_options = {'e_negative', 'e_polychrome', 'e_holo', 'e_foil'}
 		if _key == "wheel_of_fortune" or _key == "aura" then -- set base game edition polling
 		else
 			for _,v in ipairs(G.P_CENTER_POOLS.Edition) do
 				if v.in_shop then
 					sendDebugMessage(v.key)
-					table.insert(_options, v.key:sub(3))
+					table.insert(_options, v.key)
 				end
 			end
 		end
@@ -1135,8 +1135,10 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 	for _,v in ipairs(_options) do
 		local edition_option = {}
 		if type(v) == 'string' then
-			edition_option = { name = v, weight = G.P_CENTERS["e_"..v].weight }
+			assert(string.sub(v, 1, 2) == 'e_')
+			edition_option = { name = v, weight = G.P_CENTERS[v].weight }
 		elseif type(v) == 'table' then
+			assert(string.sub(v.name, 1, 2) == 'e_')
 			edition_option = { name = v.name, weight = v.weight }
 		end
 		table.insert(available_editions, edition_option)
@@ -1147,33 +1149,33 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
     for _,v in ipairs(available_editions) do
 		total_weight = total_weight + (v.weight) -- total all the weights of the polled editions
     end
-    sendDebugMessage("Edition weights: "..total_weight, "EditionAPI")
+    -- sendDebugMessage("Edition weights: "..total_weight, "EditionAPI")
     -- If not guaranteed, calculate the base card rate to maintain base 4% chance of editions
     if not _guaranteed then
         _modifier = _mod or 1
         total_weight = total_weight + (total_weight / 4 * 96)  -- Find total weight with base_card_rate as 96%
 		for _,v in ipairs(available_editions) do
-			v.weight = G.P_CENTERS["e_"..v.name]:get_weight(true) -- Apply game modifiers where appropriate (defined in edition declaration)
+			v.weight = G.P_CENTERS[v.name]:get_weight() -- Apply game modifiers where appropriate (defined in edition declaration)
 		end
     
     end
-    sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
-    sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
-    sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
+    -- sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
+    -- sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
+    -- sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
     
     -- Calculate whether edition is selected
     local weight_i = 0
     for _,v in ipairs(available_editions) do
-			weight_i = weight_i + v.weight*_modifier
-			sendDebugMessage(v.name.." weight is "..v.weight*_modifier)
-            sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
-            if edition_poll > 1 - (weight_i)/total_weight then
-				if not (v.name == 'negative' and _no_neg) then -- skip return if negative is selected and _no_neg is true
-					sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
-					return "e_"..v.name
-				end
-            end
-        end
+		weight_i = weight_i + v.weight*_modifier
+		-- sendDebugMessage(v.name.." weight is "..v.weight*_modifier)
+		-- sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
+		if edition_poll > 1 - (weight_i)/total_weight then
+			if not (v.name == 'e_negative' and _no_neg) then -- skip return if negative is selected and _no_neg is true
+				-- sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
+				return v.name
+			end
+		end
+	end
 
     return nil
 end
