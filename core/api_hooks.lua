@@ -866,7 +866,7 @@ end
 
 function create_UIBox_your_collection_editions(exit)
     local deck_tables = {}
-    local rows, cols = 2, 5
+    local rows, cols = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1), 5
     local page = 0
 
     G.your_collection = {}
@@ -946,8 +946,8 @@ G.FUNCS.your_collection_editions_page = function(args)
     if not args or not args.cycle_config then
         return
     end
-    local rows = E_ROWS
-    local cols = E_COLS
+    local rows = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1), 5
+    local cols = 5
     local page = args.cycle_config.current_option
     if page > math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) then
         page = page - math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))
