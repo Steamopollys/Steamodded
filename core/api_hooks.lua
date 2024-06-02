@@ -1135,12 +1135,11 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 	for _,v in ipairs(_options) do
 		local edition_option = {}
 		if type(v) == 'string' then
-			edition_option = { name = v, weight = G.P_CENTERS["e_"..v]:get_weight() }
-			table.insert(available_editions, edition_option)
+			edition_option = { name = v, weight = G.P_CENTERS["e_"..v].weight }
 		elseif type(v) == 'table' then
 			edition_option = { name = v.name, weight = v.weight }
-			table.insert(available_editions, edition_option)
 		end
+		table.insert(available_editions, edition_option)
 	end
 
     -- Calculate total weight of editions
