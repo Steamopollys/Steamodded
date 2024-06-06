@@ -4,19 +4,6 @@ dump_lua = true
 priority = 0
 
 ## no_rank, no_suit, all_suits
-# Card:get_nominal()
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = "if self.ability.effect == 'Stone Card' then mult = -1000 end"
-match_indent = true
-position = "at"
-payload = """
-if self.ability.effect == 'Stone Card' or (self.config.center.no_suit and self.config.center.no_rank) then 
-    mult = -1000
-elseif self.config.center.no_suit then
-    mult = 0
-end"""
 
 # Card:get_id()
 [[patches]]
@@ -29,16 +16,18 @@ payload = "if (self.ability.effect == 'Stone Card' or self.config.center.no_rank
 
 # Card:get_chip_bonus()
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "card.lua"
-pattern = "return self.base.nominal + self.ability.bonus + (self.ability.perma_bonus or 0)"
-match_indent = true
-position = "before"
-payload = """
-if self.config.center.replace_base_card then
+pattern = '''
+(?<indent>[\t ]*)if self\.ability\.effect == 'Stone Card' then
+[\t ]*    return self\.ability\.bonus \+ \(self\.ability\.perma_bonus or 0\)
+[\t ]*end'''
+position = "at"
+payload = '''
+if self.ability.effect == 'Stone Card' or self.config.center.replace_base_card then
     return self.ability.bonus + (self.ability.perma_bonus or 0)
-end
-"""
+end'''
+line_prepend = '$indent'
 
 # Card:calculate_joker()
 # Raised Fist
@@ -53,8 +42,7 @@ if temp_ID >= G.hand.cards[i].base.id and (G.hand.cards[i].ability.effect ~= 'St
     temp_Mult = G.hand.cards[i].base.nominal
     temp_ID = G.hand.cards[i].base.id
     raised_card = G.hand.cards[i]
-end
-"""
+end"""
 # Flower Pot, Seeing Double
 [[patches]]
 [patches.pattern]
@@ -73,10 +61,10 @@ payload = "if context.scoring_hand[i].ability.name == 'Wild Card' or context.sco
 
 # Card:get_suit()
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "card.lua"
-pattern = "if self.ability.effect == 'Stone Card' then"
-match_indent = true
+pattern = '''(?<indent>[\t ]*)if self\.ability\.effect == 'Stone Card' then'''
+line_prepend = '$indent'
 position = "at"
 payload = "if self.ability.effect == 'Stone Card' or self.config.center.no_suit then"
 [[patches]]
@@ -113,8 +101,7 @@ position = "at"
 payload = """
 if (not v.config.center.no_suit) and (not v.config.center.no_rank) then
     valid_idol_cards[#valid_idol_cards+1] = v
-end
-"""
+end"""
 
 # reset_mail_rank()
 [[patches]]
@@ -126,8 +113,7 @@ position = "at"
 payload = """
 if not v.config.center.no_rank then
     valid_mail_cards[#valid_mail_cards+1] = v
-end
-"""
+end"""
 
 # reset_castle_card()
 [[patches]]
@@ -139,8 +125,7 @@ position = "at"
 payload = """
 if not v.config.center.no_suit then
     valid_castle_cards[#valid_castle_cards+1] = v
-end
-"""
+end"""
 
 # G.FUNCS.evaluate_play()
 [[patches]]
@@ -166,8 +151,7 @@ position = "at"
 payload = """
 if not scoring_hand[i].config.center.no_suit then
     G.GAME.cards_played[scoring_hand[i].base.value].suits[scoring_hand[i].base.suit] = true
-end
-"""
+end"""
 
 
 ## replace_base_card
@@ -207,8 +191,7 @@ match_indent = true
 position = "after"
 payload = """
     local enhancement_calculated = false
-    local center = card.config.center
-"""
+    local center = card.config.center"""
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
@@ -275,25 +258,19 @@ payload = """
 for i = 1, #G.hand.cards do
     eval_card(G.hand.cards[i], {pre_discard = true, full_hand = G.hand.highlighted, hook = hook})
 end"""
-# two consecutive lines
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "functions/state_events.lua"
-pattern = "G.hand.highlighted[i]:calculate_seal({discard = true})"
-match_indent = true
+pattern = '''
+(?<indent>[\t ]*)G\.hand\.highlighted\[i\]:calculate_seal\(\{discard = true\}\)
+[\t ]*local removed = false'''
+line_prepend = '$indent'
 position = "at"
-payload = ""
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "local removed = false"
-match_indent = true
-position = "after"
 payload = """
+local removed = false
 local eval = nil
 eval = eval_card(G.hand.highlighted[i], {discard = true, full_hand = G.hand.highlighted})
 if eval and eval.remove then
     removed = true
     card_eval_status_text(G.hand.highlighted[i], 'jokers', nil, 1, nil, eval)
-end
-"""
+end"""

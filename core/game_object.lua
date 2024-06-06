@@ -1596,7 +1596,7 @@ function loadAPIs()
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('grim_create'))].card_key, 'A'
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
-                            if v.key ~= 'm_stone' then
+                            if v.key ~= 'm_stone' and not v.overrides_base_rank then
                                 cen_pool[#cen_pool + 1] = v
                             end
                         end
@@ -1640,7 +1640,7 @@ function loadAPIs()
                             pseudorandom_element(faces, pseudoseed('familiar_create'))
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
-                            if v.key ~= 'm_stone' then
+                            if v.key ~= 'm_stone' and not v.overrides_base_rank then
                                 cen_pool[#cen_pool + 1] = v
                             end
                         end
@@ -1684,7 +1684,7 @@ function loadAPIs()
                             pseudorandom_element(numbers, pseudoseed('incantation_create'))
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
-                            if v.key ~= 'm_stone' then
+                            if v.key ~= 'm_stone' and not v.overrides_base_rank then
                                 cen_pool[#cen_pool + 1] = v
                             end
                         end
@@ -1916,24 +1916,38 @@ function loadAPIs()
         -- if true, enhanced card has no suit
         -- no_rank
         -- if true, enhanced card has no rank
+        -- overrides_base_rank
+        -- Set to true if your enhancement overrides the base card's rank.
+        -- This prevents rank generators like Familiar creating cards
+        -- whose rank is overridden.
         -- any_suit
         -- if true, enhanced card is any suit
         -- always_scores
         -- if true, card always scores
+        -- loc_subtract_extra_chips
+        -- During tooltip generation, number of chips to subtract from displayed extra chips.
+        -- Use if enhancement already displays its own chips.
         -- Future work: use ranks() and suits() for better control
         register = function(self)
-            self.effect = self.effect or self.name
             self.config = self.config or {}
             assert(not (self.no_suit and self.any_suit))
+            if self.no_rank then self.overrides_base_rank = true end
             SMODS.Enhancement.super.register(self)
         end,
+        -- Produces the description of the whole playing card
+        -- (including chips from the rank of the card and permanent bonus chips).
+        -- You will probably want to override this if your enhancement interacts with
+        -- those parts of the base card.
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars.nominal_chips and not self.replace_base_card then 
                 localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
             end
             SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars.bonus_chips then
-                localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips}}
+                local remaining_bonus_chips = specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)
+                if remaining_bonus_chips > 0 then
+                    localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)}}
+                end
             end
         end,
         -- other methods:
@@ -1954,6 +1968,26 @@ function loadAPIs()
 
     -- TODO pos = { x = 0, y = 0 } should just be set as a default for all objects
     -- with atlases
+
+    -- local stone_card = SMODS.Enhancement:take_ownership('m_stone', {
+    --     replace_base_card = true,
+    --     no_suit = true,
+    --     no_rank = true,
+    --     always_scores = true,
+    --     loc_txt = {
+    --         name = "Stone Card",
+    --         text = {
+    --             "{C:chips}+#1#{} Chips",
+    --             "no rank or suit"
+    --         }
+    --     },
+    --     loc_vars = function(self)
+    --         return {
+    --             vars = { self.config.bonus }
+    --         }
+    --     end
+    -- })
+    -- stone_card.loc_subtract_extra_chips = stone_card.config.bonus
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Shader

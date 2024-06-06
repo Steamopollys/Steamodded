@@ -17,8 +17,7 @@ position = 'after'
 match_indent = true
 payload = '''
 lua_reload = require('lua_reload')
-lua_reload.Inject()
-'''
+lua_reload.Inject()'''
 
 [[patches]]
 [patches.pattern]
@@ -40,5 +39,4 @@ elseif key == 'q' then
 	else
 		self.held_key_times[key] = self.held_key_times[key] + dt
 	end
-elseif key == "r" and not G.SETTINGS.paused then
-'''
+elseif key == "r" and not G.SETTINGS.paused then'''

@@ -17,8 +17,7 @@ for k, v in ipairs(SMODS.Sticker.obj_buffer) do
 	if self.ability[v] then
         badges[#badges+1] = v
     end
-end
-'''
+end'''
 
 # generate_card_ui()
 [[patches]]
@@ -35,8 +34,7 @@ if sticker then
     else
         info_queue[#info_queue+1] = { key = v, set = 'Other' }
     end
-end
-'''
+end'''
 
 # create_card()
 [[patches]]
@@ -61,8 +59,7 @@ for k, v in ipairs(SMODS.Sticker.obj_buffer) do
     then
         sticker:set_sticker(card, true)
     end
-end
-'''
+end'''
 
 # Game:start_up()
 [[patches]]
@@ -76,8 +73,7 @@ for _, key in ipairs(SMODS.Sticker.obj_buffer) do
     local atlas = SMODS.Stickers[key].atlas
     local pos = SMODS.Stickers[key].pos
     self.shared_stickers[key] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS[atlas] or self.ASSET_ATLAS['stickers'], pos)
-end
-'''
+end'''
 
 # Card:draw()
 [[patches]]
@@ -98,8 +94,7 @@ for k, v in pairs(SMODS.Stickers) do
             G.shared_stickers[v.key]:draw_shader('voucher', nil, self.ARGS.send_to_shader, nil, self.children.center)
         end
     end
-end
-'''
+end'''
 
 # Card:calculate_joker()
 [[patches]]
@@ -114,6 +109,5 @@ for k, v in pairs(SMODS.Stickers) do
             v:calculate(self, context)
         end
     end
-end
-'''
+end'''
 match_indent = true

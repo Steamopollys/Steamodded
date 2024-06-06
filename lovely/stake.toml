@@ -80,8 +80,7 @@ position = "at"
 payload = '''for i = 1,
 (G.P_CENTER_POOLS["Stake"][G.GAME.stake].unlocked_stake) and 
 (G.P_STAKES["stake_"..G.P_CENTER_POOLS["Stake"][G.GAME.stake].unlocked_stake].stake_level-1) or (G.GAME.stake-1)
-do
-'''
+do'''
 match_indent = true
 
 # Stake Sprites

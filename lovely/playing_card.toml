@@ -16,8 +16,7 @@ payload = '''
 	local cards_played = {}
 	for _,v in ipairs(SMODS.Rank.obj_buffer) do
 		cards_played[v] = { suits = {}, total = 0 }
-	end
-'''
+	end'''
 
 [[patches]]
 [patches.regex]
@@ -28,8 +27,7 @@ line_prepend = '$indent'
 payload = '''
 	cards_played = cards_played,
 	disabled_suits = {},
-	disabled_ranks = {},
-'''
+	disabled_ranks = {},'''
 
 # Game:start_run()
 [[patches]]
@@ -85,8 +83,7 @@ for k, v in pairs(SMODS.Suits) do
 			remove_ranks[v.card_key] = not v:should_add_to_deck(args, self.GAME.selected_back)
 		end
 	end
-end
-'''
+end'''
 
 [[patches]]
 [patches.pattern]
@@ -97,8 +94,7 @@ match_indent = true
 payload = '''
 if self.GAME.starting_params.no_faces and SMODS.Ranks[v.value].face then keep = false end
 if remove_suits[_s] then keep = false end
-if remove_ranks[_r] then keep = false end
-'''
+if remove_ranks[_r] then keep = false end'''
 
 [[patches]]
 [patches.pattern]
@@ -114,8 +110,7 @@ end
 for k, _ in pairs(G.GAME.disabled_ranks) do
 	local s = SMODS.Ranks[k]
 	if s then s:disable() end
-end
-'''
+end'''
 
 # loc_colour()
 [[patches]]
@@ -130,8 +125,7 @@ payload = '''
 	end
 	for _, v in ipairs(SMODS.Suit.obj_buffer) do
 		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SUITS[v]
-	end
-'''
+	end'''
 
 # get_flush()
 [[patches]]
@@ -142,8 +136,7 @@ position = 'at'
 line_prepend = '$indent'
 payload = '''
 local suits = SMODS.Suit.obj_buffer
-if $restcond
-'''
+if $restcond'''
 
 # get_X_same()
 [[patches]]
@@ -156,8 +149,7 @@ payload = '''
 local vals = {}
 for i = 1, SMODS.Rank.max_id.value do
 	vals[i] = {}
-end
-'''
+end'''
 
 # Card:get_nominal()
 [[patches]]
@@ -168,37 +160,41 @@ position = 'at'
 payload = '''
 function Card:get_nominal(mod)
 	local mult = 1
+	local rank_mult = 1
 	if mod == 'suit' then mult = 10000 end
-	if self.ability.effect == 'Stone Card' then mult = -10000 end
-	return 10*self.base.nominal + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal + 0.000001*self.unique_val
-end
-'''
+	if self.ability.effect == 'Stone Card' or (self.config.center.no_suit and self.config.center.no_rank) then 
+		mult = -10000
+	elseif self.config.center.no_suit then
+		mult = 0
+	elseif self.config.center.no_rank then
+		rank_mult = 0
+	end
+	return 10*self.base.nominal*rank_mult + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal*rank_mult + 0.000001*self.unique_val
+end'''
 
 # Card:set_base()
 [[patches]]
 [patches.regex]
 target = 'card.lua'
-pattern = "(?<indent>[\t ]*)if self.base.value == '2' then self.base.nominal = 2; self.base.id = 2\n([\t ]+elseif .*\n)*"
+pattern = "(?<indent>[\t ]*)if self.base.value == '2' then self.base.nominal = 2; self.base.id = 2(\n[\t ]+elseif .*)*"
 position = 'at'
 line_prepend = '$indent'
 payload = '''
 local rank = SMODS.Ranks[self.base.value] or {}
 self.base.nominal = rank.nominal or 0
 self.base.face_nominal = rank.face_nominal or 0
-self.base.id = rank.id
-'''
+self.base.id = rank.id'''
 
 [[patches]]
 [patches.regex]
 target = 'card.lua'
-pattern = "(?<indent>[\t ]*)if self.base.suit == 'Diamonds' then self.base.suit_nominal = 0.01; self.base.suit_nominal_original = suit_base_nominal_original or 0.001 \n([\t ]+elseif .*\n)*"
+pattern = "(?<indent>[\t ]*)if self.base.suit == 'Diamonds' then self.base.suit_nominal = 0.01; self.base.suit_nominal_original = suit_base_nominal_original or 0.001 (\n[\t ]+elseif .*)*"
 position = 'at'
 line_prepend = '$indent'
 payload = '''
 local suit = SMODS.Suits[self.base.suit] or {}
 self.base.suit_nominal = suit.suit_nominal or 0
-self.base.suit_nominal_original = suit_base_nominal_original or suit.suit_nominal or 0
-'''
+self.base.suit_nominal_original = suit_base_nominal_original or suit.suit_nominal or 0'''
 
 # Card:change_suit()
 [[patches]]
@@ -210,8 +206,7 @@ line_prepend = '$indent'
 payload = '''
 local new_code = SMODS.Suits[new_suit].card_key
 local new_val = SMODS.Ranks[self.base.value].card_key
-local new_card = G.P_CARDS[new_code..'_'..new_val]
-'''
+local new_card = G.P_CARDS[new_code..'_'..new_val]'''
 
 # Card:is_face()
 [[patches]]
@@ -223,8 +218,7 @@ line_prepend = '$indent'
 payload = '''
 local rank = SMODS.Ranks[self.base.value]
 if not id then return end
-if (id > 0 and rank.face) or next(find_joker("Pareidolia")) then
-'''
+if (id > 0 and rank.face) or next(find_joker("Pareidolia")) then'''
 
 
 # tally_sprite()
@@ -257,8 +251,7 @@ for i = #SMODS.Suit.obj_buffer, 1, -1 do
 	local suit = SMODS.Suits[SMODS.Suit.obj_buffer[i]]
 	SUITS[suit.card_key] = {}
 	suit_map[#suit_map+1] = suit.card_key
-end
-'''
+end'''
 
 [[patches]]
 [patches.pattern]
@@ -281,5 +274,4 @@ for j = 1, #suit_map do
 end
 for j = 1, #suit_map do
 	$mid			
-			(0.42 - (num_suits <= 4 and 0 or num_suits >= 8 and 0.28 or 0.07 * (num_suits - 4))) * G.CARD_H,
-'''
+			(0.42 - (num_suits <= 4 and 0 or num_suits >= 8 and 0.28 or 0.07 * (num_suits - 4))) * G.CARD_H,'''
