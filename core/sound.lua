@@ -4,6 +4,7 @@
 
 SMODS.SOUND_SOURCES = {}
 
+--note from MathIsFun_: couldn't get this function to work
 function register_sound_global()
     local mod = SMODS.current_mod
     for _, filename in ipairs(love.filesystem.getDirectoryItems(mod.path ..'assets/sounds/')) do
@@ -24,13 +25,18 @@ end
 
 function register_sound(name, path, filename) -- Keep that here to support old versions
     local sound_code = string.sub(filename, 1, -5)
+    --nativefs shenanigans in case LOVE doesn't like the file location
+    local extension = string.sub(filename, -4)
+    local sound_path = path .. "assets/sounds/" .. filename
+    local file = NFS.read(sound_path)
+    love.filesystem.write("temp"..extension, file)
     local s = {
         sound = love.audio.newSource(
-            path .. "assets/sounds/" .. filename,
+            "temp"..extension,
             ((string.find(sound_code, 'music') or string.find(sound_code, 'stream')) and "stream" or 'static')
-        ),
-        filepath = path .. "assets/sounds/" .. filename
+        )
     }
+    love.filesystem.remove("temp"..extension, file)
     -- s.original_pitch = 1
     -- s.original_volume = 0.75
     s.sound_code = name
