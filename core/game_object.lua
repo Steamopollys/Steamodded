@@ -180,13 +180,12 @@ function loadAPIs()
         silent = true,
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         injector = function()
-            for _, v in ipairs(SMODS._loc_txt) do
-                v:load()
-            end
+            SMODS.handle_loc_file(SMODS.dir)
             for _, mod in ipairs(SMODS.mod_list) do
                 if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
                     mod.process_loc_text()
                 end
+                SMODS.handle_loc_file(mod.path)
             end
         end
     }
