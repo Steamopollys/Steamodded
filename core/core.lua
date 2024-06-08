@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0601a-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0607b-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -1159,94 +1159,30 @@ function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
     if not (type(target) == 'string' or target and next(target)) then return end
     ref_table[ref_value] = target
 end
-SMODS._loc_txt = {
-    {
-		['en-us'] = {
-			success = {
-				text = {
-					'Mod loaded',
-					'{C:green}successfully!'
-				}
-			},
-			failure_d = {
-				text = {
-					'Missing {C:attention}dependencies!',
-					'#1#',
-				}
-			},
-			failure_c = {
-				text = {
-					'Unresolved {C:attention}conflicts!',
-					'#1#'
-				}
-			},
-			failure_d_c = {
-				text = {
-					'Missing {C:attention}dependencies!',
-					'#1#',
-					'Unresolved {C:attention}conflicts!',
-					'#2#'
-				}
-			},
-			failure_o = {
-				text = {
-					'{C:attention}Outdated!{} Steamodded',
-					'versions {C:money}0.9.8{} and below',
-					'are no longer supported.'
-				}
-			},
-			failure_i = {
-				text = {
-					'{C:attention}Incompatible!{} Needs version',
-					'#1# of Steamodded,',
-					'but #2# is installed.'
-				}
-			},
-			disabled = {
-                text = {
-                    'This mod has been',
-                    '{C:attention}disabled!{}'
-                }
-            }
-        },
-		load = function(self)
-			for k, _ in pairs(self['en-us']) do
-				SMODS.process_loc_text(G.localization.descriptions.Other, 'load_'..k, self, k)
-			end
-		end
-    },
-    {
-        ['en-us'] = {
-            b_mods = 'Mods',
-			b_mods_cap = 'MODS',
-            b_modded_version = 'Modded Version!',
-            b_steamodded = 'Steamodded',
-            b_steamodded_credits = ' Steamodded Credits ',
-            b_steamodded_settings = ' Steamodded Settings ',
-            b_open_mods_dir = 'Open Mods directory',
-            b_no_mods = 'No mods have been detected...',
-            b_mod_list = 'List of Activated Mods',
-            b_mod_loader = 'Mod Loader',
-            b_developed_by = 'developed by ',
-            b_rewrite_by = 'Rewrite by ',
-            b_github_project = 'Github Project',
-            b_github_bugs_1 = 'You can report bugs and',
-            b_github_bugs_2 = 'submit contributions there.',
-            b_disable_mod_badges = 'Disable Mod Badges',
-            b_author = 'Author',
-			b_authors = 'Authors',
-            b_unknown = 'Unknown',
-            b_by = ' By: ',
-            b_applies_stakes_1 = 'Applies ',
-			b_applies_stakes_2 = '',
-        },
-		load = function(self)
-			for k, _ in pairs(self['en-us']) do
-				SMODS.process_loc_text(G.localization.misc.dictionary, k, self, k)
-			end
-		end
-	}
-}
+
+function SMODS.handle_loc_file(path)
+    local dir = path .. 'localization/'
+	local file_name
+    for k, v in ipairs({ dir .. G.SETTINGS.language .. '.lua', dir .. 'default.lua', dir .. 'en-us.lua' }) do
+        if NFS.getInfo(v) then
+            file_name = v
+            break
+        end
+    end
+    if not file_name then return end
+    local loc_table = assert(loadstring(NFS.read(file_name)))()
+    local function recurse(target, ref_table)
+        if type(target) ~= 'table' then return end --this shouldn't happen unless there's a bad return value
+        for k, v in pairs(target) do
+            if not ref_table[k] or (type(v) ~= 'table') then
+                ref_table[k] = v
+            else
+                recurse(v, ref_table[k])
+            end
+        end
+    end
+	recurse(loc_table, G.localization)
+end
 
 function SMODS.insert_pool(pool, center, replace)
 	if replace == nil then replace = center.taken_ownership end

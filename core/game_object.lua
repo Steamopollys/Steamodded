@@ -183,13 +183,12 @@ function loadAPIs()
         silent = true,
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         injector = function()
-            for _, v in ipairs(SMODS._loc_txt) do
-                v:load()
-            end
+            SMODS.handle_loc_file(SMODS.dir)
             for _, mod in ipairs(SMODS.mod_list) do
                 if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
                     mod.process_loc_text()
                 end
+                SMODS.handle_loc_file(mod.path)
             end
         end
     }
@@ -307,11 +306,15 @@ function loadAPIs()
             if self.language and not (G.SETTINGS.language == self.language) then return end
             if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
             self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
-                'assets/sounds' .. file_path
+                'assets/sounds/' .. file_path
+            --load with a temp file path in case LOVE doesn't like the mod directory
+            local file = NFS.read(self.full_path)
+            love.filesystem.write("steamodded-temp-"..file_path, file)
             self.sound = love.audio.newSource(
-                self.full_path,
+                "steamodded-temp-"..file_path,
                 ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
             )
+            love.filesystem.remove("steamodded-temp-"..file_path)
         end,
         register_global = function(self)
             local mod = SMODS.current_mod

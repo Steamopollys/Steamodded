@@ -20,7 +20,6 @@ sources = [
 	"core/StackTracePlus.lua",
 	"core/api_hooks.lua",
 	"core/game_object.lua",
-	#"core/sound.lua",
 	"debug/debug.lua",
 	"loader/loader.lua",
 ]
