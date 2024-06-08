@@ -17,6 +17,22 @@ if obj.set_ability and type(obj.set_ability) == 'function' then
 	obj:set_ability(self, initial, delay_sprites)
 end'''
 line_prepend = '$indent'
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "self.ability.bonus = (self.ability.bonus or 0) + (center.config.bonus or 0)"
+position = "after"
+payload = """
+for k, v in pairs(center.config) do
+	if k ~= 'bonus' then
+		if type(v) == 'table' then
+			self.ability[k] = copy_table(v)
+		else
+			self.ability[k] = v
+		end
+	end
+end"""
+match_indent = true
 
 # Card:calculate_joker()
 [[patches]]
