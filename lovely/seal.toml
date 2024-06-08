@@ -56,8 +56,7 @@ payload = '''
 local obj = G.P_SEALS[self.seal] or {}
 if obj.get_p_dollars and type(obj.get_p_dollars) == 'function' then
 	ret = ret + obj.get_p_dollars(self)
-elseif $cond
-'''
+elseif $cond'''
 
 # generate_card_ui()
 [[patches]]

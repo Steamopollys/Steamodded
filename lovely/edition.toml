@@ -76,8 +76,7 @@ match_indent = true
 payload = '''
 for _, v in ipairs(G.P_CENTER_POOLS.Edition) do
 	G.BADGE_COL[v.key:sub(3)] = v.badge_colour
-end
-'''
+end'''
 
 # Inject shaders applying to cards
 # Card:draw()
@@ -252,10 +251,9 @@ match_indent = true
 target = "card.lua"
 pattern = "badges[#badges + 1] = 'negative_consumable'"
 position = "after"
-payload = '''
+payload = """
 elseif self.edition.type == 'negative' and (self.ability.set == 'Enhanced' or self.ability.set == 'Default') then
-    badges[#badges + 1] = 'negative_playing_card'
-'''
+    badges[#badges + 1] = 'negative_playing_card'"""
 match_indent = true
 [[patches]]
 [patches.pattern]
