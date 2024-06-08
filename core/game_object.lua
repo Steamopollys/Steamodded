@@ -168,7 +168,7 @@ function loadAPIs()
             G.LANGUAGES[self.key] = self
         end,
         injector = function(self)
-            self.super.injector(self)
+            SMODS.Language.super.injector(self)
             G:set_language()
         end
     }
@@ -224,7 +224,7 @@ function loadAPIs()
             end
             -- needed for changing high contrast settings, apparently
             self.name = self.key
-            self.super.register(self)
+            SMODS.Atlas.super.register(self)
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
@@ -296,7 +296,7 @@ function loadAPIs()
                 end
                 self.replace_sounds[replace] = { key = self.key, times = times, args = args}
             end
-            self.super.register(self)
+            SMODS.Sound.super.register(self)
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
@@ -428,7 +428,7 @@ function loadAPIs()
         injector = function(self)
             G.P_CENTER_POOLS[self.set] = {}
             G.P_STAKES = {}
-            self.super.injector(self)
+            SMODS.Stake.super.injector(self)
         end,
         inject = function(self)
             if not self.injected then
@@ -942,7 +942,7 @@ function loadAPIs()
                 self.type:delete_card(self)
             end
             SMODS.remove_pool(G.P_CENTER_POOLS['Consumeables'], self.key)
-            self.super.delete(self)
+            SMODS.Consumable.super.delete(self)
         end,
         loc_vars = function(self, info_queue)
             return {}
@@ -990,7 +990,7 @@ function loadAPIs()
         register = function(self)
             -- game expects a name, so ensure it's set
             self.name = self.name or self.key
-            self.super.register(self)
+            SMODS.Back.super.register(self)
         end
     }
 
@@ -1157,7 +1157,7 @@ function loadAPIs()
             self.card_key = self:get_card_key(self.card_key)
             self.max_nominal.value = self.max_nominal.value + 0.01
             self.suit_nominal = self.max_nominal.value
-            self.super.register(self)
+            SMODS.Suit.super.register(self)
         end,
         populate = function(self)
             for _, other in pairs(SMODS.Ranks) do
