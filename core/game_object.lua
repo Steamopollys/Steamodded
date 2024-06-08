@@ -417,6 +417,7 @@ function loadAPIs()
         unlocked = false,
         set = 'Stake',
         atlas = 'chips',
+        pos = { x = 0, y = 0 },
         injected = false,
         required_params = {
             'key',
@@ -1083,6 +1084,7 @@ function loadAPIs()
         set = 'Seal',
         prefix = 's',
         atlas = 'centers',
+        pos = { x = 0, y = 0 },
         discovered = false,
         colour = HEX('FFFFFF'),
         required_params = {
@@ -1968,9 +1970,6 @@ function loadAPIs()
     -- would be documented.
     -- For example, Card:set_ability sets the card's enhancement, which is not immediately
     -- obvious.
-
-    -- TODO pos = { x = 0, y = 0 } should just be set as a default for all objects
-    -- with atlases
 
     -- local stone_card = SMODS.Enhancement:take_ownership('m_stone', {
     --     replace_base_card = true,
