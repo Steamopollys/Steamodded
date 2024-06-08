@@ -303,11 +303,15 @@ function loadAPIs()
             if self.language and not (G.SETTINGS.language == self.language) then return end
             if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
             self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
-                'assets/sounds' .. file_path
+                'assets/sounds/' .. file_path
+            --load with a temp file path in case LOVE doesn't like the mod directory
+            local file = NFS.read(self.full_path)
+            love.filesystem.write("steamodded-temp-"..file_path, file)
             self.sound = love.audio.newSource(
-                self.full_path,
+                "steamodded-temp-"..file_path,
                 ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
             )
+            love.filesystem.remove("steamodded-temp-"..file_path)
         end,
         register_global = function(self)
             local mod = SMODS.current_mod
