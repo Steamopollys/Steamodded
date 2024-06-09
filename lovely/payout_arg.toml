@@ -3,22 +3,6 @@ version = "1.0.0"
 dump_lua = true
 priority = 0
 
-### calc_dollar_bonus add-on for jokers
-# Card:calculate_dollar_bonus()
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = "if self.ability.name == 'Cloud 9' and self.ability.nine_tally and self.ability.nine_tally > 0 then"
-position = "before"
-match_indent = true
-payload = '''
---asdf
-local obj = self.config.center
-if obj.calc_dollar_bonus and type(obj.calc_dollar_bonus) == 'function' then
-    return obj.calc_dollar_bonus(self)
-end
-'''
-
 ### Payout Arg API
 # G.FUNCS.evaluate_play()
 [[patches]]

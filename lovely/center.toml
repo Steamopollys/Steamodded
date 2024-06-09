@@ -524,3 +524,64 @@ if obj.load and type(obj.load) == 'function' then
 	obj:load(self, cardTable, other_card)
 elseif self.config.center.name == "Half Joker" then
 '''
+
+# Card:calculate_dollar_bonus()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.ability.name == 'Cloud 9' and self.ability.nine_tally and self.ability.nine_tally > 0 then"
+position = "before"
+match_indent = true
+payload = '''
+--asdf
+local obj = self.config.center
+if obj.calc_dollar_bonus and type(obj.calc_dollar_bonus) == 'function' then
+    return obj:calc_dollar_bonus(self)
+end
+'''
+
+# end_round()
+[[patches]]
+[patches.regex]
+target = 'functions/state_events.lua'
+pattern = '''(?<indent>[\t ]*)reset_castle_card\(\)'''
+line_prepend = '$indent'
+position = 'after'
+payload = '''
+for _, mod in ipairs(SMODS.mod_list) do
+	if mod.reset_game_globals and type(mod.reset_game_globals) == 'function' then
+		mod.reset_game_globals(false)
+	end
+end
+'''
+
+# Game:start_run()
+[[patches]]
+[patches.regex]
+target = 'game.lua'
+pattern = '''(?<indent>[\t ]*)reset_castle_card\(\)'''
+line_prepend = '$indent'
+position = 'after'
+payload = '''
+for _, mod in ipairs(SMODS.mod_list) do
+	if mod.reset_game_globals and type(mod.reset_game_globals) == 'function' then
+		mod.reset_game_globals(true)
+	end
+end
+'''
+
+# Card:set_debuff()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = "function Card:set_debuff(should_debuff)"
+position = 'after'
+match_indent = true
+payload = '''
+for _, mod in ipairs(SMODS.mod_list) do
+	if mod.set_debuff and type(mod.set_debuff) == 'function' then
+		local omit_base_debuff_check = mod.set_debuff(self, should_debuff)
+		if omit_base_debuff_check ~= nil then return end --return anything other than nil to stop the game's base logic for card debuffing
+	end
+end
+'''

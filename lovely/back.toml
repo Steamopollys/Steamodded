@@ -51,3 +51,18 @@ payload = '''
 		obj:apply()
 	end
 '''
+
+# Back:trigger_effect(args)
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = "if not args then return end"
+position = 'after'
+match_indent = true
+payload = '''
+	local obj = self.effect.center
+	if obj.trigger_effect and type(obj.trigger_effect) == 'function' then
+		local o = obj:trigger_effect(args)
+		if o then return o end
+	end
+'''
