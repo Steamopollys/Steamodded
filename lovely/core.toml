@@ -21,5 +21,6 @@ sources = [
 	"core/api_hooks.lua",
 	"core/game_object.lua",
 	"debug/debug.lua",
+	"core/compat_0_9_8.lua",
 	"loader/loader.lua",
 ]
