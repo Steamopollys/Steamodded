@@ -102,7 +102,7 @@ end'''
 [[patches]]
 [patches.pattern]
 target = 'functions/common_events.lua'
-pattern = "elseif _c.set == 'Joker' then"
+pattern = "elseif specific_vars and specific_vars.debuffed then"
 position = 'before'
 match_indent = true
 payload = '''
