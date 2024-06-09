@@ -855,7 +855,10 @@ function loadAPIs()
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
-            full_UI_table.name = localize{type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name}
+            full_UI_table.name = localize { type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name }
+            if specific_vars and specific_vars.debuffed and not res.replace_debuff then
+                target = {type = 'other', key = 'debuffed_'..(specific_vars.playing_card and 'playing_card' or 'default'), nodes = desc_nodes}
+            end
             if res.main_start then
                 desc_nodes[#desc_nodes + 1] = res.main_start
             end
