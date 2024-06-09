@@ -114,7 +114,7 @@ elseif _c.generate_ui and type(_c.generate_ui) == 'function' then
 [[patches]]
 [patches.regex]
 target = 'functions/common_events.lua'
-pattern = "(?<indent>[\t ]*)if (?<rest>_c.name == 'Golden Ticket' then)"
+pattern = "(?<indent>[\t ]+)if (?<rest>_c.name == 'Golden Ticket' then)"
 line_prepend = '$indent'
 position = 'at'
 payload = '''
