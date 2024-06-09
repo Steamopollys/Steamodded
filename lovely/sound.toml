@@ -20,6 +20,15 @@ for _, sound_code in ipairs(music_codes) do
         end
 	end
 end
+if SMODS.Sound.current_track and SMODS.Sound.current_track ~= desired_track then
+	SMODS.Sounds[SMODS.Sound.current_track].sound:stop()
+	SMODS.Sound.current_track = nil
+end
+if SMODS.Sounds and SMODS.Sounds[desired_track] then
+	SMODS.Sounds[desired_track]:play(G.PITCH, 1)
+	SMODS.Sound.current_track = desired_track
+	desired_track = ''
+end
 local replace_sound = SMODS.Sound.replace_sounds[desired_track]
 if replace_sound then
 	local sound = SMODS.Sounds[replace_sound.key]
