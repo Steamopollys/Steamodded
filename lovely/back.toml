@@ -62,5 +62,4 @@ payload = '''
 	if obj.trigger_effect and type(obj.trigger_effect) == 'function' then
 		local o = obj:trigger_effect(args)
 		if o then return o end
-	end
-'''
+	end'''

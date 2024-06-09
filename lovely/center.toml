@@ -524,8 +524,7 @@ payload = '''
 local obj = self.config.center
 if obj.calc_dollar_bonus and type(obj.calc_dollar_bonus) == 'function' then
     return obj:calc_dollar_bonus(self)
-end
-'''
+end'''
 
 # end_round()
 [[patches]]
@@ -539,8 +538,7 @@ for _, mod in ipairs(SMODS.mod_list) do
 	if mod.reset_game_globals and type(mod.reset_game_globals) == 'function' then
 		mod.reset_game_globals(false)
 	end
-end
-'''
+end'''
 
 # Game:start_run()
 [[patches]]
@@ -554,8 +552,7 @@ for _, mod in ipairs(SMODS.mod_list) do
 	if mod.reset_game_globals and type(mod.reset_game_globals) == 'function' then
 		mod.reset_game_globals(true)
 	end
-end
-'''
+end'''
 
 # Card:set_debuff()
 [[patches]]
@@ -570,5 +567,4 @@ for _, mod in ipairs(SMODS.mod_list) do
 		local omit_base_debuff_check = mod.set_debuff(self, should_debuff)
 		if omit_base_debuff_check ~= nil then return end --return anything other than nil to stop the game's base logic for card debuffing
 	end
-end
-'''
+end'''
