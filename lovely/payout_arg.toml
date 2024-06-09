@@ -229,19 +229,18 @@ position = "at"
 payload = '''
 local r
 if i == 1 and num_dollars < 0 then
-    r = {n=G.UIT.T, config={text = '-', colour = config.payout_arg.symbol_config.color, scale = ((num_dollars < -20 and 0.28) or (num_dollars < -9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
+    r = {n=G.UIT.T, config={text = '-', colour = config.payout_arg and config.payout_arg.symbol_config.color or G.C.RED, scale = ((num_dollars < -20 and 0.28) or (num_dollars < -9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
     play_sound('coin3', 0.9+0.2*math.random(), 0.7 - (num_dollars < -20 and 0.2 or 0))
 else
     if string.find(config.name, 'payout_arg') then
         if not config.payout_arg.symbol_config.needs_localize then
-            --sendInfoMessage("Does not need localize() function")
             r = {n=G.UIT.T, config={text = config.payout_arg.symbol_config.character, colour = config.payout_arg.symbol_config.color, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
         else
-            sendInfoMessage("Needs localize() function")
             r = {n=G.UIT.T, config={text = localize(config.payout_arg.symbol_config.character), colour = config.payout_arg.symbol_config.color, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
         end
     else
-        r = {n=G.UIT.T, config={text = localize('$'), colour = G.C.MONEY, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
+        if num_dollars < 0 then r = {n=G.UIT.T, config={text = localize('$'), colour = G.C.RED, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
+        else r = {n=G.UIT.T, config={text = localize('$'), colour = G.C.MONEY, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}} end
     end
 end
 '''
