@@ -36,7 +36,6 @@ function load_compat_0_9_8()
     end
 
     SMODS.Deck_new = SMODS.Back:extend {
-        loc_vars = loc_vars_compat_0_9_8,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -81,6 +80,7 @@ function load_compat_0_9_8()
     SMODS.Sprites = SMODS.Atlases
 
     SMODS.Joker_new = SMODS.Joker:extend {
+        loc_vars = loc_vars_compat_0_9_8,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -363,28 +363,6 @@ function load_compat_0_9_8()
             defeated = defeated,
             atlas = atlas
         }
-    end
-
-    for _, cls_name in ipairs{ 'Deck_new', 'Joker_new', 'Tarot_new', 'Planet_new', 'Spectral_new', 'Voucher_new' } do
-        local __index_ref = SMODS[cls_name].__index
-        SMODS[cls_name].__index = function(t, k)
-            if k == 'loc_vars' then
-                if t['loc_def'] and type(t['loc_def']) == 'function'
-                or t['tooltip'] and type(t['tooltip']) == 'function' then
-                    return loc_vars_compat_0_9_8
-                else
-                    return nil
-                end
-            elseif k == 'generate_ui' then
-                if t['loc_def'] and type(t['loc_def']) == 'function'
-                or t['tooltip'] and type(t['tooltip']) == 'function' then
-                    return SMODS[cls_name].super.generate_ui
-                else
-                    return nil
-                end
-            end
-            return __index_ref[k]
-        end
     end
 
     load_compat_0_9_8_done = true
