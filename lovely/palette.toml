@@ -7,15 +7,15 @@ priority = 0
 [[patches]]
 [patches.pattern]
 target = "card.lua"
-pattern = '''if self.ability.name == 'Invisible Joker' and (self.config.center.discovered or self.bypass_discovery_center) then'''
+pattern = '''elseif not self.greyed then'''
 position = "before"
 payload = '''
-if SMODS.Palettes[self.ability.set] and (G.SETTINGS.selected_colours[self.ability.set].order and G.SETTINGS.selected_colours[self.ability.set].order > 1) then
+elseif SMODS.Palettes[self.ability.set] and (G.SETTINGS.selected_colours[self.ability.set].order and G.SETTINGS.selected_colours[self.ability.set].order > 1) then
     G.SHADERS['recolour']:send("base_colours",unpack(G.SEND_TO_SHADER.DEFAULT))
     G.SHADERS['recolour']:send("new_colours",unpack(G.SEND_TO_SHADER.ADJUSTED))
     G.SHADERS['recolour']:send("size",#G.SEND_TO_SHADER.ADJUSTED)
     self.children.center:draw_shader('recolour', nil, self.ARGS.send_to_shader)
-end'''
+'''
 match_indent = true
 
 # Define the base and new colour palettes
