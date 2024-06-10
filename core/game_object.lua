@@ -2004,13 +2004,14 @@ function loadAPIs()
         obj_buffer = {},
         required_params = {
             'key',
-            'path',
+            'file_name',
         },
         set = 'Shader',
         omit_prefix = true,
         inject = function(self)
-            assert(self.path:sub(-3) == ".fs")
-            G.SHADERS[self.key] = love.graphics.newShader(SMODS.current_mod.path.."/assets/shaders/"..self.path)
+            self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
+            'assets/shaders/' .. self.file_name
+            G.SHADERS[self.key] = love.graphics.newShader(self.full_path)
         end,
         register = function(self)
             if self.registered then 
