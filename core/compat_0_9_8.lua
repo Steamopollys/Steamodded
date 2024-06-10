@@ -26,7 +26,7 @@ function load_compat_0_9_8()
         end
     end
 
-    SMODS['INIT'] = {}
+    SMODS.INIT = {}
     SMODS.INIT_DONE = {}
     function SMODS.findModByID(id)
         return SMODS.Mods[id]
