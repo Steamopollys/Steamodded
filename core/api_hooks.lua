@@ -1185,3 +1185,33 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
     return nil
 end
 
+
+-------------------------------------------------------------------------------------------------
+----- API HOOKS GameObject.Palette
+-------------------------------------------------------------------------------------------------
+G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
+G.SEND_TO_SHADER = {}
+
+G.FUNCS.update_recolor = function(args)
+    G.SETTINGS.selected_colours[args.cycle_config.type] = SMODS.Palettes[args.cycle_config.type][args.to_val]
+    G:save_settings()
+end
+
+G.FUNCS.card_colours = function(e)
+    G.SETTINGS.paused = true
+    G.FUNCS.overlay_menu{
+      definition = G.UIDEF.card_colours(),
+    }
+  end
+
+G.UIDEF.card_colours = function()
+    local nodeRet = {}
+    for _,k in ipairs(SMODS.Palettes.Types) do
+		local v = SMODS.Palettes[k]
+        if #v.names > 1 then
+            nodeRet[#nodeRet+1] = create_option_cycle({w = 4,scale = 0.8, label = k.." colours" ,options = v.names, opt_callback = "update_recolor", current_option = G.SETTINGS.selected_colours[k].order, type=k})
+        end
+    end
+    local t = create_UIBox_generic_options({back_func = 'options', contents = nodeRet})
+    return t
+end

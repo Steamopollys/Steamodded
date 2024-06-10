@@ -34,7 +34,11 @@ function loadAPIs()
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
         end
         if not o.omit_prefix and o.mod then
-            o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
+            if o['palette'] then
+                o.key = ('%s_%s_%s_%s'):format(o.prefix, o.mod.prefix, o.type:lower(), o.key)
+            else
+                o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
+            end
         end
         o:register()
         return o
@@ -678,29 +682,31 @@ function loadAPIs()
             end
 
             INIT_COLLECTION_CARD_ALERTS()
-
+            local option_nodes = {create_option_cycle({
+                options = center_options,
+                w = 4.5,
+                cycle_shoulders = true,
+                opt_callback = 'your_collection_' .. string.lower(self.key) .. '_page',
+                focus_args = { snap_to = true, nav = 'wide' },
+                current_option = 1,
+                colour = G.C.RED,
+                no_pips = true
+            })}
+            if SMODS.Palettes[self.key] and #SMODS.Palettes[self.key].names > 1 then
+                option_nodes[#option_nodes + 1] = create_option_cycle({
+                    w = 4.5,
+                    scale = 0.8,
+                    options = SMODS.Palettes[self.key].names,
+                    opt_callback = "update_recolor",
+                    current_option = G.SETTINGS.selected_colours[self.key].order,
+                    type = self.key
+            })
+            end
             local t = create_UIBox_generic_options({
                 back_func = 'your_collection',
                 contents = {
                     { n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables },
-                    {
-                        n = G.UIT.R,
-                        config = { align = "cm", padding = 0 },
-                        nodes = {
-                            create_option_cycle({
-                                options = center_options,
-                                w = 4.5,
-                                cycle_shoulders = true,
-                                opt_callback =
-                                    'your_collection_' .. string.lower(self.key) .. '_page',
-                                focus_args = { snap_to = true, nav = 'wide' },
-                                current_option = 1,
-                                colour = G
-                                    .C.RED,
-                                no_pips = true
-                            })
-                        }
-                    },
+                    { n = G.UIT.R, config = { align = "cm", padding = 0 }, nodes = option_nodes },
                 }
             })
             return t
@@ -2146,4 +2152,72 @@ function loadAPIs()
         end,
     })
 
+     -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Palettes
+    -------------------------------------------------------------------------------------------------
+        
+    SMODS.local_palettes = {}
+    SMODS.Palettes = {Types = {}}
+    SMODS.Palette = SMODS.GameObject:extend {
+        obj_table = SMODS.local_palettes,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'palette',
+            'type',
+            'name'
+        },
+        set = 'Palette',
+        prefix = 'pal',
+        inject = function(self)
+            if not SMODS.Palettes[self.type] then
+                table.insert(SMODS.Palettes.Types, self.type)
+                SMODS.Palettes[self.type] = {names = {}}
+                G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or {}
+            end
+            table.insert(SMODS.Palettes[self.type].names, self.name)
+            SMODS.Palettes[self.type][self.name] = {
+                name = self.name,
+                order = #SMODS.Palettes[self.type].names,
+                palette = {}
+            }
+            for i=1, #self.palette do
+                SMODS.Palettes[self.type][self.name].palette[i] = HEX(self.palette[i])
+            end
+        end
+    }
+    -- Default palettes defined for base game consumable types
+    SMODS.Palette({
+        key = "tarot_default",
+        palette = {"4f6367","a58547","dab772","ffe5b4","ffffff"},
+        type = "Tarot",
+        name = "Default"
+    })
+    SMODS.Palette({
+        key = "planet_default",
+        palette = {"4f6367","a58547","74849f","5b9baa","84c5d2","dff5fc","ffffff"},
+        type = "Planet",
+        name = "Default"
+    })
+    SMODS.Palette({
+        key = "spectral_default",
+        palette = {
+            "344245","4e5779","4f6367","918756",
+            "8b8361","a79c67","c7b24a","dcc659","e8d67f",
+            "5e7297","607192","637699","4d6ca4","5b7fc1",
+            "638fe1","7fa5eb","7aa4f2","96aacb","d2bfd5",
+            "e3bfde","b8d1ff","c0c0c0","dcdcdc","e2ebf9",
+            "fdfdfd","ffffff"
+            },
+        type = "Spectral",
+        name = "Default"
+    })
+    -- Shaders defined that have recolour functionality
+    SMODS.Shader({key = 'recolour', file_name = 'recolour.fs'})
+    SMODS.Shader({key = 'negative', file_name = 'negative.fs'})
+    SMODS.Shader({key = 'holo', file_name = 'holo.fs'})
+    SMODS.Shader({key = 'polychrome', file_name = 'polychrome.fs'})
+
 end
+
+   

@@ -1,0 +1,66 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# Recolour the cards
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''if self.ability.name == 'Invisible Joker' and (self.config.center.discovered or self.bypass_discovery_center) then'''
+position = "before"
+payload = '''
+if SMODS.Palettes[self.ability.set] and (G.SETTINGS.selected_colours[self.ability.set].order and G.SETTINGS.selected_colours[self.ability.set].order > 1) then
+    G.SHADERS['recolour']:send("base_colours",unpack(G.SEND_TO_SHADER.DEFAULT))
+    G.SHADERS['recolour']:send("new_colours",unpack(G.SEND_TO_SHADER.ADJUSTED))
+    G.SHADERS['recolour']:send("size",#G.SEND_TO_SHADER.ADJUSTED)
+    self.children.center:draw_shader('recolour', nil, self.ARGS.send_to_shader)
+end'''
+match_indent = true
+
+# Define the base and new colour palettes
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''if self.children.particles then self.children.particles:draw() end'''
+position = "after"
+payload = '''
+if SMODS.Palettes[self.ability.set] and G.SETTINGS.selected_colours[self.ability.set] then
+    G.SEND_TO_SHADER.DEFAULT = SMODS.Palettes[self.ability.set].Default.palette
+    G.SEND_TO_SHADER.ADJUSTED = G.SETTINGS.selected_colours[self.ability.set].palette
+else
+    G.SEND_TO_SHADER.DEFAULT = {HEX("000000")}
+    G.SEND_TO_SHADER.ADJUSTED = {HEX("000000")}
+end'''
+match_indent = true
+
+# Override base shaders with new shaders that respect recolouring
+[[patches]]
+[patches.pattern]
+target = "engine/sprite.lua"
+pattern = '''G.SHADERS[_shader or 'dissolve']:send('mouse_screen_pos', self.ARGS.prep_shader.cursor_pos)'''
+position = "after"
+payload = '''
+if (_shader == "negative" or _shader == "holo" or _shader == "polychrome") then
+    G.SHADERS[_shader]:send("base_colours",unpack(G.SEND_TO_SHADER.DEFAULT))
+    G.SHADERS[_shader]:send("new_colours",unpack(G.SEND_TO_SHADER.ADJUSTED))
+    G.SHADERS[_shader]:send("size",#G.SEND_TO_SHADER.ADJUSTED)
+end'''
+match_indent = true
+
+## Create menu option for card colours
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '''local high_scores = UIBox_button{ label = {localize('b_stats')}, button = "high_scores", minw = 5}'''
+position = "after"
+payload = '''local colours = UIBox_button{ label = {"Card Colours"}, button = "card_colours", minw = 5}'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '''credits'''
+position = "before"
+payload = '''colours,'''
+match_indent = true
