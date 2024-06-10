@@ -76,7 +76,7 @@ function loadMods(modsDirectory)
                 return x and x:gsub('%-STEAMODDED', '')
             end
         },
-        outdated      = { pattern = 'SMODS%.INIT' }
+        outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } }
     }
     
     local used_prefixes = {}
@@ -111,7 +111,15 @@ function loadMods(modsDirectory)
                     local mod = {}
                     local sane = true
                     for k, v in pairs(header_components) do
-                        local component = file_content:match(v.pattern)
+                        local component = nil
+                        if type(v.pattern) == "table" then
+                            for _, pattern in ipairs(v.pattern) do
+                                component = file_content:match(pattern) or component
+                                if component then break end
+                            end
+                        else
+                            component = file_content:match(v.pattern)
+                        end
                         if v.required and not component then
                             sane = false
                             sendWarnMessage(string.format('Mod file %s is missing required header component: %s',
