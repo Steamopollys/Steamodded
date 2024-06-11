@@ -21,12 +21,12 @@ function loadAPIs()
 
     function SMODS.GameObject:__call(o)
         o.mod = SMODS.current_mod
-        if o.mod and not o.raw_atlas_key then
+        if o.mod and not o.raw_atlas_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
         end
-        if o.mod and not o.raw_shader_key then
+        if o.mod and not o.raw_shader_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
             if o['shader'] then o['shader'] = ('%s_%s'):format(o.mod.prefix, o['shader']) end
         end
         setmetatable(o, self)
@@ -35,9 +35,17 @@ function loadAPIs()
         end
         if not o.omit_prefix and o.mod then
             if o['palette'] then
-                o.key = ('%s_%s_%s_%s'):format(o.prefix, o.mod.prefix, o.type:lower(), o.key)
+                if o.mod.omit_mod_prefix or o.omit_mod_prefix then
+                    o.key = ('%s_%s_%s'):format(o.prefix, o.type:lower(), o.key)
+                else
+                    o.key = ('%s_%s_%s_%s'):format(o.prefix, o.mod.prefix, o.type:lower(), o.key)
+                end
             else
-                o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
+                if o.mod.omit_mod_prefix or o.omit_mod_prefix then
+                    o.key = ('%s_%s'):format(o.prefix, o.key)
+                else
+                    o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
+                end
             end
         end
         o:register()
@@ -128,7 +136,7 @@ function loadAPIs()
             o.loc_txt = {}
         end
         for k, v in pairs(obj) do o[k] = v end
-        if o.mod and not o.raw_atlas_key then
+        if o.mod and not o.raw_atlas_key and not o.mod.omit_mod_prefix then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 -- was a new atlas provided with this call?
                 if obj[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then o[v] = ('%s_%s'):format(
@@ -219,7 +227,7 @@ function loadAPIs()
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
                 return
             end
-            if not self.raw_key and self.mod then
+            if not self.raw_key and self.mod and not (self.mod.omit_mod_prefix or self.omit_mod_prefix) then
                 self.key = ('%s_%s'):format(self.mod.prefix, self.key)
             end
             if self.language then
@@ -284,7 +292,7 @@ function loadAPIs()
         process_loc_text = function() end,
         register = function(self)
             if self.obj_table[self.key] then return end
-            if not self.raw_key and self.mod then
+            if not self.raw_key and self.mod and not (self.mod.omit_mod_prefix or self.omit_mod_prefix) then
                 self.key = ('%s_%s'):format(self.mod.prefix, self.key)
             end
             if self.language then
@@ -956,6 +964,18 @@ function loadAPIs()
         loc_vars = function(self, info_queue)
             return {}
         end
+    }
+    SMODS.Tarot = SMODS.Consumable:extend {
+        set = 'Tarot',
+    }
+    SMODS.Planet = SMODS.Consumable:extend {
+        set = 'Planet',
+        atlas = 'Planet',
+    }
+    SMODS.Spectral = SMODS.Consumable:extend {
+        set = 'Spectral',
+        atlas = 'Spectral',
+        cost = 4,
     }
 
 
@@ -1965,7 +1985,7 @@ function loadAPIs()
             end
         end,
         -- other methods:
-        -- calculate_enhancement(self, context, effect)
+        -- calculate(self, context, effect)
     }
     -- Note: `name`, `effect`, and `label` all serve the same purpose as
     -- the name of the enhancement. In theory, `effect` serves to allow reusing
@@ -2029,7 +2049,7 @@ function loadAPIs()
                 return
             end
             self.original_key = self.key
-            if not self.raw_key and self.mod then
+            if not self.raw_key and self.mod and not (self.mod.omit_mod_prefix or self.omit_mod_prefix) then
                 self.key = ('%s_%s'):format(self.mod.prefix, self.key)
             end
             SMODS.Shader.super.register(self)
