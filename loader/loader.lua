@@ -260,13 +260,14 @@ function loadMods(modsDirectory)
                 boot_print_stage('Loading Mod: ' .. mod.id)
                 SMODS.current_mod = mod
                 if mod.outdated then
-                    load_compat_0_9_8()
-                    assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
-                    for k, v in pairs(SMODS.INIT) do
-                        v()
-                        SMODS.INIT[k] = nil
-                        SMODS.INIT_DONE[k] = v
-                    end
+                    SMODS.compat_0_9_8.with_compat(function()
+                        assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
+                        for k, v in pairs(SMODS.INIT) do
+                            v()
+                            SMODS.INIT[k] = nil
+                            SMODS.INIT_DONE[k] = v
+                        end
+                    end)
                 else
                     assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
                 end
@@ -283,11 +284,12 @@ function loadMods(modsDirectory)
             end
         end
     end
-    if load_compat_0_9_8_done then
+    -- compat after loading mods
+    if SMODS.compat_0_9_8.load_done then
         -- Invasive change to Card:generate_UIBox_ability_table()
         local Card_generate_UIBox_ability_table_ref = Card.generate_UIBox_ability_table
         function Card:generate_UIBox_ability_table(...)
-            compat_0_9_8_generate_UIBox_ability_table_card = self
+            SMODS.compat_0_9_8.generate_UIBox_ability_table_card = self
             return Card_generate_UIBox_ability_table_ref(self, ...)
         end
     end

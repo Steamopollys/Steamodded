@@ -1,15 +1,16 @@
-load_compat_0_9_8_done = false
+SMODS.compat_0_9_8 = {}
+SMODS.compat_0_9_8.load_done = false
 
-function load_compat_0_9_8()
-    if load_compat_0_9_8_done then
+function SMODS.compat_0_9_8.load()
+    if SMODS.compat_0_9_8.load_done then
         return
     end
 
-    function loc_vars_compat_0_9_8(self, info_queue, card)
+    function SMODS.compat_0_9_8.loc_vars(self, info_queue, card)
         local vars, main_end
         if self.loc_def and type(self.loc_def) == 'function' then
             if card == nil then
-                card = compat_0_9_8_generate_UIBox_ability_table_card
+                card = SMODS.compat_0_9_8.generate_UIBox_ability_table_card
             end
             vars, main_end = self.loc_def(card, info_queue)
         end
@@ -80,7 +81,7 @@ function load_compat_0_9_8()
     SMODS.Sprites = SMODS.Atlases
 
     SMODS.Joker_new = SMODS.Joker:extend {
-        loc_vars = loc_vars_compat_0_9_8,
+        loc_vars = SMODS.compat_0_9_8.loc_vars,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -125,7 +126,7 @@ function load_compat_0_9_8()
     SMODS.Jokers = SMODS.Centers
 
     SMODS.Tarot_new = SMODS.Tarot:extend {
-        loc_vars = loc_vars_compat_0_9_8,
+        loc_vars = SMODS.compat_0_9_8.loc_vars,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -166,7 +167,7 @@ function load_compat_0_9_8()
     SMODS.Tarots = SMODS.Centers
 
     SMODS.Planet_new = SMODS.Planet:extend {
-        loc_vars = loc_vars_compat_0_9_8,
+        loc_vars = SMODS.compat_0_9_8.loc_vars,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -208,7 +209,7 @@ function load_compat_0_9_8()
     SMODS.Planets = SMODS.Centers
 
     SMODS.Spectral_new = SMODS.Spectral:extend {
-        loc_vars = loc_vars_compat_0_9_8,
+        loc_vars = SMODS.compat_0_9_8.loc_vars,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -277,7 +278,7 @@ function load_compat_0_9_8()
     end
 
     SMODS.Voucher_new = SMODS.Voucher:extend {
-        loc_vars = loc_vars_compat_0_9_8,
+        loc_vars = SMODS.compat_0_9_8.loc_vars,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -365,5 +366,70 @@ function load_compat_0_9_8()
         }
     end
 
-    load_compat_0_9_8_done = true
+    SMODS.compat_0_9_8.load_done = true
+end
+
+function SMODS.compat_0_9_8.with_compat(func)
+    SMODS.compat_0_9_8.load()
+    -- local localization_ref = G.localization
+    -- local captured_loc, captured_loc_mt
+    -- captured_loc_mt = {
+    --     __index = function(t, k)
+    --         local v = rawget(t, k)
+    --         if v ~= nil then
+    --             return v
+    --         end
+    --         local corr_v = rawget(t, 'corr_t')[k]
+    --         if corr_v then
+    --             if type(corr_v) ~= 'table' then
+    --                 return corr_v
+    --             else
+    --                 -- corr_v is a table
+    --                 local ret = rawset(t, k, setmetatable({corr_t = corr_v}, captured_loc_mt))
+    --                 print("ret:")
+    --                 print(inspectDepth(ret))
+    --                 return ret
+    --             end
+    --         end
+    --         return nil
+    --     end
+    -- }
+    -- -- top-level proxy for G.localization
+    -- captured_loc = setmetatable({corr_t = localization_ref}, captured_loc_mt)
+    -- G.localization = captured_loc
+    -- local init_localization_ref = init_localization
+    -- init_localization = function()
+    --     G.localization = localization_ref
+    --     print("init_localization interposed!")
+    --     init_localization_ref()
+    --     G.localization = captured_loc
+    -- end
+    func()
+    -- init_localization = init_localization_ref
+    -- G.localization = localization_ref
+    -- local function recursive_clear_metatable(t)
+    --     setmetatable(t, nil)
+    --     for _, v in pairs(t) do
+    --         setmetatable(t, nil)
+    --     end
+    -- end
+    -- recursive_clear_metatable(captured_loc)
+    -- print("captured_loc:")
+    -- print(inspect(captured_loc))
+    -- function SMODS.current_mod.process_loc_text()
+    --     local function recurse(t, corr_t)
+    --         for k, v in pairs(t) do
+    --             if type(v) == 'table' then
+    --                 if corr_t[k] ~= nil then
+    --                     corr_t[k] = {}
+    --                 end
+    --                 -- process values individually to avoid overwriting a whole table
+    --                 recurse(v, corr_t[k])
+    --             else
+    --                 corr_t[k] = v
+    --             end
+    --         end
+    --     end
+    --     recurse(captured_loc, G.localization)
+    -- end
 end
