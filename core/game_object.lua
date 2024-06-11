@@ -1985,7 +1985,7 @@ function loadAPIs()
             end
         end,
         -- other methods:
-        -- calculate_enhancement(self, context, effect)
+        -- calculate(self, context, effect)
     }
     -- Note: `name`, `effect`, and `label` all serve the same purpose as
     -- the name of the enhancement. In theory, `effect` serves to allow reusing
