@@ -366,70 +366,71 @@ function SMODS.compat_0_9_8.load()
         }
     end
 
+    -- Indexing a table `t` that has this metatable instead indexes `t.capture_table`.
+    -- Handles nested indices by instead indexing `t.capture_table` with the
+    -- concatenation of all indices, separated by dots.
+    SMODS.compat_0_9_8.loc_indexer_mt = {
+        __index = function(t, k)
+            local new_idxs = t.idxs .. "." .. k
+            if t.capture_table[new_idxs] ~= nil then
+                return t.capture_table[new_idxs]
+            end
+            local corr_v = t.corr_t[k]
+            if type(corr_v) ~= 'table' then
+                return corr_v
+            end
+            return setmetatable({
+                -- sequence of indexes starting from G.localization, separated by dots
+                -- and preceded by a dot
+                idxs = new_idxs,
+                -- table we would be indexing
+                corr_t = corr_v,
+                capture_table = t.capture_table,
+            }, SMODS.compat_0_9_8.loc_indexer_mt)
+        end,
+        __newindex = function(t, k, v)
+            local new_idxs = t.idxs .. "." .. k
+            t.capture_table[new_idxs] = v
+        end
+    }
+
+    -- Drop-in replacement for G.localization
+    function SMODS.compat_0_9_8.new_loc_capturer(capture_table)
+        return setmetatable({
+            idxs = '',
+            corr_t = G.localization,
+            capture_table = capture_table,
+        }, SMODS.compat_0_9_8.loc_indexer_mt)
+    end
+
     SMODS.compat_0_9_8.load_done = true
 end
 
 function SMODS.compat_0_9_8.with_compat(func)
     SMODS.compat_0_9_8.load()
-    -- local localization_ref = G.localization
-    -- local captured_loc, captured_loc_mt
-    -- captured_loc_mt = {
-    --     __index = function(t, k)
-    --         local v = rawget(t, k)
-    --         if v ~= nil then
-    --             return v
-    --         end
-    --         local corr_v = rawget(t, 'corr_t')[k]
-    --         if corr_v then
-    --             if type(corr_v) ~= 'table' then
-    --                 return corr_v
-    --             else
-    --                 -- corr_v is a table
-    --                 local ret = rawset(t, k, setmetatable({corr_t = corr_v}, captured_loc_mt))
-    --                 print("ret:")
-    --                 print(inspectDepth(ret))
-    --                 return ret
-    --             end
-    --         end
-    --         return nil
-    --     end
-    -- }
-    -- -- top-level proxy for G.localization
-    -- captured_loc = setmetatable({corr_t = localization_ref}, captured_loc_mt)
-    -- G.localization = captured_loc
-    -- local init_localization_ref = init_localization
-    -- init_localization = function()
-    --     G.localization = localization_ref
-    --     print("init_localization interposed!")
-    --     init_localization_ref()
-    --     G.localization = captured_loc
-    -- end
+    local localization_ref = G.localization
+    init_localization_ref = init_localization
+    local captured_loc = {}
+    G.localization = SMODS.compat_0_9_8.new_loc_capturer(captured_loc)
+    function init_localization()
+        G.localization = localization_ref
+        init_localization_ref()
+        G.localization = SMODS.compat_0_9_8.new_loc_capturer(captured_loc)
+    end
     func()
-    -- init_localization = init_localization_ref
-    -- G.localization = localization_ref
-    -- local function recursive_clear_metatable(t)
-    --     setmetatable(t, nil)
-    --     for _, v in pairs(t) do
-    --         setmetatable(t, nil)
-    --     end
-    -- end
-    -- recursive_clear_metatable(captured_loc)
-    -- print("captured_loc:")
-    -- print(inspect(captured_loc))
-    -- function SMODS.current_mod.process_loc_text()
-    --     local function recurse(t, corr_t)
-    --         for k, v in pairs(t) do
-    --             if type(v) == 'table' then
-    --                 if corr_t[k] ~= nil then
-    --                     corr_t[k] = {}
-    --                 end
-    --                 -- process values individually to avoid overwriting a whole table
-    --                 recurse(v, corr_t[k])
-    --             else
-    --                 corr_t[k] = v
-    --             end
-    --         end
-    --     end
-    --     recurse(captured_loc, G.localization)
-    -- end
+    G.localization = localization_ref
+    init_localization = init_localization_ref
+    function SMODS.current_mod.process_loc_text()
+        for idxs, v in pairs(captured_loc) do
+            local t = G.localization
+            local k = nil
+            for cur_k in idxs:gmatch("[^%.]+") do
+                if k ~= nil then
+                    t = t[k]
+                end
+                k = cur_k
+            end
+            t[k] = v
+        end
+    end
 end
