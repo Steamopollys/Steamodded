@@ -6,13 +6,31 @@ function SMODS.compat_0_9_8.load()
         return
     end
 
-    function SMODS.compat_0_9_8.loc_vars(self, info_queue, card)
+    function SMODS.compat_0_9_8.joker_loc_vars(self, info_queue, card)
         local vars, main_end
         if self.loc_def and type(self.loc_def) == 'function' then
             if card == nil then
                 card = SMODS.compat_0_9_8.generate_UIBox_ability_table_card
             end
             vars, main_end = self.loc_def(card, info_queue)
+        end
+        if self.tooltip and type(self.tooltip) == 'function' then
+            self.tooltip(self, info_queue)
+        end
+        if vars then
+            return {
+                vars = vars,
+                main_end = main_end
+            }
+        else
+            return {}
+        end
+    end
+    -- Applies to Tarot, Planet, Spectral and Voucher
+    function SMODS.compat_0_9_8.tarot_loc_vars(self, info_queue, card)
+        local vars, main_end
+        if self.loc_def and type(self.loc_def) == 'function' then
+            vars, main_end = self.loc_def(self, info_queue)
         end
         if self.tooltip and type(self.tooltip) == 'function' then
             self.tooltip(self, info_queue)
@@ -81,7 +99,7 @@ function SMODS.compat_0_9_8.load()
     SMODS.Sprites = SMODS.Atlases
 
     SMODS.Joker_new = SMODS.Joker:extend {
-        loc_vars = SMODS.compat_0_9_8.loc_vars,
+        loc_vars = SMODS.compat_0_9_8.joker_loc_vars,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -126,7 +144,7 @@ function SMODS.compat_0_9_8.load()
     SMODS.Jokers = SMODS.Centers
 
     SMODS.Tarot_new = SMODS.Tarot:extend {
-        loc_vars = SMODS.compat_0_9_8.loc_vars,
+        loc_vars = SMODS.compat_0_9_8.tarot_loc_vars,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -167,7 +185,7 @@ function SMODS.compat_0_9_8.load()
     SMODS.Tarots = SMODS.Centers
 
     SMODS.Planet_new = SMODS.Planet:extend {
-        loc_vars = SMODS.compat_0_9_8.loc_vars,
+        loc_vars = SMODS.compat_0_9_8.tarot_loc_vars,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -209,7 +227,7 @@ function SMODS.compat_0_9_8.load()
     SMODS.Planets = SMODS.Centers
 
     SMODS.Spectral_new = SMODS.Spectral:extend {
-        loc_vars = SMODS.compat_0_9_8.loc_vars,
+        loc_vars = SMODS.compat_0_9_8.tarot_loc_vars,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
@@ -278,7 +296,7 @@ function SMODS.compat_0_9_8.load()
     end
 
     SMODS.Voucher_new = SMODS.Voucher:extend {
-        loc_vars = SMODS.compat_0_9_8.loc_vars,
+        loc_vars = SMODS.compat_0_9_8.tarot_loc_vars,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
