@@ -2017,7 +2017,11 @@ function loadAPIs()
         inject = function(self)
             self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
             'assets/shaders/' .. self.file_name
-            G.SHADERS[self.key] = love.graphics.newShader(self.full_path)
+            local file = NFS.read(self.full_path)
+            love.filesystem.write(self.key.."-temp.fs", file)
+            G.SHADERS[self.key] = love.graphics.newShader(self.key.."-temp.fs")
+            love.filesystem.remove(self.key.."-temp.fs")
+            -- G.SHADERS[self.key] = love.graphics.newShader(self.full_path)
         end,
         register = function(self)
             if self.registered then 
