@@ -54,6 +54,17 @@ function SMODS.compat_0_9_8.load()
         return c.joker_main
     end
 
+    SMODS.SOUND_SOURCES = SMODS.Sounds
+    function register_sound(name, path, filename)
+        SMODS.Sound {
+            key = name,
+            path = filename,
+        }
+    end
+    function modded_play_sound(sound_code, stop_previous_instance, volume, pitch)
+        return SMODS.Sound.play(nil, pitch, volume, stop_previous_instance, sound_code)
+    end
+
     SMODS.Deck_new = SMODS.Back:extend {
         register = function(self)
             if self.registered then
