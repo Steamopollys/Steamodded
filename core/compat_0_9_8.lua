@@ -353,10 +353,19 @@ function SMODS.compat_0_9_8.load()
         __newindex = function(t, k, v)
             if k == 'slug' then t.key = v; return
             end
-            if k == 'redeem' or k == 'update' then
+            if k == 'update' then
                 local v_ref = v
                 v = function(self, ...)
                     return v_ref(...)
+                end
+            elseif k == 'redeem' then
+                local v_ref = v
+                v = function(center, card)
+                    local center_table = {
+                        name = center and center.name or card and card.ability.name,
+                        extra = center and center.config.extra or card and card.ability.extra
+                    }
+                    return v_ref(center_table)
                 end
             end
             rawset(t, k, v)
