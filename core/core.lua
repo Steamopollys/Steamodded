@@ -1104,7 +1104,7 @@ function SMODS.SAVE_UNLOCKS()
         end
     end
 
-	table.sort(G.P_LOCKED, function (a, b) return not a.order or not b.order or a.order < b.order end)
+	table.sort(G.P_LOCKED, function (a, b) return a.order and b.order and a.order < b.order end)
 
 	for k, v in pairs(G.P_BLINDS) do
         v.key = k
