@@ -2211,6 +2211,9 @@ function loadAPIs()
             for i=1, #self.palette do
                 SMODS.Palettes[self.type][self.name].palette[i] = HEX(self.palette[i])
             end
+            if not G.SETTINGS.selected_colours[self.type] then
+                G.SETTINGS.selected_colours[self.type] = SMODS.Palettes[self.type]
+            end
         end
     }
     -- Default palettes defined for base game consumable types
