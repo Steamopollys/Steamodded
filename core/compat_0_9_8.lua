@@ -441,11 +441,15 @@ function SMODS.compat_0_9_8.load()
         }
     end
 
+    SMODS.compat_0_9_8.loc_proxies = setmetatable({}, {__mode = 'k'})
     -- Indexing a table `t` that has this metatable instead indexes `t.capture_table`.
     -- Handles nested indices by instead indexing `t.capture_table` with the
     -- concatenation of all indices, separated by dots.
     SMODS.compat_0_9_8.loc_proxy_mt = {
         __index = function(t, k)
+            if rawget(t, 'stop_capture') then
+                return t.orig_t[k]
+            end
             local new_idx_str = t.idx_str .. "." .. k
             -- first check capture_table
             if t.capture_table[new_idx_str] ~= nil then
@@ -457,7 +461,7 @@ function SMODS.compat_0_9_8.load()
                 -- reached a non-table value, stop proxying
                 return orig_v
             end
-            return setmetatable({
+            local ret = setmetatable({
                 -- concatenation of all indexes, starting from G.localization
                 -- separated by dots and preceded by a dot
                 idx_str = new_idx_str,
@@ -465,20 +469,33 @@ function SMODS.compat_0_9_8.load()
                 orig_t = orig_v,
                 capture_table = t.capture_table,
             }, SMODS.compat_0_9_8.loc_proxy_mt)
+            SMODS.compat_0_9_8.loc_proxies[ret] = true
+            return ret
         end,
         __newindex = function(t, k, v)
+            if rawget(t, 'stop_capture') then
+                t.orig_t[k] = v; return
+            end
             local new_idx_str = t.idx_str .. "." .. k
             t.capture_table[new_idx_str] = v
         end
     }
-
     -- Drop-in replacement for G.localization. Captures changes in `capture_table`
     function SMODS.compat_0_9_8.loc_proxy(capture_table)
-        return setmetatable({
+        local ret = setmetatable({
             idx_str = '',
             orig_t = G.localization,
             capture_table = capture_table,
         }, SMODS.compat_0_9_8.loc_proxy_mt)
+        SMODS.compat_0_9_8.loc_proxies[ret] = true
+        return ret
+    end
+    function SMODS.compat_0_9_8.stop_loc_proxies()
+        collectgarbage()
+        for proxy, _ in pairs(SMODS.compat_0_9_8.loc_proxies) do
+            rawset(proxy, 'stop_capture', true)
+            SMODS.compat_0_9_8.loc_proxies[proxy] = nil
+        end
     end
 
     SMODS.compat_0_9_8.load_done = true
@@ -498,6 +515,7 @@ function SMODS.compat_0_9_8.with_compat(func)
     func()
     G.localization = localization_ref
     init_localization = init_localization_ref
+    SMODS.compat_0_9_8.stop_loc_proxies()
     function SMODS.current_mod.process_loc_text()
         for idx_str, v in pairs(captured_loc) do
             local t = G
