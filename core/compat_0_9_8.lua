@@ -171,7 +171,7 @@ function SMODS.compat_0_9_8.load()
             if k == 'slug' then t.key = v; return
             elseif k == 'spritePos' then t.pos = v; return
             end
-            if k == 'calculate' or k == 'set_ability' or k == 'set_badges' then
+            if k == 'calculate' or k == 'set_ability' or k == 'set_badges' or k == 'update' then
                 local v_ref = v
                 v = function(self, ...)
                     return v_ref(...)
@@ -224,7 +224,7 @@ function SMODS.compat_0_9_8.load()
                 elseif k == 'spritePos' then
                     t.pos = v; return
                 end
-                if k == 'set_badges' or k == 'use' or k == 'can_use' then
+                if k == 'set_badges' or k == 'use' or k == 'can_use' or k == 'update' then
                     local v_ref = v
                     v = function(self, ...)
                         return v_ref(...)
@@ -353,7 +353,7 @@ function SMODS.compat_0_9_8.load()
         __newindex = function(t, k, v)
             if k == 'slug' then t.key = v; return
             end
-            if k == 'redeem' then
+            if k == 'redeem' or k == 'update' then
                 local v_ref = v
                 v = function(self, ...)
                     return v_ref(...)
