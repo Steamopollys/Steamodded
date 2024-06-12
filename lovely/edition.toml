@@ -151,7 +151,7 @@ line_prepend = "$indent"
 
 # Alternate scoring effects for editions
 
-# Add played dollars to cards
+# Expand base game calculation logic to allow for multiple effects
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua" # line 763
@@ -192,35 +192,6 @@ end
 if not effects[ii].edition then'''
 match_indent = true
 
-# Add played dollars to jokers
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''                                edition = true\}\)'''
-position = "after"
-payload = '''end'''
-
-# Repetitions
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''card_eval_status_text\(\(reps\[j].jokers or reps\[j].seals\).card, 'jokers', nil, nil, nil, \(reps\[j].jokers or reps\[j].seals\)\)\n\s+end'''
-position = "at"
-payload = '''card_eval_status_text((reps[j].jokers or reps[j].seals or reps[j].edition).card, 'jokers', nil, nil, nil, (reps[j].jokers or reps[j].seals or reps[j].edition))
-end'''
-
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua" # line 763
-pattern = "local eval = eval_card(scoring_hand[i], {repetition_only = true,cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true})"
-position = "after"
-payload = '''
-if next(eval) and eval.edition.repetitions then 
-    for h = 1, eval.edition.repetitions do
-        reps[#reps+1] = eval
-    end
-end'''
-match_indent = true
 
 
 
