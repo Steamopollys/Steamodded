@@ -262,10 +262,9 @@ function loadMods(modsDirectory)
                 if mod.outdated then
                     SMODS.compat_0_9_8.with_compat(function()
                         assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
-                        for k, v in pairs(SMODS.INIT) do
+                        for k, v in pairs(SMODS.compat_0_9_8.init_queue) do
                             v()
-                            SMODS.INIT[k] = nil
-                            SMODS.INIT_DONE[k] = v
+                            SMODS.compat_0_9_8.init_queue[k] = nil
                         end
                     end)
                 else

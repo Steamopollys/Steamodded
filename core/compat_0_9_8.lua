@@ -50,8 +50,13 @@ function SMODS.compat_0_9_8.load()
         end
     end
 
-    SMODS.INIT = {}
-    SMODS.INIT_DONE = {}
+    SMODS.compat_0_9_8.init_queue = {}
+    SMODS.INIT = setmetatable({}, {
+        __newindex = function(t, k, v)
+            SMODS.compat_0_9_8.init_queue[k] = v
+            rawset(t, k, v)
+        end
+    })
     function SMODS.findModByID(id)
         return SMODS.Mods[id]
     end
