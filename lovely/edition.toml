@@ -151,7 +151,7 @@ line_prepend = "$indent"
 
 # Alternate scoring effects for editions
 
-# Expand base game calculation logic to allow for multiple effects
+# Allows base game effects to stack
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua" # line 763
@@ -192,7 +192,12 @@ end
 if not effects[ii].edition then'''
 match_indent = true
 
-
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''                                edition = true\}\)'''
+position = "after"
+payload = '''end'''
 
 
 # Negative playing card logic
