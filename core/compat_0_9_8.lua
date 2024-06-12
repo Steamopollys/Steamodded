@@ -109,7 +109,15 @@ function SMODS.compat_0_9_8.load()
     SMODS.Sprites = {}
     SMODS.compat_0_9_8.Sprite_new = SMODS.Atlas:extend {
         register = function(self)
-            SMODS.compat_0_9_8.delay_register(SMODS.compat_0_9_8.Sprite_new, self)
+            if self.delay_register then
+                self.delay_register = nil
+                return
+            end
+            if self.registered then
+                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+                return
+            end
+            SMODS.compat_0_9_8.Sprite_new.super.register(self)
             table.insert(SMODS.Sprites, self)
         end,
         __index = function(t, k)
