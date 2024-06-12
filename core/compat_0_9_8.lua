@@ -106,9 +106,11 @@ function SMODS.compat_0_9_8.load()
     end
     SMODS.Decks = SMODS.Centers
 
+    SMODS.Sprites = {}
     SMODS.compat_0_9_8.Sprite_new = SMODS.Atlas:extend {
         register = function(self)
             SMODS.compat_0_9_8.delay_register(SMODS.compat_0_9_8.Sprite_new, self)
+            table.insert(SMODS.Sprites, self)
         end,
         __index = function(t, k)
             if k == 'name' then return t.key
@@ -139,7 +141,6 @@ function SMODS.compat_0_9_8.load()
             delay_register = true
         }
     end
-    SMODS.Sprites = SMODS.Atlas.obj_buffer
 
     SMODS.compat_0_9_8.Joker_new = SMODS.Joker:extend {
         loc_vars = SMODS.compat_0_9_8.joker_loc_vars,
