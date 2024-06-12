@@ -2119,7 +2119,16 @@ function loadAPIs()
 
     SMODS.Edition:take_ownership('foil',{
         shader = 'foil',
-        config = { chips = 50 },
+        config = setmetatable({ chips = 50 }, {
+            __index = function(t, k)
+                if k == 'extra' then return t.chips end
+                return rawget(t, k)
+            end,
+            __newindex = function(t, k, v)
+                if k == 'extra' then t.chips = v; return end
+                rawset(t, k, v)
+            end,
+        }),
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         weight = 20,
         extra_cost = 2,
@@ -2132,7 +2141,16 @@ function loadAPIs()
     })
     SMODS.Edition:take_ownership('holo', {
         shader = 'holo',
-        config = { mult = 10 },
+        config = setmetatable({ mult = 10 }, {
+            __index = function(t, k)
+                if k == 'extra' then return t.mult end
+                return rawget(t, k)
+            end,
+            __newindex = function(t, k, v)
+                if k == 'extra' then t.mult = v; return end
+                rawset(t, k, v)
+            end,
+        }),
         sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
         weight = 14,
         extra_cost = 3,
@@ -2145,7 +2163,16 @@ function loadAPIs()
     })
     SMODS.Edition:take_ownership('polychrome', {
         shader = 'polychrome',
-        config = { x_mult = 1.5 },
+        config = setmetatable({ x_mult = 1.5 }, {
+            __index = function(t, k)
+                if k == 'extra' then return t.x_mult end
+                return rawget(t, k)
+            end,
+            __newindex = function(t, k, v)
+                if k == 'extra' then t.x_mult = v; return end
+                rawset(t, k, v)
+            end,
+        }),
         sound = { sound = "polychrome1", per = 1.2, vol = 0.7 },
         weight = 3,
         extra_cost = 5,
@@ -2158,7 +2185,16 @@ function loadAPIs()
     })
     SMODS.Edition:take_ownership('negative', {
         shader = 'negative',
-        config = { card_limit = 1 },
+        config = setmetatable({ card_limit = 1 }, {
+            __index = function(t, k)
+                if k == 'extra' then return t.card_limit end
+                return rawget(t, k)
+            end,
+            __newindex = function(t, k, v)
+                if k == 'extra' then t.card_limit = v; return end
+                rawset(t, k, v)
+            end,
+        }),
         sound = { sound = "negative", per = 1.5, vol = 0.4 },
         weight = 3,
         extra_cost = 5,
