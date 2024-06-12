@@ -17,9 +17,6 @@ function SMODS.compat_0_9_8.load()
     function SMODS.compat_0_9_8.joker_loc_vars(self, info_queue, card)
         local vars, main_end
         if self.loc_def and type(self.loc_def) == 'function' then
-            if card == nil then
-                card = SMODS.compat_0_9_8.generate_UIBox_ability_table_card
-            end
             vars, main_end = self.loc_def(card, info_queue)
         end
         if self.tooltip and type(self.tooltip) == 'function' then
