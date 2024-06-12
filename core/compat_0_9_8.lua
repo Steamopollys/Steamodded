@@ -61,6 +61,9 @@ function SMODS.compat_0_9_8.load()
     function SMODS.end_calculate_context(c)
         return c.joker_main
     end
+    function SMODS.LOAD_LOC()
+        init_localization()
+    end
 
     SMODS.SOUND_SOURCES = SMODS.Sounds
     function register_sound(name, path, filename)
