@@ -6,6 +6,14 @@ function SMODS.compat_0_9_8.load()
         return
     end
 
+    function SMODS.compat_0_9_8.delay_register(cls, self)
+        if self.delay_register then
+            self.delay_register = nil
+            return
+        end
+        cls.super.register(self)
+    end
+
     function SMODS.compat_0_9_8.joker_loc_vars(self, info_queue, card)
         local vars, main_end
         if self.loc_def and type(self.loc_def) == 'function' then
@@ -65,19 +73,26 @@ function SMODS.compat_0_9_8.load()
         return SMODS.Sound.play(nil, pitch, volume, stop_previous_instance, sound_code)
     end
 
-    SMODS.Deck_new = SMODS.Back:extend {
+    SMODS.compat_0_9_8.Deck_new = SMODS.Back:extend {
         register = function(self)
-            if self.registered then
-                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
-                return
+            SMODS.compat_0_9_8.delay_register(SMODS.compat_0_9_8.Deck_new, self)
+        end,
+        __index = function(t, k)
+            if k == 'slug' then return t.key
+            elseif k == 'spritePos' then return t.pos
             end
-            self.slug = self.key
-            SMODS.Deck_new.super.register(self)
-        end
+            return getmetatable(t)[k]
+        end,
+        __newindex = function(t, k, v)
+            if k == 'slug' then t.key = v; return
+            elseif k == 'spritePos' then t.pos = v; return
+            end
+            rawset(t, k, v)
+        end,
     }
     SMODS.Deck = {}
     function SMODS.Deck.new(self, name, slug, config, spritePos, loc_txt, unlocked, discovered)
-        return SMODS.Deck_new {
+        return SMODS.compat_0_9_8.Deck_new {
             name = name,
             key = slug,
             config = config,
@@ -85,11 +100,27 @@ function SMODS.compat_0_9_8.load()
             loc_txt = loc_txt,
             unlocked = unlocked,
             discovered = discovered,
-            atlas = config and config.atlas
+            atlas = config and config.atlas,
+            delay_register = true
         }
     end
     SMODS.Decks = SMODS.Centers
 
+    SMODS.compat_0_9_8.Sprite_new = SMODS.Atlas:extend {
+        register = function(self)
+            SMODS.compat_0_9_8.delay_register(SMODS.compat_0_9_8.Sprite_new, self)
+        end,
+        __index = function(t, k)
+            if k == 'name' then return t.key
+            end
+            return getmetatable(t)[k]
+        end,
+        __newindex = function(t, k, v)
+            if k == 'name' then t.key = v; return
+            end
+            rawset(t, k, v)
+        end,
+    }
     SMODS.Sprite = {}
     function SMODS.Sprite.new(self, name, top_lpath, path, px, py, type, frames)
         local atlas_table
@@ -98,31 +129,34 @@ function SMODS.compat_0_9_8.load()
         else
             atlas_table = 'ASSET_ATLAS'
         end
-        return SMODS.Atlas {
+        return SMODS.compat_0_9_8.Sprite_new {
             key = name,
             path = path,
             atlas_table = atlas_table,
             px = px,
             py = py,
-            frames = frames
+            frames = frames,
+            delay_register = true
         }
     end
     SMODS.Sprites = SMODS.Atlases
 
-    SMODS.Joker_new = SMODS.Joker:extend {
+    SMODS.compat_0_9_8.Joker_new = SMODS.Joker:extend {
         loc_vars = SMODS.compat_0_9_8.joker_loc_vars,
         register = function(self)
-            if self.registered then
-                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
-                return
+            SMODS.compat_0_9_8.delay_register(SMODS.compat_0_9_8.Joker_new, self)
+        end,
+        __index = function(t, k)
+            if k == 'slug' then return t.key
+            elseif k == 'atlas' and SMODS.Atlases[t.key] then return t.key
+            elseif k == 'spritePos' then return t.pos
             end
-            self.slug = self.key
-            if self.atlas == 0 then
-                self.atlas = self.key
-            end
-            SMODS.Joker_new.super.register(self)
+            return getmetatable(t)[k]
         end,
         __newindex = function(t, k, v)
+            if k == 'slug' then t.key = v; return
+            elseif k == 'spritePos' then t.pos = v; return
+            end
             if k == 'calculate' or k == 'set_ability' or k == 'set_badges' then
                 local v_ref = v
                 v = function(self, ...)
@@ -134,7 +168,7 @@ function SMODS.compat_0_9_8.load()
     }
     function SMODS.Joker.new(self, name, slug, config, spritePos, loc_txt, rarity, cost, unlocked, discovered,
                              blueprint_compat, eternal_compat, effect, atlas, soul_pos)
-        local x = SMODS.Joker_new {
+        local x = SMODS.compat_0_9_8.Joker_new {
             name = name,
             key = slug,
             config = config,
@@ -147,39 +181,51 @@ function SMODS.compat_0_9_8.load()
             blueprint_compat = blueprint_compat,
             eternal_compat = eternal_compat,
             effect = effect,
-            atlas = atlas or 0,
-            soul_pos = soul_pos
+            atlas = atlas,
+            soul_pos = soul_pos,
+            delay_register = true
         }
         return x
     end
     SMODS.Jokers = SMODS.Centers
 
-    SMODS.Tarot_new = SMODS.Tarot:extend {
-        loc_vars = SMODS.compat_0_9_8.tarot_loc_vars,
-        register = function(self)
-            if self.registered then
-                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
-                return
-            end
-            self.slug = self.key
-            if self.atlas == 0 then
-                self.atlas = self.key
-            end
-            SMODS.Tarot_new.super.register(self)
-        end,
-        __newindex = function(t, k, v)
-            if k == 'set_badges' or k == 'use' or k == 'can_use' then
-                local v_ref = v
-                v = function(self, ...)
-                    return v_ref(...)
+    function SMODS.compat_0_9_8.extend_consumable_class(SMODS_cls)
+        local cls
+        cls = SMODS_cls:extend {
+            loc_vars = SMODS.compat_0_9_8.tarot_loc_vars,
+            register = function(self)
+                SMODS.compat_0_9_8.delay_register(cls, self)
+            end,
+            __index = function(t, k)
+                if k == 'slug' then
+                    return t.key
+                elseif k == 'atlas' and SMODS.Atlases[t.key] then
+                    return t.key
                 end
+                return getmetatable(t)[k]
+            end,
+            __newindex = function(t, k, v)
+                if k == 'slug' then
+                    t.key = v; return
+                elseif k == 'spritePos' then
+                    t.pos = v; return
+                end
+                if k == 'set_badges' or k == 'use' or k == 'can_use' then
+                    local v_ref = v
+                    v = function(self, ...)
+                        return v_ref(...)
+                    end
+                end
+                rawset(t, k, v)
             end
-            rawset(t, k, v)
-        end
-    }
+        }
+        return cls
+    end
+
+    SMODS.compat_0_9_8.Tarot_new = SMODS.compat_0_9_8.extend_consumable_class(SMODS.Tarot)
     function SMODS.Tarot.new(self, name, slug, config, pos, loc_txt, cost, cost_mult, effect, consumeable, discovered,
                              atlas)
-        return SMODS.Tarot_new {
+        return SMODS.compat_0_9_8.Tarot_new {
             name = name,
             key = slug,
             config = config,
@@ -190,37 +236,16 @@ function SMODS.compat_0_9_8.load()
             effect = effect,
             consumeable = consumeable,
             discovered = discovered,
-            atlas = atlas or 0
+            atlas = atlas,
+            delay_register = true
         }
     end
     SMODS.Tarots = SMODS.Centers
 
-    SMODS.Planet_new = SMODS.Planet:extend {
-        loc_vars = SMODS.compat_0_9_8.tarot_loc_vars,
-        register = function(self)
-            if self.registered then
-                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
-                return
-            end
-            self.slug = self.key
-            if self.atlas == 0 then
-                self.atlas = self.key
-            end
-            SMODS.Planet_new.super.register(self)
-        end,
-        __newindex = function(t, k, v)
-            if k == 'set_badges' or k == 'use' or k == 'can_use' then
-                local v_ref = v
-                v = function(self, ...)
-                    return v_ref(...)
-                end
-            end
-            rawset(t, k, v)
-        end
-    }
+    SMODS.compat_0_9_8.Planet_new = SMODS.compat_0_9_8.extend_consumable_class(SMODS.Planet)
     function SMODS.Planet.new(self, name, slug, config, pos, loc_txt, cost, cost_mult, effect, freq, consumeable,
                               discovered, atlas)
-        return SMODS.Planet_new {
+        return SMODS.compat_0_9_8.Planet_new {
             name = name,
             key = slug,
             config = config,
@@ -232,36 +257,15 @@ function SMODS.compat_0_9_8.load()
             freq = freq,
             consumeable = consumeable,
             discovered = discovered,
-            atlas = atlas or 0
+            atlas = atlas,
+            delay_register = true
         }
     end
     SMODS.Planets = SMODS.Centers
 
-    SMODS.Spectral_new = SMODS.Spectral:extend {
-        loc_vars = SMODS.compat_0_9_8.tarot_loc_vars,
-        register = function(self)
-            if self.registered then
-                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
-                return
-            end
-            self.slug = self.key
-            if self.atlas == 0 then
-                self.atlas = self.key
-            end
-            SMODS.Spectral_new.super.register(self)
-        end,
-        __newindex = function(t, k, v)
-            if k == 'set_badges' or k == 'use' or k == 'can_use' then
-                local v_ref = v
-                v = function(self, ...)
-                    return v_ref(...)
-                end
-            end
-            rawset(t, k, v)
-        end
-    }
+    SMODS.compat_0_9_8.Spectral_new = SMODS.compat_0_9_8.extend_consumable_class(SMODS.Spectral)
     function SMODS.Spectral.new(self, name, slug, config, pos, loc_txt, cost, consumeable, discovered, atlas)
-        return SMODS.Spectral_new {
+        return SMODS.compat_0_9_8.Spectral_new {
             name = name,
             key = slug,
             config = config,
@@ -270,14 +274,19 @@ function SMODS.compat_0_9_8.load()
             cost = cost,
             consumeable = consumeable,
             discovered = discovered,
-            atlas = atlas or 0
+            atlas = atlas,
+            delay_register = true
         }
     end
     SMODS.Spectrals = SMODS.Centers
 
-    SMODS.Seal_new = SMODS.Seal:extend {
+    SMODS.compat_0_9_8.Seal_new = SMODS.Seal:extend {
         omit_prefix = true,
         register = function(self)
+            if self.delay_register then
+                self.delay_register = nil
+                return
+            end
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
                 return
@@ -287,11 +296,20 @@ function SMODS.compat_0_9_8.load()
                 self.obj_buffer[#self.obj_buffer + 1] = self.label
                 self.registered = true
             end
-        end
+        end,
+        __index = function(t, k)
+            if k == 'name' then return t.key
+            end
+            return getmetatable(t)[k]
+        end,
+        __newindex = function(t, k, v)
+            if k == 'name' then t.key = v; return
+            end
+            rawset(t, k, v)
+        end,
     }
     function SMODS.Seal.new(self, name, label, full_name, pos, loc_txt, atlas, discovered, color)
-        return SMODS.Seal_new {
-            name = name,
+        return SMODS.compat_0_9_8.Seal_new {
             key = name,
             label = label,
             full_name = full_name,
@@ -300,26 +318,27 @@ function SMODS.compat_0_9_8.load()
                 description = loc_txt,
                 label = full_name
             },
-            atlas = atlas or 0,
+            atlas = atlas,
             discovered = discovered,
-            colour = color
+            colour = color,
+            delay_register = true
         }
     end
 
-    SMODS.Voucher_new = SMODS.Voucher:extend {
+    SMODS.compat_0_9_8.Voucher_new = SMODS.Voucher:extend {
         loc_vars = SMODS.compat_0_9_8.tarot_loc_vars,
         register = function(self)
-            if self.registered then
-                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
-                return
+            SMODS.compat_0_9_8.delay_register(SMODS.compat_0_9_8.Voucher_new, self)
+        end,
+        __index = function(t, k)
+            if k == 'slug' then return t.key
+            elseif k == 'atlas' and SMODS.Atlases[t.key] then return t.key
             end
-            self.slug = self.key
-            if self.atlas == 0 then
-                self.atlas = self.key
-            end
-            SMODS.Voucher_new.super.register(self)
+            return getmetatable(t)[k]
         end,
         __newindex = function(t, k, v)
+            if k == 'slug' then t.key = v; return
+            end
             if k == 'redeem' then
                 local v_ref = v
                 v = function(self, ...)
@@ -331,7 +350,7 @@ function SMODS.compat_0_9_8.load()
     }
     function SMODS.Voucher.new(self, name, slug, config, pos, loc_txt, cost, unlocked, discovered, available, requires,
                                atlas)
-        return SMODS.Voucher_new {
+        return SMODS.compat_0_9_8.Voucher_new {
             name = name,
             key = slug,
             config = config,
@@ -342,21 +361,24 @@ function SMODS.compat_0_9_8.load()
             discovered = discovered,
             available = available,
             requires = requires,
-            atlas = atlas or 0
+            atlas = atlas,
+            delay_register = true
         }
     end
     SMODS.Vouchers = SMODS.Centers
 
-    SMODS.Blind_new = SMODS.Blind:extend {
+    SMODS.compat_0_9_8.Blind_new = SMODS.Blind:extend {
         register = function(self)
-            if self.registered then
-                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
-                return
+            SMODS.compat_0_9_8.delay_register(SMODS.compat_0_9_8.Blind_new, self)
+        end,
+        __index = function(t, k)
+            if k == 'slug' then return t.key
             end
-            self.slug = self.key
-            SMODS.Blind_new.super.register(self)
+            return getmetatable(t)[k]
         end,
         __newindex = function(t, k, v)
+            if k == 'slug' then t.key = v; return
+            end
             if k == 'set_blind'
             or k == 'disable'
             or k == 'defeat'
@@ -377,7 +399,7 @@ function SMODS.compat_0_9_8.load()
     }
     function SMODS.Blind.new(self, name, slug, loc_txt, dollars, mult, vars, debuff, pos, boss, boss_colour, defeated,
                              atlas)
-        return SMODS.Blind_new {
+        return SMODS.compat_0_9_8.Blind_new {
             name = name,
             key = slug,
             loc_txt = loc_txt,
@@ -391,45 +413,49 @@ function SMODS.compat_0_9_8.load()
             boss = boss,
             boss_colour = boss_colour,
             defeated = defeated,
-            atlas = atlas
+            atlas = atlas,
+            delay_register = true
         }
     end
 
     -- Indexing a table `t` that has this metatable instead indexes `t.capture_table`.
     -- Handles nested indices by instead indexing `t.capture_table` with the
     -- concatenation of all indices, separated by dots.
-    SMODS.compat_0_9_8.loc_indexer_mt = {
+    SMODS.compat_0_9_8.loc_proxy_mt = {
         __index = function(t, k)
-            local new_idxs = t.idxs .. "." .. k
-            if t.capture_table[new_idxs] ~= nil then
-                return t.capture_table[new_idxs]
+            local new_idx_str = t.idx_str .. "." .. k
+            -- first check capture_table
+            if t.capture_table[new_idx_str] ~= nil then
+                return t.capture_table[new_idx_str]
             end
-            local corr_v = t.corr_t[k]
-            if type(corr_v) ~= 'table' then
-                return corr_v
+            -- then fall back to orig_t
+            local orig_v = t.orig_t[k]
+            if type(orig_v) ~= 'table' then
+                -- reached a non-table value, stop proxying
+                return orig_v
             end
             return setmetatable({
-                -- sequence of indexes starting from G.localization, separated by dots
-                -- and preceded by a dot
-                idxs = new_idxs,
+                -- concatenation of all indexes, starting from G.localization
+                -- separated by dots and preceded by a dot
+                idx_str = new_idx_str,
                 -- table we would be indexing
-                corr_t = corr_v,
+                orig_t = orig_v,
                 capture_table = t.capture_table,
-            }, SMODS.compat_0_9_8.loc_indexer_mt)
+            }, SMODS.compat_0_9_8.loc_proxy_mt)
         end,
         __newindex = function(t, k, v)
-            local new_idxs = t.idxs .. "." .. k
-            t.capture_table[new_idxs] = v
+            local new_idx_str = t.idx_str .. "." .. k
+            t.capture_table[new_idx_str] = v
         end
     }
 
-    -- Drop-in replacement for G.localization
-    function SMODS.compat_0_9_8.new_loc_capturer(capture_table)
+    -- Drop-in replacement for G.localization. Captures changes in `capture_table`
+    function SMODS.compat_0_9_8.loc_proxy(capture_table)
         return setmetatable({
-            idxs = '',
-            corr_t = G.localization,
+            idx_str = '',
+            orig_t = G.localization,
             capture_table = capture_table,
-        }, SMODS.compat_0_9_8.loc_indexer_mt)
+        }, SMODS.compat_0_9_8.loc_proxy_mt)
     end
 
     SMODS.compat_0_9_8.load_done = true
@@ -440,24 +466,21 @@ function SMODS.compat_0_9_8.with_compat(func)
     local localization_ref = G.localization
     init_localization_ref = init_localization
     local captured_loc = {}
-    G.localization = SMODS.compat_0_9_8.new_loc_capturer(captured_loc)
+    G.localization = SMODS.compat_0_9_8.loc_proxy(captured_loc)
     function init_localization()
         G.localization = localization_ref
         init_localization_ref()
-        G.localization = SMODS.compat_0_9_8.new_loc_capturer(captured_loc)
+        G.localization = SMODS.compat_0_9_8.loc_proxy(captured_loc)
     end
     func()
     G.localization = localization_ref
     init_localization = init_localization_ref
     function SMODS.current_mod.process_loc_text()
-        for idxs, v in pairs(captured_loc) do
-            local t = G.localization
-            local k = nil
-            for cur_k in idxs:gmatch("[^%.]+") do
-                if k ~= nil then
-                    t = t[k]
-                end
-                k = cur_k
+        for idx_str, v in pairs(captured_loc) do
+            local t = G
+            local k = 'localization'
+            for cur_k in idx_str:gmatch("[^%.]+") do
+                t, k = t[k], cur_k
             end
             t[k] = v
         end
