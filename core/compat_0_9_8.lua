@@ -139,7 +139,7 @@ function SMODS.compat_0_9_8.load()
             delay_register = true
         }
     end
-    SMODS.Sprites = SMODS.Atlases
+    SMODS.Sprites = SMODS.Atlas.obj_buffer
 
     SMODS.compat_0_9_8.Joker_new = SMODS.Joker:extend {
         loc_vars = SMODS.compat_0_9_8.joker_loc_vars,
