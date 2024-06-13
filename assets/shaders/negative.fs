@@ -118,9 +118,9 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
         }
     }
     vec4 neighbours[4];
-    neighbours[0] = recolour_pixel(Texel(texture, texture_coords + vec2(1.5/image_details.x,0)).rgb);
+    neighbours[0] = recolour_pixel(Texel(texture, texture_coords + vec2(0.5/image_details.x,0)).rgb);
     neighbours[1] = recolour_pixel(Texel(texture, texture_coords - vec2(0.5/image_details.x,0)).rgb);
-    neighbours[2] = recolour_pixel(Texel(texture, texture_coords + vec2(0, 1.5/image_details.y)).rgb);
+    neighbours[2] = recolour_pixel(Texel(texture, texture_coords + vec2(0, 0.5/image_details.y)).rgb);
     neighbours[3] = recolour_pixel(Texel(texture, texture_coords - vec2(0, 0.5/image_details.y)).rgb);
     vec3 avg = vec3(0,0,0);
     number count = 0;
