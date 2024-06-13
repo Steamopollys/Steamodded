@@ -41,7 +41,7 @@ target = "engine/sprite.lua"
 pattern = '''G.SHADERS[_shader or 'dissolve']:send('mouse_screen_pos', self.ARGS.prep_shader.cursor_pos)'''
 position = "after"
 payload = '''
-if (_shader == "negative" or _shader == "holo" or _shader == "polychrome") then
+if (_shader == "negative" or _shader == "holo" or _shader == "polychrome" or _shader == "voucher") then
     G.SHADERS[_shader]:send("base_colours",unpack(G.SEND_TO_SHADER.DEFAULT))
     G.SHADERS[_shader]:send("new_colours",unpack(G.SEND_TO_SHADER.ADJUSTED))
     G.SHADERS[_shader]:send("size",#G.SEND_TO_SHADER.ADJUSTED)
