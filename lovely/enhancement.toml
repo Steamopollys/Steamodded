@@ -173,7 +173,7 @@ target = "functions/common_events.lua"
 pattern = "if (_c.name == 'Stone Card') then full_UI_table.name = true end"
 match_indent = true
 position = "at"
-payload = "if _c.name == 'Stone Card' or _c.replace_base_card then full_UI_table.name = true"
+payload = "if not specific_vars.playing_card or _c.name == 'Stone Card' or _c.replace_base_card then full_UI_table.name = true"
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"

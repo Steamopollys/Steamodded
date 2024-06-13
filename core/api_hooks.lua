@@ -1215,3 +1215,123 @@ G.UIDEF.card_colours = function()
     local t = create_UIBox_generic_options({back_func = 'options', contents = nodeRet})
     return t
 end
+
+-------------------------------------------------------------------------------------------------
+----- API HOOKS GameObject.Enhancement
+-------------------------------------------------------------------------------------------------
+
+function create_UIBox_your_collection_enhancements(exit)
+    local deck_tables = {}
+    local rows, cols = 2, 4
+    local page = 0
+
+    G.your_collection = {}
+    for j = 1, rows do
+        G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 4.25 * G.CARD_W, 1.03 * G.CARD_H,
+            {
+                card_limit = cols,
+                type = 'title',
+                highlight_limit = 0,
+                collection = true
+            })
+        table.insert(deck_tables, { n = G.UIT.R, config = { align = "cm", padding = 0, no_fill = true },
+            nodes = {{ n = G.UIT.O, config = { object = G.your_collection[j] } }}
+        })
+    end
+
+	table.sort(G.P_CENTER_POOLS.Enhanced, function(a,b) return a.order < b.order end)
+
+    local count = math.min(cols * rows, #G.P_CENTER_POOLS.Enhanced)
+    local index = 1 + (rows * cols * page)
+    for j = 1, rows do
+        for i = 1, cols do
+
+            local center = G.P_CENTER_POOLS.Enhanced[index]
+            if not center then
+                break
+            end
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+            card:set_ability(center, true, true)
+            G.your_collection[j]:emplace(card)
+            index = index + 1
+        end
+        if index > count then
+            break
+        end
+    end
+
+    local enhancement_options = {}
+
+    local t = create_UIBox_generic_options({
+        infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
+        contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
+            nodes = deck_tables }}
+    })
+
+    if #G.P_CENTER_POOLS["Enhanced"] > rows * cols then
+        for i = 1, math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) do
+            table.insert(enhancement_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+                tostring(math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))))
+        end
+        t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
+            contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
+                nodes = deck_tables
+            }, { n = G.UIT.R, config = { align = "cm" },
+                nodes = {create_option_cycle({
+                    options = enhancement_options,
+                    w = 4.5,
+                    cycle_shoulders = true,
+                    opt_callback = 'your_collection_enhancements_page',
+                    focus_args = { snap_to = true, nav = 'wide' },
+                    current_option = 1,
+                    r = rows,
+                    c = cols,
+                    colour = G.C.RED,
+                    no_pips = true
+                })}
+            }}
+        })
+    end
+    return t
+end
+
+G.FUNCS.your_collection_enhancements_page = function(args)
+    if not args or not args.cycle_config then
+        return
+    end
+    local rows = 2
+    local cols = 4
+    local page = args.cycle_config.current_option
+    if page > math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) then
+        page = page - math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))
+    end
+    local count = rows * cols
+    local offset = (rows * cols) * (page - 1)
+
+    for j = 1, #G.your_collection do
+        for i = #G.your_collection[j].cards, 1, -1 do
+            if G.your_collection[j] ~= nil then
+                local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+                c:remove()
+                c = nil
+            end
+        end
+    end
+
+    for j = 1, rows do
+        for i = 1, cols do
+            if count % rows > 0 and i <= count % rows and j == cols then
+                offset = offset - 1
+                break
+            end
+            local idx = i + (j - 1) * cols + offset
+            if idx > #G.P_CENTER_POOLS.Enhanced then return end
+            local center = G.P_CENTER_POOLS.Enhanced[idx]
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+                G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+            card:set_ability(center, true, true)
+            card:start_materialize(nil, i > 1 or j > 1)
+            G.your_collection[j]:emplace(card)
+        end
+    end
+end
