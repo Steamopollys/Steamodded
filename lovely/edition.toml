@@ -93,7 +93,7 @@ if self.edition then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if self.edition[v.key:sub(3)] then
             self.children.center:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
-            if self.children.front and self.ability.effect ~= 'Stone Card' then
+            if self.children.front and self.ability.effect ~= 'Stone Card' and not self.config.center.replace_base_card then
                 self.children.front:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
             end
         end
