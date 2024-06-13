@@ -1145,7 +1145,7 @@ function loadAPIs()
         atlas = 'centers',
         pos = { x = 0, y = 0 },
         discovered = false,
-        colour = HEX('FFFFFF'),
+        badge_colour = HEX('FFFFFF'),
         required_params = {
             'key',
             'pos',
