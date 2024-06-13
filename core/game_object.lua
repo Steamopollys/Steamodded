@@ -108,13 +108,14 @@ function loadAPIs()
     end
 
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
-    function SMODS.GameObject:take_ownership(key, obj)
+    function SMODS.GameObject:take_ownership(key, obj, silent)
         key = (self.omit_prefix or key:sub(1, #self.prefix + 1) == self.prefix .. '_') and key or
             ('%s_%s'):format(self.prefix, key)
         local o = self.obj_table[key] or self:get_obj(key)
         if not o then
             sendWarnMessage(
-                ('Cannot take ownership of %s %s: Does not exist.'):format(self.set or self.__name, key)
+                ('Cannot take ownership of %s: Does not exist.'):format(key),
+                self.set
             )
             return
         end
@@ -127,9 +128,10 @@ function loadAPIs()
         setmetatable(o, self)
         if o.mod then
             o.dependencies = o.dependencies or {}
-            table.insert(o.dependencies, SMODS.current_mod.id)
+            if not silent then table.insert(o.dependencies, SMODS.current_mod.id) end
         else
             o.mod = SMODS.current_mod
+            if silent then o.no_main_mod_badge = true end
             o.key = key
             o.rarity_original = o.rarity
             -- preserve original text unless it's changed
