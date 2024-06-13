@@ -151,7 +151,7 @@ line_prepend = "$indent"
 
 # Alternate scoring effects for editions
 
-# Allows base game effects to stack
+# Edition scoring on playing cards
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua" # line 763
@@ -189,15 +189,46 @@ if effects[ii].edition.x_mult_mod then
     })
     update_hand_text({delay = 0}, {mult = mult})
 end
+if effects[ii].edition.p_dollars_mod then
+    if effects[ii].card then juice_card(effects[ii].card) end
+    ease_dollars(effects[ii].edition.p_dollars_mod)
+    card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].edition.p_dollars_mod, percent)
+end
 if not effects[ii].edition then'''
 match_indent = true
-
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
 pattern = '''                                edition = true\}\)'''
 position = "after"
 payload = '''end'''
+
+# Edition scoring on jokers
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "edition_effects.jokers.edition = true"
+position = "after"
+payload = '''
+if edition_effects.jokers.p_dollars_mod then
+    ease_dollars(edition_effects.jokers.p_dollars_mod)
+    card_eval_status_text(_card, 'dollars', edition_effects.jokers.p_dollars_mod, percent)
+end'''
+match_indent = true
+
+
+# Adding p_dollars
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.edition.x_mult then"
+position = "before"
+payload = '''
+if self.edition.p_dollars then
+    ret.p_dollars_mod = self.edition.p_dollars
+end'''
+match_indent = true
+
 
 
 # Negative playing card logic
