@@ -4,18 +4,17 @@
 	#define MY_HIGHP_OR_MEDIUMP mediump
 #endif
 
-extern MY_HIGHP_OR_MEDIUMP vec2 recolour;
-
+extern MY_HIGHP_OR_MEDIUMP vec2 voucher;
 extern MY_HIGHP_OR_MEDIUMP number dissolve;
 extern MY_HIGHP_OR_MEDIUMP number time;
 extern MY_HIGHP_OR_MEDIUMP vec4 texture_details;
-extern MY_HIGHP_OR_MEDIUMP vec4 base_colours[26];
-extern MY_HIGHP_OR_MEDIUMP vec4 new_colours[26];
-extern MY_HIGHP_OR_MEDIUMP number size;
 extern MY_HIGHP_OR_MEDIUMP vec2 image_details;
 extern bool shadow;
 extern MY_HIGHP_OR_MEDIUMP vec4 burn_colour_1;
 extern MY_HIGHP_OR_MEDIUMP vec4 burn_colour_2;
+extern MY_HIGHP_OR_MEDIUMP vec4 base_colours[26];
+extern MY_HIGHP_OR_MEDIUMP vec4 new_colours[26];
+extern MY_HIGHP_OR_MEDIUMP number size;
 
 vec4 dissolve_mask(vec4 tex, vec2 texture_coords, vec2 uv)
 {
@@ -54,7 +53,6 @@ vec4 dissolve_mask(vec4 tex, vec2 texture_coords, vec2 uv)
 
     return vec4(shadow ? vec3(0.,0.,0.) : tex.xyz, res > adjusted_dissolve ? (shadow ? tex.a*0.3: tex.a) : .0);
 }
-
 vec4 recolour_pixel(vec3 pixel){
     for (int i=0; i < size; i++){
         if (pixel.rgb == base_colours[i].rgb){
@@ -69,7 +67,7 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
     MY_HIGHP_OR_MEDIUMP vec4 tex = Texel(texture, texture_coords);
 	MY_HIGHP_OR_MEDIUMP vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.ba)/texture_details.ba;
     
-    if (recolour.g > 0.0 || recolour.g < 0.0) {
+    if (voucher.g > 0.0 || voucher.g < 0.0) {
         vec4 rec = recolour_pixel(tex.rgb);
         if (rec.a > 0) {
             tex.rgb = rec.rgb;
@@ -92,7 +90,26 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
     if (count > 0) {
         tex.rgb = sqrt(avg/count);
     }
-    return dissolve_mask(tex, texture_coords, uv);
+    number low = min(tex.r, min(tex.g, tex.b));
+    number high = max(tex.r, max(tex.g, tex.b));
+	number delta = high-low;
+
+    number fac = 0.8 + 0.9*sin(13.*uv.x+5.32*uv.y + voucher.r*12. + cos(voucher.r*5.3 + uv.y*4.2 - uv.x*4.));
+    number fac2 = 0.5 + 0.5*sin(10.*uv.x+2.32*uv.y + voucher.r*5. - cos(voucher.r*2.3 + uv.x*8.2));
+    number fac3 = 0.5 + 0.5*sin(12.*uv.x+6.32*uv.y + voucher.r*6.111 + sin(voucher.r*5.3 + uv.y*3.2));
+    number fac4 = 0.5 + 0.5*sin(4.*uv.x+2.32*uv.y + voucher.r*8.111 + sin(voucher.r*1.3 + uv.y*13.2));
+    number fac5 = sin(0.5*16.*uv.x+5.32*uv.y + voucher.r*12. + cos(voucher.r*5.3 + uv.y*4.2 - uv.x*4.));
+
+    number maxfac = 0.6*max(max(fac, max(fac2, max(fac3,0.0))) + (fac+fac2+fac3*fac4), 0.);
+
+    tex.rgb = tex.rgb*0.5 + vec3(0.4, 0.4, 0.8);
+
+    tex.r = tex.r-delta + delta*maxfac*(0.7 + fac5*0.07) - 0.1;
+    tex.g = tex.g-delta + delta*maxfac*(0.7 - fac5*0.17) - 0.1;
+    tex.b = tex.b-delta + delta*maxfac*0.7 - 0.1;
+    tex.a = tex.a*(0.8*max(min(1., max(0.,0.3*max(low*0.2, delta)+ min(max(maxfac*0.1,0.), 0.4)) ), 0.) + 0.15*maxfac*(0.1+delta));
+
+    return dissolve_mask(tex*colour, texture_coords, uv);
 }
 
 extern MY_HIGHP_OR_MEDIUMP vec2 mouse_screen_pos;
@@ -105,9 +122,9 @@ vec4 position( mat4 transform_projection, vec4 vertex_position )
     if (hovering <= 0.){
         return transform_projection * vertex_position;
     }
-    MY_HIGHP_OR_MEDIUMP float mid_dist = length(vertex_position.xy - 0.5*love_ScreenSize.xy)/length(love_ScreenSize.xy);
-    MY_HIGHP_OR_MEDIUMP vec2 mouse_offset = (vertex_position.xy - mouse_screen_pos.xy)/screen_scale;
-    MY_HIGHP_OR_MEDIUMP float scale = 0.2*(-0.03 - 0.3*max(0., 0.3-mid_dist))
+    float mid_dist = length(vertex_position.xy - 0.5*love_ScreenSize.xy)/length(love_ScreenSize.xy);
+    vec2 mouse_offset = (vertex_position.xy - mouse_screen_pos.xy)/screen_scale;
+    float scale = 0.2*(-0.03 - 0.3*max(0., 0.3-mid_dist))
                 *hovering*(length(mouse_offset)*length(mouse_offset))/(2. -mid_dist);
 
     return transform_projection * vertex_position + vec4(0,0,0,scale);

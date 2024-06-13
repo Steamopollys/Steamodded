@@ -96,17 +96,42 @@ vec4 HSL(vec4 c)
 	hsl.x = mod(hsl.x / 6., 1.);
 	return hsl;
 }
+vec4 recolour_pixel(vec3 pixel){
+    for (int i=0; i < size; i++){
+        if (pixel.rgb == base_colours[i].rgb){
+            return vec4(new_colours[i].rgb, 1);
+        }
+    }
+    return vec4(pixel.rgb, 0);
+}
 
 vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords )
 {
-    vec4 tex = Texel(texture, texture_coords);
-	vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.ba)/texture_details.ba;
-	if (holo.g > 0.0 || holo.g < 0.0) {
-        for (int i=0; i < size; i++){
-            if (tex.rgb == base_colours[i].rgb){
-                tex.rgb = new_colours[i].rgb;
-            }
+    MY_HIGHP_OR_MEDIUMP vec4 tex = Texel(texture, texture_coords);
+	MY_HIGHP_OR_MEDIUMP vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.ba)/texture_details.ba;
+    
+    if (holo.g > 0.0 || holo.g < 0.0) {
+        vec4 rec = recolour_pixel(tex.rgb);
+        if (rec.a > 0) {
+            tex.rgb = rec.rgb;
+            return dissolve_mask(tex, texture_coords, uv);
         }
+    }
+    vec4 neighbours[4];
+    neighbours[0] = recolour_pixel(Texel(texture, texture_coords + vec2(0.5/image_details.x,0)).rgb);
+    neighbours[1] = recolour_pixel(Texel(texture, texture_coords - vec2(0.5/image_details.x,0)).rgb);
+    neighbours[2] = recolour_pixel(Texel(texture, texture_coords + vec2(0, 0.5/image_details.y)).rgb);
+    neighbours[3] = recolour_pixel(Texel(texture, texture_coords - vec2(0, 0.5/image_details.y)).rgb);
+    vec3 avg = vec3(0,0,0);
+    number count = 0;
+    for (int i=0; i < 4; i++){
+        if (neighbours[i].a > 0) {
+            count++;
+            avg += neighbours[i].rgb * neighbours[i].rgb;
+        }
+    }
+    if (count > 0) {
+        tex.rgb = sqrt(avg/count);
     }
 
     vec4 hsl = HSL(0.5*tex + 0.5*vec4(0.,0.,1.,tex.a));
