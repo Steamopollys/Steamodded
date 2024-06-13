@@ -1,0 +1,14 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# fallback for card.ability.name
+# Card:set_ability()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "self.ability.bonus = (self.ability.bonus or 0) + (center.config.bonus or 0)"
+position = 'after'
+payload = "if not self.ability.name then self.ability.name = center.key end"
+match_indent = true
