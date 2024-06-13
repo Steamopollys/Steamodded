@@ -8,14 +8,14 @@ function loadAPIs()
 
     --- GameObject base class. You should always use the appropriate subclass to register your object.
     SMODS.GameObject = Object:extend()
-    SMODS.GameObject.children = {}
+    SMODS.GameObject.subclasses = {}
     function SMODS.GameObject:extend(o)
         local cls = Object.extend(self)
         for k, v in pairs(o or {}) do
             cls[k] = v
         end
-        self.children[#self.children + 1] = cls
-        cls.children = {}
+        self.subclasses[#self.subclasses + 1] = cls
+        cls.subclasses = {}
         return cls
     end
 
@@ -154,7 +154,7 @@ function loadAPIs()
         if class.obj_table and class.obj_buffer then
             class:injector()
         else
-            for _, subclass in ipairs(class.children) do SMODS.injectObjects(subclass) end
+            for _, subclass in ipairs(class.subclasses) do SMODS.injectObjects(subclass) end
         end
     end
 
