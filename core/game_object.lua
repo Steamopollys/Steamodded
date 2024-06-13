@@ -788,6 +788,27 @@ function loadAPIs()
             SMODS.process_loc_text(G.localization.misc.labels, string.lower(self.key), self.loc_txt, 'label')
             SMODS.process_loc_text(G.localization.descriptions.Other, 'undiscovered_' .. string.lower(self.key),
                 self.loc_txt, 'undiscovered')
+        end,
+        generate_palette = function(self, base_colour, alternate_colour)
+            if not self.palette_shifter then return HEX("000000") end
+            local palette = {}
+            for i=1,#self.palette_shifter do
+                local new_colour = {}
+                for j=1,4 do
+                    table.insert(new_colour, math.max(0, math.min(1, base_colour[j]+self.palette_shifter[i][j])))
+                end
+                table.insert(palette, HSL_RGB(new_colour))
+            end
+            if self.palette_shifter_alt then
+                for i=1,#self.palette_shifter_alt do
+                    local new_colour = {}
+                    for j=1,4 do
+                        table.insert(new_colour, math.max(0, math.min(1, alternate_colour[j]+self.palette_shifter_alt[i][j])))
+                    end
+                    table.insert(palette, HSL_RGB(new_colour))
+                end
+            end
+            return palette
         end
     }
 
@@ -805,6 +826,7 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
+        palette_shifter = {{0, -0.06, -0.60, 0}, {0, 0.30, -0.35, 0}, {0, 0.20, -0.15, 0}, {0, 0, 0, 0}, {0, -0.50, 0.20, 0}}
     }
     SMODS.ConsumableType {
         key = 'Planet',
@@ -820,6 +842,7 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
+        palette_shifter = {{0,-0.23,-0.26,0}, {0,0,0,0}, {0, -0.10, 0.16, 0}, {0.04, -0.35, 0.42, 0}, {-1, -1, 1, 0}}
     }
     SMODS.ConsumableType {
         key = 'Spectral',
@@ -827,6 +850,8 @@ function loadAPIs()
         primary_colour = G.C.SET.Spectral,
         secondary_colour = G.C.SECONDARY_SET.Spectral,
         loc_txt = {},
+        palette_shifter = {{-0.3,-0.48,-0.61,0}, {-0.3,-0.49,-0.48,0},{0,-0.46,-0.05,0},{-0.02,-0.3,-0.085,0},{0.08,-0.21,-0.4,0},{0,-0.03,-0.24,0},{0,-0.22,-0.31,0},{0,-0.19,-0.29,0},{0,-0.21,-0.28,0},{0,-0.04,-0.125,0},{0,0,0,0},{0,-0.07,0.07,0},{0,-0.1,0.05,0},{0,-0.28,0.12,0},{0,-0.4,0,0},{-0.03,-0.47,0.1,0}},
+        palette_shifter_alt = {{-0.015,-0.32,-0.24,0}, {0,-0.22,-0.22,0}, {0,-0.24,-0.13,0}, {0,-0.17,0.13,0}, {0,-0.03,0.08,0}, {0,0,0,0}}
     }
 
     local game_init_game_object_ref = Game.init_game_object
@@ -2245,13 +2270,68 @@ function loadAPIs()
                 palette = {}
             }
             for i=1, #self.palette do
-                SMODS.Palettes[self.type][self.name].palette[i] = HEX(self.palette[i])
+                SMODS.Palettes[self.type][self.name].palette[i] = type(self.palette[i]) == "string" and HEX(self.palette[i]) or self.palette[i]
             end
             if not G.SETTINGS.selected_colours[self.type] then
                 G.SETTINGS.selected_colours[self.type] = SMODS.Palettes[self.type]
             end
         end
     }
+
+    function SMODS.Palette:create_palette(type, base_colour, alternate_colour)
+        if SMODS.ConsumableTypes[type].generate_palette then
+            return SMODS.ConsumableTypes[type]:generate_palette(HEX_HSL(base_colour), alternate_colour and HEX_HSL(alternate_colour))
+        end
+        return {HEX(base_colour)}
+    end 
+
+    function HEX_HSL(base_colour)
+        print("HEX: "..base_colour)
+        local rgb = HEX(base_colour)
+        print("RGB: "..tprint(rgb))
+        local low = math.min(rgb[1], rgb[2], rgb[3])
+        local high = math.max(rgb[1], rgb[2], rgb[3])
+        print("Max: "..high.." Min: "..low)
+        local delta = high - low
+        local sum = high + low
+        local hsl = {0, 0, 0.5 * sum, rgb[4]}
+        
+        if delta == 0 then return hsl end
+        
+        if hsl[3] == 1 or hsl[3] == 0 then
+            hsl[2] = 0
+        else
+            hsl[2] = delta/1-math.abs(2*hsl[3] - 1)
+        end
+        
+        if high == rgb[1] then
+            hsl[1] = ((rgb[2]-rgb[3])/delta) % 6
+        elseif high == rgb[2] then
+            hsl[1] = 2 + (rgb[3]-rgb[1])/delta
+        else
+            hsl[1] = 4 + (rgb[1]-rgb[2])/delta 
+        end
+        hsl[1] = hsl[1]/6
+        return hsl
+    end
+
+    function HSL_RGB(base_colour)
+        print("Base colour" .. tprint(base_colour))
+        if base_colour[2] < 0.0001 then return {base_colour[3], base_colour[3], base_colour[3], base_colour[4]} end
+        local t = (base_colour[3] < 0.5 and (base_colour[2]*base_colour[3] + base_colour[3]) or (-1 * base_colour[2] * base_colour[3] + (base_colour[2]+base_colour[3])))
+        local s = 2 * base_colour[3] - t
+
+        return {HUE(s, t, base_colour[1] + (1/3)), HUE(s,t,base_colour[1]), HUE(s,t,base_colour[1] - (1/3)), base_colour[4]}
+    end
+
+    function HUE(s, t, h)
+        local hs = (h % 1) * 6
+        if hs < 1 then return (t-s) * hs + s end
+        if hs < 3 then return t end
+        if hs < 4 then return (t-s) * (4-hs) + s end
+        return s
+    end
+
     -- Default palettes defined for base game consumable types
     SMODS.Palette({
         key = "tarot_default",
@@ -2261,19 +2341,16 @@ function loadAPIs()
     })
     SMODS.Palette({
         key = "planet_default",
-        palette = {"4f6367","a58547","74849f","5b9baa","84c5d2","dff5fc","ffffff"},
+        palette = {"4f6367","5b9baa","84c5d2","dff5fc","ffffff"},
         type = "Planet",
         name = "Default"
     })
     SMODS.Palette({
         key = "spectral_default",
         palette = {
-            "344245","4e5779","4f6367","918756",
-            "8b8361","a79c67","c7b24a","dcc659","e8d67f",
-            "5e7297","607192","637699","4d6ca4","5b7fc1",
-            "638fe1","7fa5eb","7aa4f2","96aacb","d2bfd5",
-            "e3bfde","b8d1ff","c0c0c0","dcdcdc","e2ebf9",
-            "fdfdfd","ffffff"
+            "344245","4f6367","bfc7d5","96aacb",
+            "4e5779","4d6ca4","607192","5e7297","637699","5b7fc1","638fe1","7aa4f2","7fa5eb","b8d1ff","bfcce3","e2ebf9",
+            "8b8361","918756","a79c67","e8d67f","dcc659","c7b24a"
             },
         type = "Spectral",
         name = "Default"
@@ -2283,6 +2360,7 @@ function loadAPIs()
     SMODS.Shader({key = 'negative', file_name = 'negative.fs'})
     SMODS.Shader({key = 'holo', file_name = 'holo.fs'})
     SMODS.Shader({key = 'polychrome', file_name = 'polychrome.fs'})
+    SMODS.Shader({key = 'voucher', file_name = 'voucher.fs'})
 
 end
 
