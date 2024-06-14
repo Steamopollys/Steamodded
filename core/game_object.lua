@@ -234,20 +234,12 @@ function loadAPIs()
             if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
             self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
                 'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
-            local file_data = NFS.newFileData(self.full_path)
-            if file_data then
-                local image_data = love.image.newImageData(file_data)
-                if image_data then
-                    self.image = love.graphics.newImage(image_data,
-                        { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
-                else
-                    self.image = love.graphics.newImage(self.full_path,
-                        { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
-                end
-            else
-                self.image = love.graphics.newImage(self.full_path,
-                    { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
-            end
+            local file_data = assert(NFS.newFileData(self.full_path),
+                ('Failed to collect file data for Atlas %s'):format(self.key))
+            local image_data = assert(love.image.newImageData(file_data),
+                ('Failed to initialize image data for Atlas %s'):format(self.key))
+            self.image = love.graphics.newImage(image_data,
+                { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             G[self.atlas_table][self.key_noloc or self.key] = self
         end,
         process_loc_text = function() end
@@ -255,7 +247,6 @@ function loadAPIs()
 
     SMODS.Atlas {
         key = 'mod_tags',
-        atlas = 'ASSET_ATLAS',
         path = 'mod_tags.png',
         px = 34,
         py = 34,
