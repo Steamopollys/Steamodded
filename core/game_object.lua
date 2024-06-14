@@ -2265,7 +2265,10 @@ function loadAPIs()
                 SMODS.Palettes[self.type] = {names = {}}
                 G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or {}
             end
-            if SMODS.Palettes[self.type][self.name] then return end
+            if SMODS.Palettes[self.type][self.name] then 
+                G.FUNCS.update_atlas(self.type)
+                return
+            end
             table.insert(SMODS.Palettes[self.type].names, self.name)
             SMODS.Palettes[self.type][self.name] = {
                 name = self.name,
