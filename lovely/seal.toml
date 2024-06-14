@@ -28,7 +28,7 @@ position = 'before'
 match_indent = true
 payload = '''
 for k, v in pairs(SMODS.Seals) do
-	G.BADGE_COL[k:lower()..'_seal'] = v.colour
+	G.BADGE_COL[k:lower()..'_seal'] = v.badge_colour
 end'''
 
 # Card:calculate_seal()
