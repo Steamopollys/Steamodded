@@ -1190,11 +1190,26 @@ end
 ----- API HOOKS GameObject.Palette
 -------------------------------------------------------------------------------------------------
 G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
-G.SEND_TO_SHADER = {}
+G.PALETTE = {}
 
 G.FUNCS.update_recolor = function(args)
     G.SETTINGS.selected_colours[args.cycle_config.type] = SMODS.Palettes[args.cycle_config.type][args.to_val]
-    G:save_settings()
+	G:save_settings()
+	G.FUNCS.update_atlas(args.cycle_config.type)
+end
+
+-- Set the atlases of all cards of the correct type to be the new palette
+G.FUNCS.update_atlas = function(type)
+	local atlas_keys = {}
+	for _,v in pairs(G.P_CENTER_POOLS[type]) do
+		atlas_keys[v.atlas or type] = v.atlas or type
+	end
+	for _,v in pairs(atlas_keys) do
+		if G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name] then
+			G.ASSET_ATLAS[v].image = G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name].image
+			sendInfoMessage("Updated the "..v.." atlases to be "..G.SETTINGS.selected_colours[type].name, "PaletteAPI")
+		end
+	end
 end
 
 G.FUNCS.card_colours = function(e)
@@ -1214,6 +1229,19 @@ G.UIDEF.card_colours = function()
     end
     local t = create_UIBox_generic_options({back_func = 'options', contents = nodeRet})
     return t
+end
+
+G.FUNCS.recolour_image = function(x,y,r,g,b,a)
+	for i=1, #G.PALETTE.DEFAULT do
+		local defaultColour = G.PALETTE.DEFAULT[i]
+		if defaultColour[1] == r and defaultColour[2] == g and defaultColour[3] == b then
+			r = G.PALETTE.NEW[i][1]
+			g = G.PALETTE.NEW[i][2]
+			b = G.PALETTE.NEW[i][3]
+			return r,g,b,a
+		end
+	end
+	return r, g, b, a
 end
 
 -------------------------------------------------------------------------------------------------

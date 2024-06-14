@@ -251,9 +251,9 @@ function loadAPIs()
                 'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
             local file_data = NFS.newFileData(self.full_path)
             if file_data then
-                local image_data = love.image.newImageData(file_data)
-                if image_data then
-                    self.image = love.graphics.newImage(image_data,
+                self.image_data = love.image.newImageData(file_data)
+                if self.image_data then
+                    self.image = love.graphics.newImage(self.image_data,
                         { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
                 else
                     self.image = love.graphics.newImage(self.full_path,
@@ -2278,6 +2278,21 @@ function loadAPIs()
             if not G.SETTINGS.selected_colours[self.type] then
                 G.SETTINGS.selected_colours[self.type] = SMODS.Palettes[self.type]
             end
+
+            local atlas_keys = {}
+            for _,v in pairs(G.P_CENTER_POOLS[self.type]) do
+                atlas_keys[v.atlas or self.type] = v.atlas or self.type
+            end
+            
+            G.PALETTE.DEFAULT = SMODS.Palettes[self.type].Default.palette
+            G.PALETTE.NEW = SMODS.Palettes[self.type][self.name].palette
+            for _,v in pairs(atlas_keys) do
+                G.ASSET_ATLAS[v][self.name] = {image_data = G.ASSET_ATLAS[v].image_data}
+                local temp_data = G.ASSET_ATLAS[v][self.name].image_data:clone()
+                temp_data:mapPixel(G.FUNCS.recolour_image)
+                G.ASSET_ATLAS[v][self.name].image = love.graphics.newImage(temp_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+            end
+            G.FUNCS.update_atlas(self.type)
         end
     }
 
@@ -2289,12 +2304,9 @@ function loadAPIs()
     end 
 
     function HEX_HSL(base_colour)
-        print("HEX: "..base_colour)
         local rgb = HEX(base_colour)
-        print("RGB: "..tprint(rgb))
         local low = math.min(rgb[1], rgb[2], rgb[3])
         local high = math.max(rgb[1], rgb[2], rgb[3])
-        print("Max: "..high.." Min: "..low)
         local delta = high - low
         local sum = high + low
         local hsl = {0, 0, 0.5 * sum, rgb[4]}
@@ -2319,7 +2331,6 @@ function loadAPIs()
     end
 
     function HSL_RGB(base_colour)
-        print("Base colour" .. tprint(base_colour))
         if base_colour[2] < 0.0001 then return {base_colour[3], base_colour[3], base_colour[3], base_colour[4]} end
         local t = (base_colour[3] < 0.5 and (base_colour[2]*base_colour[3] + base_colour[3]) or (-1 * base_colour[2] * base_colour[3] + (base_colour[2]+base_colour[3])))
         local s = 2 * base_colour[3] - t
@@ -2335,6 +2346,27 @@ function loadAPIs()
         return s
     end
 
+    for k,v in pairs(G.P_CENTER_POOLS.Tarot) do
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Tarot"})
+    end
+    for _,v in pairs(G.P_CENTER_POOLS.Planet) do
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Planet"})
+    end
+    for _,v in pairs(G.P_CENTER_POOLS.Spectral) do
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Spectral"})
+    end
+    SMODS.Atlas({
+        key = "Planet",
+        path = "Tarots.png",
+        px = 71,
+        py = 95
+    })
+    SMODS.Atlas({
+        key = "Spectral",
+        path = "Tarots.png",
+        px = 71,
+        py = 95
+    })
     -- Default palettes defined for base game consumable types
     SMODS.Palette({
         key = "tarot_default",
@@ -2358,12 +2390,6 @@ function loadAPIs()
         type = "Spectral",
         name = "Default"
     })
-    -- Shaders defined that have recolour functionality
-    SMODS.Shader({key = 'recolour', file_name = 'recolour.fs'})
-    SMODS.Shader({key = 'negative', file_name = 'negative.fs'})
-    SMODS.Shader({key = 'holo', file_name = 'holo.fs'})
-    SMODS.Shader({key = 'polychrome', file_name = 'polychrome.fs'})
-    SMODS.Shader({key = 'voucher', file_name = 'voucher.fs'})
 
 end
 
