@@ -2270,6 +2270,7 @@ function loadAPIs()
             SMODS.Palettes[self.type][self.name] = {
                 name = self.name,
                 order = #SMODS.Palettes[self.type].names,
+                original_palette = self.palette,
                 palette = {}
             }
             for i=1, #self.palette do
@@ -2280,17 +2281,21 @@ function loadAPIs()
             end
 
             local atlas_keys = {}
-            for _,v in pairs(G.P_CENTER_POOLS[self.type]) do
-                atlas_keys[v.atlas or self.type] = v.atlas or self.type
+            if self.type == "Suits" then
+                atlas_keys = {"cards_1", "ui_1"}
+            else
+                for _,v in pairs(G.P_CENTER_POOLS[self.type]) do
+                    atlas_keys[v.atlas or self.type] = v.atlas or self.type
+                end
             end
-            
+
             G.PALETTE.DEFAULT = SMODS.Palettes[self.type].Default.palette
             G.PALETTE.NEW = SMODS.Palettes[self.type][self.name].palette
             for _,v in pairs(atlas_keys) do
-                G.ASSET_ATLAS[v][self.name] = {image_data = G.ASSET_ATLAS[v].image_data}
-                local temp_data = G.ASSET_ATLAS[v][self.name].image_data:clone()
-                temp_data:mapPixel(G.FUNCS.recolour_image)
-                G.ASSET_ATLAS[v][self.name].image = love.graphics.newImage(temp_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+                G.ASSET_ATLAS[v][self.name] = {image_data = G.ASSET_ATLAS[v].image_data:clone()}
+                G.ASSET_ATLAS[v][self.name].image_data:mapPixel(G.FUNCS.recolour_image)
+                G.ASSET_ATLAS[v][self.name].image = love.graphics.newImage(G.ASSET_ATLAS[v][self.name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+                sendInfoMessage("Added atlas "..self.name.." to "..v, "PaletteAPI")
             end
             G.FUNCS.update_atlas(self.type)
         end
@@ -2388,6 +2393,12 @@ function loadAPIs()
             "8b8361","918756","a79c67","e8d67f","dcc659","c7b24a"
             },
         type = "Spectral",
+        name = "Default"
+    })
+    SMODS.Palette({
+        key = "base_cards",
+        palette = {"235955","3c4368","f06b3f","f03464"},
+        type = "Suits",
         name = "Default"
     })
 

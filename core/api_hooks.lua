@@ -1201,13 +1201,22 @@ end
 -- Set the atlases of all cards of the correct type to be the new palette
 G.FUNCS.update_atlas = function(type)
 	local atlas_keys = {}
-	for _,v in pairs(G.P_CENTER_POOLS[type]) do
-		atlas_keys[v.atlas or type] = v.atlas or type
+	if type == "Suits" then
+		atlas_keys = {"cards_1", "ui_1"}
+		G.C["SO_1"].Clubs = HEX(G.SETTINGS.selected_colours[type].original_palette[1])
+		G.C["SO_1"].Spades = HEX(G.SETTINGS.selected_colours[type].original_palette[2])
+		G.C["SO_1"].Diamonds = HEX(G.SETTINGS.selected_colours[type].original_palette[3])
+		G.C["SO_1"].Hearts = HEX(G.SETTINGS.selected_colours[type].original_palette[4])
+		G.C.SUITS = G.C.SO_1		
+	else
+		for _,v in pairs(G.P_CENTER_POOLS[type]) do
+			atlas_keys[v.atlas or type] = v.atlas or type
+		end
 	end
 	for _,v in pairs(atlas_keys) do
 		if G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name] then
+			print(tprint(G.ASSET_ATLAS[v]))
 			G.ASSET_ATLAS[v].image = G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name].image
-			sendInfoMessage("Updated the "..v.." atlases to be "..G.SETTINGS.selected_colours[type].name, "PaletteAPI")
 		end
 	end
 end
