@@ -2026,7 +2026,8 @@ function loadAPIs()
         -- loc_subtract_extra_chips
         -- During tooltip generation, number of chips to subtract from displayed extra chips.
         -- Use if enhancement already displays its own chips.
-        -- Future work: use ranks() and suits() for better control
+        -- TODO Future work: use ranks() and suits() for better control. Also, there are
+        -- too many flags here, maybe simplify things
         register = function(self)
             self.config = self.config or {}
             assert(not (self.no_suit and self.any_suit))
@@ -2052,14 +2053,8 @@ function loadAPIs()
         -- other methods:
         -- calculate(self, context, effect)
     }
-    -- Note: `name`, `effect`, and `label` all serve the same purpose as
-    -- the name of the enhancement. In theory, `effect` serves to allow reusing
-    -- similar effects (ex. the Sinful jokers). But Balatro just uses them all
-    -- indiscriminately for enhancements.
-    -- `name` and `effect` are technically different for Bonus and Mult
-    -- cards but this never matters in practice; also `label` is a red herring,
-    -- I can't even find a single use of `label`.
 
+    -- TODO
     -- It would be nice if the relevant functions for modding each class of object
     -- would be documented.
     -- For example, Card:set_ability sets the card's enhancement, which is not immediately

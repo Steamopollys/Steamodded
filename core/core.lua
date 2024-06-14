@@ -1209,23 +1209,108 @@ function SMODS.remove_pool(pool, key)
     if j then return table.remove(pool, j) end
 end
 
-function SMODS.eval_this(_card, effects)
-    if effects then
+-- TODO
+function SMODS.eval_effect_key(card, subeffect, key, percent)
+end
+
+function SMODS.eval_effect(card, effect, percent)
+	if effect.chips then 
+		if effect.card then juice_card(effect.card) end
+		hand_chips = mod_chips(hand_chips + effect.chips)
+		update_hand_text({delay = 0}, {chips = hand_chips})
+		card_eval_status_text(card, 'chips', effect.chips, percent)
+	end
+	local mult_effect = effect.mult or effect.h_mult
+	if mult_effect then 
+		if effect.card then juice_card(effect.card) end
+		mult = mod_mult(mult + mult_effect)
+		update_hand_text({delay = 0}, {mult = mult})
+		card_eval_status_text(card, 'mult', mult_effect, percent)
+	end
+	if effect.p_dollars then 
+		if effect.card then juice_card(effect.card) end
+		ease_dollars(effect.p_dollars)
+		card_eval_status_text(card, 'dollars', effect.p_dollars, percent)
+	end
+	if effect.dollars then 
+		if effect.card then juice_card(effect.card) end
+		ease_dollars(effect.dollars)
+		card_eval_status_text(card, 'dollars', effect.dollars, percent)
+	end
+	if effect.extra then 
+		if effect.card then juice_card(effect.card) end
+		local extras = {mult = false, hand_chips = false}
+		if effect.extra.mult_mod then mult =mod_mult( mult + effect.extra.mult_mod);extras.mult = true end
+		if effect.extra.chip_mod then hand_chips = mod_chips(hand_chips + effect.extra.chip_mod);extras.hand_chips = true end
+		if effect.extra.swap then 
+			local old_mult = mult
+			mult = mod_mult(hand_chips)
+			hand_chips = mod_chips(old_mult)
+			extras.hand_chips = true; extras.mult = true
+		end
+		if effect.extra.func then effect.extra.func() end
+		update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult})
+		card_eval_status_text(card, 'extra', nil, percent, nil, effect.extra)
+	end
+	if effect.x_mult then 
+		if effect.card then juice_card(effect.card) end
+		mult = mod_mult(mult*effect.x_mult)
+		update_hand_text({delay = 0}, {mult = mult})
+		card_eval_status_text(card, 'x_mult', effect.x_mult, percent)
+	end
+	if effect.message then
+
+		if effect.card then juice_card(effect.card) end
+		card_eval_status_text(card, 'extra', nil, percent, nil, effect)
+	end
+	local chips_effect = effect.edition.chips or effect.edition.chip_mod
+	if chips_effect then
+	end
+	if effect.edition then
+		local chips_effect = effect.edition.chips or effect.edition.chip_mod
+		local mult_effect = effect.edition.mult or effect.edition.mult_mod
+		local x_mult_effect = effect.edition.x_mult or effect.edition.x_mult_mod
+		hand_chips = mod_chips(hand_chips + (chips_effect or 0))
+		mult = mult + (mult_effect or 0)
+		mult = mod_mult(mult*(x_mult_effect or 1))
+		update_hand_text({delay = 0}, {
+			chips = chips_effect and hand_chips or nil,
+			mult = (mult_effect or x_mult_effect) and mult or nil,
+		})
+		card_eval_status_text(card, 'extra', nil, percent, nil, {
+			message = (chips_effect and localize{type='variable',key='a_chips',vars={chips_effect}}) or
+					(mult_effect and localize{type='variable',key='a_mult',vars={mult_effect}}) or
+					(x_mult_effect and localize{type='variable',key='a_xmult',vars={x_mult_effect}}),
+			chip_mod =  chips_effect,
+			mult_mod =  mult_effect,
+			x_mult_mod =  x_mult_effect,
+			colour = G.C.DARK_EDITION,
+			edition = true})
+	end
+	if effect.jokers then
         local extras = { mult = false, hand_chips = false }
-        if effects.mult_mod then
-            mult = mod_mult(mult + effects.mult_mod); extras.mult = true
+		local mult_effect =  effect.jokers.mult or effect.jokers.mult_mod
+        if mult_effect then
+            mult = mod_mult(mult + mult_effect); extras.mult = true
         end
-        if effects.chip_mod then
-            hand_chips = mod_chips(hand_chips + effects.chip_mod); extras.hand_chips = true
+		local chips_effect = effect.jokers.chips or effect.jokers.chips_mod
+        if chips_effect then
+            hand_chips = mod_chips(hand_chips + chips_effect); extras.hand_chips = true
         end
-        if effects.Xmult_mod then
-            mult = mod_mult(mult * effects.Xmult_mod); extras.mult = true
+		local x_mult_effect = effect.jokers.x_mult or effect.jokers.Xmult_mod
+        if x_mult_effect then
+            mult = mod_mult(mult * x_mult_effect); extras.mult = true
         end
         update_hand_text({ delay = 0 }, { chips = extras.hand_chips and hand_chips, mult = extras.mult and mult })
-        if effects.message then
-            card_eval_status_text(_card, 'jokers', nil, nil, nil, effects)
+        if effect.message then
+            card_eval_status_text(effect.card, 'jokers', nil, percent, nil, effect)
         end
     end
+end
+-- legacy function, don't use
+function SMODS.eval_this(card, effect)
+	sendWarnMessage("SMODS.eval_this is a legacy function, use SMODS.eval_effect instead")
+    return SMODS.eval_effect(card, {jokers = effect})
 end
 
 -- Return an array of all (non-debuffed) jokers or consumables with key `key`.

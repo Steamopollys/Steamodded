@@ -1,0 +1,22 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# Card:get_XXXX()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.debuff then return 0 end"
+position = "at"
+payload = "if self.debuff then return nil end"
+match_indent = true
+
+# Card:get_chip_x_mult()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.ability.x_mult <= 1 then return 0 end"
+position = "at"
+payload = ""
+match_indent = true
