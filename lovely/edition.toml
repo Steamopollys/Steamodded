@@ -149,49 +149,66 @@ for k, v in pairs(G.P_CENTER_POOLS.Edition) do
 end'''
 line_prepend = "$indent"
 
-# Fix card_limit logic
+## Fix card_limit logic
+# Card:add_to_deck()
 [[patches]]
 [patches.regex]
 target = "card.lua"
 pattern = '''(?<indent>[\t ]*)if self\.edition[A-z\.\:\n\t _(',)~=+\-0-9]*limit \+ 1'''
 position = "at"
 payload = '''
-if self.edition and self.edition.card_limit then 
+if true then
     if from_debuff then 
-        self.ability.queue_negative_removal = nil
+        self.joker_added_to_deck_but_debuffed = nil
     else
-        if self.ability.consumeable then
-            G.consumeables.config.card_limit = G.consumeables.config.card_limit + self.edition.card_limit
-        else
-            G.jokers.config.card_limit = G.jokers.config.card_limit + self.edition.card_limit'''
+        if self.edition and self.edition.card_limit then
+            if self.ability.consumeable then
+                G.consumeables.config.card_limit = G.consumeables.config.card_limit + self.edition.card_limit
+            else
+                G.jokers.config.card_limit = G.jokers.config.card_limit + self.edition.card_limit
+            end'''
 line_prepend = "$indent"
+# Card:remove_from_deck()
 [[patches]]
 [patches.regex]
 target = "card.lua"
 pattern = '''(?<indent>[\t ]*)if self\.edition[A-z\.\:\n\t _(',)~=+\-0-9]*limit \- 1'''
 position = "at"
 payload = '''
-if self.edition and self.edition.card_limit and G.jokers then
+if G.jokers then
     if from_debuff then
-        self.ability.queue_negative_removal = true 
+        self.joker_added_to_deck_but_debuffed = true
     else
-        if self.ability.consumeable then
-            G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
-        else
-            G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit'''
+        if self.edition and self.edition.card_limit then
+            if self.ability.consumeable then
+                G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
+            else
+                G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit
+            end'''
 line_prepend = "$indent"
+# Card:remove()
 [[patches]]
 [patches.regex]
 target = "card.lua"
 pattern = '''(?<indent>[\t ]*)if self\.ability\.queue_neg[A-z\.\:\n\t _(',)~=+\-0-9]*limit \- 1'''
 position = "at"
 payload = '''
-if self.ability.queue_negative_removal then 
-    if self.ability.consumeable then
-        G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
-    else
-        G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit'''
+if self.joker_added_to_deck_but_debuffed then
+    if self.edition and self.edition.card_limit then
+        if self.ability.consumeable then
+            G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
+        else
+            G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit
+        end'''
 line_prepend = "$indent"
+# Card:save()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "added_to_deck = self.added_to_deck,"
+position = "after"
+payload = "joker_added_to_deck_but_debuffed = self.joker_added_to_deck_but_debuffed,"
+match_indent = true
 
 # Alternate scoring effects for editions
 
