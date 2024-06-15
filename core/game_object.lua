@@ -2255,7 +2255,7 @@ function loadAPIs()
             if not SMODS.Palettes[self.type] then
                 table.insert(SMODS.Palettes.Types, self.type)
                 SMODS.Palettes[self.type] = {names = {}}
-                G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or {}
+                G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or nil
             end
             if SMODS.Palettes[self.type][self.name] then 
                 G.FUNCS.update_atlas(self.type)
