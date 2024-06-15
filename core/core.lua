@@ -1215,12 +1215,13 @@ SMODS.playing_card_effect_order = {
 	'mult',
 	'p_dollars',
 	'dollars',
-	{['extra'] = {type = 'extra',
+	{['extra'] = {
+		-- args.type is set by default as
+		-- type = 'extra',
 		'mult', 'chips', 'swap', 'func'}},
 	'x_mult',
 	'message', -- unused in base game
-	{['edition'] = {type = 'edition',
-		'mult', 'chips', 'x_mult'}},
+	{['edition'] = {'mult', 'chips', 'x_mult'}},
 	-- TODO seals. Currently the game does not go through effects for seals
 }
 SMODS.joker_effect_order = {
@@ -1350,7 +1351,7 @@ function SMODS.eval_effect_list(list, args)
 			local subeffect_key, list2 = next(v)
 			-- could be more general, allowing args to be set differently
 			local type_old = args.type
-			args.type = list2.type or args.type
+			args.type = list2.type or subeffect_key
 			local effect_old = args.effect
 			args.effect = args.effect[subeffect_key]
 			SMODS.eval_effect_list(args.effect[subeffect_key], list2)

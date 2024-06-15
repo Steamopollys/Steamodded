@@ -1419,7 +1419,7 @@ G.FUNCS.your_collection_enhancements_page = function(args)
 end
 
 -------------------------------------------------------------------------------------------------
------ API HOOKS scoring GameObject.Enhancement, Edition, and Seal
+----- API HOOKS Scoring: GameObject.Enhancement, Edition, and Seal
 -------------------------------------------------------------------------------------------------
 
 function eval_card(card, context)
