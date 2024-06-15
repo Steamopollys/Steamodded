@@ -255,11 +255,31 @@ table.sort(blind_tab, function(a, b) return a.order + (a.boss and a.boss.showdow
 # add_round_eval_row()
 [[patches]]
 [patches.pattern]
-target = 'function/common_events.lua'
+target = 'functions/common_events.lua'
 pattern = "local blind_sprite = AnimatedSprite(0, 0, 1.2,1.2, G.ANIMATION_ATLAS['blind_chips'], copy_table(G.GAME.blind.pos))"
 match_indent = true
 position = 'at'
 payload = '''
 local obj = G.GAME.blind.config.blind
 local blind_sprite = AnimatedSprite(0, 0, 1.2, 1.2, G.ANIMATION_ATLAS[obj.atlas] or G.ANIMATION_ATLAS['blind_chips'], copy_table(G.GAME.blind.pos))
+'''
+
+# create_UIBox_blind_choice()
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = "local loc_target = localize{type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}}"
+match_indent = true
+position = 'at'
+payload = '''
+local loc_vars = nil
+local obj = blind_choice.config
+if obj.loc_vars and _G['type'](obj.loc_vars) == 'function' then
+	local res = obj:loc_vars() or {}
+	loc_vars = res.vars or {}
+end
+if blind_choice.config.name == 'The Ox' then
+   	loc_vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
+end
+local loc_target = localize{type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = loc_vars or blind_choice.config.vars}
 '''
