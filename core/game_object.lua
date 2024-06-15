@@ -2265,7 +2265,6 @@ function loadAPIs()
             SMODS.Palettes[self.type][self.name] = {
                 name = self.name,
                 order = #SMODS.Palettes[self.type].names,
-                original_palette = self.palette,
                 palette = {}
             }
             for i=1, #self.palette do
