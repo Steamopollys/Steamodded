@@ -993,7 +993,7 @@ end
 -- silent = boolean value
 function Card.set_edition(self, edition, immediate, silent)
 	-- Check to see if negative is being removed and reduce card_limit accordingly
-	if (self.added_to_deck or self.area == G.hand) and self.edition and self.edition.card_limit then
+	if (self.added_to_deck or (self.area == G.hand and not self.debuff)) and self.edition and self.edition.card_limit then
 		if self.ability.consumeable and self.area == G.consumeables then
 			G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
 		elseif self.ability.set == 'Joker' and self.area == G.jokers then
@@ -1052,7 +1052,7 @@ function Card.set_edition(self, edition, immediate, silent)
 		else
 			self.edition[k] = v
 		end
-		if k == 'card_limit' and (self.added_to_deck or self.area == G.hand) and G.jokers and G.consumeables then
+		if k == 'card_limit' and (self.added_to_deck or (self.area == G.hand and not self.debuff)) and G.jokers and G.consumeables then
 			if self.ability.consumeable then
 				G.consumeables.config.card_limit = G.consumeables.config.card_limit + v
 			elseif self.ability.set == 'Joker' then
