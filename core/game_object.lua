@@ -2349,26 +2349,14 @@ function loadAPIs()
     end
 
     for k,v in pairs(G.P_CENTER_POOLS.Tarot) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Tarot"})
+        SMODS.Consumable:take_ownership(v.key, {})
     end
     for _,v in pairs(G.P_CENTER_POOLS.Planet) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Planet"})
+        SMODS.Consumable:take_ownership(v.key, {})
     end
     for _,v in pairs(G.P_CENTER_POOLS.Spectral) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Spectral"})
+        SMODS.Consumable:take_ownership(v.key, {})
     end
-    SMODS.Atlas({
-        key = "Planet",
-        path = "Tarots.png",
-        px = 71,
-        py = 95
-    })
-    SMODS.Atlas({
-        key = "Spectral",
-        path = "Tarots.png",
-        px = 71,
-        py = 95
-    })
     -- Default palettes defined for base game consumable types
     SMODS.Palette({
         key = "tarot_default",
