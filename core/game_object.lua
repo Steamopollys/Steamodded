@@ -2260,6 +2260,7 @@ function loadAPIs()
         set = 'Palette',
         prefix = 'pal',
         inject = function(self)
+            if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suits" then return end
             if not SMODS.Palettes[self.type] then
                 table.insert(SMODS.Palettes.Types, self.type)
                 SMODS.Palettes[self.type] = {names = {}}
