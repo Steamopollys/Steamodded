@@ -1240,13 +1240,15 @@ G.UIDEF.card_colours = function()
 end
 
 G.FUNCS.recolour_image = function(x,y,r,g,b,a)
-	for i=1, #G.PALETTE.DEFAULT do
-		local defaultColour = G.PALETTE.DEFAULT[i]
-		if defaultColour[1] == r and defaultColour[2] == g and defaultColour[3] == b then
-			r = G.PALETTE.NEW[i][1]
-			g = G.PALETTE.NEW[i][2]
-			b = G.PALETTE.NEW[i][3]
-			return r,g,b,a
+	if G.PALETTE.NEW.old_colours then
+		for i=1, #G.PALETTE.NEW.old_colours do
+			local defaultColour = G.PALETTE.NEW.old_colours[i]
+			if defaultColour[1] == r and defaultColour[2] == g and defaultColour[3] == b then
+				r = G.PALETTE.NEW.new_colours[i][1]
+				g = G.PALETTE.NEW.new_colours[i][2]
+				b = G.PALETTE.NEW.new_colours[i][3]
+				return r,g,b,a
+			end
 		end
 	end
 	return r, g, b, a
