@@ -1479,11 +1479,6 @@ function eval_card(card, context)
 			-- to do your logic.
 		end
 	
-		local jokers = card:calculate_joker(context)
-		if jokers then 
-			ret.jokers = jokers
-		end
-	
 		local edition = card:get_edition(context)
 		if edition then 
 			ret.edition = edition
