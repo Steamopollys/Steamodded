@@ -1350,13 +1350,11 @@ function SMODS.eval_effect_list(list, args)
 			-- recurse on subeffect
 			local subeffect_key, list2 = next(v)
 			-- could be more general, allowing args to be set differently
-			local type_old = args.type
+			local type_old, effect_old = args.type, args.effect
 			args.type = list2.type or subeffect_key
-			local effect_old = args.effect
 			args.effect = args.effect[subeffect_key]
 			SMODS.eval_effect_list(args.effect[subeffect_key], list2)
-			args.type = type_old
-			args.effect = effect_old
+			args.type, args.effect = type_old, effect_old
 		else
 			local key = elem
 			local val = args.effect[key]
