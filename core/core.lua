@@ -1210,24 +1210,23 @@ function SMODS.remove_pool(pool, key)
 end
 
 -- TODO does not include end_round() currently
-SMODS.EFFECT_LISTS = {
-	-- Order of effects for playing cards
-	playing_cards = {
-		'chips',
-		'mult',
-		'p_dollars',
-		'dollars',
-		{['extra'] = {type = 'extra',
-			'mult', 'chips', 'swap', 'func'}},
-		'x_mult',
-		'message', -- unused in base game
-		{['edition'] = {type = 'edition',
-			'mult', 'chips', 'x_mult'}},
-		-- TODO seals. Currently the game does not go through effects for seals
-	},
-	jokers = {
-		{['jokers'] = {'mult', 'chips', 'x_mult'}},
-	},
+SMODS.playing_card_effect_order = {
+	'chips',
+	'mult',
+	'p_dollars',
+	'dollars',
+	{['extra'] = {type = 'extra',
+		'mult', 'chips', 'swap', 'func'}},
+	'x_mult',
+	'message', -- unused in base game
+	{['edition'] = {type = 'edition',
+		'mult', 'chips', 'x_mult'}},
+	-- TODO seals. Currently the game does not go through effects for seals
+}
+SMODS.joker_effect_order = {
+	'mult',
+	'chips',
+	'x_mult',
 }
 SMODS.EffectKeys = {
 	chips = {
@@ -1246,7 +1245,7 @@ SMODS.EffectKeys = {
 					colour = G.C.DARK_EDITION,
 					edition = true})
 			elseif args.type == 'jokers' then
-				card_eval_status_text(args.card, 'jokers', nil, args.percent, nil, effect)
+				card_eval_status_text(args.card, 'jokers', nil, args.percent, nil, args.effect)
 			end
 		end
 	},
@@ -1321,49 +1320,78 @@ SMODS.EffectKeys = {
 		calculate = function() end,
 		text = function(args)
 			if args.type == nil then
-				card_eval_status_text(args.card, 'extra', nil, args.percent, nil, effect)
+				card_eval_status_text(args.card, 'extra', nil, args.percent, nil, args.effect)
 			elseif args.type == 'jokers' then
-				card_eval_status_text(args.card, 'chips', args.val, args.percent)
+				card_eval_status_text(args.card, 'jokers', nil, args.percent, nil, args.effect)
 			end
 		end
 	},
 	func = {
-		calculate = function(args)
-			args.val()
-		end,
+		calculate = function(args) args.val() end,
 		text = function() end,
 	}
 }
 
 function SMODS.eval_effect_list(list, args)
-	for _, v in ipairs(list) do
-		if type(v) == 'table' then
-			if v[1] then
-				-- recurse on each element of effect array
-				for _, effect2 in ipairs(v) do
-					SMODS.eval_effect_list(card, effect2, list)
-				end
-			else
-				-- recurse on subeffect
-				local k, list2 = next(v)
-				SMODS.eval_effect_list(card, effect[k], list2)
-			end
+	if args.effect[1] then
+		-- allow arrays of effects.
+		-- recurse on each element of the array
+		local effect_old = args.effect
+		for _, effect2 in ipairs(v) do
+			args.effect = effect2
+			SMODS.eval_effect_list(list, args)
+		end
+		args.effect = effect_old
+		return
+	end
+	for _, elem in ipairs(list) do
+		if type(elem) == 'table' then
+			-- recurse on subeffect
+			local subeffect_key, list2 = next(v)
+			-- could be more general, allowing args to be set differently
+			local type_old = args.type
+			args.type = list2.type or args.type
+			local effect_old = args.effect
+			args.effect = args.effect[subeffect_key]
+			SMODS.eval_effect_list(args.effect[subeffect_key], list2)
+			args.type = type_old
+			args.effect = effect_old
 		else
-			local args = copy_table(args)
-			SMODS.EffectKeys[v].calculate(effect[v])
-			SMODS.EffectKeys[v].text(effect, effect[v], percent)
+			local key = elem
+			local val = args.effect[key]
+			if val == nil then
+				if SMODS.EffectKeys[key].aliases then
+					for _, alias in ipairs(SMODS.EffectKeys[key].aliases) do
+						val = args.effect[alias]
+						if val then break end
+					end
+				end
+			end
+			if val then
+				local val_old = args.val
+				args.val = val
+				SMODS.EffectKeys[key].calculate(args)
+				if not args.calculate_only then
+					SMODS.EffectKeys[key].text(args)
+				end
+				args.val = val_old
+			end
 		end
 	end
 end
-function SMODS.eval_effect(args)
-	return SMODS.eval_effect_list(SMODS.EFFECT_LIST.playing_cards, args)
+function SMODS.eval_playing_card_effect(args)
+	return SMODS.eval_effect_list(SMODS.EFFECT_LISTS.playing_cards, args)
+end
+function SMODS.eval_joker_effect(args)
+	return SMODS.eval_effect_list(SMODS.EFFECT_LISTS.jokers, args)
 end
 -- legacy function, don't use
 function SMODS.eval_this(card, effect)
-	sendWarnMessage("SMODS.eval_this is a legacy function, use SMODS.eval_effect instead")
-    return SMODS.eval_effect{
+	sendWarnMessage("SMODS.eval_this is a legacy function, use SMODS.eval_joker_effect instead")
+    return SMODS.eval_joker_effect{
 		card = card,
-		effect = {jokers = effect}
+		effect = effect,
+		type = 'jokers'
 	}
 end
 
