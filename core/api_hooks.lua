@@ -1471,10 +1471,12 @@ function eval_card(card, context)
 		end
 
 		if center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
+			-- Most enhancements should inject into the get_chip_XXXX() functions
+			-- for score calculation.
 			local enhancement = center:calculate(context)
-			if enhancement then
-				ret.enhancement = enhancement -- TODO doesn't do anything right now
-			end
+			-- TODO The return value of enhancement:calculate()
+			-- doesn't do anything right now. Use side effects in calculate()
+			-- to do your logic.
 		end
 	
 		local jokers = card:calculate_joker(context)
