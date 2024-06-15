@@ -109,7 +109,10 @@ function loadAPIs()
         for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
             if o[v] then atlas_override[v] = o[v] end
         end
-        if not obj.loc_txt and not obj.generate_ui and not obj.loc_vars then obj.generate_ui = 0 end
+        local original_has_loc = o.taken_ownership and (o.loc_txt or o.loc_vars or (o.generate_ui ~= self.generate_ui))
+        local is_loc_modified = obj.loc_txt or obj.loc_vars or obj.generate_ui
+        if not original_has_loc and not is_loc_modified then obj.generate_ui = 0 end
+        if is_loc_modified and o.generate_ui == 0 then obj.generate_ui = obj.generate_ui or self.generate_ui end
         setmetatable(o, self)
         if o.mod then
             o.dependencies = o.dependencies or {}
