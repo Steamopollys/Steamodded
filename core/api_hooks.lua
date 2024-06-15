@@ -1215,7 +1215,6 @@ G.FUNCS.update_atlas = function(type)
 	end
 	for _,v in pairs(atlas_keys) do
 		if G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name] then
-			print(tprint(G.ASSET_ATLAS[v]))
 			G.ASSET_ATLAS[v].image = G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name].image
 		end
 	end
