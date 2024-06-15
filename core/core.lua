@@ -1371,9 +1371,7 @@ function SMODS.eval_effect_list(list, args)
 				local val_old = args.val
 				args.val = val
 				SMODS.EffectKeys[key].calculate(args)
-				if not args.calculate_only then
-					SMODS.EffectKeys[key].text(args)
-				end
+				SMODS.EffectKeys[key].text(args)
 				args.val = val_old
 			end
 		end
