@@ -2272,7 +2272,7 @@ function loadAPIs()
                 SMODS.Palettes[self.type][self.name].palette[i] = type(self.palette[i]) == "string" and HEX(self.palette[i]) or self.palette[i]
             end
             if not G.SETTINGS.selected_colours[self.type] then
-                G.SETTINGS.selected_colours[self.type] = SMODS.Palettes[self.type]
+                G.SETTINGS.selected_colours[self.type] = SMODS.Palettes[self.type][self.name]
             end
 
             local atlas_keys = {}
