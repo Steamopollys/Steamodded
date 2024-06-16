@@ -293,5 +293,5 @@ match_indent = true
 position = 'before'
 payload = '''
 elseif v.add_to_pool and type(v.add_to_pool) == 'function' then
-	eligible_bosses[k] = v:add_to_pool()
+	eligible_bosses[k] = v:add_to_pool() and true or nil
 '''
