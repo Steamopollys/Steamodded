@@ -2209,7 +2209,7 @@ function loadAPIs()
         get_weight = function(self)
             return G.GAME.edition_rate*self.weight
         end,
-        calculate = function(...)
+        calculate = function(...) -- TODO remove, this is a test
             return SMODS.Edition.calculate(...)
         end,
         loc_vars = function(self)

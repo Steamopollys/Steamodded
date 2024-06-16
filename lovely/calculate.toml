@@ -38,3 +38,17 @@ payload = '''
 if eval.seals then
     for h = 1, eval.seals.repetitions do'''
 line_prepend = '$indent'
+
+# card_eval_status_text()
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = 'extra\.mult_mod'
+position = "at"
+payload = '(extra.mult or extra.mult_mod)'
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = 'extra\.Xmult_mod'
+position = "at"
+payload = '(extra.x_mult or extra.x_mult_mod or extra.Xmult_mod)'

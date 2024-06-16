@@ -1474,7 +1474,6 @@ function eval_card(card, context)
 		local edition = card:get_edition(context)
 		if edition then 
 			ret.edition = edition
-			print(tprint(ret))
 		end
 
 		local seals = card:calculate_seal(context)
