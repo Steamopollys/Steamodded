@@ -1254,6 +1254,49 @@ G.FUNCS.recolour_image = function(x,y,r,g,b,a)
 	return r, g, b, a
 end
 
+function HEX_HSL(base_colour)
+	local rgb = HEX(base_colour)
+	local low = math.min(rgb[1], rgb[2], rgb[3])
+	local high = math.max(rgb[1], rgb[2], rgb[3])
+	local delta = high - low
+	local sum = high + low
+	local hsl = {0, 0, 0.5 * sum, rgb[4]}
+	
+	if delta == 0 then return hsl end
+	
+	if hsl[3] == 1 or hsl[3] == 0 then
+		hsl[2] = 0
+	else
+		hsl[2] = delta/1-math.abs(2*hsl[3] - 1)
+	end
+	
+	if high == rgb[1] then
+		hsl[1] = ((rgb[2]-rgb[3])/delta) % 6
+	elseif high == rgb[2] then
+		hsl[1] = 2 + (rgb[3]-rgb[1])/delta
+	else
+		hsl[1] = 4 + (rgb[1]-rgb[2])/delta 
+	end
+	hsl[1] = hsl[1]/6
+	return hsl
+end
+
+function HSL_RGB(base_colour)
+	if base_colour[2] < 0.0001 then return {base_colour[3], base_colour[3], base_colour[3], base_colour[4]} end
+	local t = (base_colour[3] < 0.5 and (base_colour[2]*base_colour[3] + base_colour[3]) or (-1 * base_colour[2] * base_colour[3] + (base_colour[2]+base_colour[3])))
+	local s = 2 * base_colour[3] - t
+
+	return {HUE(s, t, base_colour[1] + (1/3)), HUE(s,t,base_colour[1]), HUE(s,t,base_colour[1] - (1/3)), base_colour[4]}
+end
+
+function HUE(s, t, h)
+	local hs = (h % 1) * 6
+	if hs < 1 then return (t-s) * hs + s end
+	if hs < 3 then return t end
+	if hs < 4 then return (t-s) * (4-hs) + s end
+	return s
+end
+
 -------------------------------------------------------------------------------------------------
 ----- API HOOKS GameObject.Enhancement
 -------------------------------------------------------------------------------------------------
