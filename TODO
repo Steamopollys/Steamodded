@@ -3,8 +3,6 @@
 - Language
 - Sound
 - Stake
-- ConsumableType 
-- UndiscoveredSprite
 - Seal
 - Suit
 - Rank
@@ -20,3 +18,5 @@
 - Atlas
 - Center (Joker, Consumable, Voucher, Back)
 - Blind
+- ConsumableType
+- UndiscoveredSprite
