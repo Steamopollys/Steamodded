@@ -2260,7 +2260,7 @@ function loadAPIs()
                 table.insert(SMODS.Palettes.Types, self.type)
                 SMODS.Palettes[self.type] = {names = {}}
                 SMODS.Palette:create_default(self.type)
-                G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or nil
+                G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or SMODS.Palettes[self.type]["Default"]
             end
             if SMODS.Palettes[self.type][self.name] then 
                 G.FUNCS.update_atlas(self.type)
