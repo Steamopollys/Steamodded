@@ -781,7 +781,7 @@ function loadAPIs()
             SMODS.process_loc_text(G.localization.misc.dictionary, 'k_' .. string.lower(self.key), self.loc_txt, 'name')
             SMODS.process_loc_text(G.localization.misc.dictionary, 'b_' .. string.lower(self.key) .. '_cards',
                 self.loc_txt, 'collection')
-            SMODS.process_loc_text(G.localization.misc.labels, string.lower(self.key), self.loc_txt, 'label')
+            -- SMODS.process_loc_text(G.localization.misc.labels, string.lower(self.key), self.loc_txt, 'label') -- redundant
             SMODS.process_loc_text(G.localization.descriptions.Other, 'undiscovered_' .. string.lower(self.key),
                 self.loc_txt, 'undiscovered')
         end,
