@@ -1203,10 +1203,10 @@ G.FUNCS.update_atlas = function(type)
 	local atlas_keys = {}
 	if type == "Suits" then
 		atlas_keys = {"cards_1", "ui_1"}
-		G.C["SO_1"].Clubs = G.SETTINGS.selected_colours[type].palette[1]
-		G.C["SO_1"].Spades = G.SETTINGS.selected_colours[type].palette[2]
-		G.C["SO_1"].Diamonds = G.SETTINGS.selected_colours[type].palette[3]
-		G.C["SO_1"].Hearts = G.SETTINGS.selected_colours[type].palette[4]
+		G.C["SO_1"].Clubs = G.SETTINGS.selected_colours[type].new_colours[1]
+		G.C["SO_1"].Spades = G.SETTINGS.selected_colours[type].new_colours[2]
+		G.C["SO_1"].Diamonds = G.SETTINGS.selected_colours[type].new_colours[3]
+		G.C["SO_1"].Hearts = G.SETTINGS.selected_colours[type].new_colours[4]
 		G.C.SUITS = G.C.SO_1		
 	else
 		for _,v in pairs(G.P_CENTER_POOLS[type]) do
