@@ -1427,49 +1427,41 @@ function eval_card(card, context)
     context = context or {}
     local ret = {}
     
-    if context.cardarea == G.jokers or context.card == G.consumeables then
-		-- jokers and consumeables
-        local jokers = nil
-        if context.edition then
-            jokers = card:get_edition(context)
-        elseif context.other_joker then
-            jokers = context.other_joker:calculate_joker(context)
-        else
-            jokers = card:calculate_joker(context)
+    if context.cardarea == G.play and not context.repetition then
+        local chips = card:get_chip_bonus()
+        if chips ~= 0 then 
+            ret.chips = chips
         end
-        if jokers then 
-            ret.jokers = jokers
-        end
-	else
-		-- playing cards
-		if context.cardarea == G.play then
-			local chips = card:get_chip_bonus()
-			if chips ~= 0 then 
-				ret.chips = chips
-			end
-			local mult = card:get_chip_mult()
-			if mult ~= 0 then 
-				ret.mult = mult
-			end
-			local x_mult = card:get_chip_x_mult(context)
-			if x_mult ~= 1 then 
-				ret.x_mult = x_mult
-			end
-			local p_dollars = card:get_p_dollars()
-			if p_dollars ~= 0 then 
-				ret.p_dollars = p_dollars
-			end
-		elseif context.cardarea == G.hand then
-			local h_mult = card:get_chip_h_mult()
-			if h_mult ~= 0 then 
-				ret.h_mult = h_mult
-			end
-			local h_x_mult = card:get_chip_h_x_mult()
-			if h_x_mult ~= 1 then 
-				ret.x_mult = h_x_mult
-			end
-		end
 
+        local mult = card:get_chip_mult()
+        if mult ~= 0 then 
+            ret.mult = mult
+        end
+
+        local x_mult = card:get_chip_x_mult(context)
+        if x_mult ~= 0 and x_mult ~= 1 then 
+            ret.x_mult = x_mult
+        end
+
+        local p_dollars = card:get_p_dollars()
+        if p_dollars ~= 0 then 
+            ret.p_dollars = p_dollars
+        end
+    end
+
+    if context.cardarea == G.hand and not context.repetition then
+        local h_mult = card:get_chip_h_mult()
+        if h_mult ~= 0 then 
+            ret.mult = h_mult
+        end
+
+        local h_x_mult = card:get_chip_h_x_mult()
+        if h_x_mult ~= 0 and h_x_mult ~= 1 then 
+            ret.x_mult = h_x_mult
+        end
+    end
+
+	if context.cardarea == G.play or context.cardarea == G.hand or context.repetition then
 		if center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
 			-- Most enhancements should inject into the get_chip_XXXX() functions
 			-- for score calculation.
@@ -1488,7 +1480,22 @@ function eval_card(card, context)
 		if seals then
 			ret.seals = seals
 		end
+	end
+
+    if context.cardarea == G.jokers or context.card == G.consumeables then
+        local jokers = nil
+        if context.edition then
+			jokers = card:get_edition(context)
+        elseif context.other_joker then
+            jokers = context.other_joker:calculate_joker(context)
+        else
+            jokers = card:calculate_joker(context)
+        end
+        if jokers then 
+            ret.jokers = jokers
+        end
     end
 
+	print(tprint(ret))
     return ret
 end

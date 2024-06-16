@@ -3,15 +3,6 @@ version = "1.0.0"
 dump_lua = true
 priority = 0
 
-# Card:get_XXXX()
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = "if self.debuff then return 0 end"
-position = "at"
-payload = "if self.debuff then return nil end"
-match_indent = true
-
 # Card:get_chip_x_mult()
 [[patches]]
 [patches.pattern]
@@ -20,3 +11,30 @@ pattern = "if self.ability.x_mult <= 1 then return 0 end"
 position = "at"
 payload = ""
 match_indent = true
+
+# G.FUNCS.evaluate_play(), end_round()
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if next(eval) and (next(effects[1]) or #effects > 1)  then"
+position = "at"
+payload = "if eval.seals then"
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if next(eval) and (next(effects[1]) or #effects > 1) then"
+position = "at"
+payload = "if eval.seals then"
+match_indent = true
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''
+(?<indent>[\t ]*)if next\(eval\) then 
+[\t ]*    for h = 1, eval\.seals\.repetitions do'''
+position = "at"
+payload = '''
+if eval.seals then
+    for h = 1, eval.seals.repetitions do'''
+line_prepend = '$indent'

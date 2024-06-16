@@ -1213,7 +1213,6 @@ end
 SMODS.playing_card_effect_order = {
 	'chips',
 	'mult',
-	'p_dollars',
 	'dollars',
 	{['extra'] = {
 		-- args.type is set by default as
@@ -1221,7 +1220,7 @@ SMODS.playing_card_effect_order = {
 		'mult', 'chips', 'swap', 'func'}},
 	'x_mult',
 	'message', -- unused in base game
-	{['edition'] = {'mult', 'chips', 'x_mult'}},
+	{['edition'] = {'mult', 'chips', 'x_mult', 'dollars'}},
 	-- TODO seals. Currently the game does not go through effects for seals
 }
 SMODS.joker_effect_order = {
@@ -1246,7 +1245,7 @@ SMODS.EffectKeys = {
 					colour = G.C.DARK_EDITION,
 					edition = true})
 			elseif args.type == 'jokers' then
-				card_eval_status_text(args.card, 'jokers', nil, args.percent, nil, args.effect)
+				-- TODO
 			end
 		end
 	},
@@ -1266,19 +1265,12 @@ SMODS.EffectKeys = {
 					colour = G.C.DARK_EDITION,
 					edition = true})
 			elseif args.type == 'jokers' then
-				card_eval_status_text(args.card, 'chips', args.val, args.percent)
+				-- TODO
 			end
 		end
 	},
-	p_dollars = {
-		calculate = function(args)
-			ease_dollars(args.val)
-		end,
-		text = function(args)
-			card_eval_status_text(args.card, 'dollars', args.val, args.percent)
-		end
-	},
 	dollars = {
+		aliases = {'p_dollars'},
 		calculate = function(args)
 			ease_dollars(args.val)
 		end,
@@ -1313,7 +1305,7 @@ SMODS.EffectKeys = {
 					colour = G.C.DARK_EDITION,
 					edition = true})
 			elseif args.type == 'jokers' then
-				card_eval_status_text(args.card, 'x_mult', args.val, args.percent)
+				-- TODO
 			end
 		end
 	},
@@ -1358,12 +1350,16 @@ function SMODS.eval_effect_list(list, args)
 		else
 			local key = elem
 			local val = args.effect[key]
-			if val == nil then
-				if SMODS.EffectKeys[key].aliases then
-					for _, alias in ipairs(SMODS.EffectKeys[key].aliases) do
-						val = args.effect[alias]
-						if val then break end
+			local cur_key
+			if val then cur_key = key end
+			if SMODS.EffectKeys[key].aliases then
+				for _, alias in ipairs(SMODS.EffectKeys[key].aliases) do
+					if val and args.effect[alias] then
+						sendWarnMessage("Effect has two keys with the same meaning!")
+						sendWarnMessage(("Keys: %s, %s, Effect: %s"):format(cur_key, alias, tprint(args.effect)))
 					end
+					val = args.effect[alias]
+					if val then cur_key = key end
 				end
 			end
 			if val then
@@ -1380,6 +1376,7 @@ function SMODS.eval_playing_card_effect(args)
 	return SMODS.eval_effect_list(SMODS.EFFECT_LISTS.playing_cards, args)
 end
 function SMODS.eval_joker_effect(args)
+	args.type = 'jokers'
 	return SMODS.eval_effect_list(SMODS.EFFECT_LISTS.jokers, args)
 end
 -- legacy function, don't use
@@ -1387,8 +1384,7 @@ function SMODS.eval_this(card, effect)
 	sendWarnMessage("SMODS.eval_this is a legacy function, use SMODS.eval_joker_effect instead")
     return SMODS.eval_joker_effect{
 		card = card,
-		effect = effect,
-		type = 'jokers'
+		effect = effect
 	}
 end
 

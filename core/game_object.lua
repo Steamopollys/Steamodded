@@ -2143,9 +2143,25 @@ function loadAPIs()
         -- other fields:
         -- extra_cost
 
-        -- TODO badge colours. need to check how Steamodded already does badge colors
-        -- other methods:
-        -- calculate(self)
+        -- Default calculate function, works for simple cases. Define your own!
+        calculate = function(self, card, context)
+            local ret = {card = card}
+            if context.cardarea == G.play then
+                for _, v in {'chips', 'mult', 'x_mult', 'p_dollars'} do
+                    if self.edition[v] then
+                        ret[v] = self.edition[v]
+                    end
+                end
+                return ret
+            elseif context.cardarea == G.hand then
+                for _, v in {'h_mult', 'h_x_mult'} do
+                    if self.edition[v] then
+                        ret[v] = self.edition[v]
+                    end
+                end
+                return ret
+            end
+        end,
         register = function(self)
             self.config = self.config or {}
             self.loc_txt.label = self.loc_txt.label or self.loc_txt.name
@@ -2155,8 +2171,9 @@ function loadAPIs()
             SMODS.process_loc_text(G.localization.misc.labels, self.key:sub(3), self.loc_txt, 'label')
             SMODS.Edition.super.process_loc_text(self)
         end,
-        -- apply_modifier = true when G.GAME.edition_rate is to be applied
-        get_weight = function(self, apply_modifier)
+        -- Return the modified weight (ex. G.GAME.edition_rate) of this edition
+        -- TODO rename?
+        get_weight = function(self)
             return self.weight
         end
     }
