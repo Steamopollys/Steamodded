@@ -266,3 +266,22 @@ if blind_choice.config.name == 'The Ox' then
    	loc_vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
 end
 local loc_target = localize{type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = loc_vars or blind_choice.config.vars}'''
+
+# get_new_boss()
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = 'elseif not v.boss.showdown*'
+match_indent = true
+position = 'before'
+payload = '''
+elseif v.add_to_pool and type(v.add_to_pool) == 'function' then
+	if
+		(
+			((G.GAME.round_resets.ante)%G.GAME.win_ante == 0 and G.GAME.round_resets.ante >= 2) ==
+			(v.boss.showdown or false)
+		) or
+		v.ignore_showdown_check
+	then
+		eligible_bosses[k] = v:add_to_pool() and true or nil
+	end'''
