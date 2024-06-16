@@ -267,7 +267,7 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = "card.lua"
-pattern = "Card:get_edition()"
+pattern = "function Card:get_edition()"
 position = "at"
-payload = "Card:get_edition(context)"
+payload = "function Card:get_edition(context)"
 match_indent = true
