@@ -293,5 +293,13 @@ match_indent = true
 position = 'before'
 payload = '''
 elseif v.add_to_pool and type(v.add_to_pool) == 'function' then
-	eligible_bosses[k] = v:add_to_pool() and true or nil
+	if
+		(
+			((G.GAME.round_resets.ante)%G.GAME.win_ante == 0 and G.GAME.round_resets.ante >= 2) ==
+			(v.boss.showdown or false)
+		) or
+		v.ignore_showdown_check
+	then
+		eligible_bosses[k] = v:add_to_pool() and true or nil
+	end
 '''
