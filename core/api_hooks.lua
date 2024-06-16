@@ -858,3 +858,518 @@ G.FUNCS.your_hands_page = function(args)
 		}
 	end
 end
+
+
+-------------------------------------------------------------------------------------------------
+----- API HOOKS GameObject.Edition
+-------------------------------------------------------------------------------------------------
+
+function create_UIBox_your_collection_editions(exit)
+    local deck_tables = {}
+    local rows, cols = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1), 5
+    local page = 0
+
+    G.your_collection = {}
+    for j = 1, rows do
+        G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
+            {
+                card_limit = cols,
+                type = 'title',
+                highlight_limit = 0,
+                collection = true
+            })
+        table.insert(deck_tables, { n = G.UIT.R, config = { align = "cm", padding = 0, no_fill = true },
+            nodes = {{ n = G.UIT.O, config = { object = G.your_collection[j] } }}
+        })
+    end
+
+	table.sort(G.P_CENTER_POOLS.Edition, function(a,b) return a.order < b.order end)
+
+    local count = math.min(cols * rows, #G.P_CENTER_POOLS["Edition"])
+    local index = 1 + (rows * cols * page)
+    for j = 1, rows do
+        for i = 1, cols do
+
+            local center = G.P_CENTER_POOLS.Edition[index]
+
+            if not center then
+                break
+            end
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+                G.CARD_W, G.CARD_H, nil, center)
+            card:start_materialize(nil, i > 1 or j > 1)
+            card:set_edition(center.key, true, true)
+            G.your_collection[j]:emplace(card)
+            index = index + 1
+        end
+        if index > count then
+            break
+        end
+    end
+
+    local edition_options = {}
+
+    local t = create_UIBox_generic_options({
+        infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
+        contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
+            nodes = deck_tables }}
+    })
+
+    if #G.P_CENTER_POOLS["Edition"] > rows * cols then
+        for i = 1, math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) do
+            table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+                tostring(math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))))
+        end
+        t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
+            contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
+                nodes = deck_tables
+            }, { n = G.UIT.R, config = { align = "cm" },
+                nodes = {create_option_cycle({
+                    options = edition_options,
+                    w = 4.5,
+                    cycle_shoulders = true,
+                    opt_callback = 'your_collection_editions_page',
+                    focus_args = { snap_to = true, nav = 'wide' },
+                    current_option = 1,
+                    r = rows,
+                    c = cols,
+                    colour = G.C.RED,
+                    no_pips = true
+                })}
+            }}
+        })
+    end
+    return t
+end
+
+G.FUNCS.your_collection_editions_page = function(args)
+    if not args or not args.cycle_config then
+        return
+    end
+    local rows = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1), 5
+    local cols = 5
+    local page = args.cycle_config.current_option
+    if page > math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) then
+        page = page - math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))
+    end
+    local count = rows * cols
+    local offset = (rows * cols) * (page - 1)
+
+    for j = 1, #G.your_collection do
+        for i = #G.your_collection[j].cards, 1, -1 do
+            if G.your_collection[j] ~= nil then
+                local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+                c:remove()
+                c = nil
+            end
+        end
+    end
+
+    for j = 1, rows do
+        for i = 1, cols do
+            if count % rows > 0 and i <= count % rows and j == cols then
+                offset = offset - 1
+                break
+            end
+            local idx = i + (j - 1) * cols + offset
+            if idx > #G.P_CENTER_POOLS["Edition"] then return end
+            local center = G.P_CENTER_POOLS["Edition"][idx]
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+                G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+            card:set_edition(center.key, true, true)
+            card:start_materialize(nil, i > 1 or j > 1)
+            G.your_collection[j]:emplace(card)
+        end
+    end
+end
+
+-- self = pass the card
+-- edition =
+-- nil (removes edition)
+-- OR key as string
+-- OR { name_of_edition = true } (key without e_). This is from the base game, prefer using a string.
+-- OR another card's self.edition table
+-- immediate = boolean value
+-- silent = boolean value
+function Card.set_edition(self, edition, immediate, silent)
+	-- Check to see if negative is being removed and reduce card_limit accordingly
+	if (self.added_to_deck or self.joker_added_to_deck_but_debuffed or (self.area == G.hand and not self.debuff)) and self.edition and self.edition.card_limit then
+		if self.ability.consumeable and self.area == G.consumeables then
+			G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
+		elseif self.ability.set == 'Joker' and self.area == G.jokers then
+			G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit
+		elseif self.area == G.hand then
+			G.hand.config.card_limit = G.hand.config.card_limit - self.edition.card_limit
+		end
+	end
+	
+	local edition_type = nil
+	if type(edition) == 'string' then
+		assert(string.sub(edition, 1, 2) == 'e_')
+		edition_type = string.sub(edition, 3)
+	elseif type(edition) == 'table' then
+		if edition.type then
+			edition_type = edition.type
+		else
+			for k, v in pairs(edition) do
+				if v then
+					assert(not edition_type)
+					edition_type = k
+				end
+			end
+		end
+	end
+	
+	if not edition_type or edition_type == 'base' then
+		if self.edition == nil then -- early exit
+			return
+		end
+		self.edition = nil -- remove edition from card
+		self:set_cost()
+		if not silent then
+			G.E_MANAGER:add_event(Event({
+				trigger = 'after',
+				delay = not immediate and 0.2 or 0,
+				blockable = not immediate,
+				func = function()
+					self:juice_up(1, 0.5)
+					play_sound('whoosh2', 1.2, 0.6)
+					return true
+				end
+			}))
+		end
+        return
+    end
+    
+	self.edition = {}
+	self.edition[edition_type] = true
+	self.edition.type = edition_type
+	self.edition.key = 'e_'..edition_type
+
+	for k, v in pairs(G.P_CENTERS['e_'..edition_type].config) do
+		if type(v) == 'table' then
+			self.edition[k] = copy_table(v)
+		else
+			self.edition[k] = v
+		end
+		if k == 'card_limit' and (self.added_to_deck or self.joker_added_to_deck_but_debuffed or (self.area == G.hand and not self.debuff)) and G.jokers and G.consumeables then
+			if self.ability.consumeable then
+				G.consumeables.config.card_limit = G.consumeables.config.card_limit + v
+			elseif self.ability.set == 'Joker' then
+				G.jokers.config.card_limit = G.jokers.config.card_limit + v
+			elseif self.area == G.hand and not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) then
+			    G.hand.config.card_limit = G.hand.config.card_limit + v
+			    G.E_MANAGER:add_event(Event({
+			        trigger = 'immediate',
+			        func = function()
+			            G.FUNCS.draw_from_deck_to_hand()
+			            return true
+			        end
+			    }))
+			end
+		end
+	end
+
+    if self.area and self.area == G.jokers then 
+        if self.edition then
+            if not G.P_CENTERS['e_'..(self.edition.type)].discovered then 
+                discover_card(G.P_CENTERS['e_'..(self.edition.type)])
+            end
+        else
+            if not G.P_CENTERS['e_base'].discovered then 
+                discover_card(G.P_CENTERS['e_base'])
+            end
+        end
+    end
+
+    if self.edition and not silent then
+        G.CONTROLLER.locks.edition = true
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = not immediate and 0.2 or 0,
+            blockable = not immediate,
+            func = function()
+                self:juice_up(1, 0.5)
+				local ed = G.P_CENTERS['e_'..(self.edition.type)]
+                play_sound(ed.sound.sound, ed.sound.per, ed.sound.vol)
+                return true
+            end
+        }))
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = 0.1,
+            func = function()
+                G.CONTROLLER.locks.edition = false
+                return true
+            end
+        }))
+    end
+
+	if G.jokers and self.area == G.jokers then 
+        check_for_unlock({type = 'modify_jokers'})
+    end
+
+    self:set_cost()
+
+end
+
+
+-- _key = key value for random seed
+-- _mod = scale of chance against base card (does not change guaranteed weights)
+-- _no_neg = boolean value to disable negative edition
+-- _guaranteed = boolean value to determine whether an edition is guaranteed
+-- _options = list of keys of editions to include in the poll
+-- OR list of tables { name = key, weight = number }
+function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
+    local _modifier = 1
+    local edition_poll = pseudorandom(pseudoseed(_key or 'edition_generic')) -- Generate the poll value
+	local available_editions = {} -- Table containing a list of editions and their weights
+
+	if not _options then
+		_options = {'e_negative', 'e_polychrome', 'e_holo', 'e_foil'}
+		if _key == "wheel_of_fortune" or _key == "aura" then -- set base game edition polling
+		else
+			for _,v in ipairs(G.P_CENTER_POOLS.Edition) do
+				if v.in_shop then
+					sendDebugMessage(v.key)
+					table.insert(_options, v.key)
+				end
+			end
+		end
+	end
+	for _,v in ipairs(_options) do
+		local edition_option = {}
+		if type(v) == 'string' then
+			assert(string.sub(v, 1, 2) == 'e_')
+			edition_option = { name = v, weight = G.P_CENTERS[v].weight }
+		elseif type(v) == 'table' then
+			assert(string.sub(v.name, 1, 2) == 'e_')
+			edition_option = { name = v.name, weight = v.weight }
+		end
+		table.insert(available_editions, edition_option)
+	end
+
+    -- Calculate total weight of editions
+    local total_weight = 0
+    for _,v in ipairs(available_editions) do
+		total_weight = total_weight + (v.weight) -- total all the weights of the polled editions
+    end
+    -- sendDebugMessage("Edition weights: "..total_weight, "EditionAPI")
+    -- If not guaranteed, calculate the base card rate to maintain base 4% chance of editions
+    if not _guaranteed then
+        _modifier = _mod or 1
+        total_weight = total_weight + (total_weight / 4 * 96)  -- Find total weight with base_card_rate as 96%
+		for _,v in ipairs(available_editions) do
+			v.weight = G.P_CENTERS[v.name]:get_weight() -- Apply game modifiers where appropriate (defined in edition declaration)
+		end
+    
+    end
+    -- sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
+    -- sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
+    -- sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
+    
+    -- Calculate whether edition is selected
+    local weight_i = 0
+    for _,v in ipairs(available_editions) do
+		weight_i = weight_i + v.weight*_modifier
+		-- sendDebugMessage(v.name.." weight is "..v.weight*_modifier)
+		-- sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
+		if edition_poll > 1 - (weight_i)/total_weight then
+			if not (v.name == 'e_negative' and _no_neg) then -- skip return if negative is selected and _no_neg is true
+				-- sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
+				return v.name
+			end
+		end
+	end
+
+    return nil
+end
+
+
+-------------------------------------------------------------------------------------------------
+----- API HOOKS GameObject.Palette
+-------------------------------------------------------------------------------------------------
+G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
+G.PALETTE = {}
+
+G.FUNCS.update_recolor = function(args)
+    G.SETTINGS.selected_colours[args.cycle_config.type] = SMODS.Palettes[args.cycle_config.type][args.to_val]
+	G:save_settings()
+	G.FUNCS.update_atlas(args.cycle_config.type)
+end
+
+-- Set the atlases of all cards of the correct type to be the new palette
+G.FUNCS.update_atlas = function(type)
+	local atlas_keys = {}
+	if type == "Suits" then
+		atlas_keys = {"cards_1", "ui_1"}
+		G.C["SO_1"].Clubs = G.SETTINGS.selected_colours[type].palette[1]
+		G.C["SO_1"].Spades = G.SETTINGS.selected_colours[type].palette[2]
+		G.C["SO_1"].Diamonds = G.SETTINGS.selected_colours[type].palette[3]
+		G.C["SO_1"].Hearts = G.SETTINGS.selected_colours[type].palette[4]
+		G.C.SUITS = G.C.SO_1		
+	else
+		for _,v in pairs(G.P_CENTER_POOLS[type]) do
+			atlas_keys[v.atlas or type] = v.atlas or type
+		end
+	end
+	for _,v in pairs(atlas_keys) do
+		if G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name] then
+			G.ASSET_ATLAS[v].image = G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name].image
+		end
+	end
+end
+
+G.FUNCS.card_colours = function(e)
+    G.SETTINGS.paused = true
+    G.FUNCS.overlay_menu{
+      definition = G.UIDEF.card_colours(),
+    }
+  end
+
+G.UIDEF.card_colours = function()
+    local nodeRet = {}
+    for _,k in ipairs(SMODS.Palettes.Types) do
+		local v = SMODS.Palettes[k]
+        if #v.names > 1 then
+            nodeRet[#nodeRet+1] = create_option_cycle({w = 4,scale = 0.8, label = k.." colours" ,options = v.names, opt_callback = "update_recolor", current_option = G.SETTINGS.selected_colours[k].order, type=k})
+        end
+    end
+    local t = create_UIBox_generic_options({back_func = 'options', contents = nodeRet})
+    return t
+end
+
+G.FUNCS.recolour_image = function(x,y,r,g,b,a)
+	if G.PALETTE.NEW.old_colours then
+		for i=1, #G.PALETTE.NEW.old_colours do
+			local defaultColour = G.PALETTE.NEW.old_colours[i]
+			if defaultColour[1] == r and defaultColour[2] == g and defaultColour[3] == b then
+				r = G.PALETTE.NEW.new_colours[i][1]
+				g = G.PALETTE.NEW.new_colours[i][2]
+				b = G.PALETTE.NEW.new_colours[i][3]
+				return r,g,b,a
+			end
+		end
+	end
+	return r, g, b, a
+end
+
+-------------------------------------------------------------------------------------------------
+----- API HOOKS GameObject.Enhancement
+-------------------------------------------------------------------------------------------------
+
+function create_UIBox_your_collection_enhancements(exit)
+    local deck_tables = {}
+    local rows, cols = 2, 4
+    local page = 0
+
+    G.your_collection = {}
+    for j = 1, rows do
+        G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 4.25 * G.CARD_W, 1.03 * G.CARD_H,
+            {
+                card_limit = cols,
+                type = 'title',
+                highlight_limit = 0,
+                collection = true
+            })
+        table.insert(deck_tables, { n = G.UIT.R, config = { align = "cm", padding = 0, no_fill = true },
+            nodes = {{ n = G.UIT.O, config = { object = G.your_collection[j] } }}
+        })
+    end
+
+	table.sort(G.P_CENTER_POOLS.Enhanced, function(a,b) return a.order < b.order end)
+
+    local count = math.min(cols * rows, #G.P_CENTER_POOLS.Enhanced)
+    local index = 1 + (rows * cols * page)
+    for j = 1, rows do
+        for i = 1, cols do
+
+            local center = G.P_CENTER_POOLS.Enhanced[index]
+            if not center then
+                break
+            end
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+            card:set_ability(center, true, true)
+            G.your_collection[j]:emplace(card)
+            index = index + 1
+        end
+        if index > count then
+            break
+        end
+    end
+
+    local enhancement_options = {}
+
+    local t = create_UIBox_generic_options({
+        infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
+        contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
+            nodes = deck_tables }}
+    })
+
+    if #G.P_CENTER_POOLS["Enhanced"] > rows * cols then
+        for i = 1, math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) do
+            table.insert(enhancement_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+                tostring(math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))))
+        end
+        t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
+            contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
+                nodes = deck_tables
+            }, { n = G.UIT.R, config = { align = "cm" },
+                nodes = {create_option_cycle({
+                    options = enhancement_options,
+                    w = 4.5,
+                    cycle_shoulders = true,
+                    opt_callback = 'your_collection_enhancements_page',
+                    focus_args = { snap_to = true, nav = 'wide' },
+                    current_option = 1,
+                    r = rows,
+                    c = cols,
+                    colour = G.C.RED,
+                    no_pips = true
+                })}
+            }}
+        })
+    end
+    return t
+end
+
+G.FUNCS.your_collection_enhancements_page = function(args)
+    if not args or not args.cycle_config then
+        return
+    end
+    local rows = 2
+    local cols = 4
+    local page = args.cycle_config.current_option
+    if page > math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) then
+        page = page - math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))
+    end
+    local count = rows * cols
+    local offset = (rows * cols) * (page - 1)
+
+    for j = 1, #G.your_collection do
+        for i = #G.your_collection[j].cards, 1, -1 do
+            if G.your_collection[j] ~= nil then
+                local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+                c:remove()
+                c = nil
+            end
+        end
+    end
+
+    for j = 1, rows do
+        for i = 1, cols do
+            if count % rows > 0 and i <= count % rows and j == cols then
+                offset = offset - 1
+                break
+            end
+            local idx = i + (j - 1) * cols + offset
+            if idx > #G.P_CENTER_POOLS.Enhanced then return end
+            local center = G.P_CENTER_POOLS.Enhanced[idx]
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+                G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+            card:set_ability(center, true, true)
+            card:start_materialize(nil, i > 1 or j > 1)
+            G.your_collection[j]:emplace(card)
+        end
+    end
+end

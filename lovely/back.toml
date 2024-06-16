@@ -35,8 +35,7 @@ payload = '''
 for key, val in pairs(G.sticker_card.area.cards) do
 	val.children.back = false
 	val:set_ability(val.config.center, true)
-end
-'''
+end'''
 
 # Back:apply_to_run()
 [[patches]]
@@ -49,8 +48,7 @@ payload = '''
 	local obj = self.effect.center
 	if obj.apply and type(obj.apply) == 'function' then
 		obj:apply()
-	end
-'''
+	end'''
 
 # Back:trigger_effect(args)
 [[patches]]
@@ -64,5 +62,4 @@ payload = '''
 	if obj.trigger_effect and type(obj.trigger_effect) == 'function' then
 		local o = obj:trigger_effect(args)
 		if o then return o end
-	end
-'''
+	end'''

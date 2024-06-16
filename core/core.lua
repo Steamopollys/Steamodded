@@ -292,7 +292,7 @@ end
 
 
 function buildModtag(mod)
-    local tag_pos, tag_message, tag_atlas = { x = 0, y = 0 }, "load_success", mod.prefix .. '_modicon'
+    local tag_pos, tag_message, tag_atlas = { x = 0, y = 0 }, "load_success", mod.prefix and mod.prefix .. '_modicon' or 'modicon'
     local specific_vars = {}
 
     if not mod.can_load then
@@ -1104,7 +1104,7 @@ function SMODS.SAVE_UNLOCKS()
         end
     end
 
-	table.sort(G.P_LOCKED, function (a, b) return not a.order or not b.order or a.order < b.order end)
+	table.sort(G.P_LOCKED, function (a, b) return a.order and b.order and a.order < b.order end)
 
 	for k, v in pairs(G.P_BLINDS) do
         v.key = k

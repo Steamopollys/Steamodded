@@ -20,8 +20,7 @@ for k, v in pairs(SMODS.PayoutArgs) do
         pitch = pitch + 0.06
         dollars = dollars + money_gained
     end
-end
-'''
+end'''
 
 [[patches]]
 [patches.regex]
@@ -38,8 +37,7 @@ for k, v in pairs(SMODS.PayoutArgs) do
         pitch = pitch + 0.06
         dollars = dollars + money_gained
     end
-end
-'''
+end'''
 
 [[patches]]
 [patches.pattern]
@@ -47,8 +45,7 @@ target = "functions/state_events.lua"
 pattern = "add_round_eval_row({dollars = G.GAME.blind.dollars, name='blind1', pitch = pitch})"
 position = "at"
 payload = '''
-add_round_eval_row({dollars = G.GAME.blind.dollars, name='blind1', pitch = pitch, above_dot_bar = true})
-'''
+add_round_eval_row({dollars = G.GAME.blind.dollars, name='blind1', pitch = pitch, above_dot_bar = true})'''
 match_indent = true
 
 [[patches]]
@@ -57,8 +54,7 @@ target = "functions/state_events.lua"
 pattern = "add_round_eval_row({dollars = 0, name='blind1', pitch = pitch, saved = true})"
 position = "at"
 payload = '''
-add_round_eval_row({dollars = 0, name='blind1', pitch = pitch, saved = true, above_dot_bar = true})
-'''
+add_round_eval_row({dollars = 0, name='blind1', pitch = pitch, saved = true, above_dot_bar = true})'''
 match_indent = true
 
 # add_round_eval_row()
@@ -68,8 +64,7 @@ target = "functions/common_events.lua"
 pattern = "if config.name ~= 'blind1' then"
 position = "at"
 payload = '''
-if config.above_dot_bar ~= true then
-'''
+if config.above_dot_bar ~= true then'''
 match_indent = true
 
 [[patches]]
@@ -80,8 +75,7 @@ position = "before"
 payload = '''
 --asdf
 elseif string.find(config.name, 'payout_arg') then
-    config.payout_arg:table_left_text(config, left_text, scale)
-'''
+    config.payout_arg:table_left_text(config, left_text, scale)'''
 match_indent = true
 
 [[patches]]
@@ -104,8 +98,7 @@ if string.find(config.name, 'payout_arg') and config.payout_arg.custom_message_c
             return true
         end
     }))
-else
-'''
+else'''
 match_indent = true
 
 [[patches]]
@@ -114,8 +107,7 @@ target = "functions/common_events.lua"
 pattern = "if num_dollars > 60 then"
 position = "at"
 payload = '''
-if num_dollars > 60 or num_dollars < -60 then
-'''
+if num_dollars > 60 or num_dollars < -60 then'''
 match_indent = true
 
 [[patches]]
@@ -132,8 +124,7 @@ G.round_eval:add_child(
             {n=G.UIT.O, config={object = DynaText({string = {localize('$')..num_dollars}, colours = {config.payout_arg.symbol_config.color}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
         }},
         G.round_eval:get_UIE_by_ID('dollar_'..config.name))
-else
-'''
+else'''
 
 [[patches]]
 [patches.pattern]
@@ -142,8 +133,7 @@ pattern = "play_sound('coin3', 0.9+0.2*math.random(), 0.7)"
 position = "before"
 payload = '''
 --asdf
-end
-'''
+end'''
 match_indent = true
 
 [[patches]]
@@ -177,8 +167,7 @@ if num_dollars < 0 then --if negative
         end
     }))
 else --if positive
-    dollar_string = localize('$')..num_dollars
-'''
+    dollar_string = localize('$')..num_dollars'''
 match_indent = true
 
 [[patches]]
@@ -189,9 +178,7 @@ position = "at"
 payload = '''
 local dollars_to_loop
 if num_dollars < 0 then dollars_to_loop = num_dollars*-1 else dollars_to_loop = num_dollars end
-for i = 1, dollars_to_loop do
-
-'''
+for i = 1, dollars_to_loop do'''
 match_indent = true
 
 [[patches]]
@@ -202,8 +189,7 @@ position = "before"
 line_prepend = "$indent"
 payload = '''
 --asdf
-end
-'''
+end'''
 
 [[patches]]
 [patches.pattern]
@@ -226,8 +212,7 @@ else
         if num_dollars < 0 then r = {n=G.UIT.T, config={text = localize('$'), colour = G.C.RED, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
         else r = {n=G.UIT.T, config={text = localize('$'), colour = G.C.MONEY, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}} end
     end
-end
-'''
+end'''
 match_indent = true
 
 [[patches]]
@@ -238,5 +223,4 @@ position = "before"
 line_prepend = "$indent"
 payload = '''
 --asdf
-end
-'''
+end'''

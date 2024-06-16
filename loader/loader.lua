@@ -76,7 +76,7 @@ function loadMods(modsDirectory)
                 return x and x:gsub('%-STEAMODDED', '')
             end
         },
-        outdated      = { pattern = 'SMODS%.INIT' }
+        outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } }
     }
     
     local used_prefixes = {}
@@ -111,7 +111,15 @@ function loadMods(modsDirectory)
                     local mod = {}
                     local sane = true
                     for k, v in pairs(header_components) do
-                        local component = file_content:match(v.pattern)
+                        local component = nil
+                        if type(v.pattern) == "table" then
+                            for _, pattern in ipairs(v.pattern) do
+                                component = file_content:match(pattern) or component
+                                if component then break end
+                            end
+                        else
+                            component = file_content:match(v.pattern)
+                        end
                         if v.required and not component then
                             sane = false
                             sendWarnMessage(string.format('Mod file %s is missing required header component: %s',
@@ -139,8 +147,13 @@ function loadMods(modsDirectory)
                         sendWarnMessage("Duplicate Mod ID: " .. mod.id, 'Loader')
                     end
                 
-                    mod.prefix = mod.prefix or (mod.id or ''):lower():sub(1, 4)
-                    if used_prefixes[mod.prefix] then
+                    if mod.outdated then
+                        mod.omit_mod_prefix = true
+                    end
+                    if not mod.omit_mod_prefix then
+                        mod.prefix = mod.prefix or (mod.id or ''):lower():sub(1, 4)
+                    end
+                    if mod.prefix and used_prefixes[mod.prefix] then
                         sane = false
                         sendWarnMessage(('Duplicate Mod prefix %s used by %s, %s'):format(mod.prefix, mod.id, used_prefixes[mod.prefix]))
                     end
@@ -150,7 +163,9 @@ function loadMods(modsDirectory)
                         mod.path = directory .. '/'
                         mod.main_file = filename
                         mod.display_name = mod.display_name or mod.name
-                        used_prefixes[mod.prefix] = mod.id
+                        if mod.prefix then
+                            used_prefixes[mod.prefix] = mod.id
+                        end
                         mod.content = file_content
                         mod.optional_dependencies = {}
                         SMODS.Mods[mod.id] = mod
@@ -212,7 +227,6 @@ function loadMods(modsDirectory)
             end
         end
         if mod.outdated then
-            can_load = false
             load_issues.outdated = true
         end
         if mod.disabled then
@@ -245,7 +259,17 @@ function loadMods(modsDirectory)
             if mod.can_load then
                 boot_print_stage('Loading Mod: ' .. mod.id)
                 SMODS.current_mod = mod
-                assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
+                if mod.outdated then
+                    SMODS.compat_0_9_8.with_compat(function()
+                        assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
+                        for k, v in pairs(SMODS.compat_0_9_8.init_queue) do
+                            v()
+                            SMODS.compat_0_9_8.init_queue[k] = nil
+                        end
+                    end)
+                else
+                    assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
+                end
             else
                 boot_print_stage('Failed to load Mod: ' .. mod.id)
                 sendWarnMessage(string.format("Mod %s was unable to load: %s%s%s", mod.id,
@@ -257,6 +281,15 @@ function loadMods(modsDirectory)
                     ('Unresolved Conflicts: ' .. inspect(mod.load_issues.conflicts) .. '\n') or ''
                 ))
             end
+        end
+    end
+    -- compat after loading mods
+    if SMODS.compat_0_9_8.load_done then
+        -- Invasive change to Card:generate_UIBox_ability_table()
+        local Card_generate_UIBox_ability_table_ref = Card.generate_UIBox_ability_table
+        function Card:generate_UIBox_ability_table(...)
+            SMODS.compat_0_9_8.generate_UIBox_ability_table_card = self
+            return Card_generate_UIBox_ability_table_ref(self, ...)
         end
     end
 end

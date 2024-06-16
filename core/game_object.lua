@@ -8,30 +8,45 @@ function loadAPIs()
 
     --- GameObject base class. You should always use the appropriate subclass to register your object.
     SMODS.GameObject = Object:extend()
-    SMODS.GameObject.children = {}
+    SMODS.GameObject.subclasses = {}
     function SMODS.GameObject:extend(o)
         local cls = Object.extend(self)
         for k, v in pairs(o or {}) do
             cls[k] = v
         end
-        self.children[#self.children + 1] = cls
-        cls.children = {}
+        self.subclasses[#self.subclasses + 1] = cls
+        cls.subclasses = {}
         return cls
     end
 
     function SMODS.GameObject:__call(o)
         o.mod = SMODS.current_mod
-        if o.mod and not o.raw_atlas_key then
+        if o.mod and not o.raw_atlas_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
+        end
+        if o.mod and not o.raw_shader_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
+            if o['shader'] then o['shader'] = ('%s_%s'):format(o.mod.prefix, o['shader']) end
         end
         setmetatable(o, self)
         for _, v in ipairs(o.required_params or {}) do
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
         end
         if not o.omit_prefix and o.mod then
-            o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
+            if o['palette'] then
+                if o.mod.omit_mod_prefix or o.omit_mod_prefix then
+                    o.key = ('%s_%s_%s'):format(o.prefix, o.type:lower(), o.key)
+                else
+                    o.key = ('%s_%s_%s_%s'):format(o.prefix, o.mod.prefix, o.type:lower(), o.key)
+                end
+            else
+                if o.mod.omit_mod_prefix or o.omit_mod_prefix then
+                    o.key = ('%s_%s'):format(o.prefix, o.key)
+                else
+                    o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
+                end
+            end
         end
         o:register()
         return o
@@ -126,7 +141,7 @@ function loadAPIs()
             o.loc_txt = {}
         end
         for k, v in pairs(obj) do o[k] = v end
-        if o.mod and not o.raw_atlas_key then
+        if o.mod and not o.raw_atlas_key and not o.mod.omit_mod_prefix then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 -- was a new atlas provided with this call?
                 if obj[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then o[v] = ('%s_%s'):format(
@@ -142,7 +157,7 @@ function loadAPIs()
         if class.obj_table and class.obj_buffer then
             class:injector()
         else
-            for _, subclass in ipairs(class.children) do SMODS.injectObjects(subclass) end
+            for _, subclass in ipairs(class.subclasses) do SMODS.injectObjects(subclass) end
         end
     end
 
@@ -170,7 +185,7 @@ function loadAPIs()
             G.LANGUAGES[self.key] = self
         end,
         injector = function(self)
-            self.super.injector(self)
+            SMODS.Language.super.injector(self)
             G:set_language()
         end
     }
@@ -217,7 +232,7 @@ function loadAPIs()
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
                 return
             end
-            if not self.raw_key and self.mod then
+            if not self.raw_key and self.mod and not (self.mod.omit_mod_prefix or self.omit_mod_prefix) then
                 self.key = ('%s_%s'):format(self.mod.prefix, self.key)
             end
             if self.language then
@@ -226,7 +241,7 @@ function loadAPIs()
             end
             -- needed for changing high contrast settings, apparently
             self.name = self.key
-            self.super.register(self)
+            SMODS.Atlas.super.register(self)
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
@@ -239,9 +254,9 @@ function loadAPIs()
                 'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
             local file_data = assert(NFS.newFileData(self.full_path),
                 ('Failed to collect file data for Atlas %s'):format(self.key))
-            local image_data = assert(love.image.newImageData(file_data),
+            self.image_data = assert(love.image.newImageData(file_data),
                 ('Failed to initialize image data for Atlas %s'):format(self.key))
-            self.image = love.graphics.newImage(image_data,
+            self.image = love.graphics.newImage(self.image_data,
                 { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             G[self.atlas_table][self.key_noloc or self.key] = self
         end,
@@ -273,7 +288,7 @@ function loadAPIs()
         process_loc_text = function() end,
         register = function(self)
             if self.obj_table[self.key] then return end
-            if not self.raw_key and self.mod then
+            if not self.raw_key and self.mod and not (self.mod.omit_mod_prefix or self.omit_mod_prefix) then
                 self.key = ('%s_%s'):format(self.mod.prefix, self.key)
             end
             if self.language then
@@ -289,7 +304,7 @@ function loadAPIs()
                 end
                 self.replace_sounds[replace] = { key = self.key, times = times, args = args}
             end
-            self.super.register(self)
+            SMODS.Sound.super.register(self)
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
@@ -410,6 +425,7 @@ function loadAPIs()
         unlocked = false,
         set = 'Stake',
         atlas = 'chips',
+        pos = { x = 0, y = 0 },
         injected = false,
         required_params = {
             'key',
@@ -420,7 +436,7 @@ function loadAPIs()
         injector = function(self)
             G.P_CENTER_POOLS[self.set] = {}
             G.P_STAKES = {}
-            self.super.injector(self)
+            SMODS.Stake.super.injector(self)
         end,
         inject = function(self)
             if not self.injected then
@@ -670,29 +686,31 @@ function loadAPIs()
             end
 
             INIT_COLLECTION_CARD_ALERTS()
-
+            local option_nodes = {create_option_cycle({
+                options = center_options,
+                w = 4.5,
+                cycle_shoulders = true,
+                opt_callback = 'your_collection_' .. string.lower(self.key) .. '_page',
+                focus_args = { snap_to = true, nav = 'wide' },
+                current_option = 1,
+                colour = G.C.RED,
+                no_pips = true
+            })}
+            if SMODS.Palettes[self.key] and #SMODS.Palettes[self.key].names > 1 then
+                option_nodes[#option_nodes + 1] = create_option_cycle({
+                    w = 4.5,
+                    scale = 0.8,
+                    options = SMODS.Palettes[self.key].names,
+                    opt_callback = "update_recolor",
+                    current_option = G.SETTINGS.selected_colours[self.key].order,
+                    type = self.key
+            })
+            end
             local t = create_UIBox_generic_options({
                 back_func = 'your_collection',
                 contents = {
                     { n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables },
-                    {
-                        n = G.UIT.R,
-                        config = { align = "cm", padding = 0 },
-                        nodes = {
-                            create_option_cycle({
-                                options = center_options,
-                                w = 4.5,
-                                cycle_shoulders = true,
-                                opt_callback =
-                                    'your_collection_' .. string.lower(self.key) .. '_page',
-                                focus_args = { snap_to = true, nav = 'wide' },
-                                current_option = 1,
-                                colour = G
-                                    .C.RED,
-                                no_pips = true
-                            })
-                        }
-                    },
+                    { n = G.UIT.R, config = { align = "cm", padding = 0 }, nodes = option_nodes },
                 }
             })
             return t
@@ -766,6 +784,27 @@ function loadAPIs()
             -- SMODS.process_loc_text(G.localization.misc.labels, string.lower(self.key), self.loc_txt, 'label') -- redundant
             SMODS.process_loc_text(G.localization.descriptions.Other, 'undiscovered_' .. string.lower(self.key),
                 self.loc_txt, 'undiscovered')
+        end,
+        generate_colours = function(self, base_colour, alternate_colour)
+            if not self.colour_shifter then return HEX("000000") end
+            local colours = {}
+            for i=1,#self.colour_shifter do
+                local new_colour = {}
+                for j=1,4 do
+                    table.insert(new_colour, math.max(0, math.min(1, base_colour[j]+self.colour_shifter[i][j])))
+                end
+                table.insert(colours, HSL_RGB(new_colour))
+            end
+            if self.colour_shifter_alt then
+                for i=1,#self.colour_shifter_alt do
+                    local new_colour = {}
+                    for j=1,4 do
+                        table.insert(new_colour, math.max(0, math.min(1, alternate_colour[j]+self.colour_shifter_alt[i][j])))
+                    end
+                    table.insert(colours, HSL_RGB(new_colour))
+                end
+            end
+            return colours
         end
     }
 
@@ -783,6 +822,7 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
+        colour_shifter = {{0, -0.06, -0.60, 0}, {0, 0.30, -0.35, 0}, {0, 0.20, -0.15, 0}, {0, 0, 0, 0}, {0, -0.50, 0.20, 0}}
     }
     SMODS.ConsumableType {
         key = 'Planet',
@@ -798,6 +838,7 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
+        colour_shifter = {{0,-0.23,-0.26,0}, {0,0,0,0}, {0, -0.10, 0.16, 0}, {0.04, -0.35, 0.42, 0}, {-1, -1, 1, 0}}
     }
     SMODS.ConsumableType {
         key = 'Spectral',
@@ -805,6 +846,8 @@ function loadAPIs()
         primary_colour = G.C.SET.Spectral,
         secondary_colour = G.C.SECONDARY_SET.Spectral,
         loc_txt = {},
+        colour_shifter = {{-0.3,-0.48,-0.61,0}, {-0.3,-0.49,-0.48,0},{0,-0.46,-0.05,0},{-0.02,-0.3,-0.085,0},{0.08,-0.21,-0.4,0},{0,-0.03,-0.24,0},{0,-0.22,-0.31,0},{0,-0.19,-0.29,0},{0,-0.21,-0.28,0},{0,-0.04,-0.125,0},{0,0,0,0},{0,-0.07,0.07,0},{0,-0.1,0.05,0},{0,-0.28,0.12,0},{0,-0.4,0,0},{-0.03,-0.47,0.1,0}},
+        colour_shifter_alt = {{-0.015,-0.32,-0.24,0}, {0,-0.22,-0.22,0}, {0,-0.24,-0.13,0}, {0,-0.17,0.13,0}, {0,-0.03,0.08,0}, {0,0,0,0}}
     }
 
     local game_init_game_object_ref = Game.init_game_object
@@ -843,6 +886,9 @@ function loadAPIs()
             return true
         end,
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
+            if card == nil then
+                card = SMODS.compat_0_9_8.generate_UIBox_ability_table_card
+            end
             local target = { type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars =
             specific_vars or {} }
             local res = {}
@@ -851,7 +897,9 @@ function loadAPIs()
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
-            full_UI_table.name = localize { type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name }
+            if not full_UI_table.name then
+                full_UI_table.name = localize { type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name }
+            end
             if specific_vars and specific_vars.debuffed and not res.replace_debuff then
                 target = {type = 'other', key = 'debuffed_'..(specific_vars.playing_card and 'playing_card' or 'default'), nodes = desc_nodes}
             end
@@ -935,11 +983,23 @@ function loadAPIs()
                 self.type:delete_card(self)
             end
             SMODS.remove_pool(G.P_CENTER_POOLS['Consumeables'], self.key)
-            self.super.delete(self)
+            SMODS.Consumable.super.delete(self)
         end,
         loc_vars = function(self, info_queue)
             return {}
         end
+    }
+    SMODS.Tarot = SMODS.Consumable:extend {
+        set = 'Tarot',
+    }
+    SMODS.Planet = SMODS.Consumable:extend {
+        set = 'Planet',
+        atlas = 'Planet',
+    }
+    SMODS.Spectral = SMODS.Consumable:extend {
+        set = 'Spectral',
+        atlas = 'Spectral',
+        cost = 4,
     }
 
 
@@ -983,7 +1043,7 @@ function loadAPIs()
         register = function(self)
             -- game expects a name, so ensure it's set
             self.name = self.name or self.key
-            self.super.register(self)
+            SMODS.Back.super.register(self)
         end
     }
 
@@ -1077,8 +1137,9 @@ function loadAPIs()
         set = 'Seal',
         prefix = 's',
         atlas = 'centers',
+        pos = { x = 0, y = 0 },
         discovered = false,
-        colour = HEX('FFFFFF'),
+        badge_colour = HEX('FFFFFF'),
         required_params = {
             'key',
             'pos',
@@ -1149,7 +1210,7 @@ function loadAPIs()
             self.card_key = self:get_card_key(self.card_key)
             self.max_nominal.value = self.max_nominal.value + 0.01
             self.suit_nominal = self.max_nominal.value
-            self.super.register(self)
+            SMODS.Suit.super.register(self)
         end,
         populate = function(self)
             for _, other in pairs(SMODS.Ranks) do
@@ -1593,7 +1654,7 @@ function loadAPIs()
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('grim_create'))].card_key, 'A'
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
-                            if v.key ~= 'm_stone' then
+                            if v.key ~= 'm_stone' and not v.overrides_base_rank then
                                 cen_pool[#cen_pool + 1] = v
                             end
                         end
@@ -1637,7 +1698,7 @@ function loadAPIs()
                             pseudorandom_element(faces, pseudoseed('familiar_create'))
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
-                            if v.key ~= 'm_stone' then
+                            if v.key ~= 'm_stone' and not v.overrides_base_rank then
                                 cen_pool[#cen_pool + 1] = v
                             end
                         end
@@ -1681,7 +1742,7 @@ function loadAPIs()
                             pseudorandom_element(numbers, pseudoseed('incantation_create'))
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
-                            if v.key ~= 'm_stone' then
+                            if v.key ~= 'm_stone' and not v.overrides_base_rank then
                                 cen_pool[#cen_pool + 1] = v
                             end
                         end
@@ -1913,28 +1974,42 @@ function loadAPIs()
         -- if true, enhanced card has no suit
         -- no_rank
         -- if true, enhanced card has no rank
+        -- overrides_base_rank
+        -- Set to true if your enhancement overrides the base card's rank.
+        -- This prevents rank generators like Familiar creating cards
+        -- whose rank is overridden.
         -- any_suit
         -- if true, enhanced card is any suit
         -- always_scores
         -- if true, card always scores
+        -- loc_subtract_extra_chips
+        -- During tooltip generation, number of chips to subtract from displayed extra chips.
+        -- Use if enhancement already displays its own chips.
         -- Future work: use ranks() and suits() for better control
         register = function(self)
-            self.effect = self.effect or self.name
             self.config = self.config or {}
             assert(not (self.no_suit and self.any_suit))
+            if self.no_rank then self.overrides_base_rank = true end
             SMODS.Enhancement.super.register(self)
         end,
+        -- Produces the description of the whole playing card
+        -- (including chips from the rank of the card and permanent bonus chips).
+        -- You will probably want to override this if your enhancement interacts with
+        -- those parts of the base card.
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars.nominal_chips and not self.replace_base_card then 
                 localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
             end
             SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars.bonus_chips then
-                localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips}}
+                local remaining_bonus_chips = specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)
+                if remaining_bonus_chips > 0 then
+                    localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)}}
+                end
             end
         end,
         -- other methods:
-        -- calculate_enhancement(self, context, effect)
+        -- calculate(self, context, effect)
     }
     -- Note: `name`, `effect`, and `label` all serve the same purpose as
     -- the name of the enhancement. In theory, `effect` serves to allow reusing
@@ -1949,6 +2024,395 @@ function loadAPIs()
     -- For example, Card:set_ability sets the card's enhancement, which is not immediately
     -- obvious.
 
-    -- TODO pos = { x = 0, y = 0 } should just be set as a default for all objects
-    -- with atlases
+    -- local stone_card = SMODS.Enhancement:take_ownership('m_stone', {
+    --     replace_base_card = true,
+    --     no_suit = true,
+    --     no_rank = true,
+    --     always_scores = true,
+    --     loc_txt = {
+    --         name = "Stone Card",
+    --         text = {
+    --             "{C:chips}+#1#{} Chips",
+    --             "no rank or suit"
+    --         }
+    --     },
+    --     loc_vars = function(self)
+    --         return {
+    --             vars = { self.config.bonus }
+    --         }
+    --     end
+    -- })
+    -- stone_card.loc_subtract_extra_chips = stone_card.config.bonus
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Shader
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Shaders = {}
+    SMODS.Shader = SMODS.GameObject:extend {
+        obj_table = SMODS.Shaders,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'file_name',
+        },
+        set = 'Shader',
+        omit_prefix = true,
+        inject = function(self)
+            self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
+            'assets/shaders/' .. self.file_name
+            local file = NFS.read(self.full_path)
+            love.filesystem.write(self.key.."-temp.fs", file)
+            G.SHADERS[self.key] = love.graphics.newShader(self.key.."-temp.fs")
+            love.filesystem.remove(self.key.."-temp.fs")
+            -- G.SHADERS[self.key] = love.graphics.newShader(self.full_path)
+        end,
+        register = function(self)
+            if self.registered then 
+                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+                return
+            end
+            self.original_key = self.key
+            if not self.raw_key and self.mod and not (self.mod.omit_mod_prefix or self.omit_mod_prefix) then
+                self.key = ('%s_%s'):format(self.mod.prefix, self.key)
+            end
+            SMODS.Shader.super.register(self)
+        end,
+        process_loc_text = function() end
+    }
+
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Edition
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Edition = SMODS.Center:extend {
+        set = 'Edition',
+        -- atlas only matters for displaying editions in the collection
+        atlas = 'Joker',
+        pos = { x = 0, y = 0 },
+        prefix = 'e',
+        discovered = false,
+        unlocked = true,
+        apply_to_float = false,
+        in_shop = false,
+        weight = 0,
+        badge_colour = G.C.DARK_EDITION,
+        -- default sound is foil sound
+        sound = { sound = "foil1", per = 1.2, vol = 0.4 },
+        required_params = {
+            'key',
+            'loc_txt',
+            'shader'
+        },
+        -- other fields:
+        -- extra_cost
+
+        -- TODO badge colours. need to check how Steamodded already does badge colors
+        -- other methods:
+        -- calculate(self)
+        register = function(self)
+            self.config = self.config or {}
+            self.loc_txt.label = self.loc_txt.label or self.loc_txt.name
+            SMODS.Edition.super.register(self)
+        end,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.misc.labels, self.key:sub(3), self.loc_txt, 'label')
+            SMODS.Edition.super.process_loc_text(self)
+        end,
+        -- apply_modifier = true when G.GAME.edition_rate is to be applied
+        get_weight = function(self, apply_modifier)
+            return self.weight
+        end
+    }
+
+    -- TODO also, this should probably be a utility method in core
+    -- card_area = pass the card area
+    -- edition = boolean value
+    function SMODS.Edition:get_edition_cards(card_area, edition)
+        local cards = {}
+        for _, v in ipairs(card_area.cards) do
+            if (not v.edition and edition) or (v.edition and not edition) then
+                table.insert(cards, v)
+            end
+        end
+        return cards
+    end
+
+    SMODS.Edition:take_ownership('foil',{
+        shader = 'foil',
+        config = setmetatable({ chips = 50 }, {
+            __index = function(t, k)
+                if k == 'extra' then return t.chips end
+                return rawget(t, k)
+            end,
+            __newindex = function(t, k, v)
+                if k == 'extra' then t.chips = v; return end
+                rawset(t, k, v)
+            end,
+        }),
+        sound = { sound = "foil1", per = 1.2, vol = 0.4 },
+        weight = 20,
+        extra_cost = 2,
+        get_weight = function(self)
+            return G.GAME.edition_rate*self.weight
+        end,
+        loc_vars = function(self)
+            return { vars = { self.config.chips } }
+        end
+    })
+    SMODS.Edition:take_ownership('holo', {
+        shader = 'holo',
+        config = setmetatable({ mult = 10 }, {
+            __index = function(t, k)
+                if k == 'extra' then return t.mult end
+                return rawget(t, k)
+            end,
+            __newindex = function(t, k, v)
+                if k == 'extra' then t.mult = v; return end
+                rawset(t, k, v)
+            end,
+        }),
+        sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
+        weight = 14,
+        extra_cost = 3,
+        get_weight = function(self)
+            return G.GAME.edition_rate*self.weight
+        end,
+        loc_vars = function(self)
+            return { vars = { self.config.mult } }
+        end
+    })
+    SMODS.Edition:take_ownership('polychrome', {
+        shader = 'polychrome',
+        config = setmetatable({ x_mult = 1.5 }, {
+            __index = function(t, k)
+                if k == 'extra' then return t.x_mult end
+                return rawget(t, k)
+            end,
+            __newindex = function(t, k, v)
+                if k == 'extra' then t.x_mult = v; return end
+                rawset(t, k, v)
+            end,
+        }),
+        sound = { sound = "polychrome1", per = 1.2, vol = 0.7 },
+        weight = 3,
+        extra_cost = 5,
+        get_weight = function(self)
+            return (G.GAME.edition_rate - 1)*G.P_CENTERS["e_negative"].weight + G.GAME.edition_rate*self.weight 
+        end,
+        loc_vars = function(self)
+            return { vars = { self.config.x_mult } }
+        end
+    })
+    SMODS.Edition:take_ownership('negative', {
+        shader = 'negative',
+        config = setmetatable({ card_limit = 1 }, {
+            __index = function(t, k)
+                if k == 'extra' then return t.card_limit end
+                return rawget(t, k)
+            end,
+            __newindex = function(t, k, v)
+                if k == 'extra' then t.card_limit = v; return end
+                rawset(t, k, v)
+            end,
+        }),
+        sound = { sound = "negative", per = 1.5, vol = 0.4 },
+        weight = 3,
+        extra_cost = 5,
+        get_weight = function(self)
+            return self.weight
+        end,
+        loc_vars = function(self)
+            return { vars = { self.config.card_limit } }
+        end,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.descriptions.Edition, "e_negative_playing_card", {
+                name = "Negative",
+                text = {
+                    "{C:dark_edition}+#1#{} hand size"
+                }
+            })
+            SMODS.Edition.process_loc_text(self)
+        end,
+    })
+
+     -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Palettes
+    -------------------------------------------------------------------------------------------------
+        
+    SMODS.local_palettes = {}
+    SMODS.Palettes = {Types = {}}
+    SMODS.Palette = SMODS.GameObject:extend {
+        obj_table = SMODS.local_palettes,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'old_colours',
+            'new_colours',
+            'type',
+            'name'
+        },
+        set = 'Palette',
+        prefix = 'pal',
+        inject = function(self)
+            if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suits" then return end
+            if not SMODS.Palettes[self.type] then
+                table.insert(SMODS.Palettes.Types, self.type)
+                SMODS.Palettes[self.type] = {names = {}}
+                G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or nil
+            end
+            if SMODS.Palettes[self.type][self.name] then 
+                G.FUNCS.update_atlas(self.type)
+                return
+            end
+            table.insert(SMODS.Palettes[self.type].names, self.name)
+            SMODS.Palettes[self.type][self.name] = {
+                name = self.name,
+                order = #SMODS.Palettes[self.type].names,
+                old_colours = {},
+                new_colours = {}
+            }
+            if self.old_colours then
+                for i=1, #self.old_colours do
+                    SMODS.Palettes[self.type][self.name].old_colours[i] = type(self.old_colours[i]) == "string" and HEX(self.old_colours[i]) or self.old_colours[i]
+                    SMODS.Palettes[self.type][self.name].new_colours[i] = type(self.new_colours[i]) == "string" and HEX(self.new_colours[i]) or self.new_colours[i]
+                end
+            end
+            if not G.SETTINGS.selected_colours[self.type] then
+                G.SETTINGS.selected_colours[self.type] = SMODS.Palettes[self.type][self.name]
+            end
+
+            local atlas_keys = {}
+            if self.type == "Suits" then
+                atlas_keys = {"cards_1", "ui_1"}
+            else
+                for _,v in pairs(G.P_CENTER_POOLS[self.type]) do
+                    atlas_keys[v.atlas or self.type] = v.atlas or self.type
+                end
+            end
+
+            G.PALETTE.NEW = SMODS.Palettes[self.type][self.name]
+            for _,v in pairs(atlas_keys) do
+                G.ASSET_ATLAS[v][self.name] = {image_data = G.ASSET_ATLAS[v].image_data:clone()}
+                G.ASSET_ATLAS[v][self.name].image_data:mapPixel(G.FUNCS.recolour_image)
+                G.ASSET_ATLAS[v][self.name].image = love.graphics.newImage(G.ASSET_ATLAS[v][self.name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+                sendInfoMessage("Added atlas "..self.name.." to "..v, "PaletteAPI")
+            end
+            G.FUNCS.update_atlas(self.type)
+        end
+    }
+
+    function SMODS.Palette:create_colours(type, base_colour, alternate_colour)
+        if SMODS.ConsumableTypes[type].generate_colours then
+            return SMODS.ConsumableTypes[type]:generate_colours(HEX_HSL(base_colour), alternate_colour and HEX_HSL(alternate_colour))
+        end
+        return {HEX(base_colour)}
+    end 
+
+    function HEX_HSL(base_colour)
+        local rgb = HEX(base_colour)
+        local low = math.min(rgb[1], rgb[2], rgb[3])
+        local high = math.max(rgb[1], rgb[2], rgb[3])
+        local delta = high - low
+        local sum = high + low
+        local hsl = {0, 0, 0.5 * sum, rgb[4]}
+        
+        if delta == 0 then return hsl end
+        
+        if hsl[3] == 1 or hsl[3] == 0 then
+            hsl[2] = 0
+        else
+            hsl[2] = delta/1-math.abs(2*hsl[3] - 1)
+        end
+        
+        if high == rgb[1] then
+            hsl[1] = ((rgb[2]-rgb[3])/delta) % 6
+        elseif high == rgb[2] then
+            hsl[1] = 2 + (rgb[3]-rgb[1])/delta
+        else
+            hsl[1] = 4 + (rgb[1]-rgb[2])/delta 
+        end
+        hsl[1] = hsl[1]/6
+        return hsl
+    end
+
+    function HSL_RGB(base_colour)
+        if base_colour[2] < 0.0001 then return {base_colour[3], base_colour[3], base_colour[3], base_colour[4]} end
+        local t = (base_colour[3] < 0.5 and (base_colour[2]*base_colour[3] + base_colour[3]) or (-1 * base_colour[2] * base_colour[3] + (base_colour[2]+base_colour[3])))
+        local s = 2 * base_colour[3] - t
+
+        return {HUE(s, t, base_colour[1] + (1/3)), HUE(s,t,base_colour[1]), HUE(s,t,base_colour[1] - (1/3)), base_colour[4]}
+    end
+
+    function HUE(s, t, h)
+        local hs = (h % 1) * 6
+        if hs < 1 then return (t-s) * hs + s end
+        if hs < 3 then return t end
+        if hs < 4 then return (t-s) * (4-hs) + s end
+        return s
+    end
+
+    for k,v in pairs(G.P_CENTER_POOLS.Tarot) do
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Tarot"})
+    end
+    for _,v in pairs(G.P_CENTER_POOLS.Planet) do
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Planet"})
+    end
+    for _,v in pairs(G.P_CENTER_POOLS.Spectral) do
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Spectral"})
+    end
+    SMODS.Atlas({
+        key = "Planet",
+        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Tarots.png",
+        px = 71,
+        py = 95,
+        inject = function(self)
+            self.image_data = love.image.newImageData(self.path)
+            self.image = love.graphics.newImage(self.image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+            G[self.atlas_table][self.key_noloc or self.key] = self
+          end
+    })
+    SMODS.Atlas({
+        key = "Spectral",
+        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Tarots.png",
+        px = 71,
+        py = 95,
+        inject = function(self)
+            self.image_data = love.image.newImageData(self.path)
+            self.image = love.graphics.newImage(self.image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+            G[self.atlas_table][self.key_noloc or self.key] = self
+          end
+    })
+    -- Default palettes defined for base game consumable types
+    SMODS.Palette({
+        key = "tarot_default",
+        old_colours = {},
+        new_colours = {},
+        type = "Tarot",
+        name = "Default"
+    })
+    SMODS.Palette({
+        key = "planet_default",
+        old_colours = {},
+        new_colours = {},
+        type = "Planet",
+        name = "Default"
+    })
+    SMODS.Palette({
+        key = "spectral_default",
+        old_colours = {},
+        new_colours = {},
+        type = "Spectral",
+        name = "Default"
+    })
+    SMODS.Palette({
+        key = "base_cards",
+        old_colours = {},
+        new_colours = {},
+        type = "Suits",
+        name = "Default"
+    })
+
 end
+
+   

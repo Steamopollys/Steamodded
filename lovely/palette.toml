@@ -1,0 +1,31 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# Create default atlas using image_data
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = '''self.ASSET_ATLAS[self.asset_atli[i].name].image = love.graphics.newImage(self.asset_atli[i].path, {mipmaps = true, dpiscale = self.SETTINGS.GRAPHICS.texture_scaling})'''
+position = "at"
+payload = '''
+self.ASSET_ATLAS[self.asset_atli[i].name].image_data = love.image.newImageData(self.asset_atli[i].path)
+self.ASSET_ATLAS[self.asset_atli[i].name].image = love.graphics.newImage(self.ASSET_ATLAS[self.asset_atli[i].name].image_data, {mipmaps = true, dpiscale = self.SETTINGS.GRAPHICS.texture_scaling})'''
+match_indent = true
+
+## Create menu option for card colours
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '''local high_scores = UIBox_button{ label = {localize('b_stats')}, button = "high_scores", minw = 5}'''
+position = "after"
+payload = '''local colours = UIBox_button{ label = {"Card Colours"}, button = "card_colours", minw = 5}'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '''credits'''
+position = "before"
+payload = '''colours,'''
+match_indent = true

@@ -13,13 +13,11 @@ pattern = '''
 [\t ]*elseif seal_type > 0.5 then card:set_seal\('Blue'\)
 [\t ]*elseif seal_type > 0.25 then card:set_seal\('Gold'\)
 [\t ]*else card:set_seal\('Purple'\)
-[\t ]*end
-'''
+[\t ]*end'''
 position = 'at'
 line_prepend = '$indent'
 payload = '''
-card:set_seal(SMODS.Seal.rng_buffer[math.ceil(seal_type*#SMODS.Seal.rng_buffer) or 1])
-'''
+card:set_seal(SMODS.Seal.rng_buffer[math.ceil(seal_type*#SMODS.Seal.rng_buffer) or 1])'''
 
 # get_badge_colour()
 [[patches]]
@@ -30,15 +28,14 @@ position = 'before'
 match_indent = true
 payload = '''
 for k, v in pairs(SMODS.Seals) do
-	G.BADGE_COL[k:lower()..'_seal'] = v.colour
-end
-'''
+	G.BADGE_COL[k:lower()..'_seal'] = v.badge_colour
+end'''
 
 # Card:calculate_seal()
 [[patches]]
 [patches.regex]
 target = "card.lua"
-pattern = 'function Card:calculate_seal\(context\)\n(?<indent>[\t ]*)if self.debuff then return nil end\n'
+pattern = 'function Card:calculate_seal\(context\)\n(?<indent>[\t ]*)if self.debuff then return nil end'
 position = 'after'
 line_prepend = '$indent'
 payload = '''
@@ -46,23 +43,20 @@ local obj = G.P_SEALS[self.seal] or {}
 if obj.calculate and type(obj.calculate) == 'function' then
 	local o = obj.calculate(self, context)
 	if o then return o end
-end
-'''
+end'''
 
 # Card:get_p_dollars()
 [[patches]]
 [patches.regex]
 target = "card.lua"
-pattern = "(?<indent>[\t ]*)if (?<cond>self.seal == 'Gold' then)\n"
+pattern = "(?<indent>[\t ]*)if (?<cond>self.seal == 'Gold' then)"
 position = 'at'
 line_prepend = '$indent'
 payload = '''
 local obj = G.P_SEALS[self.seal] or {}
 if obj.get_p_dollars and type(obj.get_p_dollars) == 'function' then
 	ret = ret + obj.get_p_dollars(self)
-elseif $cond
-
-'''
+elseif $cond'''
 
 # generate_card_ui()
 [[patches]]
@@ -73,5 +67,4 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 
-if SMODS.Seal.reverse_lookup[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end
-'''
+if SMODS.Seal.reverse_lookup[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end'''

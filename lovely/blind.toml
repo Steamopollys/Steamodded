@@ -14,8 +14,7 @@ position = 'before'
 match_indent = true
 payload = '''
 local obj = self.config.blind
-self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[obj.atlas] or G.ANIMATION_ATLAS['blind_chips']
-'''
+self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[obj.atlas] or G.ANIMATION_ATLAS['blind_chips']'''
 
 [[patches]]
 [patches.pattern]
@@ -27,8 +26,7 @@ payload = '''
 local obj = self.config.blind
 if obj.set_blind and type(obj.set_blind) == 'function' then
 	obj:set_blind(self, reset, silent)
-end
-'''
+end'''
 
 # Blind:disable()
 [[patches]]
@@ -41,8 +39,7 @@ payload = '''
 local obj = self.config.blind
 if obj.disable and type(obj.disable) == 'function' then
 	obj:disable(self)
-end
-'''
+end'''
 
 # Blind:defeat()
 [[patches]]
@@ -55,8 +52,7 @@ payload = '''
 local obj = self.config.blind
 if obj.defeat and type(obj.defeat) == 'function' then
 	obj:defeat(self)
-end
-'''
+end'''
 
 # Blind:debuff_card()
 [[patches]]
@@ -74,8 +70,7 @@ if not self.disabled and obj.debuff_card and type(obj.debuff_card) == 'function'
 		card:set_debuff(false)
 	end
 	return
-end
-'''
+end'''
 
 # Blind:stay_flipped()
 [[patches]]
@@ -88,8 +83,7 @@ payload = '''
 local obj = self.config.blind
 if obj.stay_flipped and type(obj.stay_flipped) == 'function' then
 	return obj:stay_flipped(self, area, card)
-end
-'''
+end'''
 
 # Blind:drawn_to_hand()
 [[patches]]
@@ -102,8 +96,7 @@ payload = '''
 local obj = self.config.blind
 if obj.drawn_to_hand and type(obj.drawn_to_hand) == 'function' then
 	obj:drawn_to_hand(self)
-end
-'''
+end'''
 
 # Blind:debuff_hand()
 [[patches]]
@@ -116,8 +109,7 @@ payload = '''
 local obj = self.config.blind
 if obj.debuff_hand and type(obj.debuff_hand) == 'function' then
 	return obj:debuff_hand(self, cards, hand, handname, check)
-end
-'''
+end'''
 
 # Blind:modify_hand()
 [[patches]]
@@ -130,8 +122,7 @@ payload = '''
 local obj = self.config.blind
 if obj.modify_hand and type(obj.modify_hand) == 'function' then
 	return obj:modify_hand(self, cards, poker_hands, text, mult, hand_chips)
-end
-'''
+end'''
 
 # Blind:press_play()
 [[patches]]
@@ -144,8 +135,7 @@ payload = '''
 local obj = self.config.blind
 if obj.press_play and type(obj.press_play) == 'function' then
 	return obj:press_play(self)
-end
-'''
+end'''
 
 # Blind:get_loc_debuff_text()
 [[patches]]
@@ -158,8 +148,7 @@ payload = '''
 local obj = self.config.blind
 if obj.get_loc_debuff_text and type(obj.get_loc_debuff_text) == 'function' then
 	return obj:get_loc_debuff_text(self)
-end
-'''
+end'''
 
 # Blind:set_text()
 [[patches]]
@@ -173,8 +162,7 @@ local obj = self.config.blind
 if obj.loc_vars and type(obj.loc_vars) == 'function' then
 	local res = obj:loc_vars(self) or {}
 	loc_vars = res.vars or {}
-end
-'''
+end'''
 
 # Blind:load()
 [[patches]]
@@ -186,8 +174,7 @@ match_indent = true
 payload = '''
 if self.config.blind.atlas then
 	self.children.animatedSprite.atlas = G.ANIMATION_ATLAS[self.config.blind.atlas]
-end
-'''
+end'''
 
 
 # create_UIBox_blind_choice()
@@ -212,8 +199,8 @@ local s = 1.3
 if math.ceil(#blind_tab/6) > 6 then
 	s = s * 6/math.ceil(#blind_tab/6)
 end
-local temp_blind = AnimatedSprite(0,0,s,s, G.ANIMATION_ATLAS[discovered and v.atlas or 'blind_chips'], discovered and v.pos or G.b_undiscovered.pos)
-'''
+local temp_blind = AnimatedSprite(0,0,s,s, G.ANIMATION_ATLAS[discovered and v.atlas or 'blind_chips'], discovered and v.pos or G.b_undiscovered.pos)'''
+line_prepend = '$indent'
 
 [[patches]]
 [patches.pattern]
@@ -232,8 +219,7 @@ table.insert(blind_matrix[row], {
 		{ n = G.UIT.O, config = { object = temp_blind, focus_with_object = true } },
 		((k - blinds_per_row) % (2 * blinds_per_row) == 0) and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
 	}
-})
-'''
+})'''
 
 [[patches]]
 [patches.regex]
@@ -249,8 +235,7 @@ pattern = 'table.sort(blind_tab, function (a, b) return a.order < b.order end)'
 match_indent = true
 position = 'at'
 payload = '''
-table.sort(blind_tab, function(a, b) return a.order + (a.boss and a.boss.showdown and 1000 or 0) < b.order + (b.boss and b.boss.showdown and 1000 or 0) end)
-'''
+table.sort(blind_tab, function(a, b) return a.order + (a.boss and a.boss.showdown and 1000 or 0) < b.order + (b.boss and b.boss.showdown and 1000 or 0) end)'''
 
 # add_round_eval_row()
 [[patches]]
@@ -261,8 +246,7 @@ match_indent = true
 position = 'at'
 payload = '''
 local obj = G.GAME.blind.config.blind
-local blind_sprite = AnimatedSprite(0, 0, 1.2, 1.2, G.ANIMATION_ATLAS[obj.atlas] or G.ANIMATION_ATLAS['blind_chips'], copy_table(G.GAME.blind.pos))
-'''
+local blind_sprite = AnimatedSprite(0, 0, 1.2, 1.2, G.ANIMATION_ATLAS[obj.atlas] or G.ANIMATION_ATLAS['blind_chips'], copy_table(G.GAME.blind.pos))'''
 
 # create_UIBox_blind_choice()
 [[patches]]
@@ -281,8 +265,7 @@ end
 if blind_choice.config.name == 'The Ox' then
    	loc_vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
 end
-local loc_target = localize{type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = loc_vars or blind_choice.config.vars}
-'''
+local loc_target = localize{type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = loc_vars or blind_choice.config.vars}'''
 
 # get_new_boss()
 [[patches]]
@@ -301,5 +284,4 @@ elseif v.add_to_pool and type(v.add_to_pool) == 'function' then
 		v.ignore_showdown_check
 	then
 		eligible_bosses[k] = v:add_to_pool() and true or nil
-	end
-'''
+	end'''

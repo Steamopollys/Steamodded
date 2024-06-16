@@ -196,3 +196,4 @@ pyrightconfig.json
 /steamodded_injector.exe
 
 *.Identifier
+core/EditionAPI.lua
