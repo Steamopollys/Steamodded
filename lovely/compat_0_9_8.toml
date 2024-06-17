@@ -23,4 +23,6 @@ line_prepend = '$indent'
 payload = """
     if card == nil then
         card = SMODS.compat_0_9_8.generate_UIBox_ability_table_card
-    end"""
+    end
+
+"""
