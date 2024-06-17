@@ -2224,15 +2224,6 @@ function loadAPIs()
         loc_vars = function(self)
             return { vars = { self.config.card_limit } }
         end,
-        process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.descriptions.Edition, "e_negative_playing_card", {
-                name = "Negative",
-                text = {
-                    "{C:dark_edition}+#1#{} hand size"
-                }
-            })
-            SMODS.Edition.process_loc_text(self)
-        end,
     })
 
     -------------------------------------------------------------------------------------------------

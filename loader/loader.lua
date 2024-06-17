@@ -198,8 +198,7 @@ function loadMods(modsDirectory)
                         mod.optional_dependencies = {}
                         if mod.dump_loc then
                             SMODS.dump_loc = {
-                                path = mod.path .. 'localization/dump.lua',
-                                mod = mod,
+                                path = mod.path,
                             }
                         end
                         SMODS.Mods[mod.id] = mod
@@ -330,6 +329,10 @@ end
 
 function SMODS.injectItems()
     SMODS.injectObjects(SMODS.GameObject)
+    if SMODS.dump_loc then
+        boot_print_stage('Dumping Localization')
+        SMODS.create_loc_dump()
+    end
     boot_print_stage('Initializing Localization')
     init_localization()
     SMODS.SAVE_UNLOCKS()
@@ -357,9 +360,6 @@ function initSteamodded()
     initializeModUIFunctions()
     boot_print_stage("Injecting Items")
     SMODS.injectItems()
-    if SMODS.dump_loc then
-        SMODS.create_loc_dump()
-    end
     SMODS.booted = true
 end
 

@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0617a-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0617b-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -1311,7 +1311,7 @@ end
 
 function SMODS.create_loc_dump()
     local _old, _new = SMODS.dump_loc.pre_inject, G.localization
-	local _dump = {}
+    local _dump = {}
     local function recurse(old, new, dump)
         for k, _ in pairs(new) do
             if type(new[k]) == 'table' then
@@ -1319,24 +1319,66 @@ function SMODS.create_loc_dump()
                 if not old[k] then
                     dump[k] = new[k]
                 else
-					recurse(old[k], new[k], dump[k])
+                    recurse(old[k], new[k], dump[k])
                 end
             elseif old[k] ~= new[k] then
-				dump[k] = new[k]
-			end
+                dump[k] = new[k]
+            end
         end
     end
     recurse(_old, _new, _dump)
-	local function cleanup(dump)
-		for k, v in pairs(dump) do
+    local function cleanup(dump)
+        for k, v in pairs(dump) do
             if type(v) == 'table' then
                 cleanup(v)
-				if not next(v) then dump[k] = nil end
+                if not next(v) then dump[k] = nil end
             end
-		end
-	end
+        end
+    end
     cleanup(_dump)
-	
+    local str = 'return ' .. serialize(_dump)
+	NFS.createDirectory(SMODS.dump_loc.path..'localization/')
+	NFS.write(SMODS.dump_loc.path..'localization/dump.lua', str)
+end
+
+function serialize(t, indent)
+    indent = indent or ''
+    local str = '{\n'
+	for k, v in ipairs(t) do
+        str = str .. indent .. '\t'
+		if type(v) == 'number' then
+            str = str .. v
+        elseif type(v) == 'string' then
+            str = str .. serialize_string(v)
+        elseif type(v) == 'table' then
+            str = str .. serialize(v, indent .. '\t')
+        else
+            assert(false)
+        end
+		str = str .. ',\n'
+	end
+    for k, v in pairs(t) do
+		if type(k) == 'string' then
+        	str = str .. indent .. '\t' .. '[' .. serialize_string(k) .. '] = '
+			if type(v) == 'number' then
+				str = str .. v
+			elseif type(v) == 'string' then
+				str = str .. serialize_string(v)
+			elseif type(v) == 'table' then
+				str = str .. serialize(v, indent .. '\t')
+			else
+				assert(false)
+			end
+			str = str .. ',\n'
+		end
+    end
+    str = str .. indent .. '}'
+	return str
+end
+
+function serialize_string(s)
+	s = s .. ''
+	return '"' .. s:gsub('"', '\\"') .. '"'
 end
 
 ----------------------------------------------

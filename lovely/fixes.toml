@@ -18,9 +18,9 @@ payload = "args = args or {}"
 ## Allows running the game without Steam being active
 # love.load()
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = 'main.lua'
-pattern = 'love.event.quit()'
+pattern = "(?<indent>[\t ]*)if not \\(st.init and st:init\\(\\)\\) then\n[\t ]*(?<quit>love.event.quit\\(\\))"
 position = 'at'
-match_indent = true
+root_capture = 'quit'
 payload = 'st = nil'
