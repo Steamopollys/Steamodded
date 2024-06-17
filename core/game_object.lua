@@ -1853,10 +1853,17 @@ function loadAPIs()
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.loc_txt)
         end,
-        inject = function(self)
+        register = function(self)
+            if self.registered then 
+                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+                return
+            end
             self.id = self.key
+            -- only needs to be called once
             SMODS.insert_pool(G.CHALLENGES, self)
+            SMODS.Challenge.super.register(self)
         end,
+        inject = function(self) end,
     }
     for k, v in ipairs{
         'c_omelette_1',
