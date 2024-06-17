@@ -2256,7 +2256,7 @@ function loadAPIs()
             if not SMODS.Palettes[self.type] then
                 table.insert(SMODS.Palettes.Types, self.type)
                 SMODS.Palettes[self.type] = {names = {}}
-                SMODS.Palette:create_default(self.type)
+                if self.name ~= "Default" then SMODS.Palette:create_default(self.type) end
                 G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or SMODS.Palettes[self.type]["Default"]
             end
             if SMODS.Palettes[self.type][self.name] then 
@@ -2377,10 +2377,17 @@ function loadAPIs()
     })
     SMODS.Palette({
         key = "base_cards",
-        old_colours = {},
-        new_colours = {},
+        old_colours = {"235955","3c4368","f06b3f","f03464"},
+        new_colours = {"235955","3c4368","f06b3f","f03464"},
         type = "Suits",
         name = "Default"
+    })
+    SMODS.Palette({
+        key = "high_contrast_cards",
+        old_colours = {"235955","3c4368","f06b3f","f03464"},
+        new_colours = {"008ee6","3c4368","e29000","f83b2f"},
+        type = "Suits",
+        name = "High Contrast"
     })
 
 end
