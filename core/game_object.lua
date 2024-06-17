@@ -20,6 +20,7 @@ function loadAPIs()
     end
 
     function SMODS.GameObject:__call(o)
+        o = o or {}
         o.mod = SMODS.current_mod
         if o.mod and not o.raw_atlas_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
@@ -201,6 +202,7 @@ function loadAPIs()
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         injector = function()
             SMODS.handle_loc_file(SMODS.dir)
+            if SMODS.dump_loc then SMODS.dump_loc.pre_inject = copy_table(G.localization) end
             for _, mod in ipairs(SMODS.mod_list) do
                 if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
                     mod.process_loc_text()
@@ -2233,8 +2235,8 @@ function loadAPIs()
         end,
     })
 
-     -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.Palettes
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Palette
     -------------------------------------------------------------------------------------------------
         
     SMODS.local_palettes = {}
@@ -2383,6 +2385,5 @@ function loadAPIs()
         name = "Default"
     })
 
-end
 
-   
+end

@@ -100,7 +100,8 @@ function loadMods(modsDirectory)
                 return x and x:gsub('%-STEAMODDED', '')
             end
         },
-        outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } }
+        outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } },
+        dump_loc      = { pattern = { '%-%-%- DUMP_LOCALIZATION\n'}}
     }
     
     local used_prefixes = {}
@@ -192,6 +193,12 @@ function loadMods(modsDirectory)
                         end
                         mod.content = file_content
                         mod.optional_dependencies = {}
+                        if mod.dump_loc then
+                            SMODS.dump_loc = {
+                                path = mod.path .. 'localization/dump.lua',
+                                mod = mod,
+                            }
+                        end
                         SMODS.Mods[mod.id] = mod
                         SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
                         table.insert(SMODS.mod_priorities[mod.priority], mod)
@@ -347,6 +354,9 @@ function initSteamodded()
     initializeModUIFunctions()
     boot_print_stage("Injecting Items")
     SMODS.injectItems()
+    if SMODS.dump_loc then
+        SMODS.create_loc_dump()
+    end
     SMODS.booted = true
 end
 

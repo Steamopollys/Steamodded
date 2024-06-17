@@ -14,3 +14,13 @@ pattern = "G.FUNCS.start_run = function(e, args)"
 position = 'after'
 match_indent = true
 payload = "args = args or {}"
+
+## Allows running the game without Steam being active
+# love.load()
+[[patches]]
+[patches.pattern]
+target = 'main.lua'
+pattern = 'love.event.quit()'
+position = 'at'
+match_indent = true
+payload = 'st = nil'
