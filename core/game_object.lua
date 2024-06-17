@@ -986,6 +986,7 @@ function loadAPIs()
             return {}
         end
     }
+    -- TODO make this set of functions extendable by ConsumableTypes
     SMODS.Tarot = SMODS.Consumable:extend {
         set = 'Tarot',
     }
@@ -1829,6 +1830,11 @@ function loadAPIs()
     SMODS.Challenge = SMODS.GameObject:extend {
         obj_table = SMODS.Challenges,
         obj_buffer = {},
+        get_obj = function(key) 
+            for _, v in ipairs(G.CHALLENGES) do
+                if v.id == key then return v end
+            end
+        end,
         set = "Challenge",
         required_params = {
             'loc_txt',
@@ -1840,6 +1846,7 @@ function loadAPIs()
         consumeables = {},
         vouchers = {},
         restrictions = { banned_cards = {}, banned_tags = {}, banned_other = {} },
+        unlocked = function(self) return true end,
         prefix = 'c',
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.loc_txt)
@@ -1849,6 +1856,36 @@ function loadAPIs()
             SMODS.insert_pool(G.CHALLENGES, self)
         end,
     }
+    for k, v in ipairs{
+        'c_omelette_1',
+        'c_city_1',
+        'c_rich_1',
+        'c_knife_1',
+        'c_xray_1',
+        'c_mad_world_1',
+        'c_luxury_1',
+        'c_non_perishable_1',
+        'c_medusa_1',
+        'c_double_nothing_1',
+        'c_typecast_1',
+        'c_inflation_1',
+        'c_bram_poker_1',
+        'c_fragile_1',
+        'c_monolith_1',
+        'c_blast_off_1',
+        'c_five_card_1',
+        'c_golden_needle_1',
+        'c_cruelty_1',
+        'c_jokerless_1',
+    } do
+        SMODS.Challenge:take_ownership(v, {
+            key = v,
+            unlocked = function(self) 
+                return G.PROFILES[G.SETTINGS.profile].challenges_unlocked and (G.PROFILES[G.SETTINGS.profile].challenges_unlocked >= k)
+            end,
+            loc_txt = {},
+        })
+    end
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Tag

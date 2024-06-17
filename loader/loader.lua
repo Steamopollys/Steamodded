@@ -5,22 +5,38 @@
 local nfs_success, nativefs = pcall(require, "nativefs")
 local lovely_success, lovely = pcall(require, "lovely")
 
-local library_load_fail
-if not lovely_success then
+local lovely_mod_dir
+local library_load_fail = false
+if lovely_success then
+    lovely_mod_dir = lovely.mod_dir:gsub("/$", "")
+else
     sendErrorMessage("Error loading lovely library!", 'Loader')
     library_load_fail = true
 end
 if nfs_success then
     NFS = nativefs
+    -- make lovely_mod_dir an absolute path.
+    -- respects symlink/.. combos
+    NFS.setWorkingDirectory(lovely_mod_dir)
+    lovely_mod_dir = NFS.getWorkingDirectory()
+    -- make sure NFS behaves the same as love.filesystem
     NFS.setWorkingDirectory(love.filesystem.getSaveDirectory())
 else
     sendWarnMessage("Error loading nativefs library!", 'Loader')
     library_load_fail = true
     NFS = love.filesystem
+    if (lovely_mod_dir):sub(1, 1) ~= '/' then
+        -- make lovely_mod_dir an absolute path
+        lovely_mod_dir = love.filesystem.getWorkingDirectory()..'/'..lovely_mod_dir
+    end
+    lovely_mod_dir = lovely_mod_dir
+        :gsub("%f[^/].%f[/]", "")
+        :gsub("[^/]+/..%f[/]", "")
+        :gsub("/+", "/")
+        :gsub("/$", "")
 end
 if library_load_fail then
-    sendDebugMessage(("Libraries are loaded from\n%s or\n%s"):format(
-        love.filesystem.getSourceBaseDirectory(),
+    sendDebugMessage(("Libraries can be loaded from\n%s"):format(
         love.filesystem.getSaveDirectory()
     ))
 end
@@ -31,14 +47,14 @@ function set_mods_dir()
         return
     end
     local save_dir = love.filesystem.getSaveDirectory()
-    if lovely.mod_dir:sub(1, #save_dir) == save_dir then
+    if lovely_mod_dir:sub(1, #save_dir) == save_dir then
         -- relative path from save_dir
-        SMODS.MODS_DIR = lovely.mod_dir:sub(#save_dir+2)
+        SMODS.MODS_DIR = lovely_mod_dir:sub(#save_dir+2)
         return
     end
     if nfs_success then
         -- allow arbitrary MODS_DIR
-        SMODS.MODS_DIR = lovely.mod_dir
+        SMODS.MODS_DIR = lovely_mod_dir
         return
     end
     sendErrorMessage("nativefs not loaded and lovely --mod_dir was not in the save directory!")
