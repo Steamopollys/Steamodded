@@ -1377,8 +1377,7 @@ function serialize(t, indent)
 end
 
 function serialize_string(s)
-	s = s .. ''
-	return '"' .. s:gsub('"', '\\"') .. '"'
+	return string.format("%q", s)
 end
 
 ----------------------------------------------
