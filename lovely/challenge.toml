@@ -1,0 +1,21 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# function G.UIDEF.challenge_list_page()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "local challenge_unlocked = G.PROFILES[G.SETTINGS.profile].challenges_unlocked and (G.PROFILES[G.SETTINGS.profile].challenges_unlocked >= k)"
+position = 'after'
+payload = """
+if v.unlocked and type(v.unlocked) == 'function' then
+	local ret = v:unlocked(self)
+	if ret then challenge_unlocked = ret end
+elseif type(v.unlocked) == 'boolean' then
+    challenge_unlocked = v.unlocked
+end
+
+"""
+match_indent = true
