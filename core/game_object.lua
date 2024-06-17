@@ -200,7 +200,7 @@ function loadAPIs()
         silent = true,
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         injector = function()
-            SMODS.handle_loc_file(SMODS.dir)
+            SMODS.handle_loc_file(SMODS.path)
             for _, mod in ipairs(SMODS.mod_list) do
                 if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
                     mod.process_loc_text()
@@ -250,7 +250,7 @@ function loadAPIs()
             -- language specific sprites override fully defined sprites only if that language is set
             if self.language and not (G.SETTINGS.language == self.language) then return end
             if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
-            self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
+            self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
             local file_data = assert(NFS.newFileData(self.full_path),
                 ('Failed to collect file data for Atlas %s'):format(self.key))
@@ -313,7 +313,7 @@ function loadAPIs()
             -- language specific sounds override fully defined sounds only if that language is set
             if self.language and not (G.SETTINGS.language == self.language) then return end
             if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
-            self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
+            self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/sounds/' .. file_path
             --load with a temp file path in case LOVE doesn't like the mod directory
             local file = NFS.read(self.full_path)
@@ -2056,7 +2056,7 @@ function loadAPIs()
         set = 'Shader',
         omit_prefix = true,
         inject = function(self)
-            self.full_path = (self.mod and self.mod.path or SMODS.dir) ..
+            self.full_path = (self.mod and self.mod.path or SMODS.path) ..
             'assets/shaders/' .. self.file_name
             local file = NFS.read(self.full_path)
             love.filesystem.write(self.key.."-temp.fs", file)
