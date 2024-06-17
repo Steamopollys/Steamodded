@@ -1,0 +1,16 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Fixes for either base game code or general mod compatibility
+
+## Mods assume Game:start_run() is called with non-nil argument
+# G.FUNCS.start_run()
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = "G.FUNCS.start_run = function(e, args)"
+position = 'after'
+match_indent = true
+payload = "args = args or {}"
