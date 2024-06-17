@@ -886,9 +886,6 @@ function loadAPIs()
             return true
         end,
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
-            if card == nil then
-                card = SMODS.compat_0_9_8.generate_UIBox_ability_table_card
-            end
             local target = { type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars =
             specific_vars or {} }
             local res = {}
