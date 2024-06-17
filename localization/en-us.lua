@@ -71,6 +71,12 @@ return {
 			b_authors = 'Authors',
             b_unknown = 'Unknown',
             b_by = ' By: ',
+			b_artist = 'Artist',
+			b_artists = 'Artists',
+			b_programmer = 'Programmer',
+			b_programmers = 'Programmers',
+			b_developer = 'Developer',
+			b_developers = 'Developers',
             b_applies_stakes_1 = 'Applies ',
 			b_applies_stakes_2 = '',
 		}
