@@ -201,7 +201,7 @@ function loadAPIs()
         silent = true,
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         injector = function()
-            SMODS.handle_loc_file(SMODS.dir)
+            SMODS.handle_loc_file(SMODS.path)
             if SMODS.dump_loc then SMODS.dump_loc.pre_inject = copy_table(G.localization) end
             for _, mod in ipairs(SMODS.mod_list) do
                 if mod.process_loc_text and type(mod.process_loc_text) == 'function' then

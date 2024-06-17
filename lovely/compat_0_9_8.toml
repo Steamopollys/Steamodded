@@ -17,7 +17,7 @@ match_indent = true
 [[patches]]
 [patches.regex]
 target = "functions/common_events.lua"
-pattern = '(?<indent>[\t ]*)function generate_card_ui\([^)]*\)\n'
+pattern = '(?<indent>[\t ]*)function generate_card_ui\([^)]*\)'
 position = "after"
 line_prepend = '$indent'
 payload = """

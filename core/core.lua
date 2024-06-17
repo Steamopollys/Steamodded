@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0616c-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0617a-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -1286,27 +1286,57 @@ function SMODS.restart_game()
 end
 
 function SMODS.create_mod_badges(obj, badges)
-	if not G.SETTINGS.no_mod_badges and obj and obj.mod and obj.mod.display_name and not obj.no_mod_badges then
+    if not G.SETTINGS.no_mod_badges and obj and obj.mod and obj.mod.display_name and not obj.no_mod_badges then
         local mods = {}
         badges.mod_set = badges.mod_set or {}
-		if not badges.mod_set[obj.mod.id] and not obj.no_main_mod_badge then table.insert(mods, obj.mod) end
-		badges.mod_set[obj.mod.id] = true
-		if obj.dependencies then
+        if not badges.mod_set[obj.mod.id] and not obj.no_main_mod_badge then table.insert(mods, obj.mod) end
+        badges.mod_set[obj.mod.id] = true
+        if obj.dependencies then
             for _, v in ipairs(obj.dependencies) do
-				local m = SMODS.Mods[v]
-				if not badges.mod_set[m.id] then
-					table.insert(mods, m)
-					badges.mod_set[m.id] = true
-				end
+                local m = SMODS.Mods[v]
+                if not badges.mod_set[m.id] then
+                    table.insert(mods, m)
+                    badges.mod_set[m.id] = true
+                end
+            end
+        end
+        for i, mod in ipairs(mods) do
+            local mod_name = string.sub(mod.display_name, 1, 16)
+            local len = string.len(mod_name)
+            local size = 0.9 - (len > 6 and 0.02 * (len - 6) or 0)
+            badges[#badges + 1] = create_badge(mod_name, mod.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil, size)
+        end
+    end
+end
+
+function SMODS.create_loc_dump()
+    local _old, _new = SMODS.dump_loc.pre_inject, G.localization
+	local _dump = {}
+    local function recurse(old, new, dump)
+        for k, _ in pairs(new) do
+            if type(new[k]) == 'table' then
+                dump[k] = {}
+                if not old[k] then
+                    dump[k] = new[k]
+                else
+					recurse(old[k], new[k], dump[k])
+                end
+            elseif old[k] ~= new[k] then
+				dump[k] = new[k]
 			end
-		end
-		for i, mod in ipairs(mods) do
-			local mod_name = string.sub(mod.display_name, 1, 16)
-			local len = string.len(mod_name)
-			local size = 0.9 - (len > 6 and 0.02*(len-6) or 0)
-			badges[#badges + 1] = create_badge(mod_name, mod.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil, size)
+        end
+    end
+    recurse(_old, _new, _dump)
+	local function cleanup(dump)
+		for k, v in pairs(dump) do
+            if type(v) == 'table' then
+                cleanup(v)
+				if not next(v) then dump[k] = nil end
+            end
 		end
 	end
+    cleanup(_dump)
+	
 end
 
 ----------------------------------------------
