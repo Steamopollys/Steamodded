@@ -29,3 +29,10 @@ pattern = '''credits'''
 position = "before"
 payload = '''colours,'''
 match_indent = true
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''if not self.bypass_lock and self.config.center.unlocked ~= false and'''
+position = "before"
+payload = '''if self.base.colour then self.base.colour = G.C.SUITS[self.config.card.suit] end'''
+match_indent = true
