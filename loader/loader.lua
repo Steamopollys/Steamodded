@@ -5,20 +5,44 @@
 local nfs_success, nativefs = pcall(require, "nativefs")
 local lovely_success, lovely = pcall(require, "lovely")
 
-if nfs_success then
-    if lovely_success then
-        SMODS.MODS_DIR = lovely.mod_dir
-    else
-        sendErrorMessage("Error loading lovely library!", 'Loader')
-        SMODS.MODS_DIR = "Mods"
-    end
-else
-    sendErrorMessage("Error loading nativefs library!", 'Loader')
-    SMODS.MODS_DIR = "Mods"
-    nativefs = love.filesystem
+local library_load_fail
+if not lovely_success then
+    sendErrorMessage("Error loading lovely library!", 'Loader')
+    library_load_fail = true
 end
-
-NFS = nativefs
+if nfs_success then
+    NFS = nativefs
+else
+    sendWarnMessage("Error loading nativefs library!", 'Loader')
+    library_load_fail = true
+    NFS = love.filesystem
+end
+if library_load_fail then
+    sendDebugMessage(("Libraries are loaded from\n%s or\n%s"):format(
+        love.filesystem.getSourceBaseDirectory(),
+        love.filesystem.getSaveDirectory()
+    ))
+end
+function set_mods_dir()
+    if not lovely_success then
+        sendWarnMessage("Lovely not loaded, setting SMODS.MODS_DIR to 'Mods'")
+        SMODS.MODS_DIR = "Mods"
+        return
+    end
+    if nfs_success then
+        SMODS.MODS_DIR = lovely.mod_dir
+        return
+    end
+    local save_dir = love.filesystem.getSaveDirectory()
+    if lovely.mod_dir:sub(1, #save_dir) == save_dir then
+        SMODS.MODS_DIR = lovely.mod_dir:sub(#save_dir+2)
+    else
+        sendErrorMessage("nativefs not loaded and lovely --mod_dir was not in the save directory!")
+        sendErrorMessage("cannot read lovely --mod-dir, exiting")
+        assert(false)
+    end
+end
+set_mods_dir()
 
 function loadMods(modsDirectory)
     SMODS.Mods = {}
