@@ -12,6 +12,7 @@ if not lovely_success then
 end
 if nfs_success then
     NFS = nativefs
+    NFS.setWorkingDirectory(love.filesystem.getSaveDirectory())
 else
     sendWarnMessage("Error loading nativefs library!", 'Loader')
     library_load_fail = true
@@ -29,18 +30,20 @@ function set_mods_dir()
         SMODS.MODS_DIR = "Mods"
         return
     end
+    local save_dir = love.filesystem.getSaveDirectory()
+    if lovely.mod_dir:sub(1, #save_dir) == save_dir then
+        -- relative path from save_dir
+        SMODS.MODS_DIR = lovely.mod_dir:sub(#save_dir+2)
+        return
+    end
     if nfs_success then
+        -- allow arbitrary MODS_DIR
         SMODS.MODS_DIR = lovely.mod_dir
         return
     end
-    local save_dir = love.filesystem.getSaveDirectory()
-    if lovely.mod_dir:sub(1, #save_dir) == save_dir then
-        SMODS.MODS_DIR = lovely.mod_dir:sub(#save_dir+2)
-    else
-        sendErrorMessage("nativefs not loaded and lovely --mod_dir was not in the save directory!")
-        sendErrorMessage("cannot read lovely --mod-dir, exiting")
-        assert(false)
-    end
+    sendErrorMessage("nativefs not loaded and lovely --mod_dir was not in the save directory!")
+    sendErrorMessage("cannot read lovely --mod-dir, exiting")
+    assert(false)
 end
 set_mods_dir()
 
@@ -205,7 +208,7 @@ function loadMods(modsDirectory)
                     end
                 elseif headerLine == '--- STEAMODDED CORE' then
                     -- save top-level directory of Steamodded installation
-                    SMODS.dir = SMODS.dir or directory:match('^(.+/)')
+                    SMODS.path = SMODS.path or directory:match('^(.+/)')
                 else
                     sendTraceMessage("Skipping non-Lua file or invalid header: " .. filename, 'Loader')
                 end
