@@ -47,6 +47,14 @@ return {
                     '{C:attention}disabled!{}'
                 }
             }
+        },
+        Edition = {
+			e_negative_playing_card = {
+                name = "Negative",
+                text = {
+                    "{C:dark_edition}+#1#{} hand size"
+                },
+            },
 		}
     },
     misc = {

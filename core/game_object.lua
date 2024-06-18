@@ -20,6 +20,7 @@ function loadAPIs()
     end
 
     function SMODS.GameObject:__call(o)
+        o = o or {}
         o.mod = SMODS.current_mod
         if o.mod and not o.raw_atlas_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
@@ -201,6 +202,7 @@ function loadAPIs()
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         injector = function()
             SMODS.handle_loc_file(SMODS.path)
+            if SMODS.dump_loc then SMODS.dump_loc.pre_inject = copy_table(G.localization) end
             for _, mod in ipairs(SMODS.mod_list) do
                 if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
                     mod.process_loc_text()
@@ -986,6 +988,7 @@ function loadAPIs()
             return {}
         end
     }
+    -- TODO make this set of functions extendable by ConsumableTypes
     SMODS.Tarot = SMODS.Consumable:extend {
         set = 'Tarot',
     }
@@ -1829,6 +1832,11 @@ function loadAPIs()
     SMODS.Challenge = SMODS.GameObject:extend {
         obj_table = SMODS.Challenges,
         obj_buffer = {},
+        get_obj = function(key) 
+            for _, v in ipairs(G.CHALLENGES) do
+                if v.id == key then return v end
+            end
+        end,
         set = "Challenge",
         required_params = {
             'loc_txt',
@@ -1840,15 +1848,53 @@ function loadAPIs()
         consumeables = {},
         vouchers = {},
         restrictions = { banned_cards = {}, banned_tags = {}, banned_other = {} },
+        unlocked = function(self) return true end,
         prefix = 'c',
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.loc_txt)
         end,
-        inject = function(self)
+        register = function(self)
+            if self.registered then 
+                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+                return
+            end
             self.id = self.key
+            -- only needs to be called once
             SMODS.insert_pool(G.CHALLENGES, self)
+            SMODS.Challenge.super.register(self)
         end,
+        inject = function(self) end,
     }
+    for k, v in ipairs{
+        'c_omelette_1',
+        'c_city_1',
+        'c_rich_1',
+        'c_knife_1',
+        'c_xray_1',
+        'c_mad_world_1',
+        'c_luxury_1',
+        'c_non_perishable_1',
+        'c_medusa_1',
+        'c_double_nothing_1',
+        'c_typecast_1',
+        'c_inflation_1',
+        'c_bram_poker_1',
+        'c_fragile_1',
+        'c_monolith_1',
+        'c_blast_off_1',
+        'c_five_card_1',
+        'c_golden_needle_1',
+        'c_cruelty_1',
+        'c_jokerless_1',
+    } do
+        SMODS.Challenge:take_ownership(v, {
+            key = v,
+            unlocked = function(self) 
+                return G.PROFILES[G.SETTINGS.profile].challenges_unlocked and (G.PROFILES[G.SETTINGS.profile].challenges_unlocked >= k)
+            end,
+            loc_txt = {},
+        })
+    end
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Tag
@@ -2222,19 +2268,10 @@ function loadAPIs()
         loc_vars = function(self)
             return { vars = { self.config.card_limit } }
         end,
-        process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.descriptions.Edition, "e_negative_playing_card", {
-                name = "Negative",
-                text = {
-                    "{C:dark_edition}+#1#{} hand size"
-                }
-            })
-            SMODS.Edition.process_loc_text(self)
-        end,
     })
 
-     -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.Palettes
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Palette
     -------------------------------------------------------------------------------------------------
         
     SMODS.local_palettes = {}
@@ -2390,6 +2427,5 @@ function loadAPIs()
         name = "High Contrast"
     })
 
-end
 
-   
+end

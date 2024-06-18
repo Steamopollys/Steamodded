@@ -5,22 +5,38 @@
 local nfs_success, nativefs = pcall(require, "nativefs")
 local lovely_success, lovely = pcall(require, "lovely")
 
-local library_load_fail
-if not lovely_success then
+local lovely_mod_dir
+local library_load_fail = false
+if lovely_success then
+    lovely_mod_dir = lovely.mod_dir:gsub("/$", "")
+else
     sendErrorMessage("Error loading lovely library!", 'Loader')
     library_load_fail = true
 end
 if nfs_success then
     NFS = nativefs
+    -- make lovely_mod_dir an absolute path.
+    -- respects symlink/.. combos
+    NFS.setWorkingDirectory(lovely_mod_dir)
+    lovely_mod_dir = NFS.getWorkingDirectory()
+    -- make sure NFS behaves the same as love.filesystem
     NFS.setWorkingDirectory(love.filesystem.getSaveDirectory())
 else
     sendWarnMessage("Error loading nativefs library!", 'Loader')
     library_load_fail = true
     NFS = love.filesystem
+    if (lovely_mod_dir):sub(1, 1) ~= '/' then
+        -- make lovely_mod_dir an absolute path
+        lovely_mod_dir = love.filesystem.getWorkingDirectory()..'/'..lovely_mod_dir
+    end
+    lovely_mod_dir = lovely_mod_dir
+        :gsub("%f[^/].%f[/]", "")
+        :gsub("[^/]+/..%f[/]", "")
+        :gsub("/+", "/")
+        :gsub("/$", "")
 end
 if library_load_fail then
-    sendDebugMessage(("Libraries are loaded from\n%s or\n%s"):format(
-        love.filesystem.getSourceBaseDirectory(),
+    sendDebugMessage(("Libraries can be loaded from\n%s"):format(
         love.filesystem.getSaveDirectory()
     ))
 end
@@ -31,19 +47,20 @@ function set_mods_dir()
         return
     end
     local save_dir = love.filesystem.getSaveDirectory()
-    if lovely.mod_dir:sub(1, #save_dir) == save_dir then
+    if lovely_mod_dir:sub(1, #save_dir) == save_dir then
         -- relative path from save_dir
-        SMODS.MODS_DIR = lovely.mod_dir:sub(#save_dir+2)
+        SMODS.MODS_DIR = lovely_mod_dir:sub(#save_dir+2)
         return
     end
     if nfs_success then
         -- allow arbitrary MODS_DIR
-        SMODS.MODS_DIR = lovely.mod_dir
+        SMODS.MODS_DIR = lovely_mod_dir
         return
     end
-    sendErrorMessage("nativefs not loaded and lovely --mod_dir was not in the save directory!")
-    sendErrorMessage("cannot read lovely --mod-dir, exiting")
-    assert(false)
+    assert(false, 
+        "nativefs not loaded and lovely --mod-dir was not in the save directory!\n"
+        ..("save dir: %s, lovely mod dir: %s\n"):format(save_dir, lovely_mod_dir)
+        .."cannot read lovely --mod-dir, exiting")
 end
 set_mods_dir()
 
@@ -103,7 +120,8 @@ function loadMods(modsDirectory)
                 return x and x:gsub('%-STEAMODDED', '')
             end
         },
-        outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } }
+        outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } },
+        dump_loc      = { pattern = { '%-%-%- DUMP_LOCALIZATION\n'}}
     }
     
     local used_prefixes = {}
@@ -195,6 +213,11 @@ function loadMods(modsDirectory)
                         end
                         mod.content = file_content
                         mod.optional_dependencies = {}
+                        if mod.dump_loc then
+                            SMODS.dump_loc = {
+                                path = mod.path,
+                            }
+                        end
                         SMODS.Mods[mod.id] = mod
                         SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
                         table.insert(SMODS.mod_priorities[mod.priority], mod)
@@ -323,6 +346,10 @@ end
 
 function SMODS.injectItems()
     SMODS.injectObjects(SMODS.GameObject)
+    if SMODS.dump_loc then
+        boot_print_stage('Dumping Localization')
+        SMODS.create_loc_dump()
+    end
     boot_print_stage('Initializing Localization')
     init_localization()
     SMODS.SAVE_UNLOCKS()

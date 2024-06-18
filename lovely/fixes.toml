@@ -14,3 +14,13 @@ pattern = "G.FUNCS.start_run = function(e, args)"
 position = 'after'
 match_indent = true
 payload = "args = args or {}"
+
+## Allows running the game without Steam being active
+# love.load()
+[[patches]]
+[patches.regex]
+target = 'main.lua'
+pattern = "(?<indent>[\t ]*)if not \\(st.init and st:init\\(\\)\\) then\n[\t ]*(?<quit>love.event.quit\\(\\))"
+position = 'at'
+root_capture = 'quit'
+payload = 'st = nil'
