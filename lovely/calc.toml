@@ -52,3 +52,9 @@ target = "functions/common_events.lua"
 pattern = 'extra\.Xmult_mod'
 position = "at"
 payload = '(extra.x_mult or extra.x_mult_mod or extra.Xmult_mod)'
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = 'extra\.chip_mod'
+position = "at"
+payload = '(extra.chips or extra.chip_mod)'
