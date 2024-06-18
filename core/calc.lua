@@ -22,11 +22,14 @@ SMODS.playing_card_effect_order = {
 	'x_mult',
 	-- plain message never happens in the base game
 	'message',
+	-- in the base game, message is always manually set, and exactly
+	-- one of mult, chips, or x_mult can be set
 	{['edition'] = {
         'mult', 
 		'chips', 
 		'x_mult', 
-		'dollars'
+		'dollars',
+		'message'
 	}},
 	-- TODO seals. Currently the game does not go through effects for seals
 }
@@ -114,22 +117,34 @@ function SMODS.eval_effect(args, update)
 		-- Text of effect
 		if args.type == 'edition' then
 			local extra = {
+				-- does not matter in base game, colour is overwritten if edition = true
 				colour = G.C.DARK_EDITION,
 				edition = true
 			}
-			if args.effect.message then
-				extra.message = args.effect.message
-			elseif args.key == 'chips' then
-				extra.message = extra.message or localize{type='variable',key='a_chips',vars={args.val}}
-				extra.chips = args.val
-			elseif args.key == 'mult' then
-				extra.message = extra.message or localize{type='variable',key='a_mult',vars={args.val}}
-				extra.mult = args.val
-			elseif args.key == 'x_mult' then
-				extra.message = extra.message or localize{type='variable',key='a_xmult',vars={args.val}}
-				extra.x_mult = args.val
+			if args.key == 'message' then
+				extra.message = args.val
+				-- only matters for the colour in base game.
+				-- TODO handle colour better if custom message is given
+				extra.chips = args.effect.chips
+				extra.mult = args.effect.mult
+				extra.x_mult = args.effect.x_mult
+				card_eval_status_text(args.card, 'extra', nil, args.percent, nil, extra)
+			else
+				if not args.effect.message then
+					if args.key == 'chips' then
+						extra.message = extra.message or localize{type='variable',key='a_chips',vars={args.val}}
+						extra.chips = args.val
+					elseif args.key == 'mult' then
+						extra.message = extra.message or localize{type='variable',key='a_mult',vars={args.val}}
+						extra.mult = args.val
+					elseif args.key == 'x_mult' then
+						extra.message = extra.message or localize{type='variable',key='a_xmult',vars={args.val}}
+						extra.x_mult = args.val
+					end
+					-- in base game, using 'extra' vs 'jokers' here doesn't matter
+					card_eval_status_text(args.card, 'extra', nil, args.percent, nil, extra)
+				end
 			end
-			card_eval_status_text(args.card, 'extra', nil, args.percent, nil, extra)
 		else
 			if args.key == 'chips' 
 			or args.key == 'mult' 
@@ -176,10 +191,13 @@ function SMODS.eval_effect(args, update)
 end
 
 function SMODS.eval_playing_card_effect(args)
-	return SMODS.eval_effect(args, {key = SMODS.playing_card_effect_order})
+	if not args.key then args.key = SMODS.playing_card_effect_order end
+	return SMODS.eval_effect(args)
 end
 function SMODS.eval_joker_effect(args)
-	return SMODS.eval_effect(args, {key = SMODS.joker_effect_order, type = 'jokers'})
+	if not args.key then args.key = SMODS.joker_effect_order end
+	if not args.type then args.type = 'jokers' end
+	return SMODS.eval_effect(args)
 end
 -- legacy function, don't use
 function SMODS.eval_this(card, effect)
