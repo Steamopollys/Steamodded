@@ -159,7 +159,7 @@ position = "at"
 payload = '''
 if true then
     if from_debuff then 
-        self.joker_added_to_deck_but_debuffed = nil
+        self.ability.joker_added_to_deck_but_debuffed = nil
     else
         if self.edition and self.edition.card_limit then
             if self.ability.consumeable then
@@ -177,7 +177,8 @@ position = "at"
 payload = '''
 if G.jokers then
     if from_debuff then
-        self.joker_added_to_deck_but_debuffed = true
+        self.ability.joker_added_to_deck_but_debuffed = true
+        print("marked "..tostring(self))
     else
         if self.edition and self.edition.card_limit then
             if self.ability.consumeable then
@@ -193,7 +194,7 @@ target = "card.lua"
 pattern = '''(?<indent>[\t ]*)if self\.ability\.queue_neg[A-z\.\:\n\t _(',)~=+\-0-9]*limit \- 1'''
 position = "at"
 payload = '''
-if self.joker_added_to_deck_but_debuffed then
+if self.ability.joker_added_to_deck_but_debuffed then
     if self.edition and self.edition.card_limit then
         if self.ability.consumeable then
             G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
