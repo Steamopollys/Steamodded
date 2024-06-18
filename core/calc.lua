@@ -8,15 +8,26 @@
 SMODS.playing_card_effect_order = {
 	'chips',
 	'mult',
-	'dollars',
+	'dollars', -- dollars comes before x_mult in base game, for some reason
+	-- the weird placement of extra never matters in the base game
 	{['extra'] = {
-        -- the weird position of this doesn't actually matter in base game
-        -- 'extra' is always used alone
-		'mult', 'chips', 'swap', 'func', 'message'}},
+		'mult', 
+		'chips', 
+		'swap', -- unused in base game
+		'func', 
+		-- in an effect, message replaces the displayed text of other keys;
+		-- no other keys will show text
+		'message',
+	}},
 	'x_mult',
-	'message', -- unused in base game
+	-- plain message never happens in the base game
+	'message',
 	{['edition'] = {
-        'mult', 'chips', 'x_mult', 'dollars'}},
+        'mult', 
+		'chips', 
+		'x_mult', 
+		'dollars'
+	}},
 	-- TODO seals. Currently the game does not go through effects for seals
 }
 SMODS.before_joker_edition_effect_order = {
@@ -92,6 +103,7 @@ function SMODS.eval_effect(args, update)
 		elseif args.key == 'dollars' then
 			ease_dollars(args.val)
 		elseif args.key == 'swap' then
+			-- args.val does not matter
 			local old_mult = mult
 			mult = mod_mult(hand_chips)
 			hand_chips = mod_chips(old_mult)
@@ -100,27 +112,40 @@ function SMODS.eval_effect(args, update)
 			args.val()
 		end
 		-- Text of effect
-		if args.key == 'chips' then
-			if args.type == nil or (args.type == 'extra' and not args.effect.message) then
-				card_eval_status_text(args.card, 'chips', args.val, args.percent)
+		if args.type == 'edition' then
+			local extra = {
+				colour = G.C.DARK_EDITION,
+				edition = true
+			}
+			if args.effect.message then
+				extra.message = args.effect.message
+			elseif args.key == 'chips' then
+				extra.message = extra.message or localize{type='variable',key='a_chips',vars={args.val}}
+				extra.chips = args.val
+			elseif args.key == 'mult' then
+				extra.message = extra.message or localize{type='variable',key='a_mult',vars={args.val}}
+				extra.mult = args.val
+			elseif args.key == 'x_mult' then
+				extra.message = extra.message or localize{type='variable',key='a_xmult',vars={args.val}}
+				extra.x_mult = args.val
 			end
-			hand_chips = mod_chips(hand_chips + args.val)
-			update_hand_text({delay = 0}, {chips = hand_chips})
-		elseif args.key == 'mult' then
-			mult = mod_mult(mult + args.val)
-			update_hand_text({delay = 0}, {mult = mult})
-		elseif args.key == 'x_mult' then
-			mult = mod_mult(mult * args.val)
-			update_hand_text({delay = 0}, {mult = mult})
-		elseif args.key == 'dollars' then
-			ease_dollars(args.val)
-		elseif args.key == 'swap' then
-			local old_mult = mult
-			mult = mod_mult(hand_chips)
-			hand_chips = mod_chips(old_mult)
-			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-		elseif args.key == 'func' then
-			args.val()
+			card_eval_status_text(args.card, 'extra', nil, args.percent, nil, extra)
+		else
+			if args.key == 'chips' 
+			or args.key == 'mult' 
+			or args.key == 'x_mult' 
+			or args.key == 'dollars'
+			or args.key == 'swap' then
+				if not args.effect.message then
+					card_eval_status_text(args.card, args.key, args.val, args.percent)
+				end
+			elseif args.key == 'message' then
+				if args.type == 'jokers' then
+					card_eval_status_text(args.card, 'jokers', nil, args.percent, nil, args.effect)
+				else -- nil or 'extra'
+					card_eval_status_text(args.card, 'extra', nil, args.percent, nil, args.effect)
+				end
+			end
 		end
 	elseif type(args.key) == 'table' and args.key[1] then
 		-- Array of keys
@@ -150,116 +175,11 @@ function SMODS.eval_effect(args, update)
     end
 end
 
--- TODO think about the structure of this table. it's got some weirdness
-SMODS.EffectKeys = {
-	chips = {
-		aliases = {'chip_mod'},
-		calculate = function(args)
-			hand_chips = mod_chips(hand_chips + args.val)
-			update_hand_text({delay = 0}, {chips = hand_chips})
-		end,
-		text = function(args)
-			if (args.type == nil or args.type == 'extra') then
-				card_eval_status_text(args.card, 'chips', args.val, args.percent)
-			elseif args.type == 'edition' then
-				card_eval_status_text(args.card, 'extra', nil, args.percent, nil, {
-					message = localize{type='variable',key='a_chips',vars={args.val}},
-					chips = args.val,
-					colour = G.C.DARK_EDITION,
-					edition = true})
-			elseif args.type == 'jokers' then
-				-- TODO
-			else
-				assert(false, ("unknown args.type: %s"):format(args.type))
-			end
-		end
-	},
-	mult = {
-		aliases = {'mult_mod'},
-		calculate = function(args)
-			mult = mod_mult(mult + args.val)
-			update_hand_text({delay = 0}, {mult = mult})
-		end,
-		text = function(args)
-			if (args.type == nil or args.type == 'extra') then
-				card_eval_status_text(args.card, 'mult', args.val, args.percent)
-			elseif args.type == 'extra' then
-				if not args.effect.message then
-					card_eval_status_text(args.card, 'mult', args.val, args.percent)
-				end
-			elseif args.type == 'edition' then
-				card_eval_status_text(args.card, 'extra', nil, args.percent, nil, {
-					message = localize{type='variable',key='a_mult',vars={args.val}},
-					mult = args.val,
-					colour = G.C.DARK_EDITION,
-					edition = true})
-			elseif args.type == 'jokers' then
-				-- TODO
-			else
-				assert(false, ("unknown args.type: %s"):format(args.type))
-			end
-		end
-	},
-	dollars = {
-		aliases = {'p_dollars'},
-		calculate = function(args)
-			ease_dollars(args.val)
-		end,
-		text = function(args)
-			card_eval_status_text(args.card, 'dollars', args.val, args.percent)
-		end
-	},
-	swap = {
-		calculate = function(args)
-			if args.type == nil then
-				local old_mult = mult
-				mult = mod_mult(hand_chips)
-				hand_chips = mod_chips(old_mult)
-				update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-			end
-		end,
-		text = function(args)
-			card_eval_status_text(args.card, 'swap', nil, args.percent)
-		end
-	},
-	x_mult = {
-		aliases = {'Xmult_mod', 'x_mult_mod'},
-		calculate = function(args)
-			mult = mod_mult(mult*args.val)
-			update_hand_text({delay = 0}, {mult = mult})
-		end,
-		text = function(args)
-			if args.type == nil then
-				card_eval_status_text(args.card, 'x_mult', args.val, args.percent)
-			elseif args.type == 'edition' then
-				card_eval_status_text(args.card, 'extra', nil, args.percent, nil, {
-					message = localize{type='variable',key='a_xmult',vars={args.val}},
-					mult = args.val,
-					colour = G.C.DARK_EDITION,
-					edition = true})
-			elseif args.type == 'jokers' then
-				-- TODO
-			end
-		end
-	},
-	message = {
-		calculate = function() end,
-		text = function(args)
-			if args.type == 'jokers' then
-				card_eval_status_text(args.card, 'jokers', nil, args.percent, nil, args.effect)
-			else
-				card_eval_status_text(args.card, 'extra', nil, args.percent, nil, args.effect)
-			end
-		end
-	},
-}
-
 function SMODS.eval_playing_card_effect(args)
-	return SMODS.eval_effect_list(SMODS.EFFECT_LISTS.playing_cards, args)
+	return SMODS.eval_effect(args, {key = SMODS.playing_card_effect_order})
 end
 function SMODS.eval_joker_effect(args)
-	args.type = 'jokers'
-	return SMODS.eval_effect_list(SMODS.EFFECT_LISTS.jokers, args)
+	return SMODS.eval_effect(args, {key = SMODS.joker_effect_order, type = 'jokers'})
 end
 -- legacy function, don't use
 function SMODS.eval_this(card, effect)
