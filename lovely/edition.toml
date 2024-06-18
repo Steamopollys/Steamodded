@@ -178,7 +178,6 @@ payload = '''
 if G.jokers then
     if from_debuff then
         self.ability.joker_added_to_deck_but_debuffed = true
-        print("marked "..tostring(self))
     else
         if self.edition and self.edition.card_limit then
             if self.ability.consumeable then
