@@ -86,7 +86,9 @@ function SMODS.eval_effect(args, update)
     end
 	-- now update holds the old key/value pairs
 
-    if args.effect[1] then
+	if not args.effect then
+		-- do nothing
+	elseif args.effect[1] then
 		-- Array of effects
 		for _, effect2 in ipairs(v) do
 			SMODS.eval_effect(args, {effect = effect2})
@@ -170,7 +172,7 @@ function SMODS.eval_effect(args, update)
     elseif type(args.key) == 'table' and #args.key == 1 then
 		-- Single-field table
 		local type, key2 = next(args.key)
-        SMODS.eval_effect(args, {type = type, key = key2})
+        SMODS.eval_effect(args, {type = type, key = key2, effect = args.effect[type]})
 	elseif type(args.key) == 'string' then
 		-- One key
 		local val = args.effect[args.key]
@@ -184,7 +186,6 @@ function SMODS.eval_effect(args, update)
 		end
 	end
 
-    -- Epilogue
     for k, v in pairs(update) do
         args[k], update[k] = update[k], args[k]
     end
@@ -202,7 +203,6 @@ end
 -- legacy function, don't use
 function SMODS.eval_this(effect)
 	sendWarnMessage("SMODS.eval_this is a legacy function, use SMODS.eval_joker_effect instead")
-	if not effect then return end
 	return SMODS.eval_joker_effect{
 		effect = effect
 	}
