@@ -57,9 +57,10 @@ function set_mods_dir()
         SMODS.MODS_DIR = lovely_mod_dir
         return
     end
-    sendErrorMessage("nativefs not loaded and lovely --mod_dir was not in the save directory!")
-    sendErrorMessage("cannot read lovely --mod-dir, exiting")
-    assert(false)
+    assert(false, 
+        "nativefs not loaded and lovely --mod-dir was not in the save directory!\n"
+        ..("save dir: %s, lovely mod dir: %s\n"):format(save_dir, lovely_mod_dir)
+        .."cannot read lovely --mod-dir, exiting")
 end
 set_mods_dir()
 
