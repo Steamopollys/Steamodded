@@ -4,7 +4,7 @@
 -- `effect`s are returned from calculate_joker() and eval_card() in the base game, and
 -- calculate() functions in SMODS.
 
--- Order of effects
+-- Constants for order of effects
 SMODS.playing_card_effect_order = {
 	'chips',
 	'mult',
@@ -15,7 +15,7 @@ SMODS.playing_card_effect_order = {
 		'chips', 
 		'swap', -- unused in base game
 		'func', 
-		-- in an effect, message replaces the displayed text of other keys;
+		-- In SMODS, message replaces the displayed text of other keys in an effect;
 		-- no other keys will show text
 		'message',
 	}},
@@ -54,10 +54,10 @@ SMODS.calc.aliases = {
     dollars = {'p_dollars'}
 }
 
--- Recursively evaluates an effect,
--- looking for a specified list of keys.
+-- SMODS.eval_effect() recursively evaluates an effect, looking for a specified 
+-- list of keys.
 
--- This function takes one `args` parameter.
+-- Functions in this file take one `args` parameter.
 -- `args` is a table that can contain the following fields:
 
 -- `effect`: the effect we're evaluating right now, always a table.
@@ -200,10 +200,10 @@ function SMODS.eval_joker_effect(args)
 	return SMODS.eval_effect(args)
 end
 -- legacy function, don't use
-function SMODS.eval_this(card, effect)
+function SMODS.eval_this(effect)
 	sendWarnMessage("SMODS.eval_this is a legacy function, use SMODS.eval_joker_effect instead")
-    return SMODS.eval_joker_effect{
-		card = card,
+	if not effect then return end
+	return SMODS.eval_joker_effect{
 		effect = effect
 	}
 end
