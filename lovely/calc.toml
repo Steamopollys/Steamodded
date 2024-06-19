@@ -74,6 +74,7 @@ position = "at"
 payload = '''
 SMODS.eval_playing_card_effect{
     card = scoring_hand[i],
-    effect = effects
+    effect = effects,
+    percent = percent
 }'''
 line_prepend = "$indent"
