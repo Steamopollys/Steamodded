@@ -12,14 +12,14 @@ SMODS.playing_card_effect_order = {
 	'mult',
 	'dollars', -- dollars comes before x_mult in base game, for some reason
 	-- Yes, this is where 'extra' is evaluated as a subeffect in base game.
-	-- The weird position of extra never matters in the base game
+	-- The weird position of 'extra' never matters in the base game.
+	-- In SMODS, 'extra' is unnecessary; put 'func' and 'message'
+	-- at top level.
 	{['extra'] = {
 		'func',
 		'message'
 	}},
 	'x_mult',
-	-- In SMODS, 'extra' is unnecessary; put 'func' and 'message'
-	-- at top level.
 	'func',
 	-- 'message' will prevent other keys from displaying text, replacing them
 	-- all with a single message
@@ -29,7 +29,8 @@ SMODS.playing_card_effect_order = {
         'mult', 
 		'chips', 
 		'x_mult', 
-		'dollars',
+		-- TODO unimplemented
+		-- 'dollars',
 		'message'
 	}},
 	-- TODO seals. Currently the game does not go through effects for seals
@@ -85,8 +86,9 @@ SMODS.calc.aliases = {
 
 -- `update` is used internally
 function SMODS.eval_effect(args, update)
-    -- Prologue
-	args = shallow_copy_and_update(args, update)
+	args = merge_tables(update, args)
+
+
 
 	if not args.effect then
 		-- do nothing
@@ -98,8 +100,11 @@ function SMODS.eval_effect(args, update)
 		end
 	elseif args.val then
 		-- Reached a key-value pair inside the effect, evaluate it
+
+
 		-- Calculate effect
-		if not args.effect.message 
+		if args.type ~= 'edition'
+		and not args.effect.message 
 		and (
 			args.key == 'chips' or args.key == 'mult' or args.key == 'x_mult'
 			or args.key == 'dollars' or args.key == 'swap' or args.key == 'func')
@@ -107,43 +112,37 @@ function SMODS.eval_effect(args, update)
 			juice_card(args.effect.card)
 		end
 		if args.key == 'chips' then
-			if not args.effect.message and args.effect.card then
-				juice_card(args.effect.card)
-			end
 			hand_chips = mod_chips(hand_chips + args.val)
 			update_hand_text({delay = 0}, {chips = hand_chips})
+			-- TODO testing, testing! remove this
+			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
 		elseif args.key == 'mult' then
-			if not args.effect.message and args.effect.card then
-				juice_card(args.effect.card)
-			end
 			mult = mod_mult(mult + args.val)
 			update_hand_text({delay = 0}, {mult = mult})
 		elseif args.key == 'x_mult' then
-			if not args.effect.message and args.effect.card then
-				juice_card(args.effect.card)
-			end
 			mult = mod_mult(mult * args.val)
 			update_hand_text({delay = 0}, {mult = mult})
 		elseif args.key == 'dollars' then
-			if not args.effect.message and args.effect.card then
-				juice_card(args.effect.card)
-			end
 			ease_dollars(args.val)
 		elseif args.key == 'swap' then
 			-- args.val does not matter
-			if not args.effect.message and args.effect.card then
-				juice_card(args.effect.card)
-			end
 			local old_mult = mult
 			mult = mod_mult(hand_chips)
 			hand_chips = mod_chips(old_mult)
 			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
 		elseif args.key == 'func' then
-			if not args.effect.message and args.effect.card then
-				juice_card(args.effect.card)
-			end
 			args.val()
 		end
+
+
+
 		-- Text of effect
 		if args.type == 'edition' then
 			local extra = {
@@ -176,15 +175,10 @@ function SMODS.eval_effect(args, update)
 				end
 			end
 		else
-			if args.key == 'chips' 
-			or args.key == 'mult' 
-			or args.key == 'x_mult' 
-			or args.key == 'dollars'
-			or args.key == 'swap' then
-				if not args.effect.message and args.effect.card then
-					juice_card(args.effect.card)
-				end
+			if args.key == 'chips' or args.key == 'mult' or args.key == 'x_mult' 
+			or args.key == 'dollars' or args.key == 'swap' then
 				if not args.effect.message then
+					if args.effect.card then juice_card(args.effect.card) end
 					card_eval_status_text(args.card, args.key, args.val, args.percent)
 				end
 			elseif args.key == 'message' then
@@ -196,15 +190,17 @@ function SMODS.eval_effect(args, update)
 				end
 			end
 		end
+
+
+
 	elseif type(args.key) == 'table' and args.key[1] then
 		-- Array of keys
 		if args.key.type then
 			args.type = args.key.type
 		end
-		if args.type == 'playing_card' and args.effect.message then
-			if args.effect.card then
-				juice_card(args.effect.card)
-			end
+		if args.type ~= 'edition' and args.effect.message then
+			-- One juice for the whole effect, if args.effect.message is set
+			if args.effect.card then juice_card(args.effect.card) end
 		end
         for _, key2 in ipairs(args.key) do
             SMODS.eval_effect(args, {key = key2})
@@ -216,11 +212,18 @@ function SMODS.eval_effect(args, update)
         SMODS.eval_effect(args, {type = type, key = key2, effect = args.effect[type]})
 	elseif type(args.key) == 'string' then
 		-- One key
+		local key_hits = {} -- For debugging purposes
 		local val = args.effect[args.key]
+		if val then table.insert(key_hits, args.key) end
 		if SMODS.calc.aliases[args.key] then
 			for _, key_alias in ipairs(SMODS.calc.aliases[args.key]) do
 				val = val or args.effect[key_alias]
+				if args.effect[key_alias] then table.insert(key_hits, key_alias) end
 			end
+		end
+		if #key_hits > 1 then
+			sendWarnMessage("Found multiple keys with the same meaning when evaluating effect:\n"
+			..inspect(key_hits))
 		end
 		if val then
 			SMODS.eval_effect(args, {val = val})
@@ -229,28 +232,30 @@ function SMODS.eval_effect(args, update)
 end
 
 function SMODS.eval_playing_card_effect(args)
-	if not args.key then args.key = SMODS.playing_card_effect_order end
-	return SMODS.eval_effect(args)
+	if args.key then
+		sendWarnMessage("SMODS.eval_playing_card_effect() does not take a key.")
+	end
+	return SMODS.eval_effect(merge_tables(args, {key = SMODS.playing_card_effect_order}))
 end
 function SMODS.eval_joker_effect(args)
-	if not args.key then args.key = SMODS.joker_effect_order end
-	if not args.type then args.type = 'jokers' end
-	return SMODS.eval_effect(args)
+	if args.key then
+		sendWarnMessage("SMODS.eval_playing_card_effect() does not take a key.")
+	end
+	return SMODS.eval_effect(merge_tables(args, {key = SMODS.joker_effect_order}))
 end
 -- legacy function, don't use
 function SMODS.eval_this(effect)
 	sendWarnMessage("SMODS.eval_this is a legacy function, use SMODS.eval_joker_effect instead")
-	return SMODS.eval_joker_effect{
-		effect = effect
-	}
+	return SMODS.eval_joker_effect{effect = effect}
 end
 
-function shallow_copy_and_update(t, update)
+-- Merge the two tables, with t1 taking priority
+function merge_tables(t1, t2)
 	local ret = {}
-	for k, v in pairs(update) do
+	for k, v in pairs(t1) do
 		ret[k] = v
 	end
-	for k, v in pairs(t) do
+	for k, v in pairs(t2) do
 		if ret[k] == nil then
 			ret[k] = v
 		end

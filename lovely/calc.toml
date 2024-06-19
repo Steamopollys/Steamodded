@@ -12,32 +12,32 @@ position = "at"
 payload = ""
 match_indent = true
 
-# G.FUNCS.evaluate_play(), end_round()
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "if next(eval) and (next(effects[1]) or #effects > 1)  then"
-position = "at"
-payload = "if eval.seals then"
-match_indent = true
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "if next(eval) and (next(effects[1]) or #effects > 1) then"
-position = "at"
-payload = "if eval.seals then"
-match_indent = true
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''
-(?<indent>[\t ]*)if next\(eval\) then 
-[\t ]*    for h = 1, eval\.seals\.repetitions do'''
-position = "at"
-payload = '''
-if eval.seals then
-    for h = 1, eval.seals.repetitions do'''
-line_prepend = '$indent'
+# # G.FUNCS.evaluate_play(), end_round()
+# [[patches]]
+# [patches.pattern]
+# target = "functions/state_events.lua"
+# pattern = "if next(eval) and (next(effects[1]) or #effects > 1)  then"
+# position = "at"
+# payload = "if eval.seals then"
+# match_indent = true
+# [[patches]]
+# [patches.pattern]
+# target = "functions/state_events.lua"
+# pattern = "if next(eval) and (next(effects[1]) or #effects > 1) then"
+# position = "at"
+# payload = "if eval.seals then"
+# match_indent = true
+# [[patches]]
+# [patches.regex]
+# target = "functions/state_events.lua"
+# pattern = '''
+# (?<indent>[\t ]*)if next\(eval\) then 
+# [\t ]*    for h = 1, eval\.seals\.repetitions do'''
+# position = "at"
+# payload = '''
+# if eval.seals then
+#     for h = 1, eval.seals.repetitions do'''
+# line_prepend = '$indent'
 
 # card_eval_status_text()
 [[patches]]
@@ -58,3 +58,22 @@ target = "functions/common_events.lua"
 pattern = 'extra\.chip_mod'
 position = "at"
 payload = '(extra.chips or extra.chip_mod)'
+
+# G.FUNCS.evaluate_play()
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''
+(?<indent>[\t ]*)scoring_hand[i].lucky_trigger = nil
+[\t ]*
+([\t ]*for ii = 1, #effects do[\s\S]*?edition = true\}\)
+[\t ]*end
+[\t ]*end)'''
+root_capture = "$1"
+position = "at"
+payload = '''
+SMODS.eval_playing_card_effect{
+    effect = effects
+}
+'''
+line_prepend = "$indent"
