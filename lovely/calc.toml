@@ -64,7 +64,7 @@ payload = '(extra.chips or extra.chip_mod)'
 [patches.regex]
 target = "functions/state_events.lua"
 pattern = '''
-(?<indent>[\t ]*)scoring_hand[i].lucky_trigger = nil
+(?<indent>[\t ]*)scoring_hand\[i\].lucky_trigger = nil
 [\t ]*
 ([\t ]*for ii = 1, #effects do[\s\S]*?edition = true\}\)
 [\t ]*end

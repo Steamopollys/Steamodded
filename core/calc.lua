@@ -66,7 +66,7 @@ SMODS.calc.aliases = {
 -- Functions in this file take one `args` parameter.
 -- `args` is a table that can contain the following fields:
 
--- `effect`: the effect we're evaluating right now, always a table.
+-- `effect`: the effect we're evaluating right now, always a table or nil.
 -- `effect` can be an array of effects; we evaluate each effect completely, in sequence.
 
 -- `type`: type of the effect/subeffect we're evaluating; for example if
@@ -77,15 +77,15 @@ SMODS.calc.aliases = {
 -- `key`: current key or list of keys we're evaluating.
 -- Can be
 -- * a string, for example "chips"
--- * a table with one field: `{[subeffect] = K}` where K is a an array of `key`s.
--- K will be evaluated with args.type = type.
--- * an array containing either of the above forms. The array can
--- additionally have a `type` field that sets args.type.
+-- * a table with one field: `{[subeffect] = K}` where `K` is a an array of `key`s,
+-- possibly with additional fields. (ex. `K` could be `{type = 'foo', 'key1', 'key2'}`)
+-- If `K` has a field 'type', `K` will be evaluated with `args.type = K.type`.
+-- * an array composed of either of the above forms. (ex. see `K` above)
 
 -- `val`: the value of `effect[k]` where k is the current key we're evaluating
 
--- `update` is used internally
 function SMODS.eval_effect(args, update)
+	-- `update` is used internally
 	args = merge_tables(update, args)
 
 
@@ -94,15 +94,14 @@ function SMODS.eval_effect(args, update)
 		-- do nothing
 	elseif args.effect[1] then
 		-- Array of effects
-		for _, effect2 in ipairs(v) do
-			args.effect = effect2
+		for _, effect2 in ipairs(args.effect) do
 			SMODS.eval_effect(args, {effect = effect2})
 		end
 	elseif args.val then
 		-- Reached a key-value pair inside the effect, evaluate it
-
-
-		-- Calculate effect
+		-----
+		----- Calculate effect
+		-----
 		if args.type ~= 'edition'
 		and not args.effect.message 
 		and (
@@ -140,10 +139,9 @@ function SMODS.eval_effect(args, update)
 		elseif args.key == 'func' then
 			args.val()
 		end
-
-
-
-		-- Text of effect
+		-----
+		----- Display text of effect
+		-----
 		if args.type == 'edition' then
 			local extra = {
 				-- does not matter in base game, colour is overwritten if edition = true
@@ -190,9 +188,6 @@ function SMODS.eval_effect(args, update)
 				end
 			end
 		end
-
-
-
 	elseif type(args.key) == 'table' and args.key[1] then
 		-- Array of keys
 		if args.key.type then
@@ -206,25 +201,25 @@ function SMODS.eval_effect(args, update)
             SMODS.eval_effect(args, {key = key2})
         end
     elseif type(args.key) == 'table' then
-		-- Single-field table
-		-- Evaluate subeffect
-		local type, key2 = next(args.key)
-        SMODS.eval_effect(args, {type = type, key = key2, effect = args.effect[type]})
+		-- Single-field table. Evaluate subeffect
+		local subeffect, key2 = next(args.key)
+		assert(next(args.key, subeffect) == nil, "SMODS.eval_effect(): args.key was a table with 2+ fields")
+		if args.effect[subeffect] then
+        	SMODS.eval_effect(args, {key = key2, effect = args.effect[subeffect]})
+		end
 	elseif type(args.key) == 'string' then
 		-- One key
-		local key_hits = {} -- For debugging purposes
-		local val = args.effect[args.key]
-		if val then table.insert(key_hits, args.key) end
+		local keys_found = {} -- For debugging purposes
+		local val = args.effect[args.key]; if val then table.insert(keys_found, args.key) end
 		if SMODS.calc.aliases[args.key] then
 			for _, key_alias in ipairs(SMODS.calc.aliases[args.key]) do
-				val = val or args.effect[key_alias]
-				if args.effect[key_alias] then table.insert(key_hits, key_alias) end
+				val = val or args.effect[key_alias]; if args.effect[key_alias] then table.insert(keys_found, key_alias) end
 			end
 		end
-		if #key_hits > 1 then
-			sendWarnMessage("Found multiple keys with the same meaning when evaluating effect:\n"
-			..inspect(key_hits))
-		end
+		assert(#keys_found <= 1,
+			("Found multiple keys with the same meaning when evaluating effect %s:\n%s")
+				:format(tprint(args.effect), inspect(keys_found))
+		)
 		if val then
 			SMODS.eval_effect(args, {val = val})
 		end
@@ -252,12 +247,16 @@ end
 -- Merge the two tables, with t1 taking priority
 function merge_tables(t1, t2)
 	local ret = {}
-	for k, v in pairs(t1) do
-		ret[k] = v
-	end
-	for k, v in pairs(t2) do
-		if ret[k] == nil then
+	if t1 then
+		for k, v in pairs(t1) do
 			ret[k] = v
+		end
+	end
+	if t2 then
+		for k, v in pairs(t2) do
+			if ret[k] == nil then
+				ret[k] = v
+			end
 		end
 	end
 	return ret

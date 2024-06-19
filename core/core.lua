@@ -1335,7 +1335,7 @@ function serialize(t, indent)
         elseif type(v) == 'table' then
             str = str .. serialize(v, indent .. '\t')
         else
-            assert(false)
+            error(("serialize(): v of invalid type %s"):format(type(v)))
         end
 		str = str .. ',\n'
 	end
@@ -1349,7 +1349,7 @@ function serialize(t, indent)
 			elseif type(v) == 'table' then
 				str = str .. serialize(v, indent .. '\t')
 			else
-				assert(false)
+				error(("serialize(): v of invalid type %s"):format(type(v)))
 			end
 			str = str .. ',\n'
 		end
