@@ -73,6 +73,7 @@ root_capture = "$1"
 position = "at"
 payload = '''
 SMODS.eval_playing_card_effect{
+    card = scoring_hand[i],
     effect = effects
 }
 '''

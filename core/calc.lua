@@ -84,6 +84,9 @@ SMODS.calc.aliases = {
 
 -- `val`: the value of `effect[k]` where k is the current key we're evaluating
 
+-- `card`: the card for which we're evaluating all effects for.
+-- Not to be confused with `effect.card`, which determines the card that's
+-- animated with juice_card()
 function SMODS.eval_effect(args, update)
 	-- `update` is used internally
 	args = merge_tables(update, args)
