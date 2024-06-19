@@ -69,12 +69,11 @@ pattern = '''
 ([\t ]*for ii = 1, #effects do[\s\S]*?edition = true\}\)
 [\t ]*end
 [\t ]*end)'''
-root_capture = "$1"
+root_capture = "$2"
 position = "at"
 payload = '''
 SMODS.eval_playing_card_effect{
     card = scoring_hand[i],
     effect = effects
-}
-'''
+}'''
 line_prepend = "$indent"

@@ -115,22 +115,19 @@ function SMODS.eval_effect(args, update)
 		end
 		if args.key == 'chips' then
 			hand_chips = mod_chips(hand_chips + args.val)
-			update_hand_text({delay = 0}, {chips = hand_chips})
-			-- TODO testing, testing! remove this
-			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+			if not args.effect.message then
+				update_hand_text({delay = 0}, {chips = hand_chips})
+			end
 		elseif args.key == 'mult' then
 			mult = mod_mult(mult + args.val)
-			update_hand_text({delay = 0}, {mult = mult})
+			if not args.effect.message then
+				update_hand_text({delay = 0}, {mult = mult})
+			end
 		elseif args.key == 'x_mult' then
 			mult = mod_mult(mult * args.val)
-			update_hand_text({delay = 0}, {mult = mult})
+			if not args.effect.message then
+				update_hand_text({delay = 0}, {mult = mult})
+			end
 		elseif args.key == 'dollars' then
 			ease_dollars(args.val)
 		elseif args.key == 'swap' then
@@ -138,7 +135,9 @@ function SMODS.eval_effect(args, update)
 			local old_mult = mult
 			mult = mod_mult(hand_chips)
 			hand_chips = mod_chips(old_mult)
-			update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+			if not args.effect.message then
+				update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+			end
 		elseif args.key == 'func' then
 			args.val()
 		end
