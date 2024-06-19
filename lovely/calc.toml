@@ -33,10 +33,6 @@ position = "at"
 # effects == nil takes advantage of undefined globals being nil
 payload = '''
 if eval.$2 and (effects == nil or next(effects[1]) or #effects > 1) then
-    print('$2')
-    if effects ~= nil then
-        print(tprint(effects))
-    end
     for h = 1, eval.$2.repetitions do
         reps[#reps+1] = eval.$2'''
 line_prepend = '$indent'
@@ -70,6 +66,7 @@ pattern = 'extra\.chip_mod'
 position = "at"
 payload = '(extra.chips or extra.chip_mod)'
 
+## Inject eval_effect
 # G.FUNCS.evaluate_play()
 [[patches]]
 [patches.regex]
@@ -107,5 +104,6 @@ SMODS.eval_playing_card_effect{
     card = G.hand.cards[i],
     effect = effects,
     percent = percent
-}'''
+}
+if next(effects[1]) or #effects > 1 then mod_percent = true end'''
 line_prepend = "$indent"
