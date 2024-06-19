@@ -1832,7 +1832,7 @@ function loadAPIs()
     SMODS.Challenge = SMODS.GameObject:extend {
         obj_table = SMODS.Challenges,
         obj_buffer = {},
-        get_obj = function(key) 
+        get_obj = function(self, key) 
             for _, v in ipairs(G.CHALLENGES) do
                 if v.id == key then return v end
             end
@@ -1866,33 +1866,31 @@ function loadAPIs()
         inject = function(self) end,
     }
     for k, v in ipairs{
-        'c_omelette_1',
-        'c_city_1',
-        'c_rich_1',
-        'c_knife_1',
-        'c_xray_1',
-        'c_mad_world_1',
-        'c_luxury_1',
-        'c_non_perishable_1',
-        'c_medusa_1',
-        'c_double_nothing_1',
-        'c_typecast_1',
-        'c_inflation_1',
-        'c_bram_poker_1',
-        'c_fragile_1',
-        'c_monolith_1',
-        'c_blast_off_1',
-        'c_five_card_1',
-        'c_golden_needle_1',
-        'c_cruelty_1',
-        'c_jokerless_1',
+        'omelette_1',
+        'city_1',
+        'rich_1',
+        'knife_1',
+        'xray_1',
+        'mad_world_1',
+        'luxury_1',
+        'non_perishable_1',
+        'medusa_1',
+        'double_nothing_1',
+        'typecast_1',
+        'inflation_1',
+        'bram_poker_1',
+        'fragile_1',
+        'monolith_1',
+        'blast_off_1',
+        'five_card_1',
+        'golden_needle_1',
+        'cruelty_1',
+        'jokerless_1',
     } do
         SMODS.Challenge:take_ownership(v, {
-            key = v,
             unlocked = function(self) 
                 return G.PROFILES[G.SETTINGS.profile].challenges_unlocked and (G.PROFILES[G.SETTINGS.profile].challenges_unlocked >= k)
             end,
-            loc_txt = {},
         })
     end
 
