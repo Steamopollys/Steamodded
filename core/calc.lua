@@ -87,6 +87,8 @@ SMODS.calc.aliases = {
 -- `card`: the card for which we're evaluating all effects for.
 -- Not to be confused with `effect.card`, which determines the card that's
 -- animated with juice_card()
+
+-- `percent`: passed to card_eval_status_text, modifies the pitch of sound played
 function SMODS.eval_effect(args, update)
 	-- `update` is used internally
 	args = merge_tables(update, args)
