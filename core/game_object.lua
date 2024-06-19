@@ -2145,20 +2145,24 @@ function loadAPIs()
 
         -- Default calculate function, works for simple cases. Define your own!
         calculate = function(self, card, context)
-            local ret = {card = card}
-            if context.cardarea == G.play then
-                for _, v in ipairs{'chips', 'mult', 'x_mult', 'p_dollars'} do
-                    if card.edition[v] then
-                        ret[v] = card.edition[v]
+            local ret = {}
+            if not context.repetition then
+                if context.cardarea == G.play then
+                    for _, v in ipairs{'chips', 'mult', 'x_mult', 'dollars'} do
+                        if card.edition[v] then
+                            ret[v] = card.edition[v]
+                        end
+                    end
+                elseif context.cardarea == G.hand then
+                    for _, v in ipairs{'h_mult', 'h_x_mult'} do
+                        if card.edition[v] then
+                            ret[v] = card.edition[v]
+                        end
                     end
                 end
-                return ret
-            elseif context.cardarea == G.hand then
-                for _, v in ipairs{'h_mult', 'h_x_mult'} do
-                    if card.edition[v] then
-                        ret[v] = card.edition[v]
-                    end
-                end
+            end
+            if next(ret) then
+                ret.card = card
                 return ret
             end
         end,
@@ -2208,9 +2212,6 @@ function loadAPIs()
         extra_cost = 2,
         get_weight = function(self)
             return G.GAME.edition_rate*self.weight
-        end,
-        calculate = function(...) -- TODO remove, this is a test
-            return SMODS.Edition.calculate(...)
         end,
         loc_vars = function(self)
             return { vars = { self.config.chips } }

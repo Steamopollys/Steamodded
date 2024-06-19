@@ -12,33 +12,44 @@ position = "at"
 payload = ""
 match_indent = true
 
+## Fix checks for if repetitions exist
+## Also don't nest repetitions under jokers/seals
 # G.FUNCS.evaluate_play(), end_round()
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "functions/state_events.lua"
-pattern = "if next(eval) and (next(effects[1]) or #effects > 1)  then"
+pattern = '(?<indent>[\t ]*)if next\(eval\) and \(next\(effects\[1\]\) or #effects > 1\) +then'
 position = "at"
 payload = "if eval.seals then"
-match_indent = true
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "if next(eval) and (next(effects[1]) or #effects > 1) then"
-position = "at"
-payload = "if eval.seals then"
-match_indent = true
+line_prepend = '$indent'
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
 pattern = '''
-(?<indent>[\t ]*)if next\(eval\) then 
-[\t ]*    for h = 1, eval\.seals\.repetitions do'''
+(?<indent>[\t ]*)if .* then[\t ]*
+[\t ]*for h += 1, eval\.(\w+)\.repetitions do
+[\t ]*reps\[#reps\+1\] = eval'''
 position = "at"
+# effects == nil takes advantage of undefined globals being nil
 payload = '''
-if eval.seals then
-    for h = 1, eval.seals.repetitions do'''
+if eval.$2 and (effects == nil or next(effects[1]) or #effects > 1) then
+    print('$2')
+    if effects ~= nil then
+        print(tprint(effects))
+    end
+    for h = 1, eval.$2.repetitions do
+        reps[#reps+1] = eval.$2'''
+line_prepend = '$indent'
+# G.FUNCS.evaluate_play()
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''card_eval_status_text\(\(reps\[j\]\.jokers or reps\[j\]\.seals\)\.card, 'jokers', nil, nil, nil, \(reps\[j\].jokers or reps\[j\]\.seals\)\)'''
+position = "at"
+payload = "card_eval_status_text(reps[j].card, 'jokers', nil, nil, nil, reps[j])"
 line_prepend = '$indent'
 
+## Common aliases in card_eval_status_text()
 # card_eval_status_text()
 [[patches]]
 [patches.regex]
