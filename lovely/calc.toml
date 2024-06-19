@@ -31,6 +31,7 @@ pattern = '''
 [\t ]*reps\[#reps\+1\] = eval'''
 position = "at"
 # effects == nil takes advantage of undefined globals being nil
+# TODO fix this, it's fragile
 payload = '''
 if eval.$2 and (effects == nil or next(effects[1]) or #effects > 1) then
     for h = 1, eval.$2.repetitions do
