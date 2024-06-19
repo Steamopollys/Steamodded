@@ -1475,10 +1475,17 @@ function eval_card(card, context)
 		if edition then 
 			ret.edition = edition
 		end
+	end
 
-		local seals = card:calculate_seal(context)
-		if seals then
-			ret.seals = seals
+	local seals = card:calculate_seal(context)
+	if seals then
+		ret.seals = seals
+	end
+
+	if context.repetition and (context.cardarea == G.play or context.cardarea == G.hand) then
+		local jokers = card:calculate_joker(context)
+		if jokers then
+			ret.jokers = jokers
 		end
 	end
 
