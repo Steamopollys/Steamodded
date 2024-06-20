@@ -82,7 +82,9 @@ function loadAPIs()
         SMODS.process_loc_text(G.localization.descriptions[self.set], self.key, self.loc_txt)
     end
 
-    function SMODS.GameObject:injector()
+    -- Inject all direct instances `o` of the class by calling `o:inject()`.
+    -- Also inject anything necessary for the class itself.
+    function SMODS.GameObject:inject_class()
         local o = nil
         for i, key in ipairs(self.obj_buffer) do
             o = self.obj_table[key]
@@ -154,9 +156,10 @@ function loadAPIs()
         return o
     end
 
+    -- Inject all SMODS Objects that are part of this class or a subclass.
     function SMODS.injectObjects(class)
         if class.obj_table and class.obj_buffer then
-            class:injector()
+            class:inject_class()
         else
             for _, subclass in ipairs(class.subclasses) do SMODS.injectObjects(subclass) end
         end
@@ -185,8 +188,8 @@ function loadAPIs()
             end
             G.LANGUAGES[self.key] = self
         end,
-        injector = function(self)
-            SMODS.Language.super.injector(self)
+        inject_class = function(self)
+            SMODS.Language.super.inject_class(self)
             G:set_language()
         end
     }
@@ -200,7 +203,7 @@ function loadAPIs()
         obj_buffer = {},
         silent = true,
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
-        injector = function()
+        inject_class = function()
             SMODS.handle_loc_file(SMODS.path)
             if SMODS.dump_loc then SMODS.dump_loc.pre_inject = copy_table(G.localization) end
             for _, mod in ipairs(SMODS.mod_list) do
@@ -435,10 +438,10 @@ function loadAPIs()
             'loc_txt',
             'applied_stakes'
         },
-        injector = function(self)
+        inject_class = function(self)
             G.P_CENTER_POOLS[self.set] = {}
             G.P_STAKES = {}
-            SMODS.Stake.super.injector(self)
+            SMODS.Stake.super.inject_class(self)
         end,
         inject = function(self)
             if not self.injected then
@@ -1069,7 +1072,7 @@ function loadAPIs()
     SMODS.UndiscoveredSprite = SMODS.GameObject:extend {
         obj_buffer = {},
         obj_table = SMODS.UndiscoveredSprites,
-        injector = function() end,
+        inject_class = function() end,
         omit_prefix = true,
         required_params = {
             'key',
