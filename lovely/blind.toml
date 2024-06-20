@@ -275,7 +275,7 @@ pattern = 'elseif not v.boss.showdown*'
 match_indent = true
 position = 'before'
 payload = '''
-elseif v.add_to_pool and type(v.add_to_pool) == 'function' then
+elseif v.in_pool and type(v.in_pool) == 'function' then
 	if
 		(
 			((G.GAME.round_resets.ante)%G.GAME.win_ante == 0 and G.GAME.round_resets.ante >= 2) ==
@@ -283,5 +283,5 @@ elseif v.add_to_pool and type(v.add_to_pool) == 'function' then
 		) or
 		v.ignore_showdown_check
 	then
-		eligible_bosses[k] = v:add_to_pool() and true or nil
+		eligible_bosses[k] = v:in_pool() and true or nil
 	end'''

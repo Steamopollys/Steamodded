@@ -379,8 +379,8 @@ pattern = "if _type == 'Enhanced' then"
 match_indent = true
 position = 'at'
 payload = '''
-if v.add_to_pool and type(v.add_to_pool) == 'function' then
-	local res = v:add_to_pool()
+if v.in_pool and type(v.in_pool) == 'function' then
+	local res = v:in_pool()
 	if res.add and (not G.GAME.used_jokers[v.key] or res.allow_duplicates or next(find_joker("Showman"))) then
 		add = true
 	end
