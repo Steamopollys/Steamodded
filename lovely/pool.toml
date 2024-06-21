@@ -9,6 +9,10 @@ target = "functions/misc_functions.lua"
 pattern = "keys[#keys+1] = {k = k,v = v}"
 position = "before"
 payload = """
+-- TODO allow vanilla behavior by an argument
+-- something like:
+-- if args.raw_pool is set, ignore in_pool()
+-- if args.in_pool(obj) is set, use that instead of obj:in_pool()
 if type(v) == 'table' and v.in_pool and type(v.in_pool) == 'function' then
     local in_pool_res = v:in_pool()
     if type(in_pool_res) == 'table' then in_pool_res = in_pool_res[1] end
