@@ -1993,6 +1993,7 @@ function loadAPIs()
     ----- API CODE GameObject.PayoutArg
     -------------------------------------------------------------------------------------------------
 
+    -- TODO needs rename- something with Row: DollarRow?
     SMODS.PayoutArgs = {}
     SMODS.PayoutArg = SMODS.GameObject:extend {
         obj_buffer = {},
