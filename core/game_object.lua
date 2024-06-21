@@ -1543,7 +1543,10 @@ function loadAPIs()
             -- need reverse nominal order to preserve vanilla RNG
             local suit_list = {}
             for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                local suit_key = SMODS.Suit.obj_buffer[i]
+                if not SMODS.Suits[suit_key].disabled then
+                    suit_list[#suit_list + 1] = suit_key
+                end
             end
             local _suit = SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('sigil'))]
             for i = 1, #G.hand.cards do
@@ -1573,7 +1576,13 @@ function loadAPIs()
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _rank = SMODS.Ranks[pseudorandom_element(SMODS.Rank.obj_buffer, pseudoseed('ouija'))]
+            local rank_list = {}
+            for _, rank_key in ipairs(SMODS.Rank.obj_buffer) do
+                if not SMODS.Ranks[rank_key].disabled then
+                    table.insert(rank_list, rank_key)
+                end
+            end
+            local _rank = SMODS.Ranks[pseudorandom_element(rank_list, pseudoseed('ouija'))]
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
@@ -1640,7 +1649,10 @@ function loadAPIs()
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                            local suit_key = SMODS.Suit.obj_buffer[i]
+                            if not SMODS.Suits[suit_key].disabled then
+                                suit_list[#suit_list + 1] = suit_key
+                            end
                         end
                         local _suit, _rank =
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('grim_create'))].card_key, 'A'
@@ -1678,12 +1690,15 @@ function loadAPIs()
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                            local suit_key = SMODS.Suit.obj_buffer[i]
+                            if not SMODS.Suits[suit_key].disabled then
+                                suit_list[#suit_list + 1] = suit_key
+                            end
                         end
                         local faces = {}
                         for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
-                            if r.face then table.insert(faces, r.card_key) end
+                            if not r.disabled and r.face then table.insert(faces, r.card_key) end
                         end
                         local _suit, _rank =
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('familiar_create'))].card_key,
@@ -1722,12 +1737,15 @@ function loadAPIs()
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                            local suit_key = SMODS.Suit.obj_buffer[i]
+                            if not SMODS.Suits[suit_key].disabled then
+                                suit_list[#suit_list + 1] = suit_key
+                            end
                         end
                         local numbers = {}
                         for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
-                            if v ~= 'Ace' and not r.face then table.insert(numbers, r.card_key) end
+                            if not r.disabled and v ~= 'Ace' and not r.face then table.insert(numbers, r.card_key) end
                         end
                         local _suit, _rank =
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('incantation_create'))].card_key,
