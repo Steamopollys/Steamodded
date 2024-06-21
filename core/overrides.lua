@@ -1240,7 +1240,14 @@ function create_UIBox_your_collection_enhancements(exit)
                     c = cols,
                     colour = G.C.RED,
                     no_pips = true
-                })}
+                }), (SMODS.AltTextures["Enhanced"] and #SMODS.AltTextures["Enhanced"].names > 1 and SMODS.GUI.createOptionSelector({
+					w = 4.5,
+					scale = 0.8,
+					options = SMODS.AltTextures["Enhanced"].names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture["Enhanced"],
+					type = "Enhanced"
+			}))}
             }}
         })
     end
@@ -1287,4 +1294,152 @@ G.FUNCS.your_collection_enhancements_page = function(args)
         end
     end
 end
+--#endregion
+--#region altTexture UI
+G.FUNCS.card_colours = function(e)
+    G.SETTINGS.paused = true
+    G.FUNCS.overlay_menu{
+		definition = G.UIDEF.card_colours(),
+    }
+end
+
+G.UIDEF.card_colours = function()
+	local page = 0
+    G.palette_options = {}
+	local node_ret = {}
+	for i=1, 4 do
+		G.palette_options[#G.palette_options + 1] = SMODS.AltTextures.Types[i]
+	end
+    for i=1, #G.palette_options do
+		local v = SMODS.AltTextures[G.palette_options[i]]
+        if #v.names > 1 then
+            node_ret[#node_ret+1] = { n = G.UIT.R, config = { align = "cm" },
+			nodes = {SMODS.GUI.createOptionSelector({w = 4,scale = 0.8, label = G.palette_options[i].." colours" ,options = v.names, opt_callback = "update_recolor", current_option = G.SETTINGS.selected_texture[G.palette_options[i]], type=G.palette_options[i]})}}
+        end
+    end
+	local t = create_UIBox_generic_options({back_func = 'options', contents = node_ret})
+	if #SMODS.AltTextures.Types > 4 then
+		local palette_types = {}
+        for i = 1, math.ceil(#SMODS.AltTextures.Types / 4) do
+            table.insert(palette_types, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+                tostring(math.ceil(#SMODS.AltTextures.Types / 4)))
+        end
+        t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit, snap_back = true,
+            contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
+                nodes = node_ret
+            }, { n = G.UIT.R, config = { align = "cm" },
+                nodes = {create_option_cycle({
+                    options = palette_types,
+                    w = 4.5,
+                    cycle_shoulders = true,
+                    opt_callback = 'card_colours_pages',
+                    focus_args = { snap_to = true, nav = 'wide' },
+                    current_option = 1,
+                    r = rows,
+                    c = cols,
+                    colour = G.C.RED,
+                    no_pips = true
+                })}
+            }}
+        })
+    end
+
+    return t
+end
+
+G.FUNCS.card_colours_pages = function(args)
+    if not args or not args.cycle_config then
+        return
+    end
+    local page = args.cycle_config.current_option
+    if page > math.ceil(#SMODS.AltTextures.Types / 4) then
+        page = page - math.ceil(#SMODS.AltTextures.Types / 4)
+    end
+    local count = 4
+    local offset = (4 * (page - 1)) + 1
+
+	G.palette_options = {}
+	for i=offset, page*count do
+		if i > #SMODS.AltTextures.Types then return end
+		local v = SMODS.AltTextures[SMODS.AltTextures.Types[i]]
+        if #v.names > 1 then
+            G.palette_options[#G.palette_options+1] = SMODS.AltTextures.Types[i]
+			sendDebugMessage(i .. " " .. G.palette_options[#G.palette_options])
+        end
+    end
+end
+
+function G.UIDEF.deck_info(_show_remaining)
+	local t = create_tabs({
+		tabs = _show_remaining and {
+			{
+				label = localize('b_remaining'),
+				chosen = true,
+				tab_definition_function = G.UIDEF.view_deck,
+				tab_definition_function_args = true,
+			},{
+				label = localize('b_full_deck'),
+				tab_definition_function = G.UIDEF.view_deck
+			},
+		} or {
+			{
+			label = localize('b_full_deck'),
+			chosen = true,
+			tab_definition_function = G.UIDEF.view_deck
+			},
+		},
+		tab_h = 8,
+		snap_to_nav = true
+	})
+
+	return create_UIBox_generic_options({contents = {
+		t,
+		SMODS.GUI.createOptionSelector({w = 4.5, scale = 1, align = "rm", options = SMODS.AltTextures.Suit.names,
+			opt_callback = "update_recolor", current_option = G.SETTINGS.selected_texture.Suit, type = 'Suit'})
+	}})
+
+end
+
+function create_UIBox_your_collection_decks()
+	G.GAME.viewed_back = Back(G.P_CENTERS.b_red)
+
+	local area = CardArea(G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h, 1.2*G.CARD_W, 1.2*G.CARD_H, {card_limit = 52, type = 'deck', highlight_limit = 0})
+
+	for i = 1, 52 do
+		local card = Card(G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h, G.CARD_W*1.2, G.CARD_H*1.2, pseudorandom_element(G.P_CARDS), G.P_CENTERS.c_base, {playing_card = i, viewed_back = true})
+		card.sprite_facing = 'back'
+		card.facing = 'back'
+		area:emplace(card)
+		if i == 52 then G.sticker_card = card; card.sticker = get_deck_win_sticker(G.GAME.viewed_back.effect.center) end
+	end
+
+	local ordered_names = {}
+	for k, v in ipairs(G.P_CENTER_POOLS.Back) do
+		ordered_names[#ordered_names+1] = v.name
+	end
+
+	local t = create_UIBox_generic_options({ back_func = 'your_collection', contents = {
+		create_option_cycle({options = ordered_names, opt_callback = 'change_viewed_back', current_option = 1, colour = G.C.RED, w = 4.5, focus_args = {snap_to = true}, mid = 
+			{n=G.UIT.R, config={align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes={
+				{n=G.UIT.R, config={align = "cm", padding = 0.2, colour = G.C.BLACK, r = 0.2}, nodes={
+					{n=G.UIT.C, config={align = "cm", padding = 0}, nodes={
+						{n=G.UIT.O, config={object = area}}
+					}},
+					{n=G.UIT.C, config={align = "tm", minw = 3.7, minh = 2.1, r = 0.1, colour = G.C.L_BLACK, padding = 0.1}, nodes={
+						{n=G.UIT.R, config={align = "cm", emboss = 0.1, r = 0.1, minw = 4, maxw = 4, minh = 0.6}, nodes={
+							{n=G.UIT.O, config={id = nil, func = 'RUN_SETUP_check_back_name', object = Moveable()}},
+						}},
+						{n=G.UIT.R, config={align = "cm", colour = G.C.WHITE, emboss = 0.1, minh = 2.2, r = 0.1}, nodes={
+							{n=G.UIT.O, config={id = G.GAME.viewed_back.name, func = 'RUN_SETUP_check_back', object = UIBox{definition = G.GAME.viewed_back:generate_UI(), config = {offset = {x=0,y=0}}}}}
+						}}       
+					}},
+				}},
+			}}}),
+			(SMODS.AltTextures["Back"] and #SMODS.AltTextures["Back"].names > 1 and SMODS.GUI.createOptionSelector({w = 4.5, scale = 0.8,
+			options = SMODS.AltTextures["Back"].names, opt_callback = "update_recolor", current_option = G.SETTINGS.selected_texture["Back"],
+			type = "Back"}))  
+	}})
+	return t
+end
+
 --#endregion

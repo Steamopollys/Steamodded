@@ -380,66 +380,69 @@ function serialize_string(s)
 	return string.format("%q", s)
 end
 
---#region palettes
-G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
+--#region alt textures
+G.SETTINGS.selected_texture = G.SETTINGS.selected_texture or {}
 G.PALETTE = {}
+default_palettes = { -- Default palettes mostly used for auto generated palettes
+	Spectral = { 
+	"344245","4f6367","bfc7d5","96aacb",
+	"4e5779","4d6ca4","607192","5e7297","637699","5b7fc1","638fe1","7aa4f2","7fa5eb","b8d1ff","bfcce3","e2ebf9",
+	"8b8361","918756","a79c67","e8d67f","dcc659","c7b24a"
+	},
+	Planet = {
+		"4f6367","5b9baa","84c5d2","dff5fc","ffffff"
+	},
+	Tarot = {
+		"4f6367","a58547","dab772","ffe5b4","ffffff"
+	}
+}
 
+-- Called from option selectors that control each type
 G.FUNCS.update_recolor = function(args)
-    G.SETTINGS.selected_colours[args.cycle_config.type] = SMODS.Palettes[args.cycle_config.type][args.to_val]
+    G.SETTINGS.selected_texture[args.cycle_config.type] = args.to_val
 	G:save_settings()
 	G.FUNCS.update_atlas(args.cycle_config.type)
 end
 
 -- Set the atlases of all cards of the correct type to be the new palette
 G.FUNCS.update_atlas = function(type)
-	local atlas_keys = {}
-	if type == "Suits" then
-		atlas_keys = {"cards_1", "ui_1"}
-		G.C["SO_1"].Clubs = G.SETTINGS.selected_colours[type].new_colours[1] or G.C["SO_1"].Clubs
-		G.C["SO_1"].Spades = G.SETTINGS.selected_colours[type].new_colours[2] or G.C["SO_1"].Spades
-		G.C["SO_1"].Diamonds = G.SETTINGS.selected_colours[type].new_colours[3] or G.C["SO_1"].Diamonds
-		G.C["SO_1"].Hearts = G.SETTINGS.selected_colours[type].new_colours[4] or G.C["SO_1"].Hearts
-		G.C.SUITS = G.C.SO_1
-			
-	else
-		for _,v in pairs(G.P_CENTER_POOLS[type]) do
-			atlas_keys[v.atlas or type] = v.atlas or type
-		end
-	end
-	for _,v in pairs(atlas_keys) do
-		if G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name] then
-			G.ASSET_ATLAS[v].image = G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name].image
-		end
-	end
-end
-
-G.FUNCS.card_colours = function(e)
-    G.SETTINGS.paused = true
-    G.FUNCS.overlay_menu{
-      definition = G.UIDEF.card_colours(),
-    }
-  end
-
-G.UIDEF.card_colours = function()
-    local nodeRet = {}
-    for _,k in ipairs(SMODS.Palettes.Types) do
-		local v = SMODS.Palettes[k]
-        if #v.names > 1 then
-            nodeRet[#nodeRet+1] = create_option_cycle({w = 4,scale = 0.8, label = k.." colours" ,options = v.names, opt_callback = "update_recolor", current_option = G.SETTINGS.selected_colours[k].order, type=k})
-        end
+    local name = G.SETTINGS.selected_texture[type]
+	if not SMODS.AltTextures[type][name] then 
+        sendDebugMessage(type.." and "..name.." caused a problem")
+        return
     end
-    local t = create_UIBox_generic_options({back_func = 'options', contents = nodeRet})
-    return t
+	local atlas_keys = {}
+	if type == "Suit" then
+		atlas_keys = {"cards_1", "ui_1"}
+		for suit, _ in pairs(G.C["SO_1"]) do
+			local colour = (SMODS.AltTextures.Suit[name].suits and SMODS.AltTextures.Suit[name].suits[suit] or SMODS.AltTextures.Suit["Default"].suits[suit] or nil)
+			G.C["SO_1"][suit] =  (colour and HEX(colour) or G.C["SO_1"][suit])
+			G.C.SUITS[suit] = G.C["SO_1"][suit]
+		end			
+	elseif type == "Spectral" then
+		atlas_keys = {"Spectral", "soul"}
+	else
+		for _, card in pairs(G.P_CENTER_POOLS[type]) do
+			atlas_keys[card.atlas or type] = card.atlas or type
+		end
+	end
+    sendDebugMessage("Attempt to update atlas for "..type)
+	for _, atlas_key in pairs(atlas_keys) do
+		if G.ASSET_ATLAS[atlas_key][name] then
+			G.ASSET_ATLAS[atlas_key].image = G.ASSET_ATLAS[atlas_key][name].image
+            sendDebugMessage("Updated atlas "..atlas_key.." to "..name)
+		end
+	end
 end
 
 G.FUNCS.recolour_image = function(x,y,r,g,b,a)
-	if G.PALETTE.NEW.old_colours then
-		for i=1, #G.PALETTE.NEW.old_colours do
-			local defaultColour = G.PALETTE.NEW.old_colours[i]
+	if G.PALETTE.old_colours then
+		for i=1, #G.PALETTE.old_colours do
+			local defaultColour = G.PALETTE.old_colours[i]
 			if defaultColour[1] == r and defaultColour[2] == g and defaultColour[3] == b then
-				r = G.PALETTE.NEW.new_colours[i][1]
-				g = G.PALETTE.NEW.new_colours[i][2]
-				b = G.PALETTE.NEW.new_colours[i][3]
+				r = G.PALETTE.new_colours[i][1]
+				g = G.PALETTE.new_colours[i][2]
+				b = G.PALETTE.new_colours[i][3]
 				return r,g,b,a
 			end
 		end
@@ -447,6 +450,8 @@ G.FUNCS.recolour_image = function(x,y,r,g,b,a)
 	return r, g, b, a
 end
 
+-- Convert a hex code into HSL values
+---@param base_colour string
 function HEX_HSL(base_colour)
 	local rgb = HEX(base_colour)
 	local low = math.min(rgb[1], rgb[2], rgb[3])
@@ -474,6 +479,8 @@ function HEX_HSL(base_colour)
 	return hsl
 end
 
+-- Convert a HSL values table to RGB values
+---@param base_colour table
 function HSL_RGB(base_colour)
 	if base_colour[2] < 0.0001 then return {base_colour[3], base_colour[3], base_colour[3], base_colour[4]} end
 	local t = (base_colour[3] < 0.5 and (base_colour[2]*base_colour[3] + base_colour[3]) or (-1 * base_colour[2] * base_colour[3] + (base_colour[2]+base_colour[3])))
@@ -482,6 +489,7 @@ function HSL_RGB(base_colour)
 	return {HUE(s, t, base_colour[1] + (1/3)), HUE(s,t,base_colour[1]), HUE(s,t,base_colour[1] - (1/3)), base_colour[4]}
 end
 
+-- Called within HSL_RGB to calculate the rgb values
 function HUE(s, t, h)
 	local hs = (h % 1) * 6
 	if hs < 1 then return (t-s) * hs + s end

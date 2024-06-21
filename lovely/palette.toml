@@ -13,6 +13,22 @@ payload = '''
 self.ASSET_ATLAS[self.asset_atli[i].name].image_data = love.image.newImageData(self.asset_atli[i].path)
 self.ASSET_ATLAS[self.asset_atli[i].name].image = love.graphics.newImage(self.ASSET_ATLAS[self.asset_atli[i].name].image_data, {mipmaps = true, dpiscale = self.SETTINGS.GRAPHICS.texture_scaling})'''
 match_indent = true
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = '''{name = "centers", path = "resources/textures/"..self.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",px=71,py=95},'''
+position = "after"
+payload = '''
+{name = "soul", path = "resources/textures/"..self.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",px=71,py=95},'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = '''self.shared_soul = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS["centers"], self.P_CENTERS.soul.pos)'''
+position = "at"
+payload = '''
+self.shared_soul = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS["soul"], self.P_CENTERS.soul.pos)'''
+match_indent = true
 
 ## Create menu option for card colours
 [[patches]]
@@ -20,12 +36,12 @@ match_indent = true
 target = "functions/UI_definitions.lua"
 pattern = '''local high_scores = UIBox_button{ label = {localize('b_stats')}, button = "high_scores", minw = 5}'''
 position = "after"
-payload = '''local colours = UIBox_button{ label = {"Card Colours"}, button = "card_colours", minw = 5}'''
+payload = '''local colours = UIBox_button{ label = {"Textures"}, button = "card_colours", minw = 5}'''
 match_indent = true
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"
-pattern = '''credits'''
+pattern = '''your_collection,'''
 position = "before"
 payload = '''colours,'''
 match_indent = true
@@ -36,3 +52,75 @@ pattern = '''if not self.bypass_lock and self.config.center.unlocked ~= false an
 position = "before"
 payload = '''if self.base.colour then self.base.colour = G.C.SUITS[self.config.card.suit] end'''
 match_indent = true
+
+# Game:set_render_settings()
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "self.ASSET_ATLAS.Spectral = self.ASSET_ATLAS.Tarot"
+position = 'after'
+match_indent = true
+payload = "if SMODS.booted then SMODS.injectObjects(SMODS.AltTexture) end"
+
+# Add collection options
+# Vouchers
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = "create_option_cycle({options = voucher_options, w = 4.5, cycle_shoulders = true, opt_callback = 'your_collection_voucher_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = 1, colour = G.C.RED, no_pips = true})"
+position = 'after'
+match_indent = true
+payload = ''',
+(SMODS.AltTextures["Voucher"] and #SMODS.AltTextures["Voucher"].names > 1 and SMODS.GUI.createOptionSelector({
+        w = 4.5,
+        scale = 0.8,
+        options = SMODS.AltTextures["Voucher"].names,
+        opt_callback = "update_recolor",
+        current_option = G.SETTINGS.selected_texture["Voucher"],
+        type = "Voucher"
+})),'''
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = "create_option_cycle({options = booster_options, w = 4.5, cycle_shoulders = true, opt_callback = 'your_collection_booster_page', focus_args = {snap_to = true, nav = 'wide'},current_option = 1, colour = G.C.RED, no_pips = true})"
+position = 'after'
+match_indent = true
+payload = ''',
+(SMODS.AltTextures["Booster"] and #SMODS.AltTextures["Booster"].names > 1 and SMODS.GUI.createOptionSelector({
+        w = 4.5,
+        scale = 0.8,
+        options = SMODS.AltTextures["Booster"].names,
+        opt_callback = "update_recolor",
+        current_option = G.SETTINGS.selected_texture["Booster"],
+        type = "Booster"
+})),'''
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = "create_option_cycle({options = joker_options, w = 4.5, cycle_shoulders = true, opt_callback = 'your_collection_joker_page', current_option = 1, colour = G.C.RED, no_pips = true, focus_args = {snap_to = true, nav = 'wide'}})"
+position = 'after'
+match_indent = true
+payload = ''',
+(SMODS.AltTextures["Joker"] and #SMODS.AltTextures["Joker"].names > 1 and SMODS.GUI.createOptionSelector({
+        w = 4.5,
+        scale = 0.8,
+        options = SMODS.AltTextures["Joker"].names,
+        opt_callback = "update_recolor",
+        current_option = G.SETTINGS.selected_texture["Joker"],
+        type = "Joker"
+})),'''
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''{n=G.UIT.R, config={align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes=deck_tables},'''
+position = 'after'
+match_indent = true
+payload = '''
+(SMODS.AltTextures["Seal"] and #SMODS.AltTextures["Seal"].names > 1 and SMODS.GUI.createOptionSelector({
+        w = 4.5,
+        scale = 0.8,
+        options = SMODS.AltTextures["Seal"].names,
+        opt_callback = "update_recolor",
+        current_option = G.SETTINGS.selected_texture["Seal"],
+        type = "Seal"
+})),'''
