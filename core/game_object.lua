@@ -82,7 +82,9 @@ function loadAPIs()
         SMODS.process_loc_text(G.localization.descriptions[self.set], self.key, self.loc_txt)
     end
 
-    function SMODS.GameObject:injector()
+    -- Inject all direct instances `o` of the class by calling `o:inject()`.
+    -- Also inject anything necessary for the class itself.
+    function SMODS.GameObject:inject_class()
         local o = nil
         for i, key in ipairs(self.obj_buffer) do
             o = self.obj_table[key]
@@ -154,9 +156,10 @@ function loadAPIs()
         return o
     end
 
+    -- Inject all SMODS Objects that are part of this class or a subclass.
     function SMODS.injectObjects(class)
         if class.obj_table and class.obj_buffer then
-            class:injector()
+            class:inject_class()
         else
             for _, subclass in ipairs(class.subclasses) do SMODS.injectObjects(subclass) end
         end
@@ -185,8 +188,8 @@ function loadAPIs()
             end
             G.LANGUAGES[self.key] = self
         end,
-        injector = function(self)
-            SMODS.Language.super.injector(self)
+        inject_class = function(self)
+            SMODS.Language.super.inject_class(self)
             G:set_language()
         end
     }
@@ -200,7 +203,7 @@ function loadAPIs()
         obj_buffer = {},
         silent = true,
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
-        injector = function()
+        inject_class = function()
             SMODS.handle_loc_file(SMODS.path)
             if SMODS.dump_loc then SMODS.dump_loc.pre_inject = copy_table(G.localization) end
             for _, mod in ipairs(SMODS.mod_list) do
@@ -435,10 +438,10 @@ function loadAPIs()
             'loc_txt',
             'applied_stakes'
         },
-        injector = function(self)
+        inject_class = function(self)
             G.P_CENTER_POOLS[self.set] = {}
             G.P_STAKES = {}
-            SMODS.Stake.super.injector(self)
+            SMODS.Stake.super.inject_class(self)
         end,
         inject = function(self)
             if not self.injected then
@@ -1069,7 +1072,7 @@ function loadAPIs()
     SMODS.UndiscoveredSprite = SMODS.GameObject:extend {
         obj_buffer = {},
         obj_table = SMODS.UndiscoveredSprites,
-        injector = function() end,
+        inject_class = function() end,
         omit_prefix = true,
         required_params = {
             'key',
@@ -1551,7 +1554,10 @@ function loadAPIs()
             -- need reverse nominal order to preserve vanilla RNG
             local suit_list = {}
             for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                local suit_key = SMODS.Suit.obj_buffer[i]
+                if not SMODS.Suits[suit_key].disabled then
+                    suit_list[#suit_list + 1] = suit_key
+                end
             end
             local _suit = SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('sigil'))]
             for i = 1, #G.hand.cards do
@@ -1581,7 +1587,13 @@ function loadAPIs()
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _rank = SMODS.Ranks[pseudorandom_element(SMODS.Rank.obj_buffer, pseudoseed('ouija'))]
+            local rank_list = {}
+            for _, rank_key in ipairs(SMODS.Rank.obj_buffer) do
+                if not SMODS.Ranks[rank_key].disabled then
+                    table.insert(rank_list, rank_key)
+                end
+            end
+            local _rank = SMODS.Ranks[pseudorandom_element(rank_list, pseudoseed('ouija'))]
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
@@ -1648,7 +1660,10 @@ function loadAPIs()
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                            local suit_key = SMODS.Suit.obj_buffer[i]
+                            if not SMODS.Suits[suit_key].disabled then
+                                suit_list[#suit_list + 1] = suit_key
+                            end
                         end
                         local _suit, _rank =
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('grim_create'))].card_key, 'A'
@@ -1686,12 +1701,15 @@ function loadAPIs()
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                            local suit_key = SMODS.Suit.obj_buffer[i]
+                            if not SMODS.Suits[suit_key].disabled then
+                                suit_list[#suit_list + 1] = suit_key
+                            end
                         end
                         local faces = {}
                         for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
-                            if r.face then table.insert(faces, r.card_key) end
+                            if not r.disabled and r.face then table.insert(faces, r.card_key) end
                         end
                         local _suit, _rank =
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('familiar_create'))].card_key,
@@ -1730,12 +1748,15 @@ function loadAPIs()
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                            local suit_key = SMODS.Suit.obj_buffer[i]
+                            if not SMODS.Suits[suit_key].disabled then
+                                suit_list[#suit_list + 1] = suit_key
+                            end
                         end
                         local numbers = {}
                         for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
-                            if v ~= 'Ace' and not r.face then table.insert(numbers, r.card_key) end
+                            if not r.disabled and v ~= 'Ace' and not r.face then table.insert(numbers, r.card_key) end
                         end
                         local _suit, _rank =
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('incantation_create'))].card_key,
@@ -1832,7 +1853,7 @@ function loadAPIs()
     SMODS.Challenge = SMODS.GameObject:extend {
         obj_table = SMODS.Challenges,
         obj_buffer = {},
-        get_obj = function(key) 
+        get_obj = function(self, key) 
             for _, v in ipairs(G.CHALLENGES) do
                 if v.id == key then return v end
             end
@@ -1866,33 +1887,31 @@ function loadAPIs()
         inject = function(self) end,
     }
     for k, v in ipairs{
-        'c_omelette_1',
-        'c_city_1',
-        'c_rich_1',
-        'c_knife_1',
-        'c_xray_1',
-        'c_mad_world_1',
-        'c_luxury_1',
-        'c_non_perishable_1',
-        'c_medusa_1',
-        'c_double_nothing_1',
-        'c_typecast_1',
-        'c_inflation_1',
-        'c_bram_poker_1',
-        'c_fragile_1',
-        'c_monolith_1',
-        'c_blast_off_1',
-        'c_five_card_1',
-        'c_golden_needle_1',
-        'c_cruelty_1',
-        'c_jokerless_1',
+        'omelette_1',
+        'city_1',
+        'rich_1',
+        'knife_1',
+        'xray_1',
+        'mad_world_1',
+        'luxury_1',
+        'non_perishable_1',
+        'medusa_1',
+        'double_nothing_1',
+        'typecast_1',
+        'inflation_1',
+        'bram_poker_1',
+        'fragile_1',
+        'monolith_1',
+        'blast_off_1',
+        'five_card_1',
+        'golden_needle_1',
+        'cruelty_1',
+        'jokerless_1',
     } do
         SMODS.Challenge:take_ownership(v, {
-            key = v,
             unlocked = function(self) 
                 return G.PROFILES[G.SETTINGS.profile].challenges_unlocked and (G.PROFILES[G.SETTINGS.profile].challenges_unlocked >= k)
             end,
-            loc_txt = {},
         })
     end
 
