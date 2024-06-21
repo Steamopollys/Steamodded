@@ -2111,13 +2111,13 @@ function loadAPIs()
         obj_buffer = {},
         required_params = {
             'key',
-            'file_name',
+            'path',
         },
         set = 'Shader',
         omit_prefix = true,
         inject = function(self)
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
-                'assets/shaders/' .. self.file_name
+                'assets/shaders/' .. self.path
             local file = NFS.read(self.full_path)
             love.filesystem.write(self.key .. "-temp.fs", file)
             G.SHADERS[self.key] = love.graphics.newShader(self.key .. "-temp.fs")
