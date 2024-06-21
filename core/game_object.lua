@@ -82,7 +82,9 @@ function loadAPIs()
         SMODS.process_loc_text(G.localization.descriptions[self.set], self.key, self.loc_txt)
     end
 
-    function SMODS.GameObject:injector()
+    -- Inject all direct instances `o` of the class by calling `o:inject()`.
+    -- Also inject anything necessary for the class itself.
+    function SMODS.GameObject:inject_class()
         local o = nil
         for i, key in ipairs(self.obj_buffer) do
             o = self.obj_table[key]
@@ -145,8 +147,10 @@ function loadAPIs()
         if o.mod and not o.raw_atlas_key and not o.mod.omit_mod_prefix then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 -- was a new atlas provided with this call?
-                if obj[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then o[v] = ('%s_%s'):format(
-                    SMODS.current_mod.prefix, o[v]) end
+                if obj[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then
+                    o[v] = ('%s_%s'):format(
+                        SMODS.current_mod.prefix, o[v])
+                end
             end
         end
         o.taken_ownership = true
@@ -154,9 +158,10 @@ function loadAPIs()
         return o
     end
 
+    -- Inject all SMODS Objects that are part of this class or a subclass.
     function SMODS.injectObjects(class)
         if class.obj_table and class.obj_buffer then
-            class:injector()
+            class:inject_class()
         else
             for _, subclass in ipairs(class.subclasses) do SMODS.injectObjects(subclass) end
         end
@@ -185,30 +190,24 @@ function loadAPIs()
             end
             G.LANGUAGES[self.key] = self
         end,
-        injector = function(self)
-            SMODS.Language.super.injector(self)
+        inject_class = function(self)
+            SMODS.Language.super.inject_class(self)
             G:set_language()
         end
     }
 
     -------------------------------------------------------------------------------------------------
-    ----- INTERNAL API CODE GameObject._Loc
+    ----- INTERNAL API CODE GameObject._Loc_Pre
     -------------------------------------------------------------------------------------------------
 
-    SMODS._Loc = SMODS.GameObject:extend {
+    SMODS._Loc_Pre = SMODS.GameObject:extend {
         obj_table = {},
         obj_buffer = {},
         silent = true,
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
-        injector = function()
+        inject_class = function()
             SMODS.handle_loc_file(SMODS.path)
             if SMODS.dump_loc then SMODS.dump_loc.pre_inject = copy_table(G.localization) end
-            for _, mod in ipairs(SMODS.mod_list) do
-                if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
-                    mod.process_loc_text()
-                end
-                SMODS.handle_loc_file(mod.path)
-            end
         end
     }
 
@@ -230,7 +229,7 @@ function loadAPIs()
         set = 'Atlas',
         omit_prefix = true,
         register = function(self)
-            if self.registered then 
+            if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
                 return
             end
@@ -262,7 +261,11 @@ function loadAPIs()
                 { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             G[self.atlas_table][self.key_noloc or self.key] = self
         end,
-        process_loc_text = function() end
+        process_loc_text = function() end,
+        inject_class = function(self) 
+            G:set_render_settings() -- restore originals first in case a texture pack was disabled
+            SMODS.Atlas.super.inject_class(self)
+        end
     }
 
     SMODS.Atlas {
@@ -304,7 +307,7 @@ function loadAPIs()
                 else
                     replace, times = self.replace, -1
                 end
-                self.replace_sounds[replace] = { key = self.key, times = times, args = args}
+                self.replace_sounds[replace] = { key = self.key, times = times, args = args }
             end
             SMODS.Sound.super.register(self)
         end,
@@ -319,17 +322,17 @@ function loadAPIs()
                 'assets/sounds/' .. file_path
             --load with a temp file path in case LOVE doesn't like the mod directory
             local file = NFS.read(self.full_path)
-            love.filesystem.write("steamodded-temp-"..file_path, file)
+            love.filesystem.write("steamodded-temp-" .. file_path, file)
             self.sound = love.audio.newSource(
-                "steamodded-temp-"..file_path,
+                "steamodded-temp-" .. file_path,
                 ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
             )
-            love.filesystem.remove("steamodded-temp-"..file_path)
+            love.filesystem.remove("steamodded-temp-" .. file_path)
         end,
         register_global = function(self)
             local mod = SMODS.current_mod
             if not mod then return end
-            for _, filename in ipairs(NFS.getDirectoryItems(mod.path ..'assets/sounds/')) do
+            for _, filename in ipairs(NFS.getDirectoryItems(mod.path .. 'assets/sounds/')) do
                 local extension = string.sub(filename, -4)
                 if extension == '.ogg' or extension == '.mp3' or extension == '.wav' then -- please use .ogg or .wav files
                     local sound_code = string.sub(filename, 1, -5)
@@ -432,13 +435,12 @@ function loadAPIs()
         required_params = {
             'key',
             'pos',
-            'loc_txt',
             'applied_stakes'
         },
-        injector = function(self)
+        inject_class = function(self)
             G.P_CENTER_POOLS[self.set] = {}
             G.P_STAKES = {}
-            SMODS.Stake.super.injector(self)
+            SMODS.Stake.super.inject_class(self)
         end,
         inject = function(self)
             if not self.injected then
@@ -480,26 +482,27 @@ function loadAPIs()
         end,
         process_loc_text = function(self)
             -- empty loc_txt indicates there are existing values that shouldn't be changed or it isn't necessary
-            if not next(self.loc_txt) then return end
+            if not self.loc_txt or not next(self.loc_txt) then return end
             local target = self.loc_txt[G.SETTINGS.language] or self.loc_txt['default'] or self.loc_txt['en-us'] or
-            self.loc_txt
+                self.loc_txt
             local applied_text = "{s:0.8}" .. localize('b_applies_stakes_1')
             local any_applied
             for _, v in pairs(self.applied_stakes) do
                 any_applied = true
                 applied_text = applied_text ..
-                localize{ set = self.set, key = self.prefix .. '_' .. v, type = 'name_text'} .. ', '
+                    localize { set = self.set, key = self.prefix .. '_' .. v, type = 'name_text' } .. ', '
             end
             applied_text = applied_text:sub(1, -3)
             if not any_applied then
                 applied_text = "{s:0.8}"
             else
-                applied_text = applied_text..localize('b_applies_stakes_2')
+                applied_text = applied_text .. localize('b_applies_stakes_2')
             end
             local desc_target = copy_table(target.description)
             table.insert(desc_target.text, applied_text)
             G.localization.descriptions[self.set][self.key] = desc_target
-            SMODS.process_loc_text(G.localization.descriptions["Other"], self.key:sub(7) .. "_sticker", self.loc_txt, 'sticker')
+            SMODS.process_loc_text(G.localization.descriptions["Other"], self.key:sub(7) .. "_sticker", self.loc_txt,
+                'sticker')
         end,
         get_obj = function(self, key) return G.P_STAKES[key] end
     }
@@ -642,7 +645,6 @@ function loadAPIs()
             'key',
             'primary_colour',
             'secondary_colour',
-            'loc_txt'
         },
         omit_prefix = true,
         collection_rows = { 6, 6 },
@@ -688,7 +690,7 @@ function loadAPIs()
             end
 
             INIT_COLLECTION_CARD_ALERTS()
-            local option_nodes = {create_option_cycle({
+            local option_nodes = { create_option_cycle({
                 options = center_options,
                 w = 4.5,
                 cycle_shoulders = true,
@@ -697,7 +699,7 @@ function loadAPIs()
                 current_option = 1,
                 colour = G.C.RED,
                 no_pips = true
-            })}
+            }) }
             if SMODS.Palettes[self.key] and #SMODS.Palettes[self.key].names > 1 then
                 option_nodes[#option_nodes + 1] = create_option_cycle({
                     w = 4.5,
@@ -706,13 +708,13 @@ function loadAPIs()
                     opt_callback = "update_recolor",
                     current_option = G.SETTINGS.selected_colours[self.key].order,
                     type = self.key
-            })
+                })
             end
             local t = create_UIBox_generic_options({
                 back_func = 'your_collection',
                 contents = {
                     { n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables },
-                    { n = G.UIT.R, config = { align = "cm", padding = 0 }, nodes = option_nodes },
+                    { n = G.UIT.R, config = { align = "cm", padding = 0 },                                                           nodes = option_nodes },
                 }
             })
             return t
@@ -790,18 +792,19 @@ function loadAPIs()
         generate_colours = function(self, base_colour, alternate_colour)
             if not self.colour_shifter then return HEX("000000") end
             local colours = {}
-            for i=1,#self.colour_shifter do
+            for i = 1, #self.colour_shifter do
                 local new_colour = {}
-                for j=1,4 do
-                    table.insert(new_colour, math.max(0, math.min(1, base_colour[j]+self.colour_shifter[i][j])))
+                for j = 1, 4 do
+                    table.insert(new_colour, math.max(0, math.min(1, base_colour[j] + self.colour_shifter[i][j])))
                 end
                 table.insert(colours, HSL_RGB(new_colour))
             end
             if self.colour_shifter_alt then
-                for i=1,#self.colour_shifter_alt do
+                for i = 1, #self.colour_shifter_alt do
                     local new_colour = {}
-                    for j=1,4 do
-                        table.insert(new_colour, math.max(0, math.min(1, alternate_colour[j]+self.colour_shifter_alt[i][j])))
+                    for j = 1, 4 do
+                        table.insert(new_colour,
+                            math.max(0, math.min(1, alternate_colour[j] + self.colour_shifter_alt[i][j])))
                     end
                     table.insert(colours, HSL_RGB(new_colour))
                 end
@@ -824,7 +827,7 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
-        colour_shifter = {{0, -0.06, -0.60, 0}, {0, 0.30, -0.35, 0}, {0, 0.20, -0.15, 0}, {0, 0, 0, 0}, {0, -0.50, 0.20, 0}}
+        colour_shifter = { { 0, -0.06, -0.60, 0 }, { 0, 0.30, -0.35, 0 }, { 0, 0.20, -0.15, 0 }, { 0, 0, 0, 0 }, { 0, -0.50, 0.20, 0 } }
     }
     SMODS.ConsumableType {
         key = 'Planet',
@@ -840,7 +843,7 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
-        colour_shifter = {{0,-0.23,-0.26,0}, {0,0,0,0}, {0, -0.10, 0.16, 0}, {0.04, -0.35, 0.42, 0}, {-1, -1, 1, 0}}
+        colour_shifter = { { 0, -0.23, -0.26, 0 }, { 0, 0, 0, 0 }, { 0, -0.10, 0.16, 0 }, { 0.04, -0.35, 0.42, 0 }, { -1, -1, 1, 0 } }
     }
     SMODS.ConsumableType {
         key = 'Spectral',
@@ -848,8 +851,8 @@ function loadAPIs()
         primary_colour = G.C.SET.Spectral,
         secondary_colour = G.C.SECONDARY_SET.Spectral,
         loc_txt = {},
-        colour_shifter = {{-0.3,-0.48,-0.61,0}, {-0.3,-0.49,-0.48,0},{0,-0.46,-0.05,0},{-0.02,-0.3,-0.085,0},{0.08,-0.21,-0.4,0},{0,-0.03,-0.24,0},{0,-0.22,-0.31,0},{0,-0.19,-0.29,0},{0,-0.21,-0.28,0},{0,-0.04,-0.125,0},{0,0,0,0},{0,-0.07,0.07,0},{0,-0.1,0.05,0},{0,-0.28,0.12,0},{0,-0.4,0,0},{-0.03,-0.47,0.1,0}},
-        colour_shifter_alt = {{-0.015,-0.32,-0.24,0}, {0,-0.22,-0.22,0}, {0,-0.24,-0.13,0}, {0,-0.17,0.13,0}, {0,-0.03,0.08,0}, {0,0,0,0}}
+        colour_shifter = { { -0.3, -0.48, -0.61, 0 }, { -0.3, -0.49, -0.48, 0 }, { 0, -0.46, -0.05, 0 }, { -0.02, -0.3, -0.085, 0 }, { 0.08, -0.21, -0.4, 0 }, { 0, -0.03, -0.24, 0 }, { 0, -0.22, -0.31, 0 }, { 0, -0.19, -0.29, 0 }, { 0, -0.21, -0.28, 0 }, { 0, -0.04, -0.125, 0 }, { 0, 0, 0, 0 }, { 0, -0.07, 0.07, 0 }, { 0, -0.1, 0.05, 0 }, { 0, -0.28, 0.12, 0 }, { 0, -0.4, 0, 0 }, { -0.03, -0.47, 0.1, 0 } },
+        colour_shifter_alt = { { -0.015, -0.32, -0.24, 0 }, { 0, -0.22, -0.22, 0 }, { 0, -0.24, -0.13, 0 }, { 0, -0.17, 0.13, 0 }, { 0, -0.03, 0.08, 0 }, { 0, 0, 0, 0 } }
     }
 
     local game_init_game_object_ref = Game.init_game_object
@@ -888,8 +891,14 @@ function loadAPIs()
             return true
         end,
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
-            local target = { type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars =
-            specific_vars or {} }
+            local target = {
+                type = 'descriptions',
+                key = self.key,
+                set = self.set,
+                nodes = desc_nodes,
+                vars =
+                    specific_vars or {}
+            }
             local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
                 res = self:loc_vars(info_queue, card) or {}
@@ -900,7 +909,8 @@ function loadAPIs()
                 full_UI_table.name = localize { type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name }
             end
             if specific_vars and specific_vars.debuffed and not res.replace_debuff then
-                target = {type = 'other', key = 'debuffed_'..(specific_vars.playing_card and 'playing_card' or 'default'), nodes = desc_nodes}
+                target = { type = 'other', key = 'debuffed_' ..
+                (specific_vars.playing_card and 'playing_card' or 'default'), nodes = desc_nodes }
             end
             if res.main_start then
                 desc_nodes[#desc_nodes + 1] = res.main_start
@@ -931,7 +941,6 @@ function loadAPIs()
         prefix = 'j',
         required_params = {
             'key',
-            'loc_txt'
         },
         inject = function(self)
             -- call the parent function to ensure all pools are set
@@ -962,7 +971,6 @@ function loadAPIs()
         required_params = {
             'set',
             'key',
-            'loc_txt'
         },
         inject = function(self)
             SMODS.Center.inject(self)
@@ -1019,7 +1027,6 @@ function loadAPIs()
         prefix = 'v',
         required_params = {
             'key',
-            'loc_txt',
         }
     }
 
@@ -1038,7 +1045,6 @@ function loadAPIs()
         prefix = 'b',
         required_params = {
             'key',
-            'loc_txt'
         },
         register = function(self)
             -- game expects a name, so ensure it's set
@@ -1069,7 +1075,7 @@ function loadAPIs()
     SMODS.UndiscoveredSprite = SMODS.GameObject:extend {
         obj_buffer = {},
         obj_table = SMODS.UndiscoveredSprites,
-        injector = function() end,
+        inject_class = function() end,
         omit_prefix = true,
         required_params = {
             'key',
@@ -1103,7 +1109,6 @@ function loadAPIs()
         pos = { x = 0, y = 0 },
         required_params = {
             'key',
-            'loc_txt',
         },
         set = 'Blind',
         get_obj = function(self, key) return G.P_BLINDS[key] end,
@@ -1143,7 +1148,6 @@ function loadAPIs()
         required_params = {
             'key',
             'pos',
-            'loc_txt'
         },
         inject = function(self)
             G.P_SEALS[self.key] = self
@@ -1195,7 +1199,6 @@ function loadAPIs()
             'key',
             'pos',
             'ui_pos',
-            'loc_txt'
         },
         hc_atlas = 'cards_2',
         lc_atlas = 'cards_1',
@@ -1269,9 +1272,9 @@ function loadAPIs()
         end,
         process_loc_text = function(self)
             -- empty loc_txt indicates there are existing values that shouldn't be changed
-            if next(self.loc_txt) then
-                SMODS.process_loc_text(G.localization.misc.suits_plural, self.key, self.loc_txt, 'plural')
-                SMODS.process_loc_text(G.localization.misc.suits_singular, self.key, self.loc_txt, 'singular')
+            SMODS.process_loc_text(G.localization.misc.suits_plural, self.key, self.loc_txt, 'plural')
+            SMODS.process_loc_text(G.localization.misc.suits_singular, self.key, self.loc_txt, 'singular')
+            if not self.keep_base_colours then
                 if type(self.lc_colour) == 'string' then self.lc_colour = HEX(self.lc_colour) end
                 if type(self.hc_colour) == 'string' then self.hc_colour = HEX(self.hc_colour) end
                 G.C.SO_1[self.key] = self.lc_colour
@@ -1285,28 +1288,28 @@ function loadAPIs()
         card_key = 'D',
         pos = { y = 2 },
         ui_pos = { x = 1, y = 1 },
-        loc_txt = {},
+        keep_base_colours = true,
     }
     SMODS.Suit {
         key = 'Clubs',
         card_key = 'C',
         pos = { y = 1 },
         ui_pos = { x = 2, y = 1 },
-        loc_txt = {},
+        keep_base_colours = true,
     }
     SMODS.Suit {
         key = 'Hearts',
         card_key = 'H',
         pos = { y = 0 },
         ui_pos = { x = 0, y = 1 },
-        loc_txt = {},
+        keep_base_colours = true,
     }
     SMODS.Suit {
         key = 'Spades',
         card_key = 'S',
         pos = { y = 3 },
         ui_pos = { x = 3, y = 1 },
-        loc_txt = {},
+        keep_base_colours = true,
     }
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Rank
@@ -1321,7 +1324,6 @@ function loadAPIs()
         required_params = {
             'key',
             'pos',
-            'loc_txt',
             'nominal',
         },
         hc_atlas = 'cards_2',
@@ -1396,7 +1398,6 @@ function loadAPIs()
             pos = { x = v - 2 },
             nominal = v,
             next = { (v + 1) .. '' },
-            loc_txt = {},
         }
     end
     SMODS.Rank {
@@ -1405,7 +1406,6 @@ function loadAPIs()
         pos = { x = 8 },
         nominal = 10,
         next = { 'Jack' },
-        loc_txt = {},
     }
     SMODS.Rank {
         key = 'Jack',
@@ -1416,7 +1416,6 @@ function loadAPIs()
         face = true,
         shorthand = 'J',
         next = { 'Queen' },
-        loc_txt = {},
     }
     SMODS.Rank {
         key = 'Queen',
@@ -1427,7 +1426,6 @@ function loadAPIs()
         face = true,
         shorthand = 'Q',
         next = { 'King' },
-        loc_txt = {},
     }
     SMODS.Rank {
         key = 'King',
@@ -1438,7 +1436,6 @@ function loadAPIs()
         face = true,
         shorthand = 'K',
         next = { 'Ace' },
-        loc_txt = {},
     }
     SMODS.Rank {
         key = 'Ace',
@@ -1449,7 +1446,6 @@ function loadAPIs()
         shorthand = 'A',
         straight_edge = true,
         next = { '2' },
-        loc_txt = {},
     }
     -- make consumable effects compatible with added suits
     local function juice_flip(used_tarot)
@@ -1551,7 +1547,10 @@ function loadAPIs()
             -- need reverse nominal order to preserve vanilla RNG
             local suit_list = {}
             for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                local suit_key = SMODS.Suit.obj_buffer[i]
+                if not SMODS.Suits[suit_key].disabled then
+                    suit_list[#suit_list + 1] = suit_key
+                end
             end
             local _suit = SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('sigil'))]
             for i = 1, #G.hand.cards do
@@ -1581,7 +1580,13 @@ function loadAPIs()
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _rank = SMODS.Ranks[pseudorandom_element(SMODS.Rank.obj_buffer, pseudoseed('ouija'))]
+            local rank_list = {}
+            for _, rank_key in ipairs(SMODS.Rank.obj_buffer) do
+                if not SMODS.Ranks[rank_key].disabled then
+                    table.insert(rank_list, rank_key)
+                end
+            end
+            local _rank = SMODS.Ranks[pseudorandom_element(rank_list, pseudoseed('ouija'))]
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
@@ -1648,7 +1653,10 @@ function loadAPIs()
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                            local suit_key = SMODS.Suit.obj_buffer[i]
+                            if not SMODS.Suits[suit_key].disabled then
+                                suit_list[#suit_list + 1] = suit_key
+                            end
                         end
                         local _suit, _rank =
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('grim_create'))].card_key, 'A'
@@ -1686,12 +1694,15 @@ function loadAPIs()
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                            local suit_key = SMODS.Suit.obj_buffer[i]
+                            if not SMODS.Suits[suit_key].disabled then
+                                suit_list[#suit_list + 1] = suit_key
+                            end
                         end
                         local faces = {}
                         for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
-                            if r.face then table.insert(faces, r.card_key) end
+                            if not r.disabled and r.face then table.insert(faces, r.card_key) end
                         end
                         local _suit, _rank =
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('familiar_create'))].card_key,
@@ -1730,12 +1741,15 @@ function loadAPIs()
                         cards[i] = true
                         local suit_list = {}
                         for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            suit_list[#suit_list + 1] = SMODS.Suit.obj_buffer[i]
+                            local suit_key = SMODS.Suit.obj_buffer[i]
+                            if not SMODS.Suits[suit_key].disabled then
+                                suit_list[#suit_list + 1] = suit_key
+                            end
                         end
                         local numbers = {}
                         for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
-                            if v ~= 'Ace' and not r.face then table.insert(numbers, r.card_key) end
+                            if not r.disabled and v ~= 'Ace' and not r.face then table.insert(numbers, r.card_key) end
                         end
                         local _suit, _rank =
                             SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('incantation_create'))].card_key,
@@ -1788,7 +1802,6 @@ function loadAPIs()
             'l_mult',
             'l_chips',
             'example',
-            'loc_txt'
         },
         order_lookup = {},
         visible = true,
@@ -1832,14 +1845,13 @@ function loadAPIs()
     SMODS.Challenge = SMODS.GameObject:extend {
         obj_table = SMODS.Challenges,
         obj_buffer = {},
-        get_obj = function(key) 
+        get_obj = function(self, key)
             for _, v in ipairs(G.CHALLENGES) do
                 if v.id == key then return v end
             end
         end,
         set = "Challenge",
         required_params = {
-            'loc_txt',
             'key',
         },
         deck = { type = "Challenge Deck" },
@@ -1854,7 +1866,7 @@ function loadAPIs()
             SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.loc_txt)
         end,
         register = function(self)
-            if self.registered then 
+            if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
                 return
             end
@@ -1865,34 +1877,33 @@ function loadAPIs()
         end,
         inject = function(self) end,
     }
-    for k, v in ipairs{
-        'c_omelette_1',
-        'c_city_1',
-        'c_rich_1',
-        'c_knife_1',
-        'c_xray_1',
-        'c_mad_world_1',
-        'c_luxury_1',
-        'c_non_perishable_1',
-        'c_medusa_1',
-        'c_double_nothing_1',
-        'c_typecast_1',
-        'c_inflation_1',
-        'c_bram_poker_1',
-        'c_fragile_1',
-        'c_monolith_1',
-        'c_blast_off_1',
-        'c_five_card_1',
-        'c_golden_needle_1',
-        'c_cruelty_1',
-        'c_jokerless_1',
+    for k, v in ipairs {
+        'omelette_1',
+        'city_1',
+        'rich_1',
+        'knife_1',
+        'xray_1',
+        'mad_world_1',
+        'luxury_1',
+        'non_perishable_1',
+        'medusa_1',
+        'double_nothing_1',
+        'typecast_1',
+        'inflation_1',
+        'bram_poker_1',
+        'fragile_1',
+        'monolith_1',
+        'blast_off_1',
+        'five_card_1',
+        'golden_needle_1',
+        'cruelty_1',
+        'jokerless_1',
     } do
         SMODS.Challenge:take_ownership(v, {
-            key = v,
-            unlocked = function(self) 
-                return G.PROFILES[G.SETTINGS.profile].challenges_unlocked and (G.PROFILES[G.SETTINGS.profile].challenges_unlocked >= k)
+            unlocked = function(self)
+                return G.PROFILES[G.SETTINGS.profile].challenges_unlocked and
+                (G.PROFILES[G.SETTINGS.profile].challenges_unlocked >= k)
             end,
-            loc_txt = {},
         })
     end
 
@@ -1906,7 +1917,6 @@ function loadAPIs()
         obj_buffer = {},
         required_params = {
             'key',
-            'loc_txt'
         },
         discovered = false,
         min_ante = nil,
@@ -1924,8 +1934,14 @@ function loadAPIs()
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
         end,
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
-            local target = { type = 'descriptions', key = self.key, set = self.set, nodes = desc_nodes, vars =
-            specific_vars }
+            local target = {
+                type = 'descriptions',
+                key = self.key,
+                set = self.set,
+                nodes = desc_nodes,
+                vars =
+                    specific_vars
+            }
             local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
                 -- card is a dead arg here
@@ -1933,7 +1949,7 @@ function loadAPIs()
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
-            full_UI_table.name = localize{type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name}
+            full_UI_table.name = localize { type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name }
             if res.main_start then
                 desc_nodes[#desc_nodes + 1] = res.main_start
             end
@@ -1955,7 +1971,6 @@ function loadAPIs()
         set = 'Sticker',
         required_params = {
             'key',
-            'loc_txt'
         },
         prefix = 'st',
         rate = 0.3,
@@ -1991,7 +2006,7 @@ function loadAPIs()
         },
         config = {},
         above_dot_bar = false,
-        symbol_config = {character = '$', color = G.C.MONEY, needs_localize = true},
+        symbol_config = { character = '$', color = G.C.MONEY, needs_localize = true },
         custom_message_config = { message = nil, color = nil, scale = nil },
         inject = function() end,
     }
@@ -2008,7 +2023,6 @@ function loadAPIs()
         required_params = {
             'key',
             -- table with keys `name` and `text`
-            'loc_txt'
         },
         -- other fields:
         -- replace_base_card
@@ -2040,14 +2054,14 @@ function loadAPIs()
         -- You will probably want to override this if your enhancement interacts with
         -- those parts of the base card.
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
-            if specific_vars.nominal_chips and not self.replace_base_card then 
-                localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
+            if specific_vars.nominal_chips and not self.replace_base_card then
+                localize { type = 'other', key = 'card_chips', nodes = desc_nodes, vars = { specific_vars.nominal_chips } }
             end
             SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars.bonus_chips then
                 local remaining_bonus_chips = specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)
                 if remaining_bonus_chips > 0 then
-                    localize{type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = {specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)}}
+                    localize { type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = { specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0) } }
                 end
             end
         end,
@@ -2103,15 +2117,15 @@ function loadAPIs()
         omit_prefix = true,
         inject = function(self)
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
-            'assets/shaders/' .. self.file_name
+                'assets/shaders/' .. self.file_name
             local file = NFS.read(self.full_path)
-            love.filesystem.write(self.key.."-temp.fs", file)
-            G.SHADERS[self.key] = love.graphics.newShader(self.key.."-temp.fs")
-            love.filesystem.remove(self.key.."-temp.fs")
+            love.filesystem.write(self.key .. "-temp.fs", file)
+            G.SHADERS[self.key] = love.graphics.newShader(self.key .. "-temp.fs")
+            love.filesystem.remove(self.key .. "-temp.fs")
             -- G.SHADERS[self.key] = love.graphics.newShader(self.full_path)
         end,
         register = function(self)
-            if self.registered then 
+            if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
                 return
             end
@@ -2144,7 +2158,6 @@ function loadAPIs()
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         required_params = {
             'key',
-            'loc_txt',
             'shader'
         },
         -- other fields:
@@ -2181,7 +2194,7 @@ function loadAPIs()
         return cards
     end
 
-    SMODS.Edition:take_ownership('foil',{
+    SMODS.Edition:take_ownership('foil', {
         shader = 'foil',
         config = setmetatable({ chips = 50 }, {
             __index = function(t, k)
@@ -2189,7 +2202,9 @@ function loadAPIs()
                 return rawget(t, k)
             end,
             __newindex = function(t, k, v)
-                if k == 'extra' then t.chips = v; return end
+                if k == 'extra' then
+                    t.chips = v; return
+                end
                 rawset(t, k, v)
             end,
         }),
@@ -2197,7 +2212,7 @@ function loadAPIs()
         weight = 20,
         extra_cost = 2,
         get_weight = function(self)
-            return G.GAME.edition_rate*self.weight
+            return G.GAME.edition_rate * self.weight
         end,
         loc_vars = function(self)
             return { vars = { self.config.chips } }
@@ -2211,15 +2226,17 @@ function loadAPIs()
                 return rawget(t, k)
             end,
             __newindex = function(t, k, v)
-                if k == 'extra' then t.mult = v; return end
+                if k == 'extra' then
+                    t.mult = v; return
+                end
                 rawset(t, k, v)
             end,
         }),
-        sound = { sound = "holo1", per = 1.2*1.58, vol = 0.4 },
+        sound = { sound = "holo1", per = 1.2 * 1.58, vol = 0.4 },
         weight = 14,
         extra_cost = 3,
         get_weight = function(self)
-            return G.GAME.edition_rate*self.weight
+            return G.GAME.edition_rate * self.weight
         end,
         loc_vars = function(self)
             return { vars = { self.config.mult } }
@@ -2233,7 +2250,9 @@ function loadAPIs()
                 return rawget(t, k)
             end,
             __newindex = function(t, k, v)
-                if k == 'extra' then t.x_mult = v; return end
+                if k == 'extra' then
+                    t.x_mult = v; return
+                end
                 rawset(t, k, v)
             end,
         }),
@@ -2241,7 +2260,7 @@ function loadAPIs()
         weight = 3,
         extra_cost = 5,
         get_weight = function(self)
-            return (G.GAME.edition_rate - 1)*G.P_CENTERS["e_negative"].weight + G.GAME.edition_rate*self.weight 
+            return (G.GAME.edition_rate - 1) * G.P_CENTERS["e_negative"].weight + G.GAME.edition_rate * self.weight
         end,
         loc_vars = function(self)
             return { vars = { self.config.x_mult } }
@@ -2255,7 +2274,9 @@ function loadAPIs()
                 return rawget(t, k)
             end,
             __newindex = function(t, k, v)
-                if k == 'extra' then t.card_limit = v; return end
+                if k == 'extra' then
+                    t.card_limit = v; return
+                end
                 rawset(t, k, v)
             end,
         }),
@@ -2273,9 +2294,9 @@ function loadAPIs()
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Palette
     -------------------------------------------------------------------------------------------------
-        
+
     SMODS.local_palettes = {}
-    SMODS.Palettes = {Types = {}}
+    SMODS.Palettes = { Types = {} }
     SMODS.Palette = SMODS.GameObject:extend {
         obj_table = SMODS.local_palettes,
         obj_buffer = {},
@@ -2292,11 +2313,12 @@ function loadAPIs()
             if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suits" then return end
             if not SMODS.Palettes[self.type] then
                 table.insert(SMODS.Palettes.Types, self.type)
-                SMODS.Palettes[self.type] = {names = {}}
+                SMODS.Palettes[self.type] = { names = {} }
                 if self.name ~= "Default" then SMODS.Palette:create_default(self.type) end
-                G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or SMODS.Palettes[self.type]["Default"]
+                G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or
+                SMODS.Palettes[self.type]["Default"]
             end
-            if SMODS.Palettes[self.type][self.name] then 
+            if SMODS.Palettes[self.type][self.name] then
                 G.FUNCS.update_atlas(self.type)
                 return
             end
@@ -2308,9 +2330,11 @@ function loadAPIs()
                 new_colours = {}
             }
             if self.old_colours then
-                for i=1, #self.old_colours do
-                    SMODS.Palettes[self.type][self.name].old_colours[i] = type(self.old_colours[i]) == "string" and HEX(self.old_colours[i]) or self.old_colours[i]
-                    SMODS.Palettes[self.type][self.name].new_colours[i] = type(self.new_colours[i]) == "string" and HEX(self.new_colours[i]) or self.new_colours[i]
+                for i = 1, #self.old_colours do
+                    SMODS.Palettes[self.type][self.name].old_colours[i] = type(self.old_colours[i]) == "string" and
+                    HEX(self.old_colours[i]) or self.old_colours[i]
+                    SMODS.Palettes[self.type][self.name].new_colours[i] = type(self.new_colours[i]) == "string" and
+                    HEX(self.new_colours[i]) or self.new_colours[i]
                 end
             end
             if not G.SETTINGS.selected_colours[self.type] then
@@ -2335,60 +2359,62 @@ function loadAPIs()
 
     function SMODS.Palette:create_atlas(type, name)
         local atlas_keys = {}
-            if type == "Suits" then
-                atlas_keys = {"cards_1", "ui_1"}
-            else
-                for _,v in pairs(G.P_CENTER_POOLS[type]) do
-                    atlas_keys[v.atlas or type] = v.atlas or type
-                end
+        if type == "Suits" then
+            atlas_keys = { "cards_1", "ui_1" }
+        else
+            for _, v in pairs(G.P_CENTER_POOLS[type]) do
+                atlas_keys[v.atlas or type] = v.atlas or type
             end
-            G.PALETTE.NEW = SMODS.Palettes[type][name]
-            for _,v in pairs(atlas_keys) do
-                G.ASSET_ATLAS[v][name] = {image_data = G.ASSET_ATLAS[v].image_data:clone()}
-                G.ASSET_ATLAS[v][name].image_data:mapPixel(G.FUNCS.recolour_image)
-                G.ASSET_ATLAS[v][name].image = love.graphics.newImage(G.ASSET_ATLAS[v][name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
-            end
+        end
+        G.PALETTE.NEW = SMODS.Palettes[type][name]
+        for _, v in pairs(atlas_keys) do
+            G.ASSET_ATLAS[v][name] = { image_data = G.ASSET_ATLAS[v].image_data:clone() }
+            G.ASSET_ATLAS[v][name].image_data:mapPixel(G.FUNCS.recolour_image)
+            G.ASSET_ATLAS[v][name].image = love.graphics.newImage(G.ASSET_ATLAS[v][name].image_data,
+                { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
+        end
     end
 
     function SMODS.Palette:create_colours(type, base_colour, alternate_colour)
         if SMODS.ConsumableTypes[type].generate_colours then
-            return SMODS.ConsumableTypes[type]:generate_colours(HEX_HSL(base_colour), alternate_colour and HEX_HSL(alternate_colour))
+            return SMODS.ConsumableTypes[type]:generate_colours(HEX_HSL(base_colour),
+                alternate_colour and HEX_HSL(alternate_colour))
         end
-        return {HEX(base_colour)}
-    end 
-
-    
-
-    for k,v in pairs(G.P_CENTER_POOLS.Tarot) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Tarot"})
+        return { HEX(base_colour) }
     end
-    for _,v in pairs(G.P_CENTER_POOLS.Planet) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Planet"})
+
+    for k, v in pairs(G.P_CENTER_POOLS.Tarot) do
+        SMODS.Consumable:take_ownership(v.key, { atlas = "Tarot" })
     end
-    for _,v in pairs(G.P_CENTER_POOLS.Spectral) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Spectral"})
+    for _, v in pairs(G.P_CENTER_POOLS.Planet) do
+        SMODS.Consumable:take_ownership(v.key, { atlas = "Planet" })
+    end
+    for _, v in pairs(G.P_CENTER_POOLS.Spectral) do
+        SMODS.Consumable:take_ownership(v.key, { atlas = "Spectral" })
     end
     SMODS.Atlas({
         key = "Planet",
-        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Tarots.png",
+        path = "resources/textures/" .. G.SETTINGS.GRAPHICS.texture_scaling .. "x/Tarots.png",
         px = 71,
         py = 95,
         inject = function(self)
             self.image_data = love.image.newImageData(self.path)
-            self.image = love.graphics.newImage(self.image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+            self.image = love.graphics.newImage(self.image_data,
+                { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             G[self.atlas_table][self.key_noloc or self.key] = self
-          end
+        end
     })
     SMODS.Atlas({
         key = "Spectral",
-        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Tarots.png",
+        path = "resources/textures/" .. G.SETTINGS.GRAPHICS.texture_scaling .. "x/Tarots.png",
         px = 71,
         py = 95,
         inject = function(self)
             self.image_data = love.image.newImageData(self.path)
-            self.image = love.graphics.newImage(self.image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+            self.image = love.graphics.newImage(self.image_data,
+                { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             G[self.atlas_table][self.key_noloc or self.key] = self
-          end
+        end
     })
     -- Default palettes defined for base game consumable types
     SMODS.Palette({
@@ -2414,18 +2440,36 @@ function loadAPIs()
     })
     SMODS.Palette({
         key = "base_cards",
-        old_colours = {"235955","3c4368","f06b3f","f03464"},
-        new_colours = {"235955","3c4368","f06b3f","f03464"},
+        old_colours = { "235955", "3c4368", "f06b3f", "f03464" },
+        new_colours = { "235955", "3c4368", "f06b3f", "f03464" },
         type = "Suits",
         name = "Default"
     })
     SMODS.Palette({
         key = "high_contrast_cards",
-        old_colours = {"235955","3c4368","f06b3f","f03464"},
-        new_colours = {"008ee6","3c4368","e29000","f83b2f"},
+        old_colours = { "235955", "3c4368", "f06b3f", "f03464" },
+        new_colours = { "008ee6", "3c4368", "e29000", "f83b2f" },
         type = "Suits",
         name = "High Contrast"
     })
 
+    
+    -------------------------------------------------------------------------------------------------
+    ----- INTERNAL API CODE GameObject._Loc_Post
+    -------------------------------------------------------------------------------------------------
 
+    SMODS._Loc_Post = SMODS.GameObject:extend {
+        obj_table = {},
+        obj_buffer = {},
+        silent = true,
+        register = function() error('INTERNAL CLASS, DO NOT CALL') end,
+        inject_class = function()
+            for _, mod in ipairs(SMODS.mod_list) do
+                if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
+                    mod.process_loc_text()
+                end
+                SMODS.handle_loc_file(mod.path)
+            end
+        end
+    }
 end

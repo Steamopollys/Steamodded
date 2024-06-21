@@ -36,8 +36,9 @@ else
         :gsub("/$", "")
 end
 if library_load_fail then
-    sendDebugMessage(("Libraries can be loaded from\n%s"):format(
-        love.filesystem.getSaveDirectory()
+    sendDebugMessage(("Libraries can be loaded from \n%s or %s"):format(
+        love.filesystem.getSaveDirectory(),
+        love.filesystem.getSourceBaseDirectory()
     ))
 end
 function set_mods_dir()
@@ -46,21 +47,34 @@ function set_mods_dir()
         SMODS.MODS_DIR = "Mods"
         return
     end
-    local save_dir = love.filesystem.getSaveDirectory()
-    if lovely_mod_dir:sub(1, #save_dir) == save_dir then
-        -- relative path from save_dir
-        SMODS.MODS_DIR = lovely_mod_dir:sub(#save_dir+2)
-        return
+    local love_dirs = {
+        love.filesystem.getSaveDirectory(),
+        love.filesystem.getSourceBaseDirectory()
+    }
+    for _, love_dir in ipairs(love_dirs) do
+        if lovely_mod_dir:sub(1, #love_dir) == love_dir then
+            -- relative path from love_dir
+            SMODS.MODS_DIR = lovely_mod_dir:sub(#love_dir+2)
+            if nfs_success then
+                -- make sure NFS behaves the same as love.filesystem.
+                -- not perfect: NFS won't read from both getSaveDirectory()
+                -- and getSourceBaseDirectory()
+                NFS.setWorkingDirectory(love_dir)
+            end
+            return
+        end
     end
     if nfs_success then
         -- allow arbitrary MODS_DIR
         SMODS.MODS_DIR = lovely_mod_dir
         return
     end
-    assert(false, 
-        "nativefs not loaded and lovely --mod-dir was not in the save directory!\n"
-        ..("save dir: %s, lovely mod dir: %s\n"):format(save_dir, lovely_mod_dir)
-        .."cannot read lovely --mod-dir, exiting")
+    SMODS.MODS_DIR = "Mods"
+    sendWarnMessage(
+        "nativefs not loaded and lovely --mod-dir was not accessible by love2D!\n"
+        ..("possible love2D dirs: %s,\nlovely mod dir: %s\n"):format(inspect(love_dirs), lovely_mod_dir)
+        .."setting Steamodded mod directory to 'Mods'"
+    )
 end
 set_mods_dir()
 

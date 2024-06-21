@@ -18,7 +18,8 @@ position = "append"
 sources = [
 	"core/core.lua",
 	"core/StackTracePlus.lua",
-	"core/api_hooks.lua",
+	"core/utils.lua",
+	"core/overrides.lua",
 	"core/game_object.lua",
 	"debug/debug.lua",
 	"core/compat_0_9_8.lua",

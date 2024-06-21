@@ -5,97 +5,29 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0617b-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0621c-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
 	if chunk then
-	  setfenv(chunk, {})  -- Use an empty environment to prevent access to potentially harmful functions
-	  local success, result = pcall(chunk)
-	  if success then
-		return result
-	  else
-		print("Error unpacking string: " .. result)
-		return nil
-	  end
-	else
-	  print("Error loading string: " .. err)
-	  return nil
-	end
-  end
-
-
-
-function inspect(table)
-	if type(table) ~= 'table' then
-		return "Not a table"
-	end
-
-	local str = ""
-	for k, v in pairs(table) do
-		local valueStr = type(v) == "table" and "table" or tostring(v)
-		str = str .. tostring(k) .. ": " .. valueStr .. "\n"
-	end
-
-	return str
-end
-
-function inspectDepth(table, indent, depth)
-	if depth and depth > 5 then  -- Limit the depth to avoid deep nesting
-		return "Depth limit reached"
-	end
-
-	if type(table) ~= 'table' then  -- Ensure the object is a table
-		return "Not a table"
-	end
-
-	local str = ""
-	if not indent then indent = 0 end
-
-	for k, v in pairs(table) do
-		local formatting = string.rep("  ", indent) .. tostring(k) .. ": "
-		if type(v) == "table" then
-			str = str .. formatting .. "\n"
-			str = str .. inspectDepth(v, indent + 1, (depth or 0) + 1)
-		elseif type(v) == 'function' then
-			str = str .. formatting .. "function\n"
-		elseif type(v) == 'boolean' then
-			str = str .. formatting .. tostring(v) .. "\n"
+		setfenv(chunk, {}) -- Use an empty environment to prevent access to potentially harmful functions
+		local success, result = pcall(chunk)
+		if success then
+			return result
 		else
-			str = str .. formatting .. tostring(v) .. "\n"
+			print("Error unpacking string: " .. result)
+			return nil
 		end
-	end
-
-	return str
-end
-
-function inspectFunction(func)
-	if type(func) ~= 'function' then
-		return "Not a function"
-	end
-
-	local info = debug.getinfo(func)
-	local result = "Function Details:\n"
-
-	if info.what == "Lua" then
-		result = result .. "Defined in Lua\n"
 	else
-		result = result .. "Defined in C or precompiled\n"
+		print("Error loading string: " .. err)
+		return nil
 	end
-
-	result = result .. "Name: " .. (info.name or "anonymous") .. "\n"
-	result = result .. "Source: " .. info.source .. "\n"
-	result = result .. "Line Defined: " .. info.linedefined .. "\n"
-	result = result .. "Last Line Defined: " .. info.lastlinedefined .. "\n"
-	result = result .. "Number of Upvalues: " .. info.nups .. "\n"
-
-	return result
 end
 
 
 local gameMainMenuRef = Game.main_menu
-function Game.main_menu(arg_280_0, arg_280_1)
-	gameMainMenuRef(arg_280_0, arg_280_1)
+function Game:main_menu(change_context)
+	gameMainMenuRef(self, change_context)
 	UIBox({
 		definition = {
 			n = G.UIT.ROOT,
@@ -127,12 +59,12 @@ function Game.main_menu(arg_280_0, arg_280_1)
 end
 
 local gameUpdateRef = Game.update
-function Game.update(arg_298_0, arg_298_1)
+function Game:update(dt)
 	if G.STATE ~= G.STATES.SPLASH and G.MAIN_MENU_UI then
-		local var_298_0 = G.MAIN_MENU_UI:get_UIE_by_ID("main_menu_play")
+		local node = G.MAIN_MENU_UI:get_UIE_by_ID("main_menu_play")
 
-		if var_298_0 and not var_298_0.children.alert then
-			var_298_0.children.alert = UIBox({
+		if node and not node.children.alert then
+			node.children.alert = UIBox({
 				definition = create_UIBox_card_alert({
 					text = localize('b_modded_version'),
 					no_bg = true,
@@ -145,14 +77,14 @@ function Game.update(arg_298_0, arg_298_1)
 						x = -0.1,
 						y = 0
 					},
-					major = var_298_0,
-					parent = var_298_0
+					major = node,
+					parent = node
 				}
 			})
-			var_298_0.children.alert.states.collide.can = false
+			node.children.alert.states.collide.can = false
 		end
 	end
-	gameUpdateRef(arg_298_0, arg_298_1)
+	gameUpdateRef(self, dt)
 end
 
 local function wrapText(text, maxChars)
@@ -186,8 +118,8 @@ function SMODS.registerUIElement(modID, uiElements)
 	SMODS.customUIElements[modID] = uiElements
 end
 
-function create_UIBox_mods(arg_736_0)
-	local var_495_0 = 0.75  -- Scale factor for text
+function create_UIBox_mods(args)
+	local scale = 0.75  -- Scale factor for text
 	local maxCharsPerLine = 50
 
 	local wrappedDescription = wrapText(G.ACTIVE_MOD_UI.description, maxCharsPerLine)
@@ -232,7 +164,7 @@ function create_UIBox_mods(arg_736_0)
 												config = {
 													text = authors,
 													shadow = true,
-													scale = var_495_0 * 0.65,
+													scale = scale * 0.65,
 													colour = G.C.BLUE,
 												}
 											}
@@ -252,7 +184,7 @@ function create_UIBox_mods(arg_736_0)
 												config = {
 													text = wrappedDescription,
 													shadow = true,
-													scale = var_495_0 * 0.5,
+													scale = scale * 0.5,
 													colour = G.C.UI.TEXT_LIGHT
 												}
 											}
@@ -288,8 +220,6 @@ function create_UIBox_mods(arg_736_0)
 		}
 	}))
 end
-
-
 
 function buildModtag(mod)
     local tag_pos, tag_message, tag_atlas = { x = 0, y = 0 }, "load_success", mod.prefix and mod.prefix .. '_modicon' or 'modicon'
@@ -363,7 +293,6 @@ function buildModtag(mod)
 
     return tag_sprite_tab
 end
-
 
 -- Helper function to create a clickable mod box
 local function createClickableModBox(modInfo, scale)
@@ -653,11 +582,11 @@ function create_UIBox_mods_button()
 	}))
 end
 
-function G.FUNCS.steamodded_github(arg_736_0)
+function G.FUNCS.steamodded_github(e)
 	love.system.openURL("https://github.com/Steamopollys/Steamodded")
 end
 
-function G.FUNCS.mods_button(arg_736_0)
+function G.FUNCS.mods_button(e)
 	G.SETTINGS.paused = true
 
 	G.FUNCS.overlay_menu({
@@ -678,9 +607,9 @@ function create_UIBox_main_menu_buttons()
 		scale = 0.45 * 1.2
 	})
 	local menu = create_UIBox_main_menu_buttonsRef()
-	table.insert(menu.nodes[1].nodes[1].nodes, #menu.nodes[1].nodes[1].nodes + 1, modsButton)
+	table.insert(menu.nodes[1].nodes[1].nodes, modsButton)
 	menu.nodes[1].nodes[1].config = {align = "cm", padding = 0.15, r = 0.1, emboss = 0.1, colour = G.C.L_BLACK, mid = true}
-	return(menu)
+	return menu
 end
 
 local create_UIBox_profile_buttonRef = create_UIBox_profile_button
@@ -1060,325 +989,12 @@ function SMODS.GUI.dynamicModListContent(page)
     }
 end
 
-function SMODS.SAVE_UNLOCKS()
-    boot_print_stage("Saving Unlocks")
-	G:save_progress()
-    -------------------------------------
-    local TESTHELPER_unlocks = false and not _RELEASE_MODE
-    -------------------------------------
-    if not love.filesystem.getInfo(G.SETTINGS.profile .. '') then
-        love.filesystem.createDirectory(G.SETTINGS.profile ..
-            '')
-    end
-    if not love.filesystem.getInfo(G.SETTINGS.profile .. '/' .. 'meta.jkr') then
-        love.filesystem.append(
-            G.SETTINGS.profile .. '/' .. 'meta.jkr', 'return {}')
-    end
-
-    convert_save_to_meta()
-
-    local meta = STR_UNPACK(get_compressed(G.SETTINGS.profile .. '/' .. 'meta.jkr') or 'return {}')
-    meta.unlocked = meta.unlocked or {}
-    meta.discovered = meta.discovered or {}
-    meta.alerted = meta.alerted or {}
-
-    for k, v in pairs(G.P_CENTERS) do
-        if not v.wip and not v.demo then
-            if TESTHELPER_unlocks then
-                v.unlocked = true; v.discovered = true; v.alerted = true
-            end --REMOVE THIS
-            if not v.unlocked and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^v_')) and meta.unlocked[k] then
-                v.unlocked = true
-            end
-            if not v.unlocked and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^v_')) then
-                G.P_LOCKED[#G.P_LOCKED + 1] = v
-            end
-            if not v.discovered and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^e_') or string.find(k, '^c_') or string.find(k, '^p_') or string.find(k, '^v_')) and meta.discovered[k] then
-                v.discovered = true
-            end
-            if v.discovered and meta.alerted[k] or v.set == 'Back' or v.start_alerted then
-                v.alerted = true
-            elseif v.discovered then
-                v.alerted = false
-            end
-        end
-    end
-
-	table.sort(G.P_LOCKED, function (a, b) return a.order and b.order and a.order < b.order end)
-
-	for k, v in pairs(G.P_BLINDS) do
-        v.key = k
-        if not v.wip and not v.demo then 
-            if TESTHELPER_unlocks then v.discovered = true; v.alerted = true  end --REMOVE THIS
-            if not v.discovered and meta.discovered[k] then 
-                v.discovered = true
-            end
-            if v.discovered and meta.alerted[k] then 
-                v.alerted = true
-            elseif v.discovered then
-                v.alerted = false
-            end
-        end
-    end
-	for k, v in pairs(G.P_TAGS) do
-        v.key = k
-        if not v.wip and not v.demo then 
-            if TESTHELPER_unlocks then v.discovered = true; v.alerted = true  end --REMOVE THIS
-            if not v.discovered and meta.discovered[k] then 
-                v.discovered = true
-            end
-            if v.discovered and meta.alerted[k] then 
-                v.alerted = true
-            elseif v.discovered then
-                v.alerted = false
-            end
-        end
-    end
-    for k, v in pairs(G.P_SEALS) do
-        v.key = k
-        if not v.wip and not v.demo then
-            if TESTHELPER_unlocks then
-                v.discovered = true; v.alerted = true
-            end                                                                   --REMOVE THIS
-            if not v.discovered and meta.discovered[k] then
-                v.discovered = true
-            end
-            if v.discovered and meta.alerted[k] then
-                v.alerted = true
-            elseif v.discovered then
-                v.alerted = false
-            end
-        end
-    end
-end
-
-function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
-    local target = (type(loc_txt) == 'table') and
-    (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
-    if key and (type(target) == 'table') then target = target[key] end
-    if not (type(target) == 'string' or target and next(target)) then return end
-    ref_table[ref_value] = target
-end
-
-function SMODS.handle_loc_file(path)
-    local dir = path .. 'localization/'
-	local file_name
-    for k, v in ipairs({ dir .. G.SETTINGS.language .. '.lua', dir .. 'default.lua', dir .. 'en-us.lua' }) do
-        if NFS.getInfo(v) then
-            file_name = v
-            break
-        end
-    end
-    if not file_name then return end
-    local loc_table = assert(loadstring(NFS.read(file_name)))()
-    local function recurse(target, ref_table)
-        if type(target) ~= 'table' then return end --this shouldn't happen unless there's a bad return value
-        for k, v in pairs(target) do
-            if not ref_table[k] or (type(v) ~= 'table') then
-                ref_table[k] = v
-            else
-                recurse(v, ref_table[k])
-            end
-        end
-    end
-	recurse(loc_table, G.localization)
-end
-
-function SMODS.insert_pool(pool, center, replace)
-	if replace == nil then replace = center.taken_ownership end
-	if replace then
-		for k, v in ipairs(pool) do
-            if v.key == center.key then
-                pool[k] = center
-            end
-		end
-    else
-		local prev_order = (pool[#pool] and pool[#pool].order) or 0
-		if prev_order ~= nil then 
-			center.order = prev_order + 1
-		end
-		table.insert(pool, center)
-	end
-end
-
-function SMODS.remove_pool(pool, key)
-    local j
-    for i, v in ipairs(pool) do
-        if v.key == key then j = i end
-    end
-    if j then return table.remove(pool, j) end
-end
-
-function SMODS.eval_this(_card, effects)
-    if effects then
-        local extras = { mult = false, hand_chips = false }
-        if effects.mult_mod then
-            mult = mod_mult(mult + effects.mult_mod); extras.mult = true
-        end
-        if effects.chip_mod then
-            hand_chips = mod_chips(hand_chips + effects.chip_mod); extras.hand_chips = true
-        end
-        if effects.Xmult_mod then
-            mult = mod_mult(mult * effects.Xmult_mod); extras.mult = true
-        end
-        update_hand_text({ delay = 0 }, { chips = extras.hand_chips and hand_chips, mult = extras.mult and mult })
-        if effects.message then
-            card_eval_status_text(_card, 'jokers', nil, nil, nil, effects)
-        end
-    end
-end
-
--- Return an array of all (non-debuffed) jokers or consumables with key `key`.
--- Debuffed jokers count if `count_debuffed` is true.
--- This function replaces find_joker(); please use SMODS.find_card() instead
--- to avoid name conflicts with other mods.
-function SMODS.find_card(key, count_debuffed)
-	local results = {}
-	if not G.jokers or not G.jokers.cards then return {} end
-	for k, v in pairs(G.jokers.cards) do
-	  if v and type(v) == 'table' and v.config.center.key == key and (count_debuffed or not v.debuff) then
-		table.insert(results, v)
-	  end
-	end
-	for k, v in pairs(G.consumeables.cards) do
-	  if v and type(v) == 'table' and v.config.center.key == key and (count_debuffed or not v.debuff) then
-		table.insert(results, v)
-	  end
-	end
-	return results
-end
-
 function SMODS.init_settings()
     SMODS.SETTINGS = {
         no_mod_badges = false,
     }
 end
 
-function SMODS.reload()
-    local lfs = love.filesystem
-    local function recurse(dir)
-        local files = lfs.getDirectoryItems(dir)
-        for i, v in ipairs(files) do
-            local file = (dir == '') and v or (dir .. '/' .. v)
-            sendTraceMessage(file)
-            if v == 'Mods' or v:len() == 1 then
-                -- exclude save files
-            elseif lfs.isFile(file) then
-                lua_reload.ReloadFile(file)
-            elseif lfs.isDirectory(file) then
-                recurse(file)
-            end
-        end
-    end
-    recurse('')
-    SMODS.booted = false
-    G:init_item_prototypes()
-    initSteamodded()
-end
-
-function SMODS.restart_game()
-	if love.system.getOS() ~= 'OS X' then
-		love.system.openURL('steam://rungameid/2379780')
-	else
-		os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
-	end
-	love.event.quit()
-end
-
-function SMODS.create_mod_badges(obj, badges)
-    if not G.SETTINGS.no_mod_badges and obj and obj.mod and obj.mod.display_name and not obj.no_mod_badges then
-        local mods = {}
-        badges.mod_set = badges.mod_set or {}
-        if not badges.mod_set[obj.mod.id] and not obj.no_main_mod_badge then table.insert(mods, obj.mod) end
-        badges.mod_set[obj.mod.id] = true
-        if obj.dependencies then
-            for _, v in ipairs(obj.dependencies) do
-                local m = SMODS.Mods[v]
-                if not badges.mod_set[m.id] then
-                    table.insert(mods, m)
-                    badges.mod_set[m.id] = true
-                end
-            end
-        end
-        for i, mod in ipairs(mods) do
-            local mod_name = string.sub(mod.display_name, 1, 16)
-            local len = string.len(mod_name)
-            local size = 0.9 - (len > 6 and 0.02 * (len - 6) or 0)
-            badges[#badges + 1] = create_badge(mod_name, mod.badge_colour or G.C.UI.BACKGROUND_INACTIVE, nil, size)
-        end
-    end
-end
-
-function SMODS.create_loc_dump()
-    local _old, _new = SMODS.dump_loc.pre_inject, G.localization
-    local _dump = {}
-    local function recurse(old, new, dump)
-        for k, _ in pairs(new) do
-            if type(new[k]) == 'table' then
-                dump[k] = {}
-                if not old[k] then
-                    dump[k] = new[k]
-                else
-                    recurse(old[k], new[k], dump[k])
-                end
-            elseif old[k] ~= new[k] then
-                dump[k] = new[k]
-            end
-        end
-    end
-    recurse(_old, _new, _dump)
-    local function cleanup(dump)
-        for k, v in pairs(dump) do
-            if type(v) == 'table' then
-                cleanup(v)
-                if not next(v) then dump[k] = nil end
-            end
-        end
-    end
-    cleanup(_dump)
-    local str = 'return ' .. serialize(_dump)
-	NFS.createDirectory(SMODS.dump_loc.path..'localization/')
-	NFS.write(SMODS.dump_loc.path..'localization/dump.lua', str)
-end
-
-function serialize(t, indent)
-    indent = indent or ''
-    local str = '{\n'
-	for k, v in ipairs(t) do
-        str = str .. indent .. '\t'
-		if type(v) == 'number' then
-            str = str .. v
-        elseif type(v) == 'string' then
-            str = str .. serialize_string(v)
-        elseif type(v) == 'table' then
-            str = str .. serialize(v, indent .. '\t')
-        else
-            assert(false)
-        end
-		str = str .. ',\n'
-	end
-    for k, v in pairs(t) do
-		if type(k) == 'string' then
-        	str = str .. indent .. '\t' .. '[' .. serialize_string(k) .. '] = '
-			if type(v) == 'number' then
-				str = str .. v
-			elseif type(v) == 'string' then
-				str = str .. serialize_string(v)
-			elseif type(v) == 'table' then
-				str = str .. serialize(v, indent .. '\t')
-			else
-				assert(false)
-			end
-			str = str .. ',\n'
-		end
-    end
-    str = str .. indent .. '}'
-	return str
-end
-
-function serialize_string(s)
-	return string.format("%q", s)
-end
 
 ----------------------------------------------
 ------------MOD CORE END----------------------
