@@ -261,7 +261,11 @@ function loadAPIs()
                 { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             G[self.atlas_table][self.key_noloc or self.key] = self
         end,
-        process_loc_text = function() end
+        process_loc_text = function() end,
+        inject_class = function(self) 
+            G:set_render_settings() -- restore originals first in case a texture pack was disabled
+            SMODS.Atlas.super.inject_class(self)
+        end
     }
 
     SMODS.Atlas {
