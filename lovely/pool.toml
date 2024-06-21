@@ -1,0 +1,19 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "keys[#keys+1] = {k = k,v = v}"
+position = "before"
+payload = """
+if type(v) == 'table' and v.in_pool and type(v.in_pool) == 'function' then
+    local in_pool_res = v:in_pool()
+    if type(in_pool_res) == 'table' then in_pool_res = in_pool_res[1] end
+    if in_pool_res then
+        break
+    end
+end"""
+match_indent = true

@@ -381,8 +381,13 @@ position = 'at'
 payload = '''
 if v.in_pool and type(v.in_pool) == 'function' then
 	local res = v:in_pool()
-	if res.add and (not G.GAME.used_jokers[v.key] or res.allow_duplicates or next(find_joker("Showman"))) then
-		add = true
+	if type(res) == 'table' then
+		-- boolean output is in res[1], additional fields can be set in res
+		if res[1] and (not G.GAME.used_jokers[v.key] or res.allow_duplicates or next(find_joker("Showman"))) then
+			add = true
+		end
+	else
+		add = res
 	end
 elseif _type == 'Enhanced' then'''
 
