@@ -2166,7 +2166,6 @@ function loadAPIs()
         -- calculate(self)
         register = function(self)
             self.config = self.config or {}
-            self.loc_txt.label = self.loc_txt.label or self.loc_txt.name
             SMODS.Edition.super.register(self)
         end,
         process_loc_text = function(self)
