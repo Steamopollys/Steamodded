@@ -397,6 +397,12 @@ default_palettes = { -- Default palettes mostly used for auto generated palettes
 	}
 }
 
+function create_default_atlas(self)
+    self.image_data = love.image.newImageData(self.path)
+    self.image = love.graphics.newImage(self.image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+    G[self.atlas_table][self.key_noloc or self.key] = self
+  end
+
 -- Called from option selectors that control each type
 G.FUNCS.update_recolor = function(args)
     G.SETTINGS.selected_texture[args.cycle_config.type] = args.to_val
@@ -407,10 +413,7 @@ end
 -- Set the atlases of all cards of the correct type to be the new palette
 G.FUNCS.update_atlas = function(type)
     local name = G.SETTINGS.selected_texture[type]
-	if not SMODS.AltTextures[type][name] then 
-        sendDebugMessage(type.." and "..name.." caused a problem")
-        return
-    end
+	if not SMODS.AltTextures[type][name] then return end
 	local atlas_keys = {}
 	if type == "Suit" then
 		atlas_keys = {"cards_1", "ui_1"}
@@ -421,16 +424,16 @@ G.FUNCS.update_atlas = function(type)
 		end			
 	elseif type == "Spectral" then
 		atlas_keys = {"Spectral", "soul"}
+    elseif type == "Seal" then
+        atlas_keys = {"centers"}
 	else
 		for _, card in pairs(G.P_CENTER_POOLS[type]) do
 			atlas_keys[card.atlas or type] = card.atlas or type
 		end
 	end
-    sendDebugMessage("Attempt to update atlas for "..type)
 	for _, atlas_key in pairs(atlas_keys) do
 		if G.ASSET_ATLAS[atlas_key][name] then
 			G.ASSET_ATLAS[atlas_key].image = G.ASSET_ATLAS[atlas_key][name].image
-            sendDebugMessage("Updated atlas "..atlas_key.." to "..name)
 		end
 	end
 end

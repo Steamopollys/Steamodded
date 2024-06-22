@@ -2305,6 +2305,11 @@ function loadAPIs()
         Suit = {names = {}}, Tarot = {names = {}}, Planet = {names = {}},
         Spectral = {names = {}}, Joker = {names = {}}, Voucher = {names = {}},
         Booster = {names = {}}, Back = {names = {}}, tags = {names= {}}}
+
+        
+    ---@param key string @Missing required parameter for %s declaration: %s
+    ---@param type string
+    ---@param name string
     SMODS.AltTexture = SMODS.GameObject:extend {
         obj_table = SMODS.alt_textures,
         obj_buffer = {},
@@ -2388,6 +2393,8 @@ function loadAPIs()
         local atlas_keys = {}
             if type == "Suit" then
                 atlas_keys = {"cards_1", "ui_1"}
+            elseif type == "Seal" then
+                atlas_keys = {"centers"}
             else
                 for _,v in pairs(G.P_CENTER_POOLS[type]) do
                     atlas_keys[v.atlas or type] = v.atlas or type
@@ -2425,6 +2432,8 @@ function loadAPIs()
                 G.ASSET_ATLAS["soul"][self.name] = {image_data = G.ASSET_ATLAS["soul"].image_data:clone()}
                 G.ASSET_ATLAS["soul"][self.name].image = love.graphics.newImage(G.ASSET_ATLAS["soul"][self.name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
             end
+        elseif self.type == "Seal" then
+            atlas_key = "centers"
         else
             atlas_key = self.type
         end
@@ -2439,66 +2448,7 @@ function loadAPIs()
         return {(type(base_colours) == 'table' and HEX(base_colours[1]) or HEX(base_colours))}
     end 
 
-    for k,v in pairs(G.P_CENTER_POOLS.Tarot) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Tarot"})
-    end
-    for _,v in pairs(G.P_CENTER_POOLS.Planet) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Planet"})
-    end
-    for _,v in pairs(G.P_CENTER_POOLS.Spectral) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Spectral"})
-    end
-    for _,v in pairs(G.P_CENTER_POOLS.Enhanced) do
-        SMODS.Enhancement:take_ownership(v.key, {atlas = "Enhanced"})
-    end
-    for _,v in pairs(G.P_CENTER_POOLS.Back) do
-        SMODS.Back:take_ownership(v.key, {atlas = "Back"})
-    end
-
-    SMODS.Atlas({
-        key = "Planet",
-        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Tarots.png",
-        px = 71,
-        py = 95,
-        inject = function(self)
-            self.image_data = love.image.newImageData(self.path)
-            self.image = love.graphics.newImage(self.image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
-            G[self.atlas_table][self.key_noloc or self.key] = self
-          end
-    })
-    SMODS.Atlas({
-        key = "Spectral",
-        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Tarots.png",
-        px = 71,
-        py = 95,
-        inject = function(self)
-            self.image_data = love.image.newImageData(self.path)
-            self.image = love.graphics.newImage(self.image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
-            G[self.atlas_table][self.key_noloc or self.key] = self
-          end
-    })
-    SMODS.Atlas({
-        key = "Enhanced",
-        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",
-        px = 71,
-        py = 95,
-        inject = function(self)
-            self.image_data = love.image.newImageData(self.path)
-            self.image = love.graphics.newImage(self.image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
-            G[self.atlas_table][self.key_noloc or self.key] = self
-          end
-    })
-    SMODS.Atlas({
-        key = "Back",
-        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",
-        px = 71,
-        py = 95,
-        inject = function(self)
-            self.image_data = love.image.newImageData(self.path)
-            self.image = love.graphics.newImage(self.image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
-            G[self.atlas_table][self.key_noloc or self.key] = self
-          end
-    })
+    
     -- Default palettes defined for base game suits
     SMODS.AltTexture({
         key = "base_cards",
@@ -2527,6 +2477,60 @@ function loadAPIs()
         type = "Suit",
         name = "High Contrast",
         palette = true
+    })
+    for k,v in pairs(G.P_CENTER_POOLS.Tarot) do
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Tarot"})
+    end
+    for _,v in pairs(G.P_CENTER_POOLS.Planet) do
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Planet"})
+    end
+    for _,v in pairs(G.P_CENTER_POOLS.Spectral) do
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Spectral"})
+    end
+    for _,v in pairs(G.P_CENTER_POOLS.Enhanced) do
+        SMODS.Enhancement:take_ownership(v.key, {atlas = "Enhanced"})
+    end
+    for _,v in pairs(G.P_CENTER_POOLS.Back) do
+        SMODS.Back:take_ownership(v.key, {atlas = "Back"})
+    end
+    for _,v in pairs(G.P_CENTER_POOLS.Seal) do
+        SMODS.Seal:take_ownership(v.key, {})
+    end
+   
+    SMODS.Atlas({
+        key = "Planet",
+        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Tarots.png",
+        px = 71,
+        py = 95,
+        inject = create_default_atlas
+    })
+    SMODS.Atlas({
+        key = "Spectral",
+        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Tarots.png",
+        px = 71,
+        py = 95,
+        inject = create_default_atlas
+    })
+    SMODS.Atlas({
+        key = "Enhanced",
+        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",
+        px = 71,
+        py = 95,
+        inject = create_default_atlas
+    })
+    SMODS.Atlas({
+        key = "Back",
+        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",
+        px = 71,
+        py = 95,
+        inject = create_default_atlas
+    })
+    SMODS.Atlas({
+        key = "Seal",
+        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",
+        px = 71,
+        py = 95,
+        inject = create_default_atlas
     })
 
     
