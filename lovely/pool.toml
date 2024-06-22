@@ -6,15 +6,20 @@ priority = 0
 [[patches]]
 [patches.pattern]
 target = "functions/misc_functions.lua"
+pattern = "function pseudorandom_element(_t, seed)"
+position = "at"
+payload = "function pseudorandom_element(_t, seed, args)"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
 pattern = "keys[#keys+1] = {k = k,v = v}"
 position = "before"
 payload = """
--- TODO allow vanilla behavior by an argument
--- something like:
--- if args.raw_pool is set, ignore in_pool()
--- if args.in_pool(obj) is set, use that instead of obj:in_pool()
-if type(v) == 'table' and v.in_pool and type(v.in_pool) == 'function' then
-    local in_pool_res = v:in_pool()
+local in_pool_func = (args and args.in_pool) or (type(v) == 'table' and v.in_pool and type(v.in_pool) == 'function')
+if in_pool_func then
+    local in_pool_res = in_pool_func(v)
     if type(in_pool_res) == 'table' then in_pool_res = in_pool_res[1] end
     if in_pool_res then
         break
