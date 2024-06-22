@@ -112,7 +112,7 @@ function loadAPIs()
 
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
     function SMODS.GameObject:take_ownership(key, obj, silent)
-        key = (self.omit_prefix or key:sub(1, #self.prefix + 1) == self.prefix .. '_') and key or
+        key = (self.omit_prefix or obj.omit_prefix or key:sub(1, #self.prefix + 1) == self.prefix .. '_') and key or
             ('%s_%s'):format(self.prefix, key)
         local o = self.obj_table[key] or self:get_obj(key)
         if not o then
@@ -140,8 +140,6 @@ function loadAPIs()
             if silent then o.no_main_mod_badge = true end
             o.key = key
             o.rarity_original = o.rarity
-            -- preserve original text unless it's changed
-            o.loc_txt = {}
         end
         for k, v in pairs(obj) do o[k] = v end
         if o.mod and not o.raw_atlas_key and not o.mod.omit_mod_prefix then
@@ -2115,13 +2113,13 @@ function loadAPIs()
         obj_buffer = {},
         required_params = {
             'key',
-            'file_name',
+            'path',
         },
         set = 'Shader',
         omit_prefix = true,
         inject = function(self)
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
-                'assets/shaders/' .. self.file_name
+                'assets/shaders/' .. self.path
             local file = NFS.read(self.full_path)
             love.filesystem.write(self.key .. "-temp.fs", file)
             G.SHADERS[self.key] = love.graphics.newShader(self.key .. "-temp.fs")
