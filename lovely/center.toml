@@ -381,7 +381,7 @@ position = 'at'
 payload = '''
 if v.in_pool and type(v.in_pool) == 'function' then
 	local res, pool_opts = v:in_pool()
-	if res and (not G.GAME.used_jokers[v.key] or pool_opts.allow_duplicates or next(find_joker("Showman"))) then
+	if res and (not G.GAME.used_jokers[v.key] or (pool_opts and pool_opts.allow_duplicates) or next(find_joker("Showman"))) then
 		add = true
 	end
 elseif _type == 'Enhanced' then'''
