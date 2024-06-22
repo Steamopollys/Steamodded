@@ -261,7 +261,11 @@ function loadAPIs()
                 { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             G[self.atlas_table][self.key_noloc or self.key] = self
         end,
-        process_loc_text = function() end
+        process_loc_text = function() end,
+        inject_class = function(self) 
+            G:set_render_settings() -- restore originals first in case a texture pack was disabled
+            SMODS.Atlas.super.inject_class(self)
+        end
     }
 
     SMODS.Atlas {
@@ -2107,13 +2111,13 @@ function loadAPIs()
         obj_buffer = {},
         required_params = {
             'key',
-            'file_name',
+            'path',
         },
         set = 'Shader',
         omit_prefix = true,
         inject = function(self)
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
-                'assets/shaders/' .. self.file_name
+                'assets/shaders/' .. self.path
             local file = NFS.read(self.full_path)
             love.filesystem.write(self.key .. "-temp.fs", file)
             G.SHADERS[self.key] = love.graphics.newShader(self.key .. "-temp.fs")

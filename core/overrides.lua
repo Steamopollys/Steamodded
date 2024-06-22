@@ -876,15 +876,15 @@ function create_UIBox_your_collection_editions(exit)
     for j = 1, rows do
         for i = 1, cols do
 
-            local center = G.P_CENTER_POOLS.Edition[index]
+            local edition = G.P_CENTER_POOLS.Edition[index]
 
-            if not center then
+            if not edition then
                 break
             end
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                G.CARD_W, G.CARD_H, nil, center)
+                G.CARD_W, G.CARD_H, nil, edition)
             card:start_materialize(nil, i > 1 or j > 1)
-            card:set_edition(center.key, true, true)
+            if edition.discovered then card:set_edition(edition.key, true, true) end
             G.your_collection[j]:emplace(card)
             index = index + 1
         end
@@ -932,7 +932,7 @@ G.FUNCS.your_collection_editions_page = function(args)
     if not args or not args.cycle_config then
         return
     end
-    local rows = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1), 5
+    local rows = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1)
     local cols = 5
     local page = args.cycle_config.current_option
     if page > math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) then
@@ -959,10 +959,10 @@ G.FUNCS.your_collection_editions_page = function(args)
             end
             local idx = i + (j - 1) * cols + offset
             if idx > #G.P_CENTER_POOLS["Edition"] then return end
-            local center = G.P_CENTER_POOLS["Edition"][idx]
+            local edition = G.P_CENTER_POOLS["Edition"][idx]
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
-            card:set_edition(center.key, true, true)
+                G.CARD_W, G.CARD_H, G.P_CARDS.empty, edition)
+			if edition.discovered then card:set_edition(edition.key, true, true) end
             card:start_materialize(nil, i > 1 or j > 1)
             G.your_collection[j]:emplace(card)
         end
