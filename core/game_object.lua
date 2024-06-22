@@ -1186,6 +1186,19 @@ function loadAPIs()
         return o
     end
     SMODS.valid_card_keys = SMODS.permutations()
+    SMODS.inject_p_card = function(suit, rank)
+        G.P_CARDS[suit.card_key .. '_' .. rank.card_key] = {
+            name = rank.key .. ' of ' .. suit.key,
+            value = rank.key,
+            suit = suit.key,
+            pos = { x = rank.pos.x, y = rank.suit_map[suit.key] or suit.pos.y },
+            lc_atlas = rank.suit_map[suit.key] and rank.lc_atlas or suit.lc_atlas,
+            hc_atlas = rank.suit_map[suit.key] and rank.hc_atlas or suit.hc_atlas,
+        }
+    end
+    SMODS.remove_p_card = function(suit, rank)
+        G.P_CARDS[suit.card_key .. '_' .. rank.card_key] =  nil
+    end
 
     SMODS.Suits = {}
     SMODS.Suit = SMODS.GameObject:extend {
@@ -1213,43 +1226,20 @@ function loadAPIs()
             self.suit_nominal = self.max_nominal.value
             SMODS.Suit.super.register(self)
         end,
-        populate = function(self)
-            for _, other in pairs(SMODS.Ranks) do
-                if not other.disabled then
-                    self:update_p_card(other)
-                end
-            end
-            self.disabled = nil
-            if G.GAME then G.GAME.disabled_suits[self.key] = nil end
-        end,
         inject = function(self)
-            if not self.disabled then self:populate() end
-        end,
-        disable = function(self)
-            for _, other in pairs(SMODS.Ranks) do
-                self:update_p_card(other, true)
+            for _, rank in pairs(SMODS.Ranks) do
+                SMODS.inject_p_card(self, rank)
             end
-            self.disabled = true
-            if G.GAME then G.GAME.disabled_suits[self.key] = true end
         end,
         delete = function(self)
-            self:disable()
             local i
             for j, v in ipairs(self.obj_buffer) do
                 if v == self.key then i = j end
             end
+            for _, rank in pairs(SMODS.Ranks) do
+                SMODS.remove_p_card(self, rank)
+            end
             table.remove(self.obj_buffer, i)
-            self = nil
-        end,
-        update_p_card = function(self, other, remove)
-            G.P_CARDS[self.card_key .. '_' .. other.card_key] = not remove and {
-                name = other.key .. ' of ' .. self.key,
-                value = other.key,
-                suit = self.key,
-                pos = { x = other.pos.x, y = other.suit_map[self.key] or self.pos.y },
-                lc_atlas = other.suit_map[self.key] and other.lc_atlas or self.lc_atlas,
-                hc_atlas = other.suit_map[self.key] and other.hc_atlas or self.hc_atlas,
-            } or nil
         end,
         get_card_key = function(self, card_key)
             local set = {}
@@ -1333,6 +1323,16 @@ function loadAPIs()
         },
         next = {},
         straight_edge = false,
+        -- TODO we need a better system for what this is doing.
+        -- We should allow setting a playing card's atlas and position to any values,
+        -- and we should also ensure that it's easy to create an atlas with a standard
+        -- arrangement: x and y set according to rank and suit.
+
+        -- Currently suit_map does the following:
+        -- suit_map forces a playing card's atlas to be rank.hc_atlas/lc_atlas,
+        -- and not the atlas defined on the suit of the playing card;
+        -- additionally pos.y is set according to the corresponding value in the
+        -- suit_map
         suit_map = {
             Hearts = 0,
             Clubs = 1,
@@ -1370,24 +1370,21 @@ function loadAPIs()
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.ranks, self.key, self.loc_txt)
         end,
-        populate = function(self)
-            for _, other in pairs(SMODS.Suits) do
-                if not other.disabled then
-                    other:update_p_card(self)
-                end
+        inject = function(self)
+            for _, suit in pairs(SMODS.Suits) do
+                SMODS.inject_p_card(suit, self)
             end
-            self.disabled = nil
-            if G.GAME then G.GAME.disabled_ranks[self.key] = nil end
         end,
-        inject = SMODS.Suit.inject,
-        disable = function(self)
-            for _, other in pairs(SMODS.Suits) do
-                other:update_p_card(self, true)
+        delete = function(self)
+            local i
+            for j, v in ipairs(self.obj_buffer) do
+                if v == self.key then i = j end
             end
-            self.disabled = true
-            if G.GAME then G.GAME.disabled_ranks[self.key] = true end
-        end,
-        delete = SMODS.Suit.delete,
+            for _, suit in pairs(SMODS.Suits) do
+                SMODS.remove_p_card(suit, self)
+            end
+            table.remove(self.obj_buffer, i)
+        end
     }
     for _, v in ipairs({ 2, 3, 4, 5, 6, 7, 8, 9 }) do
         SMODS.Rank {
@@ -1446,6 +1443,7 @@ function loadAPIs()
         next = { '2' },
     }
     -- make consumable effects compatible with added suits
+    -- TODO put this in utils.lua
     local function juice_flip(used_tarot)
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
@@ -1505,6 +1503,7 @@ function loadAPIs()
                         if behavior.ignore or not next(rank_data.next) then
                             return true
                         elseif behavior.random then
+                            -- TODO doesn't respect in_pool
                             local r = pseudorandom_element(rank_data.next, pseudoseed('strength'))
                             rank_suffix = SMODS.Ranks[r].card_key
                         else
@@ -1542,15 +1541,8 @@ function loadAPIs()
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            -- need reverse nominal order to preserve vanilla RNG
-            local suit_list = {}
-            for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                local suit_key = SMODS.Suit.obj_buffer[i]
-                if not SMODS.Suits[suit_key].disabled then
-                    suit_list[#suit_list + 1] = suit_key
-                end
-            end
-            local _suit = SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('sigil'))]
+            -- TODO need reverse nominal order to preserve vanilla RNG
+            local _suit = pseudorandom_element(SMODS.Suits, pseudoseed('sigil'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
@@ -1578,13 +1570,7 @@ function loadAPIs()
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local rank_list = {}
-            for _, rank_key in ipairs(SMODS.Rank.obj_buffer) do
-                if not SMODS.Ranks[rank_key].disabled then
-                    table.insert(rank_list, rank_key)
-                end
-            end
-            local _rank = SMODS.Ranks[pseudorandom_element(rank_list, pseudoseed('ouija'))]
+            local _rank = pseudorandom_element(SMODS.Ranks, pseudoseed('ouija'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
@@ -1649,15 +1635,9 @@ function loadAPIs()
                     local cards = {}
                     for i = 1, card.ability.extra do
                         cards[i] = true
-                        local suit_list = {}
-                        for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            local suit_key = SMODS.Suit.obj_buffer[i]
-                            if not SMODS.Suits[suit_key].disabled then
-                                suit_list[#suit_list + 1] = suit_key
-                            end
-                        end
+                        -- TODO preserve suit vanilla RNG
                         local _suit, _rank =
-                            SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('grim_create'))].card_key, 'A'
+                            pseudorandom_element(SMODS.Suits, pseudoseed('grim_create')).card_key, 'A'
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
                             if v.key ~= 'm_stone' and not v.overrides_base_rank then
@@ -1690,21 +1670,15 @@ function loadAPIs()
                     local cards = {}
                     for i = 1, card.ability.extra do
                         cards[i] = true
-                        local suit_list = {}
-                        for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            local suit_key = SMODS.Suit.obj_buffer[i]
-                            if not SMODS.Suits[suit_key].disabled then
-                                suit_list[#suit_list + 1] = suit_key
-                            end
-                        end
+                        -- TODO preserve suit vanilla RNG
                         local faces = {}
                         for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
-                            if not r.disabled and r.face then table.insert(faces, r.card_key) end
+                            if r.face then table.insert(faces, r) end
                         end
                         local _suit, _rank =
-                            SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('familiar_create'))].card_key,
-                            pseudorandom_element(faces, pseudoseed('familiar_create'))
+                            pseudorandom_element(SMODS.Suits, pseudoseed('familiar_create')).card_key,
+                            pseudorandom_element(faces, pseudoseed('familiar_create')).card_key
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
                             if v.key ~= 'm_stone' and not v.overrides_base_rank then
@@ -1737,21 +1711,15 @@ function loadAPIs()
                     local cards = {}
                     for i = 1, card.ability.extra do
                         cards[i] = true
-                        local suit_list = {}
-                        for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            local suit_key = SMODS.Suit.obj_buffer[i]
-                            if not SMODS.Suits[suit_key].disabled then
-                                suit_list[#suit_list + 1] = suit_key
-                            end
-                        end
+                        -- TODO preserve suit vanilla RNG
                         local numbers = {}
                         for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
-                            if not r.disabled and v ~= 'Ace' and not r.face then table.insert(numbers, r.card_key) end
+                            if v ~= 'Ace' and not r.face then table.insert(numbers, r) end
                         end
                         local _suit, _rank =
-                            SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('incantation_create'))].card_key,
-                            pseudorandom_element(numbers, pseudoseed('incantation_create'))
+                            pseudorandom_element(SMODS.Suits, pseudoseed('incantation_create')).card_key,
+                            pseudorandom_element(numbers, pseudoseed('incantation_create')).card_key
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
                             if v.key ~= 'm_stone' and not v.overrides_base_rank then
