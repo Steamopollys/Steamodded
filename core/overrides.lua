@@ -1117,12 +1117,12 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 		else
 			for _,v in ipairs(G.P_CENTER_POOLS.Edition) do
 				if v.in_shop then
-					sendDebugMessage(v.key)
 					table.insert(_options, v.key)
 				end
 			end
 		end
 	end
+
 	for _,v in ipairs(_options) do
 		local edition_option = {}
 		if type(v) == 'string' then
@@ -1134,13 +1134,11 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 		end
 		table.insert(available_editions, edition_option)
 	end
-
     -- Calculate total weight of editions
     local total_weight = 0
     for _,v in ipairs(available_editions) do
 		total_weight = total_weight + (v.weight) -- total all the weights of the polled editions
     end
-    sendDebugMessage("Edition weights: "..total_weight, "EditionAPI")
     -- If not guaranteed, calculate the base card rate to maintain base 4% chance of editions
     if not _guaranteed then
         _modifier = _mod or 1
@@ -1148,26 +1146,18 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 		for _,v in ipairs(available_editions) do
 			v.weight = (G.P_CENTERS[v.name].get_weight and G.P_CENTERS[v.name]:get_weight() or v.weight) -- Apply game modifiers where appropriate (defined in edition declaration)
 		end
-    
     end
-    sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
-    sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
-    sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
-    
     -- Calculate whether edition is selected
     local weight_i = 0
     for _,v in ipairs(available_editions) do
 		weight_i = weight_i + v.weight*_modifier
-		sendDebugMessage(v.name.." weight is "..v.weight*_modifier)
-		sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
 		if edition_poll > 1 - (weight_i)/total_weight then
 			if not (v.name == 'e_negative' and _no_neg) then -- skip return if negative is selected and _no_neg is true
-				sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
 				return v.name
 			end
 		end
 	end
-
+	
     return nil
 end
 --#endregion
