@@ -5,6 +5,6 @@ priority = 0
 
 [[patches]]
 [patches.module]
-source = "nativefs.lua"
+source = "nativefs/nativefs.lua"
 before = "main.lua"
 name = "nativefs"
