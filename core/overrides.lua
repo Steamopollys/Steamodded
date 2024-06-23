@@ -1140,29 +1140,29 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
     for _,v in ipairs(available_editions) do
 		total_weight = total_weight + (v.weight) -- total all the weights of the polled editions
     end
-    -- sendDebugMessage("Edition weights: "..total_weight, "EditionAPI")
+    sendDebugMessage("Edition weights: "..total_weight, "EditionAPI")
     -- If not guaranteed, calculate the base card rate to maintain base 4% chance of editions
     if not _guaranteed then
         _modifier = _mod or 1
         total_weight = total_weight + (total_weight / 4 * 96)  -- Find total weight with base_card_rate as 96%
 		for _,v in ipairs(available_editions) do
-			v.weight = G.P_CENTERS[v.name]:get_weight() -- Apply game modifiers where appropriate (defined in edition declaration)
+			v.weight = (G.P_CENTERS[v.name].get_weight and G.P_CENTERS[v.name]:get_weight() or v.weight) -- Apply game modifiers where appropriate (defined in edition declaration)
 		end
     
     end
-    -- sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
-    -- sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
-    -- sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
+    sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
+    sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
+    sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
     
     -- Calculate whether edition is selected
     local weight_i = 0
     for _,v in ipairs(available_editions) do
 		weight_i = weight_i + v.weight*_modifier
-		-- sendDebugMessage(v.name.." weight is "..v.weight*_modifier)
-		-- sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
+		sendDebugMessage(v.name.." weight is "..v.weight*_modifier)
+		sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
 		if edition_poll > 1 - (weight_i)/total_weight then
 			if not (v.name == 'e_negative' and _no_neg) then -- skip return if negative is selected and _no_neg is true
-				-- sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
+				sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
 				return v.name
 			end
 		end

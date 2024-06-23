@@ -421,15 +421,18 @@ G.FUNCS.update_atlas = function(type)
 			local colour = (SMODS.AltTextures.Suit[name].suits and SMODS.AltTextures.Suit[name].suits[suit] or SMODS.AltTextures.Suit["Default"].suits[suit] or nil)
 			G.C["SO_1"][suit] =  (colour and HEX(colour) or G.C["SO_1"][suit])
 			G.C.SUITS[suit] = G.C["SO_1"][suit]
-		end			
-	elseif type == "Spectral" then
-		atlas_keys = {"Spectral", "soul"}
+		end		
     elseif type == "Seal" then
         atlas_keys = {"centers"}
+    elseif type == "Tag" then
+        atlas_keys = {"tags"}
 	else
 		for _, card in pairs(G.P_CENTER_POOLS[type]) do
 			atlas_keys[card.atlas or type] = card.atlas or type
 		end
+        if type == "Spectral" then
+            atlas_keys["soul"] = "soul"
+        end
 	end
 	for _, atlas_key in pairs(atlas_keys) do
 		if G.ASSET_ATLAS[atlas_key][name] then

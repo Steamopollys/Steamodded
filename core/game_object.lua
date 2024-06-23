@@ -698,7 +698,7 @@ function loadAPIs()
                 colour = G.C.RED,
                 no_pips = true
             }) }
-            if SMODS.AltTextures[self.key] and #SMODS.AltTextures[self.key].names > 1 then
+                        if SMODS.AltTextures[self.key] and #SMODS.AltTextures[self.key].names > 1 then
                 option_nodes[#option_nodes + 1] = SMODS.GUI.createOptionSelector({
                     w = 4.5,
                     scale = 0.8,
@@ -712,7 +712,7 @@ function loadAPIs()
                 back_func = 'your_collection',
                 contents = {
                     { n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables },
-                    { n = G.UIT.R, config = { align = "cm", padding = 0 },                                                           nodes = option_nodes },
+                    { n = G.UIT.R, config = { align = "cm", padding = 0 }, nodes = option_nodes },
                 }
             })
             return t
@@ -2165,22 +2165,17 @@ function loadAPIs()
         -- other fields:
         -- extra_cost
 
-        -- TODO badge colours. need to check how Steamodded already does badge colors
+        -- TODO 
         -- other methods:
         -- calculate(self)
         register = function(self)
             self.config = self.config or {}
-            self.loc_txt.label = self.loc_txt.label or self.loc_txt.name
             SMODS.Edition.super.register(self)
         end,
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.labels, self.key:sub(3), self.loc_txt, 'label')
             SMODS.Edition.super.process_loc_text(self)
         end,
-        -- apply_modifier = true when G.GAME.edition_rate is to be applied
-        get_weight = function(self, apply_modifier)
-            return self.weight
-        end
     }
 
     -- TODO also, this should probably be a utility method in core
@@ -2328,10 +2323,8 @@ function loadAPIs()
             if not SMODS.AltTextures[self.type] then
                 table.insert(SMODS.AltTextures.Types, self.type)
                 SMODS.AltTextures[self.type] = {names = {}}
-                sendDebugMessage("initialising "..self.type)
             end
             if #SMODS.AltTextures[self.type].names == 0 then
-                sendDebugMessage("creating default "..self.type)
                 if self.name ~= "Default" then SMODS.AltTexture:create_default(self.type) end
                 G.SETTINGS.selected_texture[self.type] = G.SETTINGS.selected_texture[self.type] or "Default"
             end
@@ -2393,6 +2386,8 @@ function loadAPIs()
                 atlas_keys = {"cards_1", "ui_1"}
             elseif type == "Seal" then
                 atlas_keys = {"centers"}
+            elseif type == "Tag" then
+                atlas_keys = {"tags"}
             else
                 for _,v in pairs(G.P_CENTER_POOLS[type]) do
                     atlas_keys[v.atlas or type] = v.atlas or type
@@ -2405,7 +2400,6 @@ function loadAPIs()
                 G.ASSET_ATLAS[v][name].image_data:mapPixel(G.FUNCS.recolour_image)
                 G.ASSET_ATLAS[v][name].image = love.graphics.newImage(G.ASSET_ATLAS[v][name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
             end
-        sendDebugMessage("Created "..name.." for "..type,"AltTexture")
     end
 
     function SMODS.AltTexture:create_new_atlas()
@@ -2432,6 +2426,8 @@ function loadAPIs()
             end
         elseif self.type == "Seal" then
             atlas_key = "centers"
+        elseif self.type == "Tag" then
+            atlas_key = "tags"
         else
             atlas_key = self.type
         end
@@ -2446,7 +2442,7 @@ function loadAPIs()
         return {(type(base_colours) == 'table' and HEX(base_colours[1]) or HEX(base_colours))}
     end 
 
-    
+    print(tprint(G.ASSET_ATLAS))
     -- Default palettes defined for base game suits
     SMODS.AltTexture({
         key = "base_cards",
@@ -2491,9 +2487,6 @@ function loadAPIs()
     for _,v in pairs(G.P_CENTER_POOLS.Back) do
         SMODS.Back:take_ownership(v.key, {atlas = "Back"})
     end
-    for _,v in pairs(G.P_CENTER_POOLS.Seal) do
-        SMODS.Seal:take_ownership(v.key, {})
-    end
    
     SMODS.Atlas({
         key = "Planet",
@@ -2518,13 +2511,6 @@ function loadAPIs()
     })
     SMODS.Atlas({
         key = "Back",
-        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",
-        px = 71,
-        py = 95,
-        inject = create_default_atlas
-    })
-    SMODS.Atlas({
-        key = "Seal",
         path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",
         px = 71,
         py = 95,

@@ -51,6 +51,16 @@ local table_nodes = {}
 for i = 1, math.ceil(counter / 6) do
 	table.insert(table_nodes, {n=G.UIT.R, config={align = "cm"}, nodes=tag_matrix[i]})
 end
+if SMODS.AltTextures["Tag"] and #SMODS.AltTextures["Tag"].names > 1 then
+	table.insert(table_nodes, SMODS.GUI.createOptionSelector({
+        w = 4.5,
+        scale = 0.8,
+        options = SMODS.AltTextures["Tag"].names,
+        opt_callback = "update_recolor",
+        current_option = G.SETTINGS.selected_texture["Tag"],
+        type = "Tag"
+}))
+end
 $t table_nodes
 }'''
 
