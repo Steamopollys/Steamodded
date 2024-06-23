@@ -111,9 +111,7 @@ pattern = '''
 [\t ]*end'''
 position = "at"
 payload = '''
-if self.config.center_key ~= "c_base" then
-    G.GAME.used_jokers[self.config.center_key] = true
-end
+G.GAME.used_jokers[self.config.center_key] = true
 '''
 line_prepend = "$indent"
 # Card:remove()
@@ -130,7 +128,7 @@ pattern = '''
 [\t ]*end'''
 position = "at"
 payload = '''
-if not SMODS.find_card(self.config.center_key, true) then
+if not next(SMODS.find_card(self.config.center_key, true)) then
     G.GAME.used_jokers[self.config.center_key] = nil
 end'''
 line_prepend = "$indent"
