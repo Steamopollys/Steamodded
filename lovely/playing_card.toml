@@ -55,10 +55,10 @@ pattern = 'local keep, _e, _d, _g = true, nil, nil, nil'
 position = 'after'
 match_indent = true
 payload = '''
-if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool() then
+if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true}) then
 	keep = false
 end
-if type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool() then
+if type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true}) then
 	keep = false
 end'''
 
@@ -228,10 +228,10 @@ pattern = 'local keep, _e, _d, _g = true, nil, nil, nil'
 position = 'after'
 match_indent = true
 payload = '''
-if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool() then
+if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true}) then
 	keep = false
 end
-if type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool() then
+if type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true}) then
 	keep = false
 end'''
 
