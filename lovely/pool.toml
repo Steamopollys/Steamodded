@@ -6,12 +6,23 @@ priority = 0
 ### Functions that affect random selection from pools
 
 # pseudorandom_element()
+# TODO special cases for now
 [[patches]]
 [patches.pattern]
 target = "functions/misc_functions.lua"
 pattern = "function pseudorandom_element(_t, seed)"
 position = "at"
-payload = "function pseudorandom_element(_t, seed, args)"
+payload = """function pseudorandom_element(_t, seed, args)
+    -- TODO special cases for now
+	-- Preserves reverse nominal order for Suits, nominal+face_nominal order for Ranks
+	-- for vanilla RNG
+	if _t == SMODS.Suits then
+		_t = SMODS.Suit:obj_list(true)
+	end
+	if _t == SMODS.Ranks then
+		_t = SMODS.Rank:obj_list()
+	end
+"""
 match_indent = true
 
 [[patches]]
@@ -21,7 +32,15 @@ pattern = "keys[#keys+1] = {k = k,v = v}"
 position = "at"
 payload = """
 local keep = true
-local in_pool_func = (args and args.in_pool) or (type(v) == 'table' and v.in_pool and type(v.in_pool) == 'function')
+local in_pool_func = 
+	args and args.in_pool
+	or type(v) == 'table' and type(v.in_pool) == 'function' and v.in_pool
+	or _t == G.P_CARDS and function(c)
+			return not (
+				type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = true})
+				or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = true})
+			)
+		end
 if in_pool_func then
     keep = in_pool_func(v, args)
 end

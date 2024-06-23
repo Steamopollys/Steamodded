@@ -49,15 +49,7 @@ pattern = "if self.GAME.starting_params.erratic_suits_and_ranks then _, k = pseu
 position = 'at'
 match_indent = true
 payload = '''if self.GAME.starting_params.erratic_suits_and_ranks then
-    v, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic'), {
-		starting_deck = true,
-		in_pool = function(c)
-			return not (
-				type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = true})
-				or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = true})
-			)
-		end
-	})
+    v, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic'), {starting_deck = true})
 end'''
 
 [[patches]]

@@ -165,6 +165,19 @@ function loadAPIs()
         end
     end
 
+    -- Internal function
+    -- Creates a list of objects from a list of keys.
+    -- Currently used for a special case when selecting a random suit/rank.
+    function SMODS.GameObject:obj_list(reversed)
+        local lb, ub, step = 1, #self.obj_buffer, 1
+        if reversed then lb, ub, step = ub, lb, -1 end
+        local res = {}
+        for i = lb, ub, step do
+          res[#res+1] = self.obj_table[self.obj_buffer[i]]
+        end
+        return res
+    end
+
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Language
     -------------------------------------------------------------------------------------------------
@@ -1541,7 +1554,6 @@ function loadAPIs()
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            -- TODO need reverse nominal order to preserve vanilla RNG
             local _suit = pseudorandom_element(SMODS.Suits, pseudoseed('sigil'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
