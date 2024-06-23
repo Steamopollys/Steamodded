@@ -23,7 +23,7 @@ payload = """
 local keep = true
 local in_pool_func = (args and args.in_pool) or (type(v) == 'table' and v.in_pool and type(v.in_pool) == 'function')
 if in_pool_func then
-    keep = in_pool_func(v)
+    keep = in_pool_func(v, args)
 end
 if keep then
     keys[#keys+1] = {k = k,v = v}

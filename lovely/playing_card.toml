@@ -33,11 +33,32 @@ payload = '''
 [[patches]]
 [patches.pattern]
 target = "game.lua"
+pattern = 'local _ = nil'
+position = 'before'
+match_indent = true
+payload = '''
+if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true})
+or type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true}) then
+	goto continue
+end'''
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
 pattern = "if self.GAME.starting_params.erratic_suits_and_ranks then _, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic')) end"
 position = 'at'
 match_indent = true
-payload = '''if self.GAME.starting_params.erratic_suits_and_ranks then _, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic'))
-	v = G.P_CARDS[k] end'''
+payload = '''if self.GAME.starting_params.erratic_suits_and_ranks then
+    v, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic'), {
+		starting_deck = true,
+		in_pool = function(c)
+			return not (
+				type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = true})
+				or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = true})
+			)
+		end
+	})
+end'''
 
 [[patches]]
 [patches.pattern]
@@ -47,21 +68,6 @@ position = 'at'
 match_indent = true
 payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].card_key'
 
-# TODO should we have a should_add_to_deck()? Or is just in_pool ok?
-[[patches]]
-[patches.pattern]
-target = "game.lua"
-pattern = 'local keep, _e, _d, _g = true, nil, nil, nil'
-position = 'after'
-match_indent = true
-payload = '''
-if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true}) then
-	keep = false
-end
-if type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true}) then
-	keep = false
-end'''
-
 [[patches]]
 [patches.pattern]
 target = "game.lua"
@@ -70,6 +76,14 @@ position = 'at'
 match_indent = true
 payload = '''
 if self.GAME.starting_params.no_faces and SMODS.Ranks[v.value].face then keep = false end'''
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "if keep then card_protos[#card_protos+1] = {s=_s,r=_r,e=_e,d=_d,g=_g} end"
+position = "after"
+payload = "::continue::"
+match_indent = true
 
 # loc_colour()
 [[patches]]
