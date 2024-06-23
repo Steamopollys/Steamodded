@@ -3,6 +3,9 @@ version = "1.0.0"
 dump_lua = true
 priority = 0
 
+### Functions that affect random selection from pools
+
+# pseudorandom_element()
 [[patches]]
 [patches.pattern]
 target = "functions/misc_functions.lua"
@@ -26,3 +29,108 @@ if keep then
     keys[#keys+1] = {k = k,v = v}
 end"""
 match_indent = true
+
+## get_current_pool()
+
+# Centers
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "else _starting_pool, _pool_key = G.P_CENTER_POOLS[_type], _type..(_append or '')"
+match_indent = true
+position = 'before'
+payload = '''
+elseif SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].rarities then
+	local rarities = SMODS.ConsumableTypes[_type].rarities
+	local rarity
+	if _legendary and rarities.legendary then
+		rarity = rarities.legendary.key
+	else
+		rarity = _rarity or pseudorandom('rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
+		for _, v in ipairs(rarities) do
+			if rarity <= v.rate then
+				rarity = v.key
+				break
+			else
+				rarity = rarity - v.rate
+			end
+		end
+	end
+	_starting_pool, _pool_key = SMODS.ConsumableTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1] = \"c_strength\""
+match_indent = true
+position = 'at'
+payload = '''
+if SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].default and G.P_CENTERS[SMODS.ConsumableTypes[_type].default] then
+	_pool[#_pool+1] = SMODS.ConsumableTypes[_type].default
+elseif _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1] = "c_strength"'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if v.name == 'Black Hole' or v.name == 'The Soul' then"
+match_indent = true
+position = 'at'
+payload = "if v.name == 'Black Hole' or v.name == 'The Soul' or v.hidden then"
+
+# TODO currently this overrides all base game checks
+# Probably move this down below all the add = _ and add an override flag "override_base_checks"
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if _type == 'Enhanced' then"
+match_indent = true
+position = 'at'
+payload = '''
+if v.in_pool and type(v.in_pool) == 'function' then
+	-- TODO currently this overrides all base game checks
+	if (_type == 'Enhanced' or _type == 'Tag' or v.set == 'Voucher' or v.set == 'Planet') then
+		sendWarnMessage(("get_current_pool(): in_pool() may not work correctly on a card of _type=%s"):format(_type))
+	end
+	local res, pool_opts = v:in_pool()
+	if res and (not G.GAME.used_jokers[v.key] or (pool_opts and pool_opts.allow_duplicates) or next(find_joker("Showman"))) then
+		add = true
+	end
+elseif _type == 'Enhanced' then'''
+
+## G.GAME.used_jokers now checks keys, not names
+# Card:set_ability()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+(?<indent>[\t ]*)for k, v in pairs\(G\.P_CENTERS\) do
+[\t ]*if v\.name == self\.ability\.name then
+[\t ]*G\.GAME\.used_jokers\[k\] = true
+[\t ]*end
+[\t ]*end'''
+position = "at"
+payload = '''
+if self.config.center_key ~= "c_base" then
+    G.GAME.used_jokers[self.config.center_key] = true
+end
+'''
+line_prepend = "$indent"
+# Card:remove()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+(?<indent>[\t ]*)for k, v in pairs\(G\.P_CENTERS\) do
+[\t ]*if v\.name == self\.ability\.name then
+[\t ]*if not next\(find_joker\(self\.ability\.name, true\)\) then 
+[\t ]*G\.GAME\.used_jokers\[k\] = nil
+[\t ]*end
+[\t ]*end
+[\t ]*end'''
+position = "at"
+payload = '''
+if not SMODS.find_card(self.config.center_key, true) then
+    G.GAME.used_jokers[self.config.center_key] = nil
+end'''
+line_prepend = "$indent"
