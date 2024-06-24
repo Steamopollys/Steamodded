@@ -67,4 +67,4 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 
-if SMODS.Seal.reverse_lookup[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end'''
+if SMODS.Seals[v] or SMODS.Seal.reverse_lookup[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end'''

@@ -1,0 +1,7 @@
+{
+    "name": "nativefs",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/EngineerSmith/nativefs",
+    "description": "nativefs replicates a subset of the love.filesystem API, but without LÖVE's path restrictions.",
+    "dependencies": ["Thunderstore-lovely-0.3.0"]
+}
