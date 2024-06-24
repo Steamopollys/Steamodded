@@ -219,6 +219,11 @@ function loadAPIs()
         inject_class = function()
             SMODS.handle_loc_file(SMODS.path)
             if SMODS.dump_loc then SMODS.dump_loc.pre_inject = copy_table(G.localization) end
+            for _, mod in ipairs(SMODS.mod_list) do
+                if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
+                    mod.process_loc_text()
+                end
+            end
         end
     }
 
@@ -2443,9 +2448,6 @@ function loadAPIs()
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         inject_class = function()
             for _, mod in ipairs(SMODS.mod_list) do
-                if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
-                    mod.process_loc_text()
-                end
                 SMODS.handle_loc_file(mod.path)
             end
         end
