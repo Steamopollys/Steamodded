@@ -6,7 +6,7 @@ priority = 0
 # function G.UIDEF.challenge_list_page()
 [[patches]]
 [patches.pattern]
-target = "card.lua"
+target = "functions/UI_definitions.lua"
 pattern = "local challenge_unlocked = G.PROFILES[G.SETTINGS.profile].challenges_unlocked and (G.PROFILES[G.SETTINGS.profile].challenges_unlocked >= k)"
 position = 'after'
 payload = """
