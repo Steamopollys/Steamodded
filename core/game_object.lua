@@ -1759,11 +1759,11 @@ function loadAPIs()
         end,
     })
     SMODS.Blind:take_ownership('eye', {
-        set_blind = function(self, blind, reset, silent)
+        set_blind = function(self, reset, silent)
             if not reset then
-                self.hands = {}
+                G.GAME.blind.hands = {}
                 for _, v in ipairs(G.handlist) do
-                    self.hands[v] = false
+                    G.GAME.blind.hands[v] = false
                 end
             end
         end
