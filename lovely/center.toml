@@ -124,16 +124,6 @@ if _c.locked_loc_vars and type(_c.locked_loc_vars) == 'function' then
 	specific_vars.not_hidden = res.not_hidden or specific_vars.not_hidden
 elseif $rest'''
 
-[[patches]]
-[patches.regex]
-target = 'functions/common_events.lua'
-pattern = "(?<indent>[\t ]*)if v == 'eternal'"
-line_prepend = '$indent'
-position = 'before'
-payload = '''
-
-if SMODS.Seals[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end'''
-
 # check_for_unlock()
 [[patches]]
 [patches.regex]
