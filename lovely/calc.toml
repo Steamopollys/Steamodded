@@ -1,0 +1,110 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# Card:get_chip_x_mult()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.ability.x_mult <= 1 then return 0 end"
+position = "at"
+payload = ""
+match_indent = true
+
+## Fix checks for if repetitions exist
+## Also don't nest repetitions under jokers/seals
+# G.FUNCS.evaluate_play(), end_round()
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '(?<indent>[\t ]*)if next\(eval\) and \(next\(effects\[1\]\) or #effects > 1\) +then'
+position = "at"
+payload = "if eval.seals then"
+line_prepend = '$indent'
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''
+(?<indent>[\t ]*)if .* then[\t ]*
+[\t ]*for h += 1, eval\.(\w+)\.repetitions do
+[\t ]*reps\[#reps\+1\] = eval'''
+position = "at"
+# effects == nil takes advantage of undefined globals being nil
+# TODO fix this, it's fragile
+payload = '''
+if eval.$2 and (effects == nil or next(effects[1]) or #effects > 1) then
+    for h = 1, eval.$2.repetitions do
+        reps[#reps+1] = eval.$2'''
+line_prepend = '$indent'
+# G.FUNCS.evaluate_play()
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''card_eval_status_text\(\(reps\[j\]\.jokers or reps\[j\]\.seals\)\.card, 'jokers', nil, nil, nil, \(reps\[j\].jokers or reps\[j\]\.seals\)\)'''
+position = "at"
+payload = "card_eval_status_text(reps[j].card, 'jokers', nil, nil, nil, reps[j])"
+line_prepend = '$indent'
+
+## Common aliases in card_eval_status_text()
+# card_eval_status_text()
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = 'extra\.mult_mod'
+position = "at"
+payload = '(extra.mult or extra.mult_mod)'
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = 'extra\.Xmult_mod'
+position = "at"
+payload = '(extra.x_mult or extra.x_mult_mod or extra.Xmult_mod)'
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = 'extra\.chip_mod'
+position = "at"
+payload = '(extra.chips or extra.chip_mod)'
+
+## Inject eval_effect
+# G.FUNCS.evaluate_play()
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''
+(?<indent>[\t ]*)scoring_hand\[i\].lucky_trigger = nil
+[\t ]*
+([\t ]*for ii = 1, #effects do
+[\s\S]*?edition = true\}\)
+[\t ]*end
+[\t ]*end)'''
+root_capture = "$2"
+position = "at"
+payload = '''
+SMODS.eval_playing_card_effect{
+    card = scoring_hand[i],
+    effect = effects,
+    percent = percent
+}'''
+line_prepend = "$indent"
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''
+((?<indent>[\t ]*)for ii = 1, #effects do
+[\t ]*--if this effect came from a joker
+[\t ]*if effects\[ii\]\.card then
+[\t ]*mod_percent = true
+[\s\S]*?end)
+[\t ]*j = j \+1'''
+root_capture = "$1"
+position = "at"
+payload = '''
+SMODS.eval_playing_card_effect{
+    card = G.hand.cards[i],
+    effect = effects,
+    percent = percent
+}
+if next(effects[1]) or #effects > 1 then mod_percent = true end'''
+line_prepend = "$indent"

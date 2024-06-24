@@ -210,87 +210,6 @@ position = "after"
 payload = "joker_added_to_deck_but_debuffed = self.joker_added_to_deck_but_debuffed,"
 match_indent = true
 
-# Alternate scoring effects for editions
-
-# Edition scoring on playing cards
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua" # line 763
-pattern = '''hand_chips = mod_chips(hand_chips + (effects[ii].edition.chip_mod or 0))'''
-position = "before"
-payload = '''
-if effects[ii].edition.chip_mod then
-    hand_chips = mod_chips(hand_chips + effects[ii].edition.chip_mod)
-    local key_switch = (effects[ii].edition.chip_mod > 0 and 'a_chips' or 'a_chips_minus')
-    card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
-        message = localize{type='variable', key=key_switch, vars={math.abs(effects[ii].edition.chip_mod)}},
-        chip_mod = true,
-        colour = G.C.DARK_EDITION,
-        edition = true
-    })
-    update_hand_text({delay = 0}, {chips = hand_chips})
-end
-if effects[ii].edition.mult_mod then
-    mult = mult + effects[ii].edition.mult_mod
-    card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
-        message = localize{type='variable', key='a_mult', vars={effects[ii].edition.mult_mod}},
-        mult_mod = true,
-        colour = G.C.DARK_EDITION,
-        edition = true
-    })
-    update_hand_text({delay = 0}, {mult = mult})
-end
-if effects[ii].edition.x_mult_mod then
-    mult = mult * effects[ii].edition.x_mult_mod
-    card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
-        message = localize{type='variable', key='a_xmult', vars={effects[ii].edition.x_mult_mod}},
-        x_mult_mod = true,
-        colour = G.C.DARK_EDITION,
-        edition = true
-    })
-    update_hand_text({delay = 0}, {mult = mult})
-end
-if effects[ii].edition.p_dollars_mod then
-    if effects[ii].card then juice_card(effects[ii].card) end
-    ease_dollars(effects[ii].edition.p_dollars_mod)
-    card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].edition.p_dollars_mod, percent)
-end
-if not effects[ii].edition then'''
-match_indent = true
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''                                edition = true\}\)'''
-position = "after"
-payload = '''end'''
-
-# Edition scoring on jokers
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "edition_effects.jokers.edition = true"
-position = "after"
-payload = '''
-if edition_effects.jokers.p_dollars_mod then
-    ease_dollars(edition_effects.jokers.p_dollars_mod)
-    card_eval_status_text(_card, 'dollars', edition_effects.jokers.p_dollars_mod, percent)
-end'''
-match_indent = true
-
-
-# Adding p_dollars
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = "if self.edition.x_mult then"
-position = "before"
-payload = '''
-if self.edition.p_dollars then
-    ret.p_dollars_mod = self.edition.p_dollars
-end'''
-match_indent = true
-
-
 
 # Negative playing card logic
 [[patches]]
@@ -329,4 +248,26 @@ target = "functions/UI_definitions.lua"
 pattern = "if v == 'negative_consumable' then v = 'negative' end"
 position = "at"
 payload = '''if v == 'negative_consumable' or v == 'negative_playing_card' then v = 'negative' end'''
+match_indent = true
+
+
+## Inject edition calculate()
+# Card:get_edition()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "local ret = {card = self}"
+position = "before"
+payload = """
+local obj = G.P_CENTERS['e_'..self.edition.type]
+if obj and obj.calculate and type(obj.calculate) == 'function' and context then
+    return obj:calculate(self, context)
+end"""
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "function Card:get_edition()"
+position = "at"
+payload = "function Card:get_edition(context)"
 match_indent = true

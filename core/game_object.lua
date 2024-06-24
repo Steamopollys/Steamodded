@@ -2026,7 +2026,8 @@ function loadAPIs()
         -- loc_subtract_extra_chips
         -- During tooltip generation, number of chips to subtract from displayed extra chips.
         -- Use if enhancement already displays its own chips.
-        -- Future work: use ranks() and suits() for better control
+        -- TODO Future work: use ranks() and suits() for better control. Also, there are
+        -- too many flags here, maybe simplify things
         register = function(self)
             self.config = self.config or {}
             assert(not (self.no_suit and self.any_suit))
@@ -2052,14 +2053,8 @@ function loadAPIs()
         -- other methods:
         -- calculate(self, context, effect)
     }
-    -- Note: `name`, `effect`, and `label` all serve the same purpose as
-    -- the name of the enhancement. In theory, `effect` serves to allow reusing
-    -- similar effects (ex. the Sinful jokers). But Balatro just uses them all
-    -- indiscriminately for enhancements.
-    -- `name` and `effect` are technically different for Bonus and Mult
-    -- cards but this never matters in practice; also `label` is a red herring,
-    -- I can't even find a single use of `label`.
 
+    -- TODO
     -- It would be nice if the relevant functions for modding each class of object
     -- would be documented.
     -- For example, Card:set_ability sets the card's enhancement, which is not immediately
@@ -2147,9 +2142,29 @@ function loadAPIs()
         -- other fields:
         -- extra_cost
 
-        -- TODO badge colours. need to check how Steamodded already does badge colors
-        -- other methods:
-        -- calculate(self)
+        -- Default calculate function, works for simple cases. Define your own!
+        calculate = function(self, card, context)
+            local ret = {}
+            if not context.repetition then
+                if context.cardarea == G.play then
+                    for _, v in ipairs{'chips', 'mult', 'x_mult', 'dollars'} do
+                        if card.edition[v] then
+                            ret[v] = card.edition[v]
+                        end
+                    end
+                elseif context.cardarea == G.hand then
+                    for _, v in ipairs{'h_mult', 'h_x_mult'} do
+                        if card.edition[v] then
+                            ret[v] = card.edition[v]
+                        end
+                    end
+                end
+            end
+            if next(ret) then
+                ret.card = card
+                return ret
+            end
+        end,
         register = function(self)
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
@@ -2158,8 +2173,9 @@ function loadAPIs()
             SMODS.process_loc_text(G.localization.misc.labels, self.key:sub(3), self.loc_txt, 'label')
             SMODS.Edition.super.process_loc_text(self)
         end,
-        -- apply_modifier = true when G.GAME.edition_rate is to be applied
-        get_weight = function(self, apply_modifier)
+        -- Return the modified weight (ex. G.GAME.edition_rate) of this edition
+        -- TODO rename?
+        get_weight = function(self)
             return self.weight
         end
     }
