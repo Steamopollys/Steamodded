@@ -2405,35 +2405,35 @@ function loadAPIs()
         old_colours = {},
         new_colours = {},
         type = "Tarot",
-        name = "Default"
+        name = localize('b_card_colours_def')
     })
     SMODS.Palette({
         key = "planet_default",
         old_colours = {},
         new_colours = {},
         type = "Planet",
-        name = "Default"
+        name = localize('b_card_colours_def')
     })
     SMODS.Palette({
         key = "spectral_default",
         old_colours = {},
         new_colours = {},
         type = "Spectral",
-        name = "Default"
+        name = localize('b_card_colours_def')
     })
     SMODS.Palette({
         key = "base_cards",
         old_colours = { "235955", "3c4368", "f06b3f", "f03464" },
         new_colours = { "235955", "3c4368", "f06b3f", "f03464" },
         type = "Suits",
-        name = "Default"
+        name = localize('b_card_colours_def')
     })
     SMODS.Palette({
         key = "high_contrast_cards",
         old_colours = { "235955", "3c4368", "f06b3f", "f03464" },
         new_colours = { "008ee6", "3c4368", "e29000", "f83b2f" },
         type = "Suits",
-        name = "High Contrast"
+        name = localize('b_card_colours_hi')
     })
 
     

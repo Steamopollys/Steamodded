@@ -20,7 +20,7 @@ match_indent = true
 target = "functions/UI_definitions.lua"
 pattern = '''local high_scores = UIBox_button{ label = {localize('b_stats')}, button = "high_scores", minw = 5}'''
 position = "after"
-payload = '''local colours = UIBox_button{ label = {"Card Colours"}, button = "card_colours", minw = 5}'''
+payload = '''local colours = UIBox_button{ label = {localize('b_card_colours')}, button = "card_colours", minw = 5}'''
 match_indent = true
 [[patches]]
 [patches.pattern]
