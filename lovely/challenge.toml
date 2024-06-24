@@ -11,8 +11,7 @@ pattern = "local challenge_unlocked = G.PROFILES[G.SETTINGS.profile].challenges_
 position = 'after'
 payload = """
 if v.unlocked and type(v.unlocked) == 'function' then
-	local ret = v:unlocked(self)
-	if ret then challenge_unlocked = ret end
+	challenge_unlocked = v:unlocked()
 elseif type(v.unlocked) == 'boolean' then
     challenge_unlocked = v.unlocked
 end
