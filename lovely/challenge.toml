@@ -15,6 +15,7 @@ if v.unlocked and type(v.unlocked) == 'function' then
 elseif type(v.unlocked) == 'boolean' then
     challenge_unlocked = v.unlocked
 end
+challenge_unlocked = challenge_unlocked or G.PROFILES[G.SETTINGS.profile].all_unlocked
 
 """
 match_indent = true
