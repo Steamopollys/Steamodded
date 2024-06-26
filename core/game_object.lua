@@ -1114,8 +1114,9 @@ function loadAPIs()
         -- TODO generalize
         -- TODO currently this is just supposed to create a card,
         -- but there may be other things that open should do
-        open = function(self, card)
-            return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
+        create_card = function(self, card)
+            -- Example
+            -- return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
         end,
         update_pack = function(self, dt)
             if G.buttons then self.buttons:remove(); G.buttons = nil end

@@ -27,8 +27,8 @@ target = "card.lua"
 pattern = '''(?<indent>[\t ]*)elseif self\.ability\.name:find\('Spectral'\) then\n[\s\S]{24}card'''
 position = "before"
 payload = ''' 
-elseif booster_obj.open and type(booster_obj.open) == "function" then 
-    local _card_to_spawn = booster_obj:open(self)
+elseif booster_obj.create_card and type(booster_obj.create_card) == "function" then 
+    local _card_to_spawn = booster_obj:create_card(self)
     card = _card_to_spawn
 
 '''
