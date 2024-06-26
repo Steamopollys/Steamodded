@@ -1090,20 +1090,18 @@ function loadAPIs()
     SMODS.Boosters = {}
     SMODS.OPENED_BOOSTER = nil
     SMODS.Booster = SMODS.Center:extend {
-        reverse_lookup_type = {},
         required_params = {
             'key',
         },
         prefix = 'p',
         set = "Booster",
-        atlas = "dsix_d6_boosters",
-        type_key = "D6 Joker",
+        atlas = "Booster",
         pos = {x = 0, y = 0},
         loc_txt = {},
-        discovered = true,
+        discovered = false,
         weight = 1,
         cost = 4,
-        config = {extra = 4, choose = 1},
+        config = {extra = 3, choose = 1},
         inject = function(self)
             SMODS.Center.inject(self)
             SMODS.Boosters[self.key] = self
@@ -1116,17 +1114,7 @@ function loadAPIs()
         open = function(self, card)
             return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
         end,
-        handle_pack_uibox = function(dt)
-            local opened_booster = nil
-            for k, v in pairs(SMODS.Booster) do
-                if k == SMODS.OPENED_BOOSTER then opened_booster = v end
-            end
-            if opened_booster then opened_booster:update_pack_uibox(dt) 
-            else 
-                SMODS.Booster:update_pack_uibox(dt)
-            end
-        end,
-        update_pack_uibox = function(self, dt)
+        update_pack = function(self, dt)
             if G.buttons then self.buttons:remove(); G.buttons = nil end
             if G.shop then G.shop.alignment.offset.y = G.ROOM.T.y+11 end
         
@@ -1137,11 +1125,11 @@ function loadAPIs()
                     trigger = 'immediate',
                     func = function()
                         G.booster_pack = UIBox{
-                            definition = self:create_pack_uibox(),
-                            config = {align="tmi", offset = {x=0,y=G.ROOM.T.y + 9},major = G.hand, bond = 'Weak'}
+                            definition = self:pack_uibox(),
+                            config = {align="tmi", offset = {x=0,y=G.ROOM.T.y + 9}, major = G.hand, bond = 'Weak'}
                         }
                         G.booster_pack.alignment.offset.y = -2.2
-                                G.ROOM.jiggle = G.ROOM.jiggle + 3
+                        G.ROOM.jiggle = G.ROOM.jiggle + 3
                         self:ease_background_colour()
                         G.E_MANAGER:add_event(Event({
                             trigger = 'immediate',
@@ -1161,11 +1149,12 @@ function loadAPIs()
                 }))  
             end
         end,
+        -- TODO generalize
         ease_background_colour = function(self, blind_override)
             ease_colour(G.C.DYN_UI.MAIN, G.C.FILTER)
             ease_background_colour{new_colour = G.C.FILTER, special_colour = G.C.BLACK, contrast = 2}
         end,
-        create_pack_uibox = function(self)
+        pack_uibox = function(self)
             local _size = self.config.extra
             G.pack_cards = CardArea(
               G.ROOM.T.x + 9 + G.hand.T.x, G.hand.T.y,

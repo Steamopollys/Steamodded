@@ -1,0 +1,89 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+## Booster Pack API
+
+# Card:open
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''G.GAME.pack_choices = self.config.center.config.choose or 1'''
+position = "before"
+payload = '''
+booster_obj = self.config.center
+sendInfoMessage("self.config.center: "..tostring(self.config.center))
+if booster_obj and SMODS.Boosters[booster_obj.key] then
+    G.STATE = G.STATES.SMODS_BOOSTER_OPENED
+    SMODS.OPENED_BOOSTER = booster_obj.key
+end'''
+match_indent = true
+
+# Card:open
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''(?<indent>[\t ]*)elseif self\.ability\.name:find\('Spectral'\) then\n[\s\S]{24}card'''
+position = "before"
+payload = ''' 
+elseif booster_obj.open and type(booster_obj.open) == "function" then 
+    local _card_to_spawn = booster_obj:open(self)
+    card = _card_to_spawn
+
+'''
+line_prepend = '$indent'
+
+# Game:set_globals
+[[patches]]
+[patches.regex]
+target = "globals.lua"
+pattern = '''(?<indent>[\t ]*)self\.STATES = \{'''
+position = "after"
+payload = '''
+
+    SMODS_BOOSTER_OPENED = 999,'''
+line_prepend = '$indent'
+
+# Game:update
+[[patches]]
+[patches.regex]
+target = "game.lua"
+pattern = '''(?<indent>[\t ]*)if self\.STATE == self\.STATES\.TAROT_PACK then'''
+position = "before"
+payload = '''
+if G.STATE == G.STATES.SMODS_BOOSTER_OPENED then
+    SMODS.Boosters[SMODS.OPENED_BOOSTER]:update_pack(dt)
+end
+
+'''
+line_prepend = '$indent'
+
+# G.FUNC.can_skip_booster
+# TODO customize whether pack can be skipped
+[[patches]]
+[patches.regex]
+target = "functions/button_callbacks.lua"
+pattern = '''G\.STATE == G\.STATES\.PLANET_PACK or G\.STATE == G\.STATES\.STANDARD_PACK or G\.STATE == G.STATES\.BUFFOON_PACK'''
+position = "before"
+payload = '''G.STATE == G.STATES.SMODS_BOOSTER_OPENED or '''
+
+# CardArea:draw()
+[[patches]]
+[patches.pattern]
+target = "cardarea.lua"
+pattern = "(self.config.type == 'deck' and self ~= G.deck) or"
+position = "before"
+payload = '''
+(self.config.type == 'hand' and state == G.STATES.SMODS_BOOSTER_OPENED) or'''
+match_indent = true
+
+# G.FUNCS.use_card
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "prev_state == G.STATES.SPECTRAL_PACK or prev_state == G.STATES.STANDARD_PACK or"
+position = "after"
+payload = '''
+prev_state == G.STATES.SMODS_BOOSTER_OPENED or'''
+match_indent = true
