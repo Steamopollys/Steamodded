@@ -1106,10 +1106,23 @@ function loadAPIs()
             SMODS.Center.inject(self)
             SMODS.Boosters[self.key] = self
         end,
+        loc_vars = function(self, info_queue, card)
+            return { vars = {card.config.choose, card.config.extra} }
+        end,
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
-            local vars = { self.config.choose, self.config.extra }
+            local target = {
+                type = 'other',
+                key = self.key,
+                nodes = desc_nodes,
+                vars = {}
+            }
+            if self.loc_vars and type(self.loc_vars) == 'function' then
+                local res = self:loc_vars(info_queue, card) or {}
+                target.vars = res.vars or target.vars
+                target.key = res.key or target.key
+            end
             full_UI_table.name = localize{type = 'name', set = 'Other', key = self.key, nodes = full_UI_table.name}
-            localize{type = 'other', key = self.key, nodes = desc_nodes, vars = vars}
+            localize(target)
         end,
         -- TODO generalize
         -- TODO currently this is just supposed to create a card,
