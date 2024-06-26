@@ -90,6 +90,16 @@ function loadMods(modsDirectory)
         priority      = { pattern = '%-%-%- PRIORITY: (%-?%d+)\n', handle = function(x) return x and x + 0 or 0 end },
         badge_colour  = { pattern = '%-%-%- BADGE_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or '666666FF') end },
         display_name  = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
+        mod_config = { 
+            pattern = '%-%-%- MOD_CONFIG_PATH: (.-)\n', 
+            handle = function(x)
+                local config = {}
+                if x then
+                    local file, err = NFS.load(SMODS.MODS_DIR.."/"..x..".lua")
+                    if err then sendWarnMessage("Error loading mod config file: "..err) else return file() end
+                end
+            end
+        },
         dependencies  = {
             pattern = '%-%-%- DEPENDENCIES: %[(.-)%]\n',
             parse_array = true,

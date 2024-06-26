@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0624b-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0625a-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -213,6 +213,78 @@ function create_UIBox_mods(args)
 									}
 								end
 							},
+							(G.ACTIVE_MOD_UI.mod_config and G.ACTIVE_MOD_UI.mod_config.credits) and {
+								-- Mod Credits
+								label = localize("b_credits"),
+								chosen = false,
+								tab_definition_function = function()
+									local modNodes = {}
+
+									--Loop through all tabs
+									for i, v in ipairs(G.ACTIVE_MOD_UI.mod_config.credits) do
+										local credits_list = {}
+										local subNodes = {
+											n = G.UIT.C,
+											config = {
+												padding = v.padding or 0.1,
+												align = "cm"
+											},
+											nodes = {}
+										}
+										-- Loop through all keys within a given tab
+										for k, v in pairs(G.ACTIVE_MOD_UI.mod_config.credits[i]) do
+											if type(v) == "table" then table.insert(credits_list, v) end
+										end
+
+										table.sort(credits_list, function(a, b) return a.order < b.order end)
+
+										for _, credit_info in ipairs(credits_list) do
+											local text_desc = wrapText(localize(credit_info.title).. ': ' .. concatAuthors(credit_info.name_list), maxCharsPerLine)
+											table.insert(subNodes.nodes, {
+												n = G.UIT.R,
+												config = {
+													padding = credit_info.padding or 0.1,
+													align = "cm"
+												},
+												nodes = {
+													{
+														n = G.UIT.T,
+														config = {
+															text = text_desc,
+															shadow = true,
+															scale = credit_info.scale or var_495_0 * 0.5,
+															colour = G.C.UI.TEXT_LIGHT
+														}
+													}
+												}
+											})
+										end
+
+										table.insert(modNodes, subNodes)
+									end
+
+									local customUI = SMODS.customUIElements[G.ACTIVE_MOD_UI.id]
+									if customUI then
+										for _, uiElement in ipairs(customUI) do
+											table.insert(modNodes, uiElement)
+										end
+									end
+
+									return {
+										n = G.UIT.ROOT,
+										config = {
+											emboss = 0.05,
+											minh = 6,
+											r = 0.1,
+											minw = 6,
+											align = "tm",
+											padding = 0.2,
+											colour = G.C.BLACK
+										},
+										nodes = modNodes
+									}
+								end
+							} or nil,
 						}
 					})
 				}
