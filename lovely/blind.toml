@@ -274,11 +274,11 @@ target = 'functions/UI_definitions.lua'
 pattern = '''local loc_target = localize{type = 'raw_descriptions', key = blind.key, set = 'Blind', vars = vars or blind.vars}'''
 match_indent = true
 position = 'at'
-payload = ''' 
+payload = '''
 local loc_vars = nil
-if blind.loc_vars and type(blind.loc_vars) == 'function' then
-	local res = blind:loc_vars() or {}
-	loc_vars = res.vars or {}
+if blind.collection_loc_vars and type(blind.collection_loc_vars) == 'function' then
+	local res = blind:collection_loc_vars() or {}
+	loc_vars = res.vars
 end
 local loc_target = localize{type = 'raw_descriptions', key = blind.key, set = 'Blind', vars = loc_vars or vars or blind.vars}'''
 
