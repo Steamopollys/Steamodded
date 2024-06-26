@@ -33,11 +33,24 @@ payload = '''
 [[patches]]
 [patches.pattern]
 target = "game.lua"
+pattern = 'local _ = nil'
+position = 'before'
+match_indent = true
+payload = '''
+if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true})
+or type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true}) then
+	goto continue
+end'''
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
 pattern = "if self.GAME.starting_params.erratic_suits_and_ranks then _, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic')) end"
 position = 'at'
 match_indent = true
-payload = '''if self.GAME.starting_params.erratic_suits_and_ranks then _, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic'))
-v = G.P_CARDS[k] end'''
+payload = '''if self.GAME.starting_params.erratic_suits_and_ranks then
+    v, k = pseudorandom_element(G.P_CARDS, pseudoseed('erratic'), {starting_deck = true})
+end'''
 
 [[patches]]
 [patches.pattern]
@@ -50,67 +63,19 @@ payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].car
 [[patches]]
 [patches.pattern]
 target = "game.lua"
-pattern = 'local card_protos = nil'
-position = 'after'
-match_indent = true
-payload = '''
-local remove_suits = {}
-G.GAME.disabled_suits = {}
-for k, v in pairs(SMODS.Suits) do
-	if v.should_register and type(v.should_register) == 'function' then
-		G.GAME.disabled_suits[k] = not v:should_register(args, self.GAME.selected_back) or nil
-		-- unregister playing cards
-		if G.GAME.disabled_suits[k] then v:disable() end
-	else
-		G.GAME.disabled_suits[k] = nil
-		v:populate()
-		if v.should_add_to_deck and type(v.should_add_to_deck) == 'function' then
-			-- remove cards from starting deck
-			remove_suits[v.card_key] = not v:should_add_to_deck(args, self.GAME.selected_back)
-		end
-	end
-end
-local remove_ranks = {}
-G.GAME.disabled_ranks = {}
-for k, v in pairs(SMODS.Suits) do
-	if v.should_register and type(v.should_register) == 'function' then
-		G.GAME.disabled_ranks[k] = not v:should_register(args, self.GAME.selected_back) or nil
-		if G.GAME.disabled_ranks[k] then v:disable() end
-	else
-		G.GAME.disabled_suits[k] = nil
-		v:populate()
-		if v.should_add_to_deck and type(v.should_add_to_deck) == 'function' then
-			remove_ranks[v.card_key] = not v:should_add_to_deck(args, self.GAME.selected_back)
-		end
-	end
-end'''
-
-[[patches]]
-[patches.pattern]
-target = "game.lua"
 pattern = "if self.GAME.starting_params.no_faces and (_r == 'K' or _r == 'Q' or _r == 'J') then keep = false end"
 position = 'at'
 match_indent = true
 payload = '''
-if self.GAME.starting_params.no_faces and SMODS.Ranks[v.value].face then keep = false end
-if remove_suits[_s] then keep = false end
-if remove_ranks[_r] then keep = false end'''
+if self.GAME.starting_params.no_faces and SMODS.Ranks[v.value].face then keep = false end'''
 
 [[patches]]
 [patches.pattern]
 target = "game.lua"
-pattern = "table.sort(G.playing_cards, function (a, b) return a.playing_card > b.playing_card end )"
-position = 'before'
+pattern = "if keep then card_protos[#card_protos+1] = {s=_s,r=_r,e=_e,d=_d,g=_g} end"
+position = "after"
+payload = "::continue::"
 match_indent = true
-payload = '''
-for k, _ in pairs(G.GAME.disabled_suits) do
-	local s = SMODS.Suits[k]
-	if s then s:disable() end
-end
-for k, _ in pairs(G.GAME.disabled_ranks) do
-	local s = SMODS.Ranks[k]
-	if s then s:disable() end
-end'''
 
 # loc_colour()
 [[patches]]
@@ -260,6 +225,21 @@ pattern = 'local _r, _s = string.sub(k, 3, 3), string.sub(k, 1, 1)'
 position = 'at'
 match_indent = true
 payload = 'local _r, _s = SMODS.Ranks[v.value].card_key, SMODS.Suits[v.suit].card_key'
+
+# TODO there may need to be a way to let in_pool know what challenge is being displayed
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = 'local keep, _e, _d, _g = true, nil, nil, nil'
+position = 'after'
+match_indent = true
+payload = '''
+if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true}) then
+	keep = false
+end
+if type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true}) then
+	keep = false
+end'''
 
 [[patches]]
 [patches.regex]

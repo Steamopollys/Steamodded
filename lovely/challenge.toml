@@ -1,0 +1,21 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# function G.UIDEF.challenge_list_page()
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "local challenge_unlocked = G.PROFILES[G.SETTINGS.profile].challenges_unlocked and (G.PROFILES[G.SETTINGS.profile].challenges_unlocked >= k)"
+position = 'after'
+payload = """
+if v.unlocked and type(v.unlocked) == 'function' then
+	challenge_unlocked = v:unlocked()
+elseif type(v.unlocked) == 'boolean' then
+    challenge_unlocked = v.unlocked
+end
+challenge_unlocked = challenge_unlocked or G.PROFILES[G.SETTINGS.profile].all_unlocked
+
+"""
+match_indent = true

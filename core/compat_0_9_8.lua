@@ -414,7 +414,7 @@ function SMODS.compat_0_9_8.load()
             or k == 'get_loc_debuff_text' then
                 local v_ref = v
                 v = function(self, ...)
-                    return v_ref(...)
+                    return v_ref(G.GAME.blind, ...)
                 end
             end
             rawset(t, k, v)

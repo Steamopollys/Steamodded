@@ -1,10 +1,7 @@
 --- STEAMODDED CORE
---- MODULE API HOOKS
+--- OVERRIDES
 
--------------------------------------------------------------------------------------------------
------ API HOOKS GameObject.Stake
--------------------------------------------------------------------------------------------------
-
+--#region stakes UI
 function SMODS.applied_stakes_UI(i, stake_desc_rows, num_added)
 	if num_added == nil then num_added = { val = 0 } end
 	if G.P_CENTER_POOLS['Stake'][i].applied_stakes then
@@ -25,13 +22,14 @@ function SMODS.applied_stakes_UI(i, stake_desc_rows, num_added)
 						n = G.UIT.R,
 						config = { align = "cm" },
 						nodes = {
-							{ n = G.UIT.C, config = { align = 'cm' },                                                                nodes = { { n = G.UIT.C, config = { align = "cm", colour = get_stake_col(i), r = 0.1, minh = 0.35, minw = 0.35, emboss = 0.05 }, nodes = {} }, { n = G.UIT.B, config = { w = 0.1, h = 0.1 } } } },
+							{ n = G.UIT.C, config = { align = 'cm' },                                                                      nodes = { { n = G.UIT.C, config = { align = "cm", colour = get_stake_col(i), r = 0.1, minh = 0.35, minw = 0.35, emboss = 0.05 }, nodes = {} }, { n = G.UIT.B, config = { w = 0.1, h = 0.1 } } } },
 							{ n = G.UIT.C, config = { align = "cm", padding = 0.03, colour = G.C.WHITE, r = 0.1, minh = 0.7, minw = 4.8 }, nodes = _full_desc },
 						}
 					}
 				end
 				num_added.val = num_added.val + 1
-				num_added.val = SMODS.applied_stakes_UI(G.P_STAKES["stake_" .. v].stake_level, stake_desc_rows, num_added)
+				num_added.val = SMODS.applied_stakes_UI(G.P_STAKES["stake_" .. v].stake_level, stake_desc_rows,
+					num_added)
 			end
 		end
 	end
@@ -57,12 +55,8 @@ function G.UIDEF.deck_stake_column(_deck_key)
 	end
 	return { n = G.UIT.ROOT, config = { align = 'cm', colour = G.C.CLEAR }, nodes = stake_col }
 end
-
--------------------------------------------------------------------------------------------------
------ API HOOKS GameObject.Suit / GameObject.Rank
--------------------------------------------------------------------------------------------------
-
--- no point in using lovely for this, since no part of the original function is useful
+--#endregion
+--#region straights and view deck UI
 function get_straight(hand)
 	local ret = {}
 	local four_fingers = next(SMODS.find_card('j_four_fingers'))
@@ -140,7 +134,6 @@ function get_straight(hand)
 	return ret
 end
 
--- yeah no, modifying this with lovely is so inefficient
 function G.UIDEF.deck_preview(args)
 	local _minh, _minw = 0.35, 0.5
 	local suit_labels = {}
@@ -659,11 +652,8 @@ function G.UIDEF.view_deck(unplayed_only)
 	}
 	return t
 end
-
--------------------------------------------------------------------------------------------------
------ API HOOKS GameObject.PokerHand
--------------------------------------------------------------------------------------------------
--- this would be annoying to patch in with lovely
+--#endregion
+--#region poker hands
 local init_game_object_ref = Game.init_game_object
 function Game:init_game_object()
 	local t = init_game_object_ref(self)
@@ -858,12 +848,8 @@ G.FUNCS.your_hands_page = function(args)
 		}
 	end
 end
-
-
--------------------------------------------------------------------------------------------------
------ API HOOKS GameObject.Edition
--------------------------------------------------------------------------------------------------
-
+--#endregion
+--#region editions
 function create_UIBox_your_collection_editions(exit)
     local deck_tables = {}
     local rows, cols = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1), 5
@@ -890,15 +876,15 @@ function create_UIBox_your_collection_editions(exit)
     for j = 1, rows do
         for i = 1, cols do
 
-            local center = G.P_CENTER_POOLS.Edition[index]
+            local edition = G.P_CENTER_POOLS.Edition[index]
 
-            if not center then
+            if not edition then
                 break
             end
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                G.CARD_W, G.CARD_H, nil, center)
+                G.CARD_W, G.CARD_H, nil, edition)
             card:start_materialize(nil, i > 1 or j > 1)
-            card:set_edition(center.key, true, true)
+            if edition.discovered then card:set_edition(edition.key, true, true) end
             G.your_collection[j]:emplace(card)
             index = index + 1
         end
@@ -946,7 +932,7 @@ G.FUNCS.your_collection_editions_page = function(args)
     if not args or not args.cycle_config then
         return
     end
-    local rows = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1), 5
+    local rows = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1)
     local cols = 5
     local page = args.cycle_config.current_option
     if page > math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) then
@@ -973,10 +959,10 @@ G.FUNCS.your_collection_editions_page = function(args)
             end
             local idx = i + (j - 1) * cols + offset
             if idx > #G.P_CENTER_POOLS["Edition"] then return end
-            local center = G.P_CENTER_POOLS["Edition"][idx]
+            local edition = G.P_CENTER_POOLS["Edition"][idx]
             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
-            card:set_edition(center.key, true, true)
+                G.CARD_W, G.CARD_H, G.P_CARDS.empty, edition)
+			if edition.discovered then card:set_edition(edition.key, true, true) end
             card:start_materialize(nil, i > 1 or j > 1)
             G.your_collection[j]:emplace(card)
         end
@@ -991,7 +977,7 @@ end
 -- OR another card's self.edition table
 -- immediate = boolean value
 -- silent = boolean value
-function Card.set_edition(self, edition, immediate, silent)
+function Card:set_edition(edition, immediate, silent)
 	-- Check to see if negative is being removed and reduce card_limit accordingly
 	if (self.added_to_deck or self.joker_added_to_deck_but_debuffed or (self.area == G.hand and not self.debuff)) and self.edition and self.edition.card_limit then
 		if self.ability.consumeable and self.area == G.consumeables then
@@ -1184,123 +1170,8 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 
     return nil
 end
-
-
--------------------------------------------------------------------------------------------------
------ API HOOKS GameObject.Palette
--------------------------------------------------------------------------------------------------
-G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
-G.PALETTE = {}
-
-G.FUNCS.update_recolor = function(args)
-    G.SETTINGS.selected_colours[args.cycle_config.type] = SMODS.Palettes[args.cycle_config.type][args.to_val]
-	G:save_settings()
-	G.FUNCS.update_atlas(args.cycle_config.type)
-end
-
--- Set the atlases of all cards of the correct type to be the new palette
-G.FUNCS.update_atlas = function(type)
-	local atlas_keys = {}
-	if type == "Suits" then
-		atlas_keys = {"cards_1", "ui_1"}
-		G.C["SO_1"].Clubs = G.SETTINGS.selected_colours[type].new_colours[1]
-		G.C["SO_1"].Spades = G.SETTINGS.selected_colours[type].new_colours[2]
-		G.C["SO_1"].Diamonds = G.SETTINGS.selected_colours[type].new_colours[3]
-		G.C["SO_1"].Hearts = G.SETTINGS.selected_colours[type].new_colours[4]
-		G.C.SUITS = G.C.SO_1		
-	else
-		for _,v in pairs(G.P_CENTER_POOLS[type]) do
-			atlas_keys[v.atlas or type] = v.atlas or type
-		end
-	end
-	for _,v in pairs(atlas_keys) do
-		if G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name] then
-			G.ASSET_ATLAS[v].image = G.ASSET_ATLAS[v][G.SETTINGS.selected_colours[type].name].image
-		end
-	end
-end
-
-G.FUNCS.card_colours = function(e)
-    G.SETTINGS.paused = true
-    G.FUNCS.overlay_menu{
-      definition = G.UIDEF.card_colours(),
-    }
-  end
-
-G.UIDEF.card_colours = function()
-    local nodeRet = {}
-    for _,k in ipairs(SMODS.Palettes.Types) do
-		local v = SMODS.Palettes[k]
-        if #v.names > 1 then
-            nodeRet[#nodeRet+1] = create_option_cycle({w = 4,scale = 0.8, label = k.." colours" ,options = v.names, opt_callback = "update_recolor", current_option = G.SETTINGS.selected_colours[k].order, type=k})
-        end
-    end
-    local t = create_UIBox_generic_options({back_func = 'options', contents = nodeRet})
-    return t
-end
-
-G.FUNCS.recolour_image = function(x,y,r,g,b,a)
-	if G.PALETTE.NEW.old_colours then
-		for i=1, #G.PALETTE.NEW.old_colours do
-			local defaultColour = G.PALETTE.NEW.old_colours[i]
-			if defaultColour[1] == r and defaultColour[2] == g and defaultColour[3] == b then
-				r = G.PALETTE.NEW.new_colours[i][1]
-				g = G.PALETTE.NEW.new_colours[i][2]
-				b = G.PALETTE.NEW.new_colours[i][3]
-				return r,g,b,a
-			end
-		end
-	end
-	return r, g, b, a
-end
-
-function HEX_HSL(base_colour)
-	local rgb = HEX(base_colour)
-	local low = math.min(rgb[1], rgb[2], rgb[3])
-	local high = math.max(rgb[1], rgb[2], rgb[3])
-	local delta = high - low
-	local sum = high + low
-	local hsl = {0, 0, 0.5 * sum, rgb[4]}
-	
-	if delta == 0 then return hsl end
-	
-	if hsl[3] == 1 or hsl[3] == 0 then
-		hsl[2] = 0
-	else
-		hsl[2] = delta/1-math.abs(2*hsl[3] - 1)
-	end
-	
-	if high == rgb[1] then
-		hsl[1] = ((rgb[2]-rgb[3])/delta) % 6
-	elseif high == rgb[2] then
-		hsl[1] = 2 + (rgb[3]-rgb[1])/delta
-	else
-		hsl[1] = 4 + (rgb[1]-rgb[2])/delta 
-	end
-	hsl[1] = hsl[1]/6
-	return hsl
-end
-
-function HSL_RGB(base_colour)
-	if base_colour[2] < 0.0001 then return {base_colour[3], base_colour[3], base_colour[3], base_colour[4]} end
-	local t = (base_colour[3] < 0.5 and (base_colour[2]*base_colour[3] + base_colour[3]) or (-1 * base_colour[2] * base_colour[3] + (base_colour[2]+base_colour[3])))
-	local s = 2 * base_colour[3] - t
-
-	return {HUE(s, t, base_colour[1] + (1/3)), HUE(s,t,base_colour[1]), HUE(s,t,base_colour[1] - (1/3)), base_colour[4]}
-end
-
-function HUE(s, t, h)
-	local hs = (h % 1) * 6
-	if hs < 1 then return (t-s) * hs + s end
-	if hs < 3 then return t end
-	if hs < 4 then return (t-s) * (4-hs) + s end
-	return s
-end
-
--------------------------------------------------------------------------------------------------
------ API HOOKS GameObject.Enhancement
--------------------------------------------------------------------------------------------------
-
+--#endregion
+--#region enhancements UI
 function create_UIBox_your_collection_enhancements(exit)
     local deck_tables = {}
     local rows, cols = 2, 4
@@ -1416,3 +1287,4 @@ G.FUNCS.your_collection_enhancements_page = function(args)
         end
     end
 end
+--#endregion

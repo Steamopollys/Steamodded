@@ -1,0 +1,43 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Fixes for either base game code or general mod compatibility
+
+## Mods assume Game:start_run() is called with non-nil argument
+# G.FUNCS.start_run()
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = "G.FUNCS.start_run = function(e, args)"
+position = 'after'
+match_indent = true
+payload = "args = args or {}"
+
+## Allows running the game without Steam being active
+# love.load()
+[[patches]]
+[patches.regex]
+target = 'main.lua'
+pattern = "(?<indent>[\t ]*)if not \\(st.init and st:init\\(\\)\\) then\n[\t ]*(?<quit>love.event.quit\\(\\))"
+position = 'at'
+root_capture = 'quit'
+payload = 'st = nil'
+
+
+## Prevents the game from crashing when hitting play with a corrupt/invalid save file
+# G.FUNCS.can_continue(e)
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = "if G.SAVED_GAME ~= nil then G.SAVED_GAME = STR_UNPACK(G.SAVED_GAME) end"
+position = 'after'
+match_indent = true
+payload = """
+if G.SAVED_GAME == nil then 
+    e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+    e.config.button = nil
+    return _can_continue
+end
+"""

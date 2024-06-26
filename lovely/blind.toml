@@ -25,7 +25,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if obj.set_blind and type(obj.set_blind) == 'function' then
-	obj:set_blind(self, reset, silent)
+	obj:set_blind(reset, silent)
 end'''
 
 # Blind:disable()
@@ -38,7 +38,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if obj.disable and type(obj.disable) == 'function' then
-	obj:disable(self)
+	obj:disable()
 end'''
 
 # Blind:defeat()
@@ -51,7 +51,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if obj.defeat and type(obj.defeat) == 'function' then
-	obj:defeat(self)
+	obj:defeat()
 end'''
 
 # Blind:debuff_card()
@@ -64,7 +64,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if not self.disabled and obj.debuff_card and type(obj.debuff_card) == 'function' then
-	if obj:debuff_card(self, card, from_blind) then 
+	if obj:debuff_card(card, from_blind) then 
 		card:set_debuff(true)
 	else
 		card:set_debuff(false)
@@ -82,7 +82,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if obj.stay_flipped and type(obj.stay_flipped) == 'function' then
-	return obj:stay_flipped(self, area, card)
+	return obj:stay_flipped(area, card)
 end'''
 
 # Blind:drawn_to_hand()
@@ -95,7 +95,7 @@ line_prepend = '$indent'
 payload = '''
 local obj = self.config.blind
 if obj.drawn_to_hand and type(obj.drawn_to_hand) == 'function' then
-	obj:drawn_to_hand(self)
+	obj:drawn_to_hand()
 end'''
 
 # Blind:debuff_hand()
@@ -108,7 +108,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if obj.debuff_hand and type(obj.debuff_hand) == 'function' then
-	return obj:debuff_hand(self, cards, hand, handname, check)
+	return obj:debuff_hand(cards, hand, handname, check)
 end'''
 
 # Blind:modify_hand()
@@ -121,7 +121,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if obj.modify_hand and type(obj.modify_hand) == 'function' then
-	return obj:modify_hand(self, cards, poker_hands, text, mult, hand_chips)
+	return obj:modify_hand(cards, poker_hands, text, mult, hand_chips)
 end'''
 
 # Blind:press_play()
@@ -134,7 +134,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if obj.press_play and type(obj.press_play) == 'function' then
-	return obj:press_play(self)
+	return obj:press_play()
 end'''
 
 # Blind:get_loc_debuff_text()
@@ -147,7 +147,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if obj.get_loc_debuff_text and type(obj.get_loc_debuff_text) == 'function' then
-	return obj:get_loc_debuff_text(self)
+	return obj:get_loc_debuff_text()
 end'''
 
 # Blind:set_text()
@@ -160,7 +160,7 @@ match_indent = true
 payload = '''
 local obj = self.config.blind
 if obj.loc_vars and type(obj.loc_vars) == 'function' then
-	local res = obj:loc_vars(self) or {}
+	local res = obj:loc_vars() or {}
 	loc_vars = res.vars or {}
 end'''
 
@@ -267,6 +267,21 @@ if blind_choice.config.name == 'The Ox' then
 end
 local loc_target = localize{type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = loc_vars or blind_choice.config.vars}'''
 
+# create_UIBox_blind_popup()
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''local loc_target = localize{type = 'raw_descriptions', key = blind.key, set = 'Blind', vars = vars or blind.vars}'''
+match_indent = true
+position = 'at'
+payload = '''
+local loc_vars = nil
+if blind.collection_loc_vars and type(blind.collection_loc_vars) == 'function' then
+	local res = blind:collection_loc_vars() or {}
+	loc_vars = res.vars
+end
+local loc_target = localize{type = 'raw_descriptions', key = blind.key, set = 'Blind', vars = loc_vars or vars or blind.vars}'''
+
 # get_new_boss()
 [[patches]]
 [patches.pattern]
@@ -275,7 +290,7 @@ pattern = 'elseif not v.boss.showdown*'
 match_indent = true
 position = 'before'
 payload = '''
-elseif v.add_to_pool and type(v.add_to_pool) == 'function' then
+elseif v.in_pool and type(v.in_pool) == 'function' then
 	if
 		(
 			((G.GAME.round_resets.ante)%G.GAME.win_ante == 0 and G.GAME.round_resets.ante >= 2) ==
@@ -283,5 +298,5 @@ elseif v.add_to_pool and type(v.add_to_pool) == 'function' then
 		) or
 		v.ignore_showdown_check
 	then
-		eligible_bosses[k] = v:add_to_pool() and true or nil
+		eligible_bosses[k] = v:in_pool() and true or nil
 	end'''

@@ -124,16 +124,6 @@ if _c.locked_loc_vars and type(_c.locked_loc_vars) == 'function' then
 	specific_vars.not_hidden = res.not_hidden or specific_vars.not_hidden
 elseif $rest'''
 
-[[patches]]
-[patches.regex]
-target = 'functions/common_events.lua'
-pattern = "(?<indent>[\t ]*)if v == 'eternal'"
-line_prepend = '$indent'
-position = 'before'
-payload = '''
-
-if SMODS.Seals[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end'''
-
 # check_for_unlock()
 [[patches]]
 [patches.regex]
@@ -326,65 +316,6 @@ if obj.redeem and type(obj.redeem) == 'function' then
 	obj:redeem(self)
 	return
 end'''
-
-# get_current_pool()
-[[patches]]
-[patches.pattern]
-target = 'functions/common_events.lua'
-pattern = "else _starting_pool, _pool_key = G.P_CENTER_POOLS[_type], _type..(_append or '')"
-match_indent = true
-position = 'before'
-payload = '''
-elseif SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].rarities then
-	local rarities = SMODS.ConsumableTypes[_type].rarities
-	local rarity
-	if _legendary and rarities.legendary then
-		rarity = rarities.legendary.key
-	else
-		rarity = _rarity or pseudorandom('rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
-		for _, v in ipairs(rarities) do
-			if rarity <= v.rate then
-				rarity = v.key
-				break
-			else
-				rarity = rarity - v.rate
-			end
-		end
-	end
-	_starting_pool, _pool_key = SMODS.ConsumableTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')'''
-
-[[patches]]
-[patches.pattern]
-target = 'functions/common_events.lua'
-pattern = "if _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1] = \"c_strength\""
-match_indent = true
-position = 'at'
-payload = '''
-if SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].default and G.P_CENTERS[SMODS.ConsumableTypes[_type].default] then
-	_pool[#_pool+1] = SMODS.ConsumableTypes[_type].default
-elseif _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1] = "c_strength"'''
-
-[[patches]]
-[patches.pattern]
-target = 'functions/common_events.lua'
-pattern = "if v.name == 'Black Hole' or v.name == 'The Soul' then"
-match_indent = true
-position = 'at'
-payload = "if v.name == 'Black Hole' or v.name == 'The Soul' or v.hidden then"
-
-[[patches]]
-[patches.pattern]
-target = 'functions/common_events.lua'
-pattern = "if _type == 'Enhanced' then"
-match_indent = true
-position = 'at'
-payload = '''
-if v.add_to_pool and type(v.add_to_pool) == 'function' then
-	local res = v:add_to_pool()
-	if res.add and (not G.GAME.used_jokers[v.key] or res.allow_duplicates or next(find_joker("Showman"))) then
-		add = true
-	end
-elseif _type == 'Enhanced' then'''
 
 # create_card_for_shop()
 [[patches]]

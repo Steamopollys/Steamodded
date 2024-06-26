@@ -53,8 +53,8 @@ payload = '$start G.ASSET_ATLAS[G.SETTINGS.colourblind_option and _front.hc_atla
 # Game:set_render_settings()
 [[patches]]
 [patches.pattern]
-target = 'game.lua'
-pattern = "self.ASSET_ATLAS.Spectral = self.ASSET_ATLAS.Tarot"
-position = 'after'
+target = 'functions/button_callbacks.lua'
+pattern = "G:set_render_settings()"
+position = 'at'
 match_indent = true
-payload = "if SMODS.booted then SMODS.injectObjects(SMODS.Atlas) end"
+payload = "SMODS.injectObjects(SMODS.Atlas)"

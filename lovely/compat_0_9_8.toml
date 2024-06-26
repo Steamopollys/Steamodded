@@ -12,3 +12,17 @@ pattern = "self.ability.bonus = (self.ability.bonus or 0) + (center.config.bonus
 position = 'after'
 payload = "if not self.ability.name then self.ability.name = center.key end"
 match_indent = true
+
+# generate_card_ui()
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '(?<indent>[\t ]*)function generate_card_ui\([^)]*\)\n'
+position = "after"
+line_prepend = '$indent'
+payload = """
+    if card == nil then
+        card = SMODS.compat_0_9_8.generate_UIBox_ability_table_card
+    end
+
+"""
