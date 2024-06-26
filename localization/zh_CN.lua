@@ -80,6 +80,11 @@ return {
             b_by = ' 作者：',
             b_applies_stakes_1 = '',
 			b_applies_stakes_2 = '的限制也将起效',
+			-- Preliminary support for localizing Palette, except I don't understand Chinese
+			-- For those who do, please evaluate these for me
+			b_card_colours = 'Card Colours',
+			b_card_colours_def = 'Default',
+			b_card_colours_hi = 'High Contrast',
 		}
 	}
 }
