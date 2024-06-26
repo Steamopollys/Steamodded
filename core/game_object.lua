@@ -1111,6 +1111,9 @@ function loadAPIs()
             full_UI_table.name = localize{type = 'name', set = 'Other', key = self.key, nodes = full_UI_table.name}
             localize{type = 'other', key = self.key, nodes = desc_nodes, vars = vars}
         end,
+        -- TODO generalize
+        -- TODO currently this is just supposed to create a card,
+        -- but there may be other things that open should do
         open = function(self, card)
             return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
         end,
