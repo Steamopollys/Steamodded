@@ -24,3 +24,20 @@ pattern = "(?<indent>[\t ]*)if not \\(st.init and st:init\\(\\)\\) then\n[\t ]*(
 position = 'at'
 root_capture = 'quit'
 payload = 'st = nil'
+
+
+## Prevents the game from crashing when hitting play with a corrupt/invalid save file
+# G.FUNCS.can_continue(e)
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = "if G.SAVED_GAME ~= nil then G.SAVED_GAME = STR_UNPACK(G.SAVED_GAME) end"
+position = 'after'
+match_indent = true
+payload = """
+if G.SAVED_GAME == nil then 
+    e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+    e.config.button = nil
+    return _can_continue
+end
+"""
