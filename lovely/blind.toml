@@ -267,6 +267,21 @@ if blind_choice.config.name == 'The Ox' then
 end
 local loc_target = localize{type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = loc_vars or blind_choice.config.vars}'''
 
+# create_UIBox_blind_popup()
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''local loc_target = localize{type = 'raw_descriptions', key = blind.key, set = 'Blind', vars = vars or blind.vars}'''
+match_indent = true
+position = 'at'
+payload = ''' 
+local loc_vars = nil
+if blind.loc_vars and type(blind.loc_vars) == 'function' then
+	local res = blind:loc_vars() or {}
+	loc_vars = res.vars or {}
+end
+local loc_target = localize{type = 'raw_descriptions', key = blind.key, set = 'Blind', vars = loc_vars or vars or blind.vars}'''
+
 # get_new_boss()
 [[patches]]
 [patches.pattern]
