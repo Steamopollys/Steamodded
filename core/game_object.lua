@@ -27,9 +27,6 @@ function loadAPIs()
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
         end
-        if o.mod and not o.raw_shader_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
-            if o['shader'] then o['shader'] = ('%s_%s'):format(o.mod.prefix, o['shader']) end
-        end
         setmetatable(o, self)
         for _, v in ipairs(o.required_params or {}) do
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
