@@ -22,7 +22,7 @@ function loadAPIs()
     function SMODS.GameObject:__call(o)
         o = o or {}
         o.mod = SMODS.current_mod
-        if o.mod and not o.raw_atlas_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
+        if o.mod and not o.raw_atlas_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) and not o['shader'] then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
