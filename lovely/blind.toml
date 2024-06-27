@@ -23,9 +23,11 @@ pattern = '--add new debuffs'
 position = 'before'
 match_indent = true
 payload = '''
-local obj = self.config.blind
-if obj.set_blind and type(obj.set_blind) == 'function' then
-	obj:set_blind(reset, silent)
+if not reset then
+	local obj = self.config.blind
+	if obj.set_blind and type(obj.set_blind) == 'function' then
+		obj:set_blind()
+	end
 end'''
 
 # Blind:disable()
