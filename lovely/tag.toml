@@ -43,7 +43,7 @@ end'''
 [[patches]]
 [patches.regex]
 target = "functions/UI_definitions.lua"
-pattern = "(?<indent>[\t ]*)(?<t>local t = create_UIBox_generic_options\\(\\{ back_func = 'your_collection', contents = \\{\n[\t ]*\\{n=G\\.UIT\\.C, config=\\{align = \"cm\", r = 0\\.1, colour = G\\.C\\.BLACK, padding = 0\\.1, emboss = 0\\.05\\}, nodes=\\{(\n.*?){2}nodes=)\\{(\n.*){5}[\n \t})]*"
+pattern = "(?<indent>[\t ]*)(?<t>local t = create_UIBox_generic_options\\(\\{ back_func = 'your_collection', contents = \\{\n[\t ]*\\{n=G\\.UIT\\.C, config=\\{align = \"cm\", r = 0\\.1, colour = G\\.C\\.BLACK, padding = 0\\.1, emboss = 0\\.05\\}, nodes=\\{(\n.*?){2}nodes=)\\{(\n.*){5}"
 position = 'at'
 line_prepend = '$indent'
 payload = '''
@@ -51,25 +51,8 @@ local table_nodes = {}
 for i = 1, math.ceil(counter / 6) do
 	table.insert(table_nodes, {n=G.UIT.R, config={align = "cm"}, nodes=tag_matrix[i]})
 end
-
-local t = create_UIBox_generic_options({ back_func = 'your_collection', contents = {
-    {n=G.UIT.R, config={align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05}, nodes={
-      	{n=G.UIT.C, config={align = "cm"}, nodes={
-        	{n=G.UIT.R, config={align = "cm"}, nodes= table_nodes}
-    	}} 
-    }},
-	(SMODS.AltTextures["Tag"] and #SMODS.AltTextures["Tag"].names > 1 and
-		SMODS.GUI.createOptionSelector({
-			w = 4.5,
-			scale = 0.8,
-			options = SMODS.AltTextures["Tag"].names,
-			opt_callback = "update_recolor",
-			current_option = G.SETTINGS.selected_texture["Tag"],
-			type = "Tag"
-		}))  
-}})
-
-'''
+$t table_nodes
+}'''
 
 # Tag:generate_UI()
 [[patches]]

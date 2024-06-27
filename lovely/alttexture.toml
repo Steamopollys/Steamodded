@@ -112,15 +112,9 @@ payload = ''',
 # [[patches]]
 # [patches.pattern]
 # target = 'functions/UI_definitions.lua'
-# pattern = '''{n=G.UIT.R, config={align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes=deck_tables},'''
+# pattern = '''{n=G.UIT.R, config={align = "cm"}, nodes=ante_amounts}'''
 # position = 'after'
 # match_indent = true
-# payload = '''
-# (SMODS.AltTextures["Seal"] and #SMODS.AltTextures["Seal"].names > 1 and SMODS.GUI.createOptionSelector({
-#         w = 4.5,
-#         scale = 0.8,
-#         options = SMODS.AltTextures["Seal"].names,
-#         opt_callback = "update_recolor",
-#         current_option = G.SETTINGS.selected_texture["Seal"],
-#         type = "Seal"
-# })),'''
+# payload = ''',
+# {n=G.UIT.R, config={align = "cm"}, nodes={
+# }},'''

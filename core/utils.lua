@@ -383,6 +383,7 @@ end
 --#region alt textures
 G.SETTINGS.selected_texture = G.SETTINGS.selected_texture or {}
 G.PALETTE = {}
+G.C.AltTexture = HEX("277a97")
 default_palettes = { -- Default palettes mostly used for auto generated palettes
 	Spectral = { 
 	"344245","4f6367","bfc7d5","96aacb",
@@ -426,6 +427,14 @@ G.FUNCS.update_atlas = function(type)
         atlas_keys = {"centers"}
     elseif type == "Tag" then
         atlas_keys = {"tags"}
+    elseif type == "Blind" then
+        if G.ASSET_ATLAS[type][name] then
+            G.ANIMATION_ATLAS["blind_chips"].image = G.ASSET_ATLAS[type][name].image
+        else
+            sendDebugMessage("Can't find type "..type.." with name "..name)
+            print(tprint(G.ASSET_ATLAS[type]))    
+        end
+        return
 	else
 		for _, card in pairs(G.P_CENTER_POOLS[type]) do
 			atlas_keys[card.atlas or type] = card.atlas or type
