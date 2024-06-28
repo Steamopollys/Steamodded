@@ -1084,6 +1084,161 @@ function loadAPIs()
     SMODS.Back:take_ownership('erratic', stake_mod('stake_orange'))
 
     -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Center.Booster
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.OPENED_BOOSTER = nil
+    SMODS.Booster = SMODS.Center:extend {
+        required_params = {
+            'key',
+        },
+        prefix = 'p',
+        set = "Booster",
+        atlas = "Booster",
+        pos = {x = 0, y = 0},
+        loc_txt = {},
+        discovered = false,
+        weight = 1,
+        cost = 4,
+        config = {extra = 3, choose = 1},
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
+            SMODS.process_loc_text(G.localization.misc.dictionary, 'k_booster_group_'..self.key, self.loc_txt, 'group_name')
+        end,
+        loc_vars = function(self, info_queue, card)
+            return { vars = {card.ability.choose, card.ability.extra} }
+        end,
+        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
+            local target = {
+                type = 'other',
+                key = self.key,
+                nodes = desc_nodes,
+                vars = {}
+            }
+            if self.loc_vars and type(self.loc_vars) == 'function' then
+                local res = self:loc_vars(info_queue, card) or {}
+                target.vars = res.vars or target.vars
+                target.key = res.key or target.key
+            end
+            if not full_UI_table.name then 
+                full_UI_table.name = localize{type = 'name', set = 'Other', key = self.key, nodes = full_UI_table.name}
+            end
+            localize(target)
+        end,
+        create_card = function(self, card)
+            -- Example
+            -- return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
+        end,
+        update_pack = function(self, dt)
+            if G.buttons then self.buttons:remove(); G.buttons = nil end
+            if G.shop then G.shop.alignment.offset.y = G.ROOM.T.y+11 end
+        
+            if not G.STATE_COMPLETE then
+                G.STATE_COMPLETE = true
+                G.CONTROLLER.interrupt.focus = true
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'immediate',
+                    func = function()
+                        if self.sparkles then
+                            G.booster_pack_sparkles = Particles(1, 1, 0,0, {
+                                timer = self.sparkles.timer or 0.015,
+                                scale = self.sparkles.scale or 0.1,
+                                initialize = true,
+                                lifespan = self.sparkles.lifespan or 3,
+                                speed = self.sparkles.speed or 0.2,
+                                padding = self.sparkles.padding or -1,
+                                attach = G.ROOM_ATTACH,
+                                colours = self.sparkles.colours or {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
+                                fill = true
+                            })
+                        end
+                        G.booster_pack = UIBox{
+                            definition = self:pack_uibox(),
+                            config = {align="tmi", offset = {x=0,y=G.ROOM.T.y + 9}, major = G.hand, bond = 'Weak'}
+                        }
+                        G.booster_pack.alignment.offset.y = -2.2
+                        G.ROOM.jiggle = G.ROOM.jiggle + 3
+                        self:ease_background_colour()
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'immediate',
+                            func = function()
+                                if self.draw_hand == true then G.FUNCS.draw_from_deck_to_hand() end
+        
+                                G.E_MANAGER:add_event(Event({
+                                    trigger = 'after',
+                                    delay = 0.5,
+                                    func = function()
+                                        G.CONTROLLER:recall_cardarea_focus('pack_cards')
+                                        return true
+                                    end}))
+                                return true
+                            end
+                        }))  
+                        return true
+                    end
+                }))  
+            end
+        end,
+        ease_background_colour = function(self)
+            ease_colour(G.C.DYN_UI.MAIN, G.C.FILTER)
+            ease_background_colour{new_colour = G.C.FILTER, special_colour = G.C.BLACK, contrast = 2}
+        end,
+        pack_uibox = function(self)
+            local _size = SMODS.OPENED_BOOSTER.ability.extra
+            G.pack_cards = CardArea(
+                G.ROOM.T.x + 9 + G.hand.T.x, G.hand.T.y,
+                math.max(1,math.min(_size,5))*G.CARD_W*1.1,
+                1.05*G.CARD_H, 
+                {card_limit = _size, type = 'consumeable', highlight_limit = 1})
+
+            local t = {n=G.UIT.ROOT, config = {align = 'tm', r = 0.15, colour = G.C.CLEAR, padding = 0.15}, nodes={
+                {n=G.UIT.R, config={align = "cl", colour = G.C.CLEAR,r=0.15, padding = 0.1, minh = 2, shadow = true}, nodes={
+                    {n=G.UIT.R, config={align = "cm"}, nodes={
+                    {n=G.UIT.C, config={align = "cm", padding = 0.1}, nodes={
+                        {n=G.UIT.C, config={align = "cm", r=0.2, colour = G.C.CLEAR, shadow = true}, nodes={
+                            {n=G.UIT.O, config={object = G.pack_cards}},}}}}}},
+                {n=G.UIT.R, config={align = "cm"}, nodes={}},
+                {n=G.UIT.R, config={align = "tm"}, nodes={
+                    {n=G.UIT.C,config={align = "tm", padding = 0.05, minw = 2.4}, nodes={}},
+                    {n=G.UIT.C,config={align = "tm", padding = 0.05}, nodes={
+                        UIBox_dyn_container({
+                            {n=G.UIT.C, config={align = "cm", padding = 0.05, minw = 4}, nodes={
+                                {n=G.UIT.R,config={align = "bm", padding = 0.05}, nodes={
+                                    {n=G.UIT.O, config={object = DynaText({string = localize(self.group_key or ('k_booster_group_'..self.key)), colours = {G.C.WHITE},shadow = true, rotate = true, bump = true, spacing =2, scale = 0.7, maxw = 4, pop_in = 0.5})}}}},
+                                {n=G.UIT.R,config={align = "bm", padding = 0.05}, nodes={
+                                    {n=G.UIT.O, config={object = DynaText({string = {localize('k_choose')..' '}, colours = {G.C.WHITE},shadow = true, rotate = true, bump = true, spacing =2, scale = 0.5, pop_in = 0.7})}},
+                                    {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.GAME, ref_value = 'pack_choices'}}, colours = {G.C.WHITE},shadow = true, rotate = true, bump = true, spacing =2, scale = 0.5, pop_in = 0.7})}}}},}}
+                        }),}},
+                    {n=G.UIT.C,config={align = "tm", padding = 0.05, minw = 2.4}, nodes={
+                        {n=G.UIT.R,config={minh =0.2}, nodes={}},
+                        {n=G.UIT.R,config={align = "tm",padding = 0.2, minh = 1.2, minw = 1.8, r=0.15,colour = G.C.GREY, one_press = true, button = 'skip_booster', hover = true,shadow = true, func = 'can_skip_booster'}, nodes = {
+                            {n=G.UIT.T, config={text = localize('b_skip'), scale = 0.5, colour = G.C.WHITE, shadow = true, focus_args = {button = 'y', orientation = 'bm'}, func = 'set_button_pip'}}}}}}}}}}}}
+            return t
+        end,
+    }
+
+    SMODS.Booster {
+        key = 'test_booster_pack',
+        weight = 1000,
+        loc_txt = {
+            name = "Asdf",
+            text = {
+                "This is a test Booster Pack"
+            },
+            group_name = "Test Pack",
+        },
+        create_card = function(self, card)
+            return create_card("Tarot", G.pack_cards, nil, nil, true, true, nil, 'buf')
+        end,
+        config = {extra = 5, choose = 5},
+        draw_hand = true,
+        sparkles = {
+            colours = {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
+            lifespan = 1
+        }
+    }
+
+    -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.UndiscoveredSprite
     -------------------------------------------------------------------------------------------------
 
