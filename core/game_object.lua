@@ -1087,7 +1087,6 @@ function loadAPIs()
     ----- API CODE GameObject.Center.Booster
     -------------------------------------------------------------------------------------------------
 
-    SMODS.Boosters = {}
     SMODS.OPENED_BOOSTER = nil
     SMODS.Booster = SMODS.Center:extend {
         required_params = {
@@ -1102,10 +1101,6 @@ function loadAPIs()
         weight = 1,
         cost = 4,
         config = {extra = 3, choose = 1},
-        inject = function(self)
-            SMODS.Center.inject(self)
-            SMODS.Boosters[self.key] = self
-        end,
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
             SMODS.process_loc_text(G.localization.misc.dictionary, 'k_booster_group_'..self.key, self.loc_txt, 'group_name')
@@ -1220,6 +1215,27 @@ function loadAPIs()
                             {n=G.UIT.T, config={text = localize('b_skip'), scale = 0.5, colour = G.C.WHITE, shadow = true, focus_args = {button = 'y', orientation = 'bm'}, func = 'set_button_pip'}}}}}}}}}}}}
             return t
         end,
+    }
+
+    SMODS.Booster {
+        key = 'test_booster_pack',
+        weight = 1000,
+        loc_txt = {
+            name = "Asdf",
+            text = {
+                "This is a test Booster Pack"
+            },
+            group_name = "Test Pack",
+        },
+        create_card = function(self, card)
+            return create_card("Tarot", G.pack_cards, nil, nil, true, true, nil, 'buf')
+        end,
+        config = {extra = 5, choose = 5},
+        draw_hand = true,
+        sparkles = {
+            colours = {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
+            lifespan = 1
+        }
     }
 
     -------------------------------------------------------------------------------------------------

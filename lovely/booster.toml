@@ -13,8 +13,7 @@ pattern = '''G.GAME.pack_choices = self.config.center.config.choose or 1'''
 position = "before"
 payload = '''
 booster_obj = self.config.center
-sendInfoMessage("self.config.center: "..tostring(self.config.center))
-if booster_obj and SMODS.Boosters[booster_obj.key] then
+if booster_obj and SMODS.Centers[booster_obj.key] then
     G.STATE = G.STATES.SMODS_BOOSTER_OPENED
     SMODS.OPENED_BOOSTER = self
 end'''
