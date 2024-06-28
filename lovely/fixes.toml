@@ -41,3 +41,17 @@ if G.SAVED_GAME == nil then
     return _can_continue
 end
 """
+
+## Fix loading a blind with $0 reward
+# Blind:load()
+[[patches]]
+[patches.regex]
+target = 'blind.lua'
+pattern = '''
+(?<indent>[\t ]*)    G\.HUD_blind\.alignment\.offset\.y = 0
+[\t ]*end'''
+position = 'at'
+payload = '''
+end
+G.HUD_blind.alignment.offset.y = 0'''
+line_prepend = '$indent'
