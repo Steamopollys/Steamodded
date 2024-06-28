@@ -1143,6 +1143,19 @@ function loadAPIs()
                 G.E_MANAGER:add_event(Event({
                     trigger = 'immediate',
                     func = function()
+                        if self.particles then
+                            G.booster_pack_sparkles = Particles(1, 1, 0,0, {
+                                timer = self.particles.timer or 0.015,
+                                scale = self.particles.scale or 0.1,
+                                initialize = true,
+                                lifespan = self.particles.lifespan or 3,
+                                speed = self.particles.speed or 0.2,
+                                padding = self.particles.padding or -1,
+                                attach = G.ROOM_ATTACH,
+                                colours = self.particles.colours or {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
+                                fill = true
+                            })
+                        end
                         G.booster_pack = UIBox{
                             definition = self:pack_uibox(),
                             config = {align="tmi", offset = {x=0,y=G.ROOM.T.y + 9}, major = G.hand, bond = 'Weak'}
@@ -1224,7 +1237,11 @@ function loadAPIs()
             return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
         end,
         config = {extra = 5, choose = 5},
-        draw_hand = true
+        draw_hand = true,
+        particles = {
+            colours = {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
+            lifespan = 1
+        }
     }
 
     -------------------------------------------------------------------------------------------------
