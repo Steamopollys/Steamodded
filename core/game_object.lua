@@ -1217,27 +1217,6 @@ function loadAPIs()
         end,
     }
 
-    SMODS.Booster {
-        key = 'test_booster_pack',
-        weight = 1000,
-        loc_txt = {
-            name = "Asdf",
-            text = {
-                "This is a test Booster Pack"
-            },
-            group_name = "Test Pack",
-        },
-        create_card = function(self, card)
-            return create_card("Tarot", G.pack_cards, nil, nil, true, true, nil, 'buf')
-        end,
-        config = {extra = 5, choose = 5},
-        draw_hand = true,
-        sparkles = {
-            colours = {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
-            lifespan = 1
-        }
-    }
-
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.UndiscoveredSprite
     -------------------------------------------------------------------------------------------------
