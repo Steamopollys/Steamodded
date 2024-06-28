@@ -1143,16 +1143,16 @@ function loadAPIs()
                 G.E_MANAGER:add_event(Event({
                     trigger = 'immediate',
                     func = function()
-                        if self.particles then
+                        if self.sparkles then
                             G.booster_pack_sparkles = Particles(1, 1, 0,0, {
-                                timer = self.particles.timer or 0.015,
-                                scale = self.particles.scale or 0.1,
+                                timer = self.sparkles.timer or 0.015,
+                                scale = self.sparkles.scale or 0.1,
                                 initialize = true,
-                                lifespan = self.particles.lifespan or 3,
-                                speed = self.particles.speed or 0.2,
-                                padding = self.particles.padding or -1,
+                                lifespan = self.sparkles.lifespan or 3,
+                                speed = self.sparkles.speed or 0.2,
+                                padding = self.sparkles.padding or -1,
                                 attach = G.ROOM_ATTACH,
-                                colours = self.particles.colours or {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
+                                colours = self.sparkles.colours or {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
                                 fill = true
                             })
                         end
@@ -1238,7 +1238,7 @@ function loadAPIs()
         end,
         config = {extra = 5, choose = 5},
         draw_hand = true,
-        particles = {
+        sparkles = {
             colours = {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
             lifespan = 1
         }
