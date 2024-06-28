@@ -1236,7 +1236,7 @@ function loadAPIs()
             group_name = "Test Pack",
         },
         create_card = function(self, card)
-            return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
+            return create_card("Tarot", G.pack_cards, nil, nil, true, true, nil, 'buf')
         end,
         config = {extra = 5, choose = 5},
         draw_hand = true,
