@@ -1108,6 +1108,7 @@ function loadAPIs()
         end,
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
+            SMODS.process_loc_text(G.localization.misc.dictionary, 'k_booster_group_'..self.key, self.loc_txt, 'group_name')
         end,
         loc_vars = function(self, info_queue, card)
             return { vars = {card.ability.choose, card.ability.extra} }
@@ -1211,7 +1212,7 @@ function loadAPIs()
                         UIBox_dyn_container({
                             {n=G.UIT.C, config={align = "cm", padding = 0.05, minw = 4}, nodes={
                                 {n=G.UIT.R,config={align = "bm", padding = 0.05}, nodes={
-                                    {n=G.UIT.O, config={object = DynaText({string = localize('TODO'), colours = {G.C.WHITE},shadow = true, rotate = true, bump = true, spacing =2, scale = 0.7, maxw = 4, pop_in = 0.5})}}}},
+                                    {n=G.UIT.O, config={object = DynaText({string = localize(self.group_key or ('k_booster_group_'..self.key)), colours = {G.C.WHITE},shadow = true, rotate = true, bump = true, spacing =2, scale = 0.7, maxw = 4, pop_in = 0.5})}}}},
                                 {n=G.UIT.R,config={align = "bm", padding = 0.05}, nodes={
                                     {n=G.UIT.O, config={object = DynaText({string = {localize('k_choose')..' '}, colours = {G.C.WHITE},shadow = true, rotate = true, bump = true, spacing =2, scale = 0.5, pop_in = 0.7})}},
                                     {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.GAME, ref_value = 'pack_choices'}}, colours = {G.C.WHITE},shadow = true, rotate = true, bump = true, spacing =2, scale = 0.5, pop_in = 0.7})}}}},}}
@@ -1231,7 +1232,8 @@ function loadAPIs()
             name = "Asdf",
             text = {
                 "This is a test Booster Pack"
-            }
+            },
+            group_name = "Test Pack",
         },
         create_card = function(self, card)
             return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
