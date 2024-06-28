@@ -1184,13 +1184,10 @@ function loadAPIs()
                 }))  
             end
         end,
-        -- TODO generalize
-        ease_background_colour = function(self, blind_override)
+        ease_background_colour = function(self)
             ease_colour(G.C.DYN_UI.MAIN, G.C.FILTER)
             ease_background_colour{new_colour = G.C.FILTER, special_colour = G.C.BLACK, contrast = 2}
         end,
-        -- TODO need to replace `'TODO'` with ex. `'k_arcana_pack'`
-        -- Need to set G.localization.misc['k_arcana_pack']
         pack_uibox = function(self)
             local _size = SMODS.OPENED_BOOSTER.ability.extra
             G.pack_cards = CardArea(
@@ -1223,27 +1220,6 @@ function loadAPIs()
                             {n=G.UIT.T, config={text = localize('b_skip'), scale = 0.5, colour = G.C.WHITE, shadow = true, focus_args = {button = 'y', orientation = 'bm'}, func = 'set_button_pip'}}}}}}}}}}}}
             return t
         end,
-    }
-
-    SMODS.Booster {
-        key = 'test_booster_pack',
-        weight = 1000,
-        loc_txt = {
-            name = "Asdf",
-            text = {
-                "This is a test Booster Pack"
-            },
-            group_name = "Test Pack",
-        },
-        create_card = function(self, card)
-            return create_card("Tarot", G.pack_cards, nil, nil, true, true, nil, 'buf')
-        end,
-        config = {extra = 5, choose = 5},
-        draw_hand = true,
-        sparkles = {
-            colours = {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
-            lifespan = 1
-        }
     }
 
     -------------------------------------------------------------------------------------------------
