@@ -1107,10 +1107,10 @@ function loadAPIs()
             SMODS.Boosters[self.key] = self
         end,
         process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.Other, self.key, self.loc_txt)
+            SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
         end,
         loc_vars = function(self, info_queue, card)
-            return { vars = {card.config.choose, card.config.extra} }
+            return { vars = {card.config.center.config.choose, card.ability.extra} }
         end,
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             local target = {
@@ -1212,6 +1212,12 @@ function loadAPIs()
     SMODS.Booster {
         key = 'test_booster_pack',
         weight = 100,
+        loc_txt = {
+            name = "Asdf",
+            text = {
+                "This is a test Booster Pack"
+            }
+        },
         create_card = function(self, card)
             return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
         end,
