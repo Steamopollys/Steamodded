@@ -114,3 +114,41 @@ pattern = "if G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PA
 position = "at"
 payload = "if G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED then"
 match_indent = true
+
+# G.FUNC.use_card()
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "if G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SPECTRAL_PACK then"
+position = "at"
+payload = "if G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED then"
+match_indent = true
+
+# G.FUNC.use_card()
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "(G.STATE == G.STATES.BUFFOON_PACK and G.STATES.BUFFOON_PACK) or"
+position = "before"
+payload = "(G.STATE == G.STATES.SMODS_BOOSTER_OPENED and G.STATES.SMODS_BOOSTER_OPENED) or"
+match_indent = true
+
+# G.FUNC.use_card()
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) and"
+position = "at"
+payload = "if not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and"
+match_indent = true
+
+# Card:use_consumeable()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''(?<indent>[\t ]*)align = \(G\.STATE[\s\S]*and -0\.2 or 0},'''
+position = "at"
+payload = '''
+align = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and 'tm' or 'cm',
+offset = {x = 0, y = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and -0.2 or 0},'''
+line_prepend = '$indent'
