@@ -1101,7 +1101,6 @@ function loadAPIs()
         discovered = false,
         weight = 1,
         cost = 4,
-        draw_cards = true,
         config = {extra = 3, choose = 1},
         inject = function(self)
             SMODS.Center.inject(self)
@@ -1154,7 +1153,7 @@ function loadAPIs()
                         G.E_MANAGER:add_event(Event({
                             trigger = 'immediate',
                             func = function()
-                                if self.draw_cards == true then G.FUNCS.draw_from_deck_to_hand() end
+                                if self.draw_hand == true then G.FUNCS.draw_from_deck_to_hand() end
         
                                 G.E_MANAGER:add_event(Event({
                                     trigger = 'after',
@@ -1214,7 +1213,7 @@ function loadAPIs()
 
     SMODS.Booster {
         key = 'test_booster_pack',
-        weight = 100,
+        weight = 1000,
         loc_txt = {
             name = "Asdf",
             text = {
@@ -1224,6 +1223,8 @@ function loadAPIs()
         create_card = function(self, card)
             return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
         end,
+        config = {extra = 5, choose = 5},
+        draw_hand = true
     }
 
     -------------------------------------------------------------------------------------------------
