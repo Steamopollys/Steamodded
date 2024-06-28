@@ -1111,7 +1111,7 @@ function loadAPIs()
             SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
         end,
         loc_vars = function(self, info_queue, card)
-            return { vars = {card.config.center.config.choose, card.ability.extra} }
+            return { vars = {card.ability.choose, card.ability.extra} }
         end,
         generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             local target = {
