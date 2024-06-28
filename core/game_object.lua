@@ -1192,7 +1192,7 @@ function loadAPIs()
         -- TODO need to replace `'TODO'` with ex. `'k_arcana_pack'`
         -- Need to set G.localization.misc['k_arcana_pack']
         pack_uibox = function(self)
-            local _size = self.config.extra
+            local _size = SMODS.OPENED_BOOSTER.ability.extra
             G.pack_cards = CardArea(
                 G.ROOM.T.x + 9 + G.hand.T.x, G.hand.T.y,
                 math.max(1,math.min(_size,5))*G.CARD_W*1.1,

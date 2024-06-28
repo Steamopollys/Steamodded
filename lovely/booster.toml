@@ -16,7 +16,7 @@ booster_obj = self.config.center
 sendInfoMessage("self.config.center: "..tostring(self.config.center))
 if booster_obj and SMODS.Boosters[booster_obj.key] then
     G.STATE = G.STATES.SMODS_BOOSTER_OPENED
-    SMODS.OPENED_BOOSTER = booster_obj.key
+    SMODS.OPENED_BOOSTER = self
 end'''
 match_indent = true
 
@@ -53,7 +53,7 @@ pattern = '''(?<indent>[\t ]*)if self\.STATE == self\.STATES\.TAROT_PACK then'''
 position = "before"
 payload = '''
 if G.STATE == G.STATES.SMODS_BOOSTER_OPENED then
-    SMODS.Boosters[SMODS.OPENED_BOOSTER]:update_pack(dt)
+    SMODS.OPENED_BOOSTER.config.center:update_pack(dt)
 end
 
 '''
