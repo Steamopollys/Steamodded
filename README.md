@@ -8,7 +8,7 @@ Steamodded is a mod loader and injector for the game Balatro. Much like the [LÖ
 
 ### How to Install Steamodded
 
-Please refer to the [Installation Instructions](https://github.com/Steamopollys/Steamodded/wiki/01.-Getting-started) in the Steamodded guide. While it is possible to use the injector for versions 0.9.8 and below, this method is no longer recommended and is deprecated starting in version 1.0, which is current in Alpha.
+Please refer to the [Installation Instructions](https://github.com/Steamopollys/Steamodded/wiki/01.-Getting-started) in the Steamodded guide. While it is possible to use the injector for versions 0.9.8 and below, this method is no longer recommended and is deprecated starting in version 1.0, which is currently in Alpha.
 
 ### How to install the Alpha
 
@@ -16,17 +16,17 @@ To use the 1.0.0 pre-release version, install Steamodded [using Git](https://git
 
 ## How to Install a Mod
 
-- Navigate to your Mods directory as it was specified in the installation instructions.
-- Put the mod into the directory (only the Mod File if there is only one file provided or all the files in a subdirectory)
+- Navigate to your Mods directory (see the installation instructions).
+- Put the mod into that directory. (The mod can be a single file if there is only one file provided, or it can be a whole folder.)
 - Launch the game and enjoy!
 
 ## Features
 
-Documentation for this project is currently incomplete. Information on features in version 0.9.8 can be found within the [Wiki](https://github.com/Steamopollys/Steamodded/wiki) pages that are not numbered, while complete and fully structured documentation for version 1.0 is still being assembled on the **numbered** pages. Any information found there is subject to change until the full release of version 1.0.0.
+Documentation for this project is currently incomplete. Old documentation for version 0.9.8 can be found on unnumbered [Wiki](https://github.com/Steamopollys/Steamodded/wiki) pages. Documentation for version 1.0 is still being assembled on the **numbered** pages; it's not yet complete. Any information found there is subject to change until the full release of version 1.0.0.
 
 ## Contributing
 
-This project is open for contribution. Please, feel free to open a pull request to do so. If you are adding new features, providing documentation is highly appreciated.
+This project is open for contribution; feel free to open a pull request. If you are adding new features, providing documentation is highly appreciated.
 
 ## License
 

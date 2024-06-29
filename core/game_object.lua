@@ -165,6 +165,19 @@ function loadAPIs()
         end
     end
 
+    -- Internal function
+    -- Creates a list of objects from a list of keys.
+    -- Currently used for a special case when selecting a random suit/rank.
+    function SMODS.GameObject:obj_list(reversed)
+        local lb, ub, step = 1, #self.obj_buffer, 1
+        if reversed then lb, ub, step = ub, lb, -1 end
+        local res = {}
+        for i = lb, ub, step do
+          res[#res+1] = self.obj_table[self.obj_buffer[i]]
+        end
+        return res
+    end
+
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Language
     -------------------------------------------------------------------------------------------------
@@ -206,6 +219,11 @@ function loadAPIs()
         inject_class = function()
             SMODS.handle_loc_file(SMODS.path)
             if SMODS.dump_loc then SMODS.dump_loc.pre_inject = copy_table(G.localization) end
+            for _, mod in ipairs(SMODS.mod_list) do
+                if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
+                    mod.process_loc_text()
+                end
+            end
         end
     }
 
@@ -1070,6 +1088,140 @@ function loadAPIs()
     SMODS.Back:take_ownership('erratic', stake_mod('stake_orange'))
 
     -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.Center.Booster
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.OPENED_BOOSTER = nil
+    SMODS.Booster = SMODS.Center:extend {
+        required_params = {
+            'key',
+        },
+        prefix = 'p',
+        set = "Booster",
+        atlas = "Booster",
+        pos = {x = 0, y = 0},
+        loc_txt = {},
+        discovered = false,
+        weight = 1,
+        cost = 4,
+        config = {extra = 3, choose = 1},
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
+            SMODS.process_loc_text(G.localization.misc.dictionary, 'k_booster_group_'..self.key, self.loc_txt, 'group_name')
+        end,
+        loc_vars = function(self, info_queue, card)
+            return { vars = {card.ability.choose, card.ability.extra} }
+        end,
+        generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
+            local target = {
+                type = 'other',
+                key = self.key,
+                nodes = desc_nodes,
+                vars = {}
+            }
+            if self.loc_vars and type(self.loc_vars) == 'function' then
+                local res = self:loc_vars(info_queue, card) or {}
+                target.vars = res.vars or target.vars
+                target.key = res.key or target.key
+            end
+            if not full_UI_table.name then 
+                full_UI_table.name = localize{type = 'name', set = 'Other', key = self.key, nodes = full_UI_table.name}
+            end
+            localize(target)
+        end,
+        create_card = function(self, card)
+            -- Example
+            -- return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
+        end,
+        update_pack = function(self, dt)
+            if G.buttons then self.buttons:remove(); G.buttons = nil end
+            if G.shop then G.shop.alignment.offset.y = G.ROOM.T.y+11 end
+        
+            if not G.STATE_COMPLETE then
+                G.STATE_COMPLETE = true
+                G.CONTROLLER.interrupt.focus = true
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'immediate',
+                    func = function()
+                        if self.sparkles then
+                            G.booster_pack_sparkles = Particles(1, 1, 0,0, {
+                                timer = self.sparkles.timer or 0.015,
+                                scale = self.sparkles.scale or 0.1,
+                                initialize = true,
+                                lifespan = self.sparkles.lifespan or 3,
+                                speed = self.sparkles.speed or 0.2,
+                                padding = self.sparkles.padding or -1,
+                                attach = G.ROOM_ATTACH,
+                                colours = self.sparkles.colours or {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
+                                fill = true
+                            })
+                        end
+                        G.booster_pack = UIBox{
+                            definition = self:pack_uibox(),
+                            config = {align="tmi", offset = {x=0,y=G.ROOM.T.y + 9}, major = G.hand, bond = 'Weak'}
+                        }
+                        G.booster_pack.alignment.offset.y = -2.2
+                        G.ROOM.jiggle = G.ROOM.jiggle + 3
+                        self:ease_background_colour()
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'immediate',
+                            func = function()
+                                if self.draw_hand == true then G.FUNCS.draw_from_deck_to_hand() end
+        
+                                G.E_MANAGER:add_event(Event({
+                                    trigger = 'after',
+                                    delay = 0.5,
+                                    func = function()
+                                        G.CONTROLLER:recall_cardarea_focus('pack_cards')
+                                        return true
+                                    end}))
+                                return true
+                            end
+                        }))  
+                        return true
+                    end
+                }))  
+            end
+        end,
+        ease_background_colour = function(self)
+            ease_colour(G.C.DYN_UI.MAIN, G.C.FILTER)
+            ease_background_colour{new_colour = G.C.FILTER, special_colour = G.C.BLACK, contrast = 2}
+        end,
+        pack_uibox = function(self)
+            local _size = SMODS.OPENED_BOOSTER.ability.extra
+            G.pack_cards = CardArea(
+                G.ROOM.T.x + 9 + G.hand.T.x, G.hand.T.y,
+                math.max(1,math.min(_size,5))*G.CARD_W*1.1,
+                1.05*G.CARD_H, 
+                {card_limit = _size, type = 'consumeable', highlight_limit = 1})
+
+            local t = {n=G.UIT.ROOT, config = {align = 'tm', r = 0.15, colour = G.C.CLEAR, padding = 0.15}, nodes={
+                {n=G.UIT.R, config={align = "cl", colour = G.C.CLEAR,r=0.15, padding = 0.1, minh = 2, shadow = true}, nodes={
+                    {n=G.UIT.R, config={align = "cm"}, nodes={
+                    {n=G.UIT.C, config={align = "cm", padding = 0.1}, nodes={
+                        {n=G.UIT.C, config={align = "cm", r=0.2, colour = G.C.CLEAR, shadow = true}, nodes={
+                            {n=G.UIT.O, config={object = G.pack_cards}},}}}}}},
+                {n=G.UIT.R, config={align = "cm"}, nodes={}},
+                {n=G.UIT.R, config={align = "tm"}, nodes={
+                    {n=G.UIT.C,config={align = "tm", padding = 0.05, minw = 2.4}, nodes={}},
+                    {n=G.UIT.C,config={align = "tm", padding = 0.05}, nodes={
+                        UIBox_dyn_container({
+                            {n=G.UIT.C, config={align = "cm", padding = 0.05, minw = 4}, nodes={
+                                {n=G.UIT.R,config={align = "bm", padding = 0.05}, nodes={
+                                    {n=G.UIT.O, config={object = DynaText({string = localize(self.group_key or ('k_booster_group_'..self.key)), colours = {G.C.WHITE},shadow = true, rotate = true, bump = true, spacing =2, scale = 0.7, maxw = 4, pop_in = 0.5})}}}},
+                                {n=G.UIT.R,config={align = "bm", padding = 0.05}, nodes={
+                                    {n=G.UIT.O, config={object = DynaText({string = {localize('k_choose')..' '}, colours = {G.C.WHITE},shadow = true, rotate = true, bump = true, spacing =2, scale = 0.5, pop_in = 0.7})}},
+                                    {n=G.UIT.O, config={object = DynaText({string = {{ref_table = G.GAME, ref_value = 'pack_choices'}}, colours = {G.C.WHITE},shadow = true, rotate = true, bump = true, spacing =2, scale = 0.5, pop_in = 0.7})}}}},}}
+                        }),}},
+                    {n=G.UIT.C,config={align = "tm", padding = 0.05, minw = 2.4}, nodes={
+                        {n=G.UIT.R,config={minh =0.2}, nodes={}},
+                        {n=G.UIT.R,config={align = "tm",padding = 0.2, minh = 1.2, minw = 1.8, r=0.15,colour = G.C.GREY, one_press = true, button = 'skip_booster', hover = true,shadow = true, func = 'can_skip_booster'}, nodes = {
+                            {n=G.UIT.T, config={text = localize('b_skip'), scale = 0.5, colour = G.C.WHITE, shadow = true, focus_args = {button = 'y', orientation = 'bm'}, func = 'set_button_pip'}}}}}}}}}}}}
+            return t
+        end,
+    }
+
+    -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.UndiscoveredSprite
     -------------------------------------------------------------------------------------------------
 
@@ -1190,6 +1342,19 @@ function loadAPIs()
         return o
     end
     SMODS.valid_card_keys = SMODS.permutations()
+    SMODS.inject_p_card = function(suit, rank)
+        G.P_CARDS[suit.card_key .. '_' .. rank.card_key] = {
+            name = rank.key .. ' of ' .. suit.key,
+            value = rank.key,
+            suit = suit.key,
+            pos = { x = rank.pos.x, y = rank.suit_map[suit.key] or suit.pos.y },
+            lc_atlas = rank.suit_map[suit.key] and rank.lc_atlas or suit.lc_atlas,
+            hc_atlas = rank.suit_map[suit.key] and rank.hc_atlas or suit.hc_atlas,
+        }
+    end
+    SMODS.remove_p_card = function(suit, rank)
+        G.P_CARDS[suit.card_key .. '_' .. rank.card_key] =  nil
+    end
 
     SMODS.Suits = {}
     SMODS.Suit = SMODS.GameObject:extend {
@@ -1217,43 +1382,20 @@ function loadAPIs()
             self.suit_nominal = self.max_nominal.value
             SMODS.Suit.super.register(self)
         end,
-        populate = function(self)
-            for _, other in pairs(SMODS.Ranks) do
-                if not other.disabled then
-                    self:update_p_card(other)
-                end
-            end
-            self.disabled = nil
-            if G.GAME then G.GAME.disabled_suits[self.key] = nil end
-        end,
         inject = function(self)
-            if not self.disabled then self:populate() end
-        end,
-        disable = function(self)
-            for _, other in pairs(SMODS.Ranks) do
-                self:update_p_card(other, true)
+            for _, rank in pairs(SMODS.Ranks) do
+                SMODS.inject_p_card(self, rank)
             end
-            self.disabled = true
-            if G.GAME then G.GAME.disabled_suits[self.key] = true end
         end,
         delete = function(self)
-            self:disable()
             local i
             for j, v in ipairs(self.obj_buffer) do
                 if v == self.key then i = j end
             end
+            for _, rank in pairs(SMODS.Ranks) do
+                SMODS.remove_p_card(self, rank)
+            end
             table.remove(self.obj_buffer, i)
-            self = nil
-        end,
-        update_p_card = function(self, other, remove)
-            G.P_CARDS[self.card_key .. '_' .. other.card_key] = not remove and {
-                name = other.key .. ' of ' .. self.key,
-                value = other.key,
-                suit = self.key,
-                pos = { x = other.pos.x, y = other.suit_map[self.key] or self.pos.y },
-                lc_atlas = other.suit_map[self.key] and other.lc_atlas or self.lc_atlas,
-                hc_atlas = other.suit_map[self.key] and other.hc_atlas or self.hc_atlas,
-            } or nil
         end,
         get_card_key = function(self, card_key)
             local set = {}
@@ -1337,6 +1479,16 @@ function loadAPIs()
         },
         next = {},
         straight_edge = false,
+        -- TODO we need a better system for what this is doing.
+        -- We should allow setting a playing card's atlas and position to any values,
+        -- and we should also ensure that it's easy to create an atlas with a standard
+        -- arrangement: x and y set according to rank and suit.
+
+        -- Currently suit_map does the following:
+        -- suit_map forces a playing card's atlas to be rank.hc_atlas/lc_atlas,
+        -- and not the atlas defined on the suit of the playing card;
+        -- additionally pos.y is set according to the corresponding value in the
+        -- suit_map
         suit_map = {
             Hearts = 0,
             Clubs = 1,
@@ -1374,24 +1526,21 @@ function loadAPIs()
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.ranks, self.key, self.loc_txt)
         end,
-        populate = function(self)
-            for _, other in pairs(SMODS.Suits) do
-                if not other.disabled then
-                    other:update_p_card(self)
-                end
+        inject = function(self)
+            for _, suit in pairs(SMODS.Suits) do
+                SMODS.inject_p_card(suit, self)
             end
-            self.disabled = nil
-            if G.GAME then G.GAME.disabled_ranks[self.key] = nil end
         end,
-        inject = SMODS.Suit.inject,
-        disable = function(self)
-            for _, other in pairs(SMODS.Suits) do
-                other:update_p_card(self, true)
+        delete = function(self)
+            local i
+            for j, v in ipairs(self.obj_buffer) do
+                if v == self.key then i = j end
             end
-            self.disabled = true
-            if G.GAME then G.GAME.disabled_ranks[self.key] = true end
-        end,
-        delete = SMODS.Suit.delete,
+            for _, suit in pairs(SMODS.Suits) do
+                SMODS.remove_p_card(suit, self)
+            end
+            table.remove(self.obj_buffer, i)
+        end
     }
     for _, v in ipairs({ 2, 3, 4, 5, 6, 7, 8, 9 }) do
         SMODS.Rank {
@@ -1450,6 +1599,7 @@ function loadAPIs()
         next = { '2' },
     }
     -- make consumable effects compatible with added suits
+    -- TODO put this in utils.lua
     local function juice_flip(used_tarot)
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
@@ -1509,6 +1659,7 @@ function loadAPIs()
                         if behavior.ignore or not next(rank_data.next) then
                             return true
                         elseif behavior.random then
+                            -- TODO doesn't respect in_pool
                             local r = pseudorandom_element(rank_data.next, pseudoseed('strength'))
                             rank_suffix = SMODS.Ranks[r].card_key
                         else
@@ -1546,15 +1697,7 @@ function loadAPIs()
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            -- need reverse nominal order to preserve vanilla RNG
-            local suit_list = {}
-            for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                local suit_key = SMODS.Suit.obj_buffer[i]
-                if not SMODS.Suits[suit_key].disabled then
-                    suit_list[#suit_list + 1] = suit_key
-                end
-            end
-            local _suit = SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('sigil'))]
+            local _suit = pseudorandom_element(SMODS.Suits, pseudoseed('sigil'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
@@ -1582,13 +1725,7 @@ function loadAPIs()
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local rank_list = {}
-            for _, rank_key in ipairs(SMODS.Rank.obj_buffer) do
-                if not SMODS.Ranks[rank_key].disabled then
-                    table.insert(rank_list, rank_key)
-                end
-            end
-            local _rank = SMODS.Ranks[pseudorandom_element(rank_list, pseudoseed('ouija'))]
+            local _rank = pseudorandom_element(SMODS.Ranks, pseudoseed('ouija'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
@@ -1653,15 +1790,9 @@ function loadAPIs()
                     local cards = {}
                     for i = 1, card.ability.extra do
                         cards[i] = true
-                        local suit_list = {}
-                        for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            local suit_key = SMODS.Suit.obj_buffer[i]
-                            if not SMODS.Suits[suit_key].disabled then
-                                suit_list[#suit_list + 1] = suit_key
-                            end
-                        end
+                        -- TODO preserve suit vanilla RNG
                         local _suit, _rank =
-                            SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('grim_create'))].card_key, 'A'
+                            pseudorandom_element(SMODS.Suits, pseudoseed('grim_create')).card_key, 'A'
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
                             if v.key ~= 'm_stone' and not v.overrides_base_rank then
@@ -1694,21 +1825,15 @@ function loadAPIs()
                     local cards = {}
                     for i = 1, card.ability.extra do
                         cards[i] = true
-                        local suit_list = {}
-                        for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            local suit_key = SMODS.Suit.obj_buffer[i]
-                            if not SMODS.Suits[suit_key].disabled then
-                                suit_list[#suit_list + 1] = suit_key
-                            end
-                        end
+                        -- TODO preserve suit vanilla RNG
                         local faces = {}
                         for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
-                            if not r.disabled and r.face then table.insert(faces, r.card_key) end
+                            if r.face then table.insert(faces, r) end
                         end
                         local _suit, _rank =
-                            SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('familiar_create'))].card_key,
-                            pseudorandom_element(faces, pseudoseed('familiar_create'))
+                            pseudorandom_element(SMODS.Suits, pseudoseed('familiar_create')).card_key,
+                            pseudorandom_element(faces, pseudoseed('familiar_create')).card_key
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
                             if v.key ~= 'm_stone' and not v.overrides_base_rank then
@@ -1741,21 +1866,15 @@ function loadAPIs()
                     local cards = {}
                     for i = 1, card.ability.extra do
                         cards[i] = true
-                        local suit_list = {}
-                        for i = #SMODS.Suit.obj_buffer, 1, -1 do
-                            local suit_key = SMODS.Suit.obj_buffer[i]
-                            if not SMODS.Suits[suit_key].disabled then
-                                suit_list[#suit_list + 1] = suit_key
-                            end
-                        end
+                        -- TODO preserve suit vanilla RNG
                         local numbers = {}
                         for _, v in ipairs(SMODS.Rank.obj_buffer) do
                             local r = SMODS.Ranks[v]
-                            if not r.disabled and v ~= 'Ace' and not r.face then table.insert(numbers, r.card_key) end
+                            if v ~= 'Ace' and not r.face then table.insert(numbers, r) end
                         end
                         local _suit, _rank =
-                            SMODS.Suits[pseudorandom_element(suit_list, pseudoseed('incantation_create'))].card_key,
-                            pseudorandom_element(numbers, pseudoseed('incantation_create'))
+                            pseudorandom_element(SMODS.Suits, pseudoseed('incantation_create')).card_key,
+                            pseudorandom_element(numbers, pseudoseed('incantation_create')).card_key
                         local cen_pool = {}
                         for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
                             if v.key ~= 'm_stone' and not v.overrides_base_rank then
@@ -1778,11 +1897,11 @@ function loadAPIs()
         end,
     })
     SMODS.Blind:take_ownership('eye', {
-        set_blind = function(self, blind, reset, silent)
+        set_blind = function(self, reset, silent)
             if not reset then
-                self.hands = {}
+                G.GAME.blind.hands = {}
                 for _, v in ipairs(G.handlist) do
-                    self.hands[v] = false
+                    G.GAME.blind.hands[v] = false
                 end
             end
         end
@@ -1997,6 +2116,7 @@ function loadAPIs()
     ----- API CODE GameObject.PayoutArg
     -------------------------------------------------------------------------------------------------
 
+    -- TODO needs rename- something with Row: DollarRow?
     SMODS.PayoutArgs = {}
     SMODS.PayoutArg = SMODS.GameObject:extend {
         obj_buffer = {},
@@ -2529,9 +2649,6 @@ function loadAPIs()
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         inject_class = function()
             for _, mod in ipairs(SMODS.mod_list) do
-                if mod.process_loc_text and type(mod.process_loc_text) == 'function' then
-                    mod.process_loc_text()
-                end
                 SMODS.handle_loc_file(mod.path)
             end
         end

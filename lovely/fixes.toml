@@ -24,3 +24,37 @@ pattern = "(?<indent>[\t ]*)if not \\(st.init and st:init\\(\\)\\) then\n[\t ]*(
 position = 'at'
 root_capture = 'quit'
 payload = 'st = nil'
+
+
+## Prevents the game from crashing when hitting play with a corrupt/invalid save file
+# G.FUNCS.can_continue(e)
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = "if G.SAVED_GAME ~= nil then G.SAVED_GAME = STR_UNPACK(G.SAVED_GAME) end"
+position = 'after'
+match_indent = true
+payload = """
+if G.SAVED_GAME == nil then 
+    e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+    e.config.button = nil
+    return _can_continue
+end
+"""
+
+## Fix loading a blind with $0 reward
+# Blind:load()
+[[patches]]
+[patches.regex]
+target = 'blind.lua'
+pattern = '''
+(?<indent>[\t ]*)    G\.HUD_blind\.alignment\.offset\.y = 0
+[\t ]*end'''
+position = 'at'
+payload = '''
+end
+if G.GAME.blind.name and G.GAME.blind.name ~= '' then
+    G.HUD_blind.alignment.offset.y = 0
+    G.HUD_blind:recalculate()
+end'''
+line_prepend = '$indent'
