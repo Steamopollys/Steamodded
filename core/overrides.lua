@@ -9,21 +9,17 @@
 G.FUNCS.HUD_blind_debuff = function(e)
 	local scale = 0.4
 	local num_lines = #G.GAME.blind.loc_debuff_lines
-	e.config.padding = num_lines <= 2 and 0.05 or 0
-	local minh = math.min(e.config.maxh / num_lines, 0.3)
+	local allowed_h = 2.74-1.85
+	local minh = 0.3
+	e.config.padding = (allowed_h - num_lines * minh) / (num_lines + 1)
+	e.config.padding = math.min(e.config.padding, 0.05) -- at most 0.05
 	remove_all(e.children)
 	local blind_desc_nodes = {}
 	for k, v in ipairs(G.GAME.blind.loc_debuff_lines) do
-		if k == 1 then
-			blind_desc_nodes[#blind_desc_nodes+1] = {n=G.UIT.R, config={align = "cm", minh = minh, maxw = 4.2}, nodes={
-				{n=G.UIT.T, config={ref_table = {val = ''}, ref_value = 'val', scale = scale*0.9, colour = G.C.UI.TEXT_LIGHT}},
-				{n=G.UIT.T, config={ref_table = G.GAME.blind.loc_debuff_lines, ref_value = k, scale = scale*0.9, colour = G.C.UI.TEXT_LIGHT}}
-			}}
-		else
-			blind_desc_nodes[#blind_desc_nodes+1] = {n=G.UIT.R, config={align = "cm", minh = minh, maxw = 4.2}, nodes={
-				{n=G.UIT.T, config={ref_table = G.GAME.blind.loc_debuff_lines, ref_value = k, scale = scale*0.9, colour = G.C.UI.TEXT_LIGHT}}
-			}}
-		end
+		blind_desc_nodes[#blind_desc_nodes+1] = {n=G.UIT.R, config={align = "cm", minh = minh, maxw = 4.2}, nodes={
+			-- TODO just take ownership of the wheel
+			{n=G.UIT.T, config={ref_table = G.GAME.blind.loc_debuff_lines, ref_value = k, scale = scale*0.9, colour = G.C.UI.TEXT_LIGHT}}
+		}}
 	end
 	for _, node_def in ipairs(blind_desc_nodes) do
 		e.UIBox:add_child(node_def, e)

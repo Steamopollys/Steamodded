@@ -62,7 +62,7 @@ pattern = '''
 [\t ]*\}\},'''
 position = "at"
 payload = '''
-{n=G.UIT.R, config={align = "cm", maxh = 2.74 - 1.85, func = 'HUD_blind_debuff'}, nodes={}},'''
+{n=G.UIT.R, config={align = "cm", func = 'HUD_blind_debuff'}, nodes={}},'''
 line_prepend = '$indent'
 
 # Blind:set_text
