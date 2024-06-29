@@ -1,0 +1,48 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Per-mod functions
+
+# end_round()
+[[patches]]
+[patches.regex]
+target = 'functions/state_events.lua'
+pattern = '''(?<indent>[\t ]*)reset_castle_card\(\)'''
+line_prepend = '$indent'
+position = 'after'
+payload = '''
+for _, mod in ipairs(SMODS.mod_list) do
+	if mod.reset_game_globals and type(mod.reset_game_globals) == 'function' then
+		mod.reset_game_globals(false)
+	end
+end'''
+
+# Game:start_run()
+[[patches]]
+[patches.regex]
+target = 'game.lua'
+pattern = '''(?<indent>[\t ]*)reset_castle_card\(\)'''
+line_prepend = '$indent'
+position = 'after'
+payload = '''
+for _, mod in ipairs(SMODS.mod_list) do
+	if mod.reset_game_globals and type(mod.reset_game_globals) == 'function' then
+		mod.reset_game_globals(true)
+	end
+end'''
+
+# Card:set_debuff()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = "function Card:set_debuff(should_debuff)"
+position = 'after'
+match_indent = true
+payload = '''
+	for _, mod in ipairs(SMODS.mod_list) do
+		if mod.set_debuff and type(mod.set_debuff) == 'function' then
+			should_debuff = should_debuff or mod.set_debuff(self)
+		end
+	end'''
