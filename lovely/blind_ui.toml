@@ -1,0 +1,117 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# create_UIBox_blind_choice
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "if blind_state == 'Select' then blind_state = 'Current' end"
+position = 'after'
+payload = '''
+local blind_desc_nodes = {}
+for k, v in ipairs(text_table) do
+  if k == 1 then
+    blind_desc_nodes[#blind_desc_nodes+1] = {n=G.UIT.R, config={align = "cm", maxw = 2.8}, nodes={
+      {n=G.UIT.T, config={id = blind_choice.config.key, ref_table = {val = ''}, ref_value = 'val', scale = 0.32, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.WHITE, shadow = not disabled, func = 'HUD_blind_debuff_prefix'}},
+      {n=G.UIT.T, config={text = v or '-', scale = 0.32, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.WHITE, shadow = not disabled}}
+    }}
+  else
+    blind_desc_nodes[#blind_desc_nodes+1] = {n=G.UIT.R, config={align = "cm", maxw = 2.8}, nodes={
+      {n=G.UIT.T, config={text = v or '-', scale = 0.32, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.WHITE, shadow = not disabled}}
+    }}
+  end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''
+(?<indent>[\t ]*)text_table\[1\] and \{n=G\.UIT\.R, config=\{align = "cm", minh = 0\.7, padding = 0\.05, minw = 2\.9}, nodes=\{
+[\t ]*  text_table\[1\] and \{n=G\.UIT\.R, config=\{align = "cm", maxw = 2\.8\}, nodes=\{
+[\t ]*    \{n=G\.UIT\.T, config=\{id = blind_choice\.config\.key, ref_table = \{val = ''\}, ref_value = 'val', scale = 0\.32, colour = disabled and G\.C\.UI\.TEXT_INACTIVE or G\.C\.WHITE, shadow = not disabled, func = 'HUD_blind_debuff_prefix'\}\},
+[\t ]*    \{n=G\.UIT\.T, config=\{text = text_table\[1\] or '\-', scale = 0\.32, colour = disabled and G\.C\.UI\.TEXT_INACTIVE or G\.C\.WHITE, shadow = not disabled\}\}
+[\t ]*  \}\} or nil,
+[\t ]*  text_table\[2\] and \{n=G\.UIT\.R, config=\{align = "cm", maxw = 2\.8\}, nodes=\{
+[\t ]*    \{n=G\.UIT\.T, config=\{text = text_table\[2\] or '\-', scale = 0\.32, colour = disabled and G\.C\.UI\.TEXT_INACTIVE or G\.C\.WHITE, shadow = not disabled\}\}
+[\t ]*  \}\} or nil,
+[\t ]*\}\} or nil,'''
+position = "at"
+payload = '''
+text_table[1] and {n=G.UIT.R, config={align = "cm", minh = 0.7, padding = 0.05, minw = 2.9}, nodes = blind_desc_nodes} or nil,'''
+line_prepend = '$indent'
+
+# create_UIBox_HUD_blind()
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "G.GAME.blind:change_dim(1.5,1.5)"
+position = 'after'
+payload = '''
+local blind_desc_nodes = {}
+for k, v in ipairs(G.GAME.blind.loc_debuff_lines) do
+  if k == 1 then
+    blind_desc_nodes[#blind_desc_nodes+1] = {n=G.UIT.R, config={align = "cm", minh = 0.3, maxw = 4.2}, nodes={
+      {n=G.UIT.T, config={ref_table = {val = ''}, ref_value = 'val', scale = scale*0.9, colour = G.C.UI.TEXT_LIGHT, func = 'HUD_blind_debuff_prefix'}},
+      {n=G.UIT.T, config={ref_table = G.GAME.blind.loc_debuff_lines, ref_value = k, scale = scale*0.9, colour = G.C.UI.TEXT_LIGHT, id = 'HUD_blind_debuff_1', func = 'HUD_blind_debuff'}}
+    }}
+  else
+    blind_desc_nodes[#blind_desc_nodes+1] = {n=G.UIT.R, config={align = "cm", minh = 0.3, maxw = 4.2}, nodes={
+      {n=G.UIT.T, config={ref_table = G.GAME.blind.loc_debuff_lines, ref_value = k, scale = scale*0.9, colour = G.C.UI.TEXT_LIGHT, id = 'HUD_blind_debuff_2', func = 'HUD_blind_debuff'}}
+    }}
+  end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''
+(?<indent>[\t ]*)\{n=G\.UIT\.R, config=\{align = "cm", padding = 0\.05\}, nodes=\{
+[\t ]*  \{n=G\.UIT\.R, config=\{align = "cm", minh = 0\.3, maxw = 4\.2\}, nodes=\{
+[\t ]*    \{n=G\.UIT\.T, config=\{ref_table = \{val = ''\}, ref_value = 'val', scale = scale\*0\.9, colour = G\.C\.UI\.TEXT_LIGHT, func = 'HUD_blind_debuff_prefix'\}\},
+[\t ]*    \{n=G\.UIT\.T, config=\{ref_table = G\.GAME\.blind\.loc_debuff_lines, ref_value = 1, scale = scale\*0\.9, colour = G\.C\.UI\.TEXT_LIGHT, id = 'HUD_blind_debuff_1', func = 'HUD_blind_debuff'\}\}
+[\t ]*  \}\},
+[\t ]*  \{n=G\.UIT\.R, config=\{align = "cm", minh = 0\.3, maxw = 4\.2\}, nodes=\{
+[\t ]*    \{n=G\.UIT\.T, config=\{ref_table = G\.GAME\.blind\.loc_debuff_lines, ref_value = 2, scale = scale\*0\.9, colour = G\.C\.UI\.TEXT_LIGHT, id = 'HUD_blind_debuff_2', func = 'HUD_blind_debuff'\}\}
+[\t ]*  \}\},
+[\t ]*\}\},'''
+position = "at"
+payload = '''
+{n=G.UIT.R, config={align = "cm", padding = 0.05-0.05*(#blind_desc_nodes-2)}, nodes=blind_desc_nodes},'''
+line_prepend = '$indent'
+
+# Blind:set_text
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = "self.loc_debuff_text = self.loc_debuff_text..v..(k <= #loc_target and ' ' or '')"
+position = 'after'
+payload = "self.loc_debuff_lines[k] = v"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = "for k, v in ipairs(loc_target) do"
+position = 'before'
+payload = '''
+for k, v in ipairs(self.loc_debuff_lines) do
+    self.loc_debuff_lines[k] = nil
+end'''
+match_indent = true
+
+# Update the UI
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = "G.GAME.last_blind = G.GAME.last_blind or {}"
+position = 'before'
+payload = '''
+G.HUD_blind = UIBox{
+    definition = create_UIBox_HUD_blind(),
+    config = {major = G.HUD:get_UIE_by_ID('row_blind'), align = 'cm', offset = {x=0,y=-10}, bond = 'Weak'}
+}'''
+match_indent = true
