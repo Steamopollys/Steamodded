@@ -2437,7 +2437,7 @@ function loadAPIs()
         prefix = 'tex',
         inject = function(self)
             -- Do not create palettes for any types that do not exist
-            if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suit" then return end
+            if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suit" and self.type ~= "Blind" then return end
             
             -- Initialize new palette types, including a default palette 
             if not SMODS.AltTextures[self.type] then
@@ -2453,7 +2453,7 @@ function loadAPIs()
             if SMODS.AltTextures[self.type][self.name] then
                 SMODS.AltTextures[self.type][self.name] = {} 
             else
-                table.insert(SMODS.AltTextures[self.type].names, self.name)
+                table.insert(SMODS.AltTextures[self.type].names, (self.name:len() < 20 and self.name or self.name:sub(1,18).."..."))
             end
             SMODS.AltTextures[self.type][self.name] = {
                 name = self.name,
@@ -2502,24 +2502,26 @@ function loadAPIs()
 
     function SMODS.AltTexture:create_atlas(type, name)
         local atlas_keys = {}
-            if type == "Suit" then
-                atlas_keys = {"cards_1", "ui_1"}
-            elseif type == "Seal" then
-                atlas_keys = {"centers"}
-            elseif type == "Tag" then
-                atlas_keys = {"tags"}
-            else
-                for _,v in pairs(G.P_CENTER_POOLS[type]) do
-                    atlas_keys[v.atlas or type] = v.atlas or type
-                end
-                if type == "Spectral" then atlas_keys["soul"] = "soul" end
+        if type == "Suit" then
+            atlas_keys = {"cards_1", "ui_1"}
+        elseif type == "Seal" then
+            atlas_keys = {"centers"}
+        elseif type == "Tag" then
+            atlas_keys = {"tags"}
+        elseif type == "Blind" then
+            atlas_keys = {"Blind"}
+        else
+            for _,v in pairs(G.P_CENTER_POOLS[type]) do
+                atlas_keys[v.atlas or type] = v.atlas or type
             end
-            G.PALETTE = SMODS.AltTextures[type][name]
-            for _,v in pairs(atlas_keys) do
-                G.ASSET_ATLAS[v][name] = {image_data = G.ASSET_ATLAS[v].image_data:clone()}
-                G.ASSET_ATLAS[v][name].image_data:mapPixel(G.FUNCS.recolour_image)
-                G.ASSET_ATLAS[v][name].image = love.graphics.newImage(G.ASSET_ATLAS[v][name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
-            end
+            if type == "Spectral" then atlas_keys["soul"] = "soul" end
+        end
+        G.PALETTE = SMODS.AltTextures[type][name]
+        for _,v in pairs(atlas_keys) do
+            G.ASSET_ATLAS[v][name] = {image_data = G.ASSET_ATLAS[v].image_data:clone()}
+            G.ASSET_ATLAS[v][name].image_data:mapPixel(G.FUNCS.recolour_image)
+            G.ASSET_ATLAS[v][name].image = love.graphics.newImage(G.ASSET_ATLAS[v][name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+        end
     end
 
     function SMODS.AltTexture:create_new_atlas()
@@ -2634,6 +2636,13 @@ function loadAPIs()
         path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",
         px = 71,
         py = 95,
+        inject = create_default_atlas
+    })
+    SMODS.Atlas({
+        key = "Blind",
+        path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/BlindChips.png",
+        px = 34,
+        py = 34,
         inject = create_default_atlas
     })
 

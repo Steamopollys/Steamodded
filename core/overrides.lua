@@ -1391,83 +1391,62 @@ function G.UIDEF.deck_info(_show_remaining)
 
 end
 
+local UIBox_collection_deck_ref = create_UIBox_your_collection_decks
 function create_UIBox_your_collection_decks()
-	G.GAME.viewed_back = Back(G.P_CENTERS.b_red)
+	local t = UIBox_collection_deck_ref()
+	local selector = {n=G.UIT.R, config={align = "cm", }, nodes={
+		{n=G.UIT.R, config = {align = "cm", padding=-0.3}, nodes = {
+			(SMODS.AltTextures["Back"] and #SMODS.AltTextures["Back"].names > 1 and SMODS.GUI.createOptionSelector({
+				w = 4.5,
+				scale = 0.8,
+				colour = G.C.BLUE,
+				options = SMODS.AltTextures["Back"].names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture["Back"],
+				type = "Back"
+			}) or {n=G.UIT.C, config = {minw = 4.5}})
+		}},
+		{n=G.UIT.R, config = {minh = 0.35}} 
+	}}
+	table.insert(t.nodes[1].nodes[1].nodes, 2, selector)
 
-	local area = CardArea(G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h, 1.2*G.CARD_W, 1.2*G.CARD_H, {card_limit = 52, type = 'deck', highlight_limit = 0})
-
-	for i = 1, 52 do
-		local card = Card(G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h, G.CARD_W*1.2, G.CARD_H*1.2, pseudorandom_element(G.P_CARDS), G.P_CENTERS.c_base, {playing_card = i, viewed_back = true})
-		card.sprite_facing = 'back'
-		card.facing = 'back'
-		area:emplace(card)
-		if i == 52 then G.sticker_card = card; card.sticker = get_deck_win_sticker(G.GAME.viewed_back.effect.center) end
-	end
-
-	local ordered_names = {}
-	for k, v in ipairs(G.P_CENTER_POOLS.Back) do
-		ordered_names[#ordered_names+1] = v.name
-	end
-
-	local t = create_UIBox_generic_options({ back_func = 'your_collection', contents = {
-		create_option_cycle({options = ordered_names, opt_callback = 'change_viewed_back', current_option = 1, colour = G.C.RED, w = 4.5, focus_args = {snap_to = true}, mid = 
-			{n=G.UIT.R, config={align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes={
-				{n=G.UIT.R, config={align = "cm", padding = 0.2, colour = G.C.BLACK, r = 0.2}, nodes={
-					{n=G.UIT.C, config={align = "cm", padding = 0}, nodes={
-						{n=G.UIT.O, config={object = area}}
-					}},
-					{n=G.UIT.C, config={align = "tm", minw = 3.7, minh = 2.1, r = 0.1, colour = G.C.L_BLACK, padding = 0.1}, nodes={
-						{n=G.UIT.R, config={align = "cm", emboss = 0.1, r = 0.1, minw = 4, maxw = 4, minh = 0.6}, nodes={
-							{n=G.UIT.O, config={id = nil, func = 'RUN_SETUP_check_back_name', object = Moveable()}},
-						}},
-						{n=G.UIT.R, config={align = "cm", colour = G.C.WHITE, emboss = 0.1, minh = 2.2, r = 0.1}, nodes={
-							{n=G.UIT.O, config={id = G.GAME.viewed_back.name, func = 'RUN_SETUP_check_back', object = UIBox{definition = G.GAME.viewed_back:generate_UI(), config = {offset = {x=0,y=0}}}}}
-						}}       
-					}},
-				}},
-			}}}),
-			(SMODS.AltTextures["Back"] and #SMODS.AltTextures["Back"].names > 1 and SMODS.GUI.createOptionSelector({w = 4.5, scale = 0.8,
-			options = SMODS.AltTextures["Back"].names, opt_callback = "update_recolor", current_option = G.SETTINGS.selected_texture["Back"],
-			type = "Back"}))  
-	}})
 	return t
 end
 
 local blinds_UI = create_UIBox_your_collection_blinds
 function create_UIBox_your_collection_blinds(exit)
 	local t = blinds_UI(exit)
-	print(tprint(t.nodes[1].nodes[1].nodes[1].nodes[1]))
-	if SMODS.AltTextures["Blind"] and #SMODS.AltTextures["Blind"].names > 1 then
-		local selector = {n=G.UIT.R, config={align = "bm", padding=0.1}, nodes={
-			{n=G.UIT.C, nodes = {
-				{n=G.UIT.C, config = {minw = 1}},
-				{n=G.UIT.C, config = {align = "cm"}, nodes = {
-					SMODS.GUI.createOptionSelector({
-						w = 4.5,
-						scale = 0.8,
-						colour = G.C.BLUE,
-						options = SMODS.AltTextures["Blind"].names,
-						opt_callback = "update_recolor",
-						current_option = G.SETTINGS.selected_texture["Blind"],
-						type = "Blind"
-					})}}, 
-				-- Page selector NYI
-				{n=G.UIT.C, config = {align = "cm"}, nodes = {
-					SMODS.GUI.createOptionSelector({
-						options = {"Page 1/2","Page 2/2"},
-						w = 3,
-						scale = 0.8,
-						cycle_shoulders = true,
-						-- opt_callback = '',
-						focus_args = { snap_to = true, nav = 'wide' },
-						current_option = 1,
-						colour = G.C.RED,
-						no_pips = true
-					})}}
-				}}
-		}}
-		table.insert(t.nodes[1].nodes[1].nodes[1].nodes[1].nodes[2].nodes[1].nodes, selector)		
-	end
+	local selector = {n=G.UIT.R, config={align = "bm", padding=0.1}, nodes={
+		{n=G.UIT.C, nodes = {
+			{n=G.UIT.C, config = {minw = 1}},
+			{n=G.UIT.C, config = {align = "cm"}, nodes = {
+				(SMODS.AltTextures["Blind"] and #SMODS.AltTextures["Blind"].names > 1 and 
+				SMODS.GUI.createOptionSelector({
+					w = 4.5,
+					scale = 0.8,
+					colour = G.C.BLUE,
+					options = SMODS.AltTextures["Blind"].names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture["Blind"],
+					type = "Blind"
+				}) or {n=G.UIT.C, config = {minw = 4.5}})
+			}}, 
+			-- Page selector NYI
+			{n=G.UIT.C, config = {align = "cm"}, nodes = {
+				SMODS.GUI.createOptionSelector({
+					options = {"NYI"},
+					w = 3,
+					scale = 0.8,
+					cycle_shoulders = true,
+					-- opt_callback = '',
+					focus_args = { snap_to = true, nav = 'wide' },
+					current_option = 1,
+					colour = G.C.RED,
+					no_pips = true
+				})}}
+			}}
+	}}
+	table.insert(t.nodes[1].nodes[1].nodes[1].nodes[1].nodes[2].nodes, selector)		
 	t.nodes[1].nodes[1].nodes[1].nodes[1].nodes[2].config.align = "bm"
 	return t
 end
