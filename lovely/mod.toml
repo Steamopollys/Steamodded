@@ -43,6 +43,14 @@ match_indent = true
 payload = '''
 	for _, mod in ipairs(SMODS.mod_list) do
 		if mod.set_debuff and type(mod.set_debuff) == 'function' then
-			should_debuff = should_debuff or mod.set_debuff(self)
+            local res = mod.set_debuff(self)
+            if res == 'prevent_debuff' then
+                if self.debuff then
+                    self.debuff = false
+                    if self.area == G.jokers then self:add_to_deck(true) end
+                end
+                return
+            end
+			should_debuff = should_debuff or res
 		end
 	end'''
