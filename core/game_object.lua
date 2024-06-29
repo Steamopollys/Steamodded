@@ -706,31 +706,35 @@ function loadAPIs()
             end
 
             INIT_COLLECTION_CARD_ALERTS()
-            local option_nodes = { create_option_cycle({
-                options = center_options,
-                w = 4.5,
-                cycle_shoulders = true,
-                opt_callback = 'your_collection_' .. string.lower(self.key) .. '_page',
-                focus_args = { snap_to = true, nav = 'wide' },
-                current_option = 1,
-                colour = G.C.RED,
-                no_pips = true
-            }) }
-                        if SMODS.AltTextures[self.key] and #SMODS.AltTextures[self.key].names > 1 then
-                option_nodes[#option_nodes + 1] = SMODS.GUI.createOptionSelector({
-                    w = 4.5,
-                    scale = 0.8,
-                    options = SMODS.AltTextures[self.key].names,
-                    opt_callback = "update_recolor",
-                    current_option = G.SETTINGS.selected_texture[self.key],
-                    type = self.key
-            })
-            end
+            local selector = {
+                (center_options and #center_options > 1 and { n = G.UIT.R, config = { align = "cm", padding = -0.1 },
+                    nodes = {create_option_cycle({
+                        options = center_options,
+                        w = 4.5,
+                        cycle_shoulders = true,
+                        opt_callback = 'your_collection_'..string.lower(self.key)..'_page',
+                        current_option = 1,
+                        colour = G.C.RED,
+                        no_pips = true
+                })}} or { n = G.UIT.R}), 
+                (SMODS.AltTextures[self.key] and #SMODS.AltTextures[self.key].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = -0.1 },
+                    nodes = {SMODS.GUI.createOptionSelector({
+                        w = 4.5,
+                        scale = 0.8,
+                        colour = G.C.BLUE,
+                        options = SMODS.AltTextures[self.key].names,
+                        opt_callback = "update_recolor",
+                        current_option = G.SETTINGS.selected_texture[self.key],
+                        type = self.key,
+                })}}),
+                
+            }
+        
             local t = create_UIBox_generic_options({
                 back_func = 'your_collection',
                 contents = {
                     { n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables },
-                    { n = G.UIT.R, config = { align = "cm", padding = 0 }, nodes = option_nodes },
+                    { n = G.UIT.R, config = { align = "cm", padding = 0 }, nodes = selector },
                 }
             })
             return t
@@ -2436,6 +2440,7 @@ function loadAPIs()
         set = 'AltTexture',
         prefix = 'tex',
         inject = function(self)
+            self.name = (self.name:len() < 18 and self.name or self.name:sub(1,16).."...")
             -- Do not create palettes for any types that do not exist
             if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suit" and self.type ~= "Blind" then return end
             
@@ -2453,7 +2458,7 @@ function loadAPIs()
             if SMODS.AltTextures[self.type][self.name] then
                 SMODS.AltTextures[self.type][self.name] = {} 
             else
-                table.insert(SMODS.AltTextures[self.type].names, (self.name:len() < 20 and self.name or self.name:sub(1,18).."..."))
+                table.insert(SMODS.AltTextures[self.type].names, self.name)
             end
             SMODS.AltTextures[self.type][self.name] = {
                 name = self.name,

@@ -1213,10 +1213,20 @@ function create_UIBox_your_collection_enhancements(exit)
     local t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
             contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
                 nodes = deck_tables
-            }, { n = G.UIT.R, config = { align = "cm", padding = -0.25},
+            },
+			{ n = G.UIT.R, config = { align = "cm", padding = -0.2},
                 nodes = {
-					{ n = G.UIT.C, config = {minw = 1}},
-					(SMODS.AltTextures["Enhanced"] and #SMODS.AltTextures["Enhanced"].names > 1 and { n = G.UIT.C, config = { align = "cm" },
+					(enhancement_options[1] and { n = G.UIT.R, config = { align = "cm" },
+						nodes = {create_option_cycle({
+							options = enhancement_options,
+							w = 4.5,
+							cycle_shoulders = true,
+							opt_callback = 'your_collection_enhancements_page',
+							current_option = 1,
+							colour = G.C.RED,
+							no_pips = true
+					})}}), 
+					(SMODS.AltTextures["Enhanced"] and #SMODS.AltTextures["Enhanced"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
 						nodes = {SMODS.GUI.createOptionSelector({
 							w = 4.5,
 							scale = 0.8,
@@ -1224,23 +1234,13 @@ function create_UIBox_your_collection_enhancements(exit)
 							options = SMODS.AltTextures["Enhanced"].names,
 							opt_callback = "update_recolor",
 							current_option = G.SETTINGS.selected_texture["Enhanced"],
-							type = "Enhanced"
-					})}} or { n = G.UIT.C, config = {minw = 4.5, scale = 0.8}}),
-					(enhancement_options[1] and { n = G.UIT.C, config = { align = "cm" },
-						nodes = {create_option_cycle({
-							options = enhancement_options,
-							w = 3,
-							scale = 0.8,
-							cycle_shoulders = true,
-							opt_callback = 'your_collection_enhancements_page',
-							focus_args = { snap_to = true, nav = 'wide' },
-							current_option = 1,
-							colour = G.C.RED,
-							no_pips = true
-					})}})
+							type = "Enhanced",
+					})}}),
+					
 				}
-            }}
-        })
+            }
+		}
+    })
     
     return t
 end
@@ -1394,20 +1394,20 @@ end
 local UIBox_collection_deck_ref = create_UIBox_your_collection_decks
 function create_UIBox_your_collection_decks()
 	local t = UIBox_collection_deck_ref()
-	local selector = {n=G.UIT.R, config={align = "cm", }, nodes={
-		{n=G.UIT.R, config = {align = "cm", padding=-0.3}, nodes = {
-			(SMODS.AltTextures["Back"] and #SMODS.AltTextures["Back"].names > 1 and SMODS.GUI.createOptionSelector({
+	local selector = { n = G.UIT.R, config = { align = "cm", padding = -0.2},
+	nodes = { 
+		(SMODS.AltTextures["Back"] and #SMODS.AltTextures["Back"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
+			nodes = {SMODS.GUI.createOptionSelector({
 				w = 4.5,
 				scale = 0.8,
 				colour = G.C.BLUE,
 				options = SMODS.AltTextures["Back"].names,
 				opt_callback = "update_recolor",
 				current_option = G.SETTINGS.selected_texture["Back"],
-				type = "Back"
-			}) or {n=G.UIT.C, config = {minw = 4.5}})
-		}},
-		{n=G.UIT.R, config = {minh = 0.35}} 
-	}}
+				type = "Back",
+		})}}),
+	}
+}
 	table.insert(t.nodes[1].nodes[1].nodes, 2, selector)
 
 	return t
@@ -1416,36 +1416,38 @@ end
 local blinds_UI = create_UIBox_your_collection_blinds
 function create_UIBox_your_collection_blinds(exit)
 	local t = blinds_UI(exit)
-	local selector = {n=G.UIT.R, config={align = "bm", padding=0.1}, nodes={
-		{n=G.UIT.C, nodes = {
-			{n=G.UIT.C, config = {minw = 1}},
-			{n=G.UIT.C, config = {align = "cm"}, nodes = {
-				(SMODS.AltTextures["Blind"] and #SMODS.AltTextures["Blind"].names > 1 and 
-				SMODS.GUI.createOptionSelector({
-					w = 4.5,
-					scale = 0.8,
-					colour = G.C.BLUE,
-					options = SMODS.AltTextures["Blind"].names,
-					opt_callback = "update_recolor",
-					current_option = G.SETTINGS.selected_texture["Blind"],
-					type = "Blind"
-				}) or {n=G.UIT.C, config = {minw = 4.5}})
-			}}, 
-			-- Page selector NYI
-			{n=G.UIT.C, config = {align = "cm"}, nodes = {
-				SMODS.GUI.createOptionSelector({
-					options = {"NYI"},
-					w = 3,
-					scale = 0.8,
-					cycle_shoulders = true,
-					-- opt_callback = '',
-					focus_args = { snap_to = true, nav = 'wide' },
-					current_option = 1,
-					colour = G.C.RED,
-					no_pips = true
-				})}}
-			}}
-	}}
+	local blind_tab = {}
+	for k, v in pairs(G.P_BLINDS) do
+		blind_tab[#blind_tab+1] = v
+	end
+	print(#blind_tab)
+	local selector = { n = G.UIT.R, config = { align = "cm", padding = -0.2},
+	nodes = {
+		{ n = G.UIT.R, config = {minh = 0.4}},
+		(#blind_tab > 54 and { n = G.UIT.R, config = { align = "cm" },
+			nodes = {create_option_cycle({
+				options = {"NYI"},
+				w = 4.5,
+				scale = 0.8,
+				cycle_shoulders = true,
+				-- opt_callback = 'your_collection_blinds_page',
+				current_option = 1,
+				colour = G.C.RED,
+				no_pips = true
+		})}} or { n = G.UIT.R, config = {minh = 1}}), 
+		(SMODS.AltTextures["Blind"] and #SMODS.AltTextures["Blind"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
+			nodes = {SMODS.GUI.createOptionSelector({
+				w = 4.5,
+				scale = 0.6,
+				colour = G.C.BLUE,
+				options = SMODS.AltTextures["Blind"].names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture["Blind"],
+				type = "Blind",
+		})}}),
+		
+	}
+}
 	table.insert(t.nodes[1].nodes[1].nodes[1].nodes[1].nodes[2].nodes, selector)		
 	t.nodes[1].nodes[1].nodes[1].nodes[1].nodes[2].config.align = "bm"
 	return t
