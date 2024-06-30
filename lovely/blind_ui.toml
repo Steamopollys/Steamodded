@@ -60,6 +60,24 @@ line_prepend = '$indent'
 
 # Blind:set_text
 [[patches]]
+[patches.regex]
+target = "blind.lua"
+pattern = """
+(?<indent>[\t ]*)self\\.loc_debuff_lines\\[1\\] = ''
+[\t ]*self\\.loc_debuff_lines\\[2\\] = ''"""
+position = 'at'
+payload = 'EMPTY(self.loc_debuff_lines)'
+line_prepend = '$indent'
+
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = "for k, v in ipairs(loc_target) do"
+position = 'before'
+payload = 'EMPTY(self.loc_debuff_lines)'
+match_indent = true
+
+[[patches]]
 [patches.pattern]
 target = "blind.lua"
 pattern = "self.loc_debuff_text = self.loc_debuff_text..v..(k <= #loc_target and ' ' or '')"
@@ -68,12 +86,11 @@ payload = "self.loc_debuff_lines[k] = v"
 match_indent = true
 
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "blind.lua"
-pattern = "for k, v in ipairs(loc_target) do"
-position = 'before'
-payload = '''
-for k, v in ipairs(self.loc_debuff_lines) do
-    self.loc_debuff_lines[k] = nil
-end'''
-match_indent = true
+pattern = """
+(?<indent>[\t ]*)self\\.loc_debuff_lines\\[1\\] = loc_target\\[1\\] or ''
+[\t ]*self\\.loc_debuff_lines\\[2\\] = loc_target\\[2\\] or ''
+"""
+position = 'at'
+payload = ''
