@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0625a-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0629b-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -220,6 +220,8 @@ function create_UIBox_mods(args)
 		}
 	}))
 end
+
+
 
 function buildModtag(mod)
     local tag_pos, tag_message, tag_atlas = { x = 0, y = 0 }, "load_success", mod.prefix and mod.prefix .. '_modicon' or 'modicon'
