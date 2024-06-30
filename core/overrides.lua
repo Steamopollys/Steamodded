@@ -1362,35 +1362,47 @@ G.FUNCS.card_colours_pages = function(args)
     end
 end
 
-function G.UIDEF.deck_info(_show_remaining)
-	local t = create_tabs({
-		tabs = _show_remaining and {
-			{
-				label = localize('b_remaining'),
-				chosen = true,
-				tab_definition_function = G.UIDEF.view_deck,
-				tab_definition_function_args = true,
-			},{
-				label = localize('b_full_deck'),
-				tab_definition_function = G.UIDEF.view_deck
-			},
-		} or {
-			{
-			label = localize('b_full_deck'),
-			chosen = true,
-			tab_definition_function = G.UIDEF.view_deck
-			},
-		},
-		tab_h = 8,
-		snap_to_nav = true
-	})
 
-	return create_UIBox_generic_options({contents = {
-		t,
-		SMODS.GUI.createOptionSelector({w = 4.5, scale = 1, align = "rm", options = SMODS.AltTextures.Suit.names,
-			opt_callback = "update_recolor", current_option = G.SETTINGS.selected_texture.Suit, type = 'Suit'})
-	}})
-
+local deck_view_ui = G.UIDEF.view_deck
+function G.UIDEF.view_deck(_show_remaining)
+	local t = deck_view_ui(_show_remaining)
+	local nodes_present = 0
+	for _,_ in pairs(t.nodes[3].nodes) do
+		nodes_present = nodes_present + 1
+	end
+	print(nodes_present)
+	if nodes_present < 1 then
+		table.insert(t.nodes[3].nodes, {n=G.UIT.R, config={align = "cm"}, nodes={
+			{n=G.UIT.C, config={padding = 0.3, r = 0.1}, nodes = {}},
+			{n=G.UIT.T, config={text ="",colour = G.C.WHITE, scale =0.3}},
+		  }})
+	end
+	if nodes_present < 2 then
+		table.insert(t.nodes[3].nodes, {n=G.UIT.R, config={align = "cm"}, nodes={
+			{n=G.UIT.C, config={padding = 0.3, r = 0.1}, nodes = {}},
+			{n=G.UIT.T, config={text ="",colour = G.C.WHITE, scale =0.3}},
+		  }})
+	end
+	local selector = { n = G.UIT.R, config = { align = "tr", padding = -0.7, minw = 15},
+		nodes = {
+			(SMODS.AltTextures["Suit"] and #SMODS.AltTextures["Suit"].names > 1 and { n = G.UIT.C,
+				nodes = {SMODS.GUI.createOptionSelector({
+					w = 3,
+					scale = 0.8,
+					text_scale = 0.4,
+					colour = G.C.BLUE,
+					options = SMODS.AltTextures["Suit"].names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture["Suit"],
+					type = "Suit",
+			})}} or {n = G.UIT.C}),
+		}
+	}
+	-- t.nodes[3].nodes[2].nodes = {}
+	-- table.insert(t.nodes[3].nodes[2].nodes, 1, spacer)
+	table.insert(t.nodes[3].nodes, selector)
+	
+	return t
 end
 
 local UIBox_collection_deck_ref = create_UIBox_your_collection_decks
