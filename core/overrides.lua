@@ -1075,10 +1075,12 @@ function Card:set_edition(edition, immediate, silent)
             delay = not immediate and 0.2 or 0,
             blockable = not immediate,
             func = function()
-                self:juice_up(1, 0.5)
-				local ed = G.P_CENTERS['e_'..(self.edition.type)]
-                play_sound(ed.sound.sound, ed.sound.per, ed.sound.vol)
-                return true
+				if self.edition then
+					self:juice_up(1, 0.5)
+					local ed = G.P_CENTERS['e_'..(self.edition.type)]
+					play_sound(ed.sound.sound, ed.sound.per, ed.sound.vol)
+				end
+				return true
             end
         }))
         G.E_MANAGER:add_event(Event({
