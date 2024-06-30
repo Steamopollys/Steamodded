@@ -21,6 +21,7 @@ sources = [
 	"core/utils.lua",
 	"core/overrides.lua",
 	"core/game_object.lua",
+	"core/calc.lua",
 	"debug/debug.lua",
 	"core/compat_0_9_8.lua",
 	"loader/loader.lua",

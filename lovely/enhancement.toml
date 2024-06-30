@@ -182,53 +182,53 @@ match_indent = true
 position = "at"
 payload = "elseif specific_vars.playing_card then"
 
-# eval_card()
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "function eval_card(card, context)"
-match_indent = true
-position = "after"
-payload = """
-    local enhancement_calculated = false
-    local center = card.config.center"""
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "local jokers = card:calculate_joker(context)"
-match_indent = true
-position = "before"
-payload = """
-if center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
-    center:calculate(context, ret)
-    enhancement_calculated = true
-end"""
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "local seals = card:calculate_seal(context)"
-match_indent = true
-position = "before"
-payload = """
-if center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
-    center:calculate(context, ret)
-    enhancement_calculated = true
-end"""
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
-match_indent = true
-position = "before"
-payload = """
-if not enhancement_calculated and center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
-    center:calculate(context, ret)
-    enhancement_calculated = true
-end
-local seals = card:calculate_seal(context)
-if seals then
-    ret.seals = seals
-end"""
+## eval_card()
+# [[patches]]
+# [patches.pattern]
+# target = "functions/common_events.lua"
+# pattern = "function eval_card(card, context)"
+# match_indent = true
+# position = "after"
+# payload = """
+#     local enhancement_calculated = false
+#     local center = card.config.center"""
+# [[patches]]
+# [patches.pattern]
+# target = "functions/common_events.lua"
+# pattern = "local jokers = card:calculate_joker(context)"
+# match_indent = true
+# position = "before"
+# payload = """
+# if center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
+#     center:calculate(context, ret)
+#     enhancement_calculated = true
+# end"""
+# [[patches]]
+# [patches.pattern]
+# target = "functions/common_events.lua"
+# pattern = "local seals = card:calculate_seal(context)"
+# match_indent = true
+# position = "before"
+# payload = """
+# if center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
+#     center:calculate(context, ret)
+#     enhancement_calculated = true
+# end"""
+# [[patches]]
+# [patches.pattern]
+# target = "functions/common_events.lua"
+# pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
+# match_indent = true
+# position = "before"
+# payload = """
+# if not enhancement_calculated and center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
+#     center:calculate(context, ret)
+#     enhancement_calculated = true
+# end
+# local seals = card:calculate_seal(context)
+# if seals then
+#     ret.seals = seals
+# end"""
 
 
 ## Add additional eval_card() calls
