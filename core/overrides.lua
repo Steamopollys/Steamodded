@@ -1395,19 +1395,19 @@ local UIBox_collection_deck_ref = create_UIBox_your_collection_decks
 function create_UIBox_your_collection_decks()
 	local t = UIBox_collection_deck_ref()
 	local selector = { n = G.UIT.R, config = { align = "cm", padding = -0.2},
-	nodes = { 
-		(SMODS.AltTextures["Back"] and #SMODS.AltTextures["Back"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
-			nodes = {SMODS.GUI.createOptionSelector({
-				w = 4.5,
-				scale = 0.8,
-				colour = G.C.BLUE,
-				options = SMODS.AltTextures["Back"].names,
-				opt_callback = "update_recolor",
-				current_option = G.SETTINGS.selected_texture["Back"],
-				type = "Back",
-		})}}),
+		nodes = { 
+			(SMODS.AltTextures["Back"] and #SMODS.AltTextures["Back"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
+				nodes = {SMODS.GUI.createOptionSelector({
+					w = 4.5,
+					scale = 0.8,
+					colour = G.C.BLUE,
+					options = SMODS.AltTextures["Back"].names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture["Back"],
+					type = "Back",
+			})}} or {n = G.UIT.R}),
+		}
 	}
-}
 	table.insert(t.nodes[1].nodes[1].nodes, 2, selector)
 
 	return t
@@ -1422,37 +1422,146 @@ function create_UIBox_your_collection_blinds(exit)
 	end
 	print(#blind_tab)
 	local selector = { n = G.UIT.R, config = { align = "cm", padding = -0.2},
-	nodes = {
-		{ n = G.UIT.R, config = {minh = 0.4}},
-		(#blind_tab > 54 and { n = G.UIT.R, config = { align = "cm" },
-			nodes = {create_option_cycle({
-				options = {"NYI"},
-				w = 4.5,
-				scale = 0.8,
-				cycle_shoulders = true,
-				-- opt_callback = 'your_collection_blinds_page',
-				current_option = 1,
-				colour = G.C.RED,
-				no_pips = true
-		})}} or { n = G.UIT.R, config = {minh = 1}}), 
-		(SMODS.AltTextures["Blind"] and #SMODS.AltTextures["Blind"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
-			nodes = {SMODS.GUI.createOptionSelector({
-				w = 4.5,
-				scale = 0.6,
-				colour = G.C.BLUE,
-				options = SMODS.AltTextures["Blind"].names,
-				opt_callback = "update_recolor",
-				current_option = G.SETTINGS.selected_texture["Blind"],
-				type = "Blind",
-		})}}),
-		
+		nodes = {
+			{ n = G.UIT.R, config = {minh = 0.4}},
+			(#blind_tab > 54 and { n = G.UIT.R, config = { align = "cm" },
+				nodes = {create_option_cycle({
+					options = {"NYI"},
+					w = 4.5,
+					scale = 0.8,
+					cycle_shoulders = true,
+					-- opt_callback = 'your_collection_blinds_page',
+					current_option = 1,
+					colour = G.C.RED,
+					no_pips = true
+			})}} or { n = G.UIT.R, config = {minh = 1}}), 
+			(SMODS.AltTextures["Blind"] and #SMODS.AltTextures["Blind"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
+				nodes = {SMODS.GUI.createOptionSelector({
+					w = 4.5,
+					scale = 0.6,
+					colour = G.C.BLUE,
+					options = SMODS.AltTextures["Blind"].names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture["Blind"],
+					type = "Blind",
+			})}} or { n = G.UIT.R }),
+		}
 	}
-}
 	table.insert(t.nodes[1].nodes[1].nodes[1].nodes[1].nodes[2].nodes, selector)		
-	t.nodes[1].nodes[1].nodes[1].nodes[1].nodes[2].config.align = "bm"
 	return t
 end
 
+local joker_ui = create_UIBox_your_collection_jokers
+function create_UIBox_your_collection_jokers()
+	local t = joker_ui()
+	local selector = (SMODS.AltTextures["Joker"] and #SMODS.AltTextures["Joker"].names > 1 and
+	{ n = G.UIT.R, config = { align = "cm", padding = -0.3 },
+		nodes = {SMODS.GUI.createOptionSelector({
+				w = 4.5,
+				scale = 0.8,
+				colour = G.C.BLUE,
+				options = SMODS.AltTextures["Joker"].names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture["Joker"],
+				type = "Joker",
+			})
+		}
+	}
+	or {n = G.UIT.R})
+	table.insert(t.nodes[1].nodes[1].nodes[1].nodes, selector)
+	return t
+end
+
+local tag_ui = create_UIBox_your_collection_tags
+function create_UIBox_your_collection_tags()
+	local t = tag_ui()
+	local selector = (SMODS.AltTextures["Tag"] and #SMODS.AltTextures["Tag"].names > 1 and
+	{ n = G.UIT.R, config = { align = "cm", padding = -0.3 },
+		nodes = {SMODS.GUI.createOptionSelector({
+				w = 4.5,
+				scale = 0.7,
+				colour = G.C.BLUE,
+				options = SMODS.AltTextures["Tag"].names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture["Tag"],
+				type = "Tag",
+			}), {n = G.UIT.R, config = {minh = 0.5}}
+		}
+	}
+	or {n = G.UIT.R})
+	table.insert(t.nodes[1].nodes[1].nodes, 2, selector)
+	return t
+end
+
+local voucher_ui = create_UIBox_your_collection_vouchers
+function create_UIBox_your_collection_vouchers()
+	local t = voucher_ui()
+	local selector = 
+		(SMODS.AltTextures["Voucher"] and #SMODS.AltTextures["Voucher"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = -0.3 },
+			nodes = {SMODS.GUI.createOptionSelector({
+				w = 4.5,
+				scale = 0.8,
+				colour = G.C.BLUE,
+				options = SMODS.AltTextures["Voucher"].names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture["Voucher"],
+				type = "Voucher",
+		})}} or { n = G.UIT.R})
+	table.insert(t.nodes[1].nodes[1].nodes[1].nodes, selector)
+	return t
+end
+
+local booster_ui = create_UIBox_your_collection_boosters
+function create_UIBox_your_collection_boosters()
+	local t = booster_ui()
+	local selector = 
+		(SMODS.AltTextures["Booster"] and #SMODS.AltTextures["Booster"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = -0.3 },
+			nodes = {SMODS.GUI.createOptionSelector({
+				w = 4.5,
+				scale = 0.8,
+				colour = G.C.BLUE,
+				options = SMODS.AltTextures["Booster"].names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture["Booster"],
+				type = "Booster",
+		})}} or { n = G.UIT.R})
+	table.insert(t.nodes[1].nodes[1].nodes[1].nodes, selector)
+	return t
+end
+
+local seals_ui = create_UIBox_your_collection_seals
+function create_UIBox_your_collection_seals(exit)
+	local t = seals_ui(exit)
+	
+	local selector = { n = G.UIT.R, config = { align = "cm", padding = -0.2},
+		nodes = {
+			{ n = G.UIT.R, config = {minh = 0.4}},
+			(#G.P_CENTER_POOLS.Seal > 4 and { n = G.UIT.R, config = { align = "cm" },
+				nodes = {create_option_cycle({
+					options = {"NYI"},
+					w = 4.5,
+					scale = 0.8,
+					cycle_shoulders = true,
+					-- opt_callback = 'your_collection_blinds_page',
+					current_option = 1,
+					colour = G.C.RED,
+					no_pips = true
+			})}} or { n = G.UIT.R }), 
+			(SMODS.AltTextures["Seal"] and #SMODS.AltTextures["Seal"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
+				nodes = {SMODS.GUI.createOptionSelector({
+					w = 4.5,
+					scale = 0.6,
+					colour = G.C.BLUE,
+					options = SMODS.AltTextures["Seal"].names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture["Seal"],
+					type = "Seal",
+			})}} or { n = G.UIT.R }),
+		}
+	}
+	table.insert(t.nodes[1].nodes[1].nodes[1].nodes, selector)		
+	return t
+end
 
 --#endregion
 

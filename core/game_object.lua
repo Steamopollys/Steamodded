@@ -726,7 +726,7 @@ function loadAPIs()
                         opt_callback = "update_recolor",
                         current_option = G.SETTINGS.selected_texture[self.key],
                         type = self.key,
-                })}}),
+                })}} or {n = G.UIT.R}),
                 
             }
         
@@ -2471,8 +2471,6 @@ function loadAPIs()
             -- Initialize the new palette
             if self.palette then self:create_palette()
             elseif self.texture then self:create_new_atlas() end
-
-            G.FUNCS.update_atlas(self.type)
         end
     }
 
@@ -2524,7 +2522,9 @@ function loadAPIs()
         G.PALETTE = SMODS.AltTextures[type][name]
         for _,v in pairs(atlas_keys) do
             G.ASSET_ATLAS[v][name] = {image_data = G.ASSET_ATLAS[v].image_data:clone()}
-            G.ASSET_ATLAS[v][name].image_data:mapPixel(G.FUNCS.recolour_image)
+            if #SMODS.AltTextures[type][name].old_colours > 0 then 
+                G.ASSET_ATLAS[v][name].image_data:mapPixel(G.FUNCS.recolour_image)
+            end
             G.ASSET_ATLAS[v][name].image = love.graphics.newImage(G.ASSET_ATLAS[v][name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
         end
     end
@@ -2614,6 +2614,7 @@ function loadAPIs()
     for _,v in pairs(G.P_CENTER_POOLS.Back) do
         SMODS.Back:take_ownership(v.key, {atlas = "Back"})
     end
+    
    
     SMODS.Atlas({
         key = "Planet",
