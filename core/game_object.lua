@@ -27,7 +27,7 @@ function loadAPIs()
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
         end
-        if o.mod and not o.raw_shader_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
+        if o.mod and not o.raw_shader_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) and not type(o['shader']) == "table" then
             if o['shader'] then o['shader'] = ('%s_%s'):format(o.mod.prefix, o['shader']) end
         end
         setmetatable(o, self)
