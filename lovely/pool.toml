@@ -49,6 +49,16 @@ if keep then
 end"""
 match_indent = true
 
+# fixes pseudorandom_element on an empty list
+# nil, nil is returned in that case
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "local key = keys[math.random(#keys)].k"
+position = "before"
+payload = "if #keys == 0 then return nil, nil end"
+match_indent = true
+
 ## get_current_pool()
 
 # Centers
