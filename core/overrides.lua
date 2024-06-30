@@ -1389,7 +1389,7 @@ function G.UIDEF.view_deck(_show_remaining)
 				nodes = {SMODS.GUI.createOptionSelector({
 					w = 3,
 					scale = 0.8,
-					text_scale = 0.4,
+					text_scale = 0.38,
 					colour = G.C.BLUE,
 					options = SMODS.AltTextures["Suit"].names,
 					opt_callback = "update_recolor",
