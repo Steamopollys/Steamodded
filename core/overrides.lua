@@ -17,7 +17,6 @@ G.FUNCS.HUD_blind_debuff = function(e)
 	local blind_desc_nodes = {}
 	for k, v in ipairs(G.GAME.blind.loc_debuff_lines) do
 		blind_desc_nodes[#blind_desc_nodes + 1] = {n = G.UIT.R, config = {align = "cm", minh = minh, maxw = 4.2}, nodes = {
-			-- TODO just take ownership of the wheel
 			{n = G.UIT.T, config = {ref_table = G.GAME.blind.loc_debuff_lines, ref_value = k, scale = scale * 0.9, colour = G.C.UI.TEXT_LIGHT}}}}
 	end
 	for _, node_def in ipairs(blind_desc_nodes) do

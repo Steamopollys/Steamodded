@@ -15,7 +15,6 @@ payload = '''
 local blind_desc_nodes = {}
 for k, v in ipairs(text_table) do
   blind_desc_nodes[#blind_desc_nodes+1] = {n=G.UIT.R, config={align = "cm", maxw = 2.8}, nodes={
-    -- TODO take ownership of the wheel
     {n=G.UIT.T, config={text = v or '-', scale = 0.32, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.WHITE, shadow = not disabled}}
   }}
 end'''

@@ -1274,6 +1274,26 @@ function loadAPIs()
             G.P_BLINDS[self.key] = self
         end
     }
+    SMODS.Blind:take_ownership('eye', {
+        set_blind = function(self, reset, silent)
+            if not reset then
+                G.GAME.blind.hands = {}
+                for _, v in ipairs(G.handlist) do
+                    G.GAME.blind.hands[v] = false
+                end
+            end
+        end
+    })
+    SMODS.Blind:take_ownership('wheel', {
+        loc_vars = function(self)
+            return { vars = { G.GAME.probabilities.normal } }
+        end,
+        process_loc_text = function(self)
+            G.localization.descriptions.Blind['bl_wheel'].text[1] =
+                "#1#"..G.localization.descriptions.Blind['bl_wheel'].text[1]
+            SMODS.Blind.process_loc_text(self)
+        end
+    })
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Seal
@@ -1891,16 +1911,6 @@ function loadAPIs()
                 G.jokers.cards[i]:calculate_joker({ remove_playing_cards = true, removed = destroyed_cards })
             end
         end,
-    })
-    SMODS.Blind:take_ownership('eye', {
-        set_blind = function(self, reset, silent)
-            if not reset then
-                G.GAME.blind.hands = {}
-                for _, v in ipairs(G.handlist) do
-                    G.GAME.blind.hands[v] = false
-                end
-            end
-        end
     })
 
     -------------------------------------------------------------------------------------------------
