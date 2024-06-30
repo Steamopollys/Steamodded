@@ -1098,28 +1098,30 @@ function Card:set_edition(edition, immediate, silent)
 				end
 		end
 
-		if self.edition and not silent then
-				G.CONTROLLER.locks.edition = true
-				G.E_MANAGER:add_event(Event({
-						trigger = 'after',
-						delay = not immediate and 0.2 or 0,
-						blockable = not immediate,
-						func = function()
-								self:juice_up(1, 0.5)
-				local ed = G.P_CENTERS['e_'..(self.edition.type)]
-								play_sound(ed.sound.sound, ed.sound.per, ed.sound.vol)
-								return true
-						end
-				}))
-				G.E_MANAGER:add_event(Event({
-						trigger = 'after',
-						delay = 0.1,
-						func = function()
-								G.CONTROLLER.locks.edition = false
-								return true
-						end
-				}))
-		end
+    if self.edition and not silent then
+        G.CONTROLLER.locks.edition = true
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = not immediate and 0.2 or 0,
+            blockable = not immediate,
+            func = function()
+				if self.edition then
+					self:juice_up(1, 0.5)
+					local ed = G.P_CENTERS['e_'..(self.edition.type)]
+					play_sound(ed.sound.sound, ed.sound.per, ed.sound.vol)
+				end
+				return true
+            end
+        }))
+        G.E_MANAGER:add_event(Event({
+            trigger = 'after',
+            delay = 0.1,
+            func = function()
+                G.CONTROLLER.locks.edition = false
+                return true
+            end
+        }))
+    end
 
 	if G.jokers and self.area == G.jokers then 
 				check_for_unlock({type = 'modify_jokers'})
