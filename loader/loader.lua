@@ -362,6 +362,7 @@ function SMODS.injectItems()
     SMODS.injectObjects(SMODS.GameObject)
     for k,v in pairs(SMODS.AltTextures) do
         boot_print_stage('Setting texture - '..k)
+        G.SETTINGS.selected_texture[k] = G.SETTINGS.selected_texture[k] or "Default"
         G.FUNCS.update_atlas(k)
     end
     if SMODS.dump_loc then

@@ -2451,7 +2451,6 @@ function loadAPIs()
             end
             if #SMODS.AltTextures[self.type].names == 0 then
                 if self.name ~= "Default" then SMODS.AltTexture:create_default(self.type) end
-                G.SETTINGS.selected_texture[self.type] = G.SETTINGS.selected_texture[self.type] or "Default"
             end
 
             -- Catch duplicate palettes
@@ -2569,12 +2568,11 @@ function loadAPIs()
         return {(type(base_colours) == 'table' and HEX(base_colours[1]) or HEX(base_colours))}
     end 
 
-    print(tprint(G.ASSET_ATLAS))
     -- Default palettes defined for base game suits
     SMODS.AltTexture({
         key = "base_cards",
-        old_colours = {"235955","3c4368","f06b3f","f03464"},
-        new_colours = {"235955","3c4368","f06b3f","f03464"},
+        old_colours = {},
+        new_colours = {},
         suits = {
             Clubs = "235955",
             Spades = "3c4368",
@@ -2583,12 +2581,12 @@ function loadAPIs()
         },
         type = "Suit",
         name = "Default",
-        palette = true
+        palette = true,
     })   
     SMODS.AltTexture({
         key = "high_contrast_cards",
-        old_colours = {"235955","3c4368","f06b3f","f03464"},
-        new_colours = {"008ee6","3c4368","e29000","f83b2f"},
+        texture = true,
+        atlas_key = "cards_2",
         suits = {
             Clubs = "008ee6",
             Spades = "3c4368",
@@ -2597,7 +2595,6 @@ function loadAPIs()
         },
         type = "Suit",
         name = "High Contrast",
-        palette = true
     })
     for k,v in pairs(G.P_CENTER_POOLS.Tarot) do
         SMODS.Consumable:take_ownership(v.key, {atlas = "Tarot"})
