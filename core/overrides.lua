@@ -1,6 +1,33 @@
 --- STEAMODDED CORE
 --- OVERRIDES
 
+--#region blind UI
+-- Recreate all lines of the blind description.
+-- This callback is called each frame.
+---@param e {}
+--**e** Is the UIE that called this function
+G.FUNCS.HUD_blind_debuff = function(e)
+	local scale = 0.4
+	local num_lines = #G.GAME.blind.loc_debuff_lines
+	local allowed_h = 2.74 - 1.85
+	local minh = 0.3
+	e.config.padding = (allowed_h - num_lines * minh) / (num_lines + 1)
+	e.config.padding = math.min(e.config.padding, 0.05) -- at most 0.05
+	if num_lines > #e.children then
+		for i = #e.children+1, num_lines do
+			local node_def = {n = G.UIT.R, config = {align = "cm", minh = minh, maxw = 4.2}, nodes = {
+				{n = G.UIT.T, config = {ref_table = G.GAME.blind.loc_debuff_lines, ref_value = i, scale = scale * 0.9, colour = G.C.UI.TEXT_LIGHT}}}}
+			e.UIBox:set_parent_child(node_def, e)
+		end
+	elseif num_lines < #e.children then
+		for i = num_lines+1, #e.children do
+			e.children[i]:remove()
+			e.children[i] = nil
+		end
+	end
+	e.UIBox:recalculate()
+end
+--#endregion
 --#region stakes UI
 function SMODS.applied_stakes_UI(i, stake_desc_rows, num_added)
 	if num_added == nil then num_added = { val = 0 } end
@@ -15,17 +42,15 @@ function SMODS.applied_stakes_UI(i, stake_desc_rows, num_added)
 					localize { type = 'descriptions', key = _stake_center.key, set = _stake_center.set, nodes = _stake_desc }
 					local _full_desc = {}
 					for k, v in ipairs(_stake_desc) do
-						_full_desc[#_full_desc + 1] = { n = G.UIT.R, config = { align = "cm" }, nodes = v }
+						_full_desc[#_full_desc + 1] = {n = G.UIT.R, config = {align = "cm"}, nodes = v}
 					end
 					_full_desc[#_full_desc] = nil
-					stake_desc_rows[#stake_desc_rows + 1] = {
-						n = G.UIT.R,
-						config = { align = "cm" },
-						nodes = {
-							{ n = G.UIT.C, config = { align = 'cm' },                                                                      nodes = { { n = G.UIT.C, config = { align = "cm", colour = get_stake_col(i), r = 0.1, minh = 0.35, minw = 0.35, emboss = 0.05 }, nodes = {} }, { n = G.UIT.B, config = { w = 0.1, h = 0.1 } } } },
-							{ n = G.UIT.C, config = { align = "cm", padding = 0.03, colour = G.C.WHITE, r = 0.1, minh = 0.7, minw = 4.8 }, nodes = _full_desc },
-						}
-					}
+					stake_desc_rows[#stake_desc_rows + 1] = {n = G.UIT.R, config = {align = "cm" }, nodes = {
+						{n = G.UIT.C, config = {align = 'cm'}, nodes = { 
+							{n = G.UIT.C, config = {align = "cm", colour = get_stake_col(i), r = 0.1, minh = 0.35, minw = 0.35, emboss = 0.05 }, nodes = {}},
+							{n = G.UIT.B, config = {w = 0.1, h = 0.1}}}},
+						{n = G.UIT.C, config = {align = "cm", padding = 0.03, colour = G.C.WHITE, r = 0.1, minh = 0.7, minw = 4.8 }, nodes =
+							_full_desc},}}
 				end
 				num_added.val = num_added.val + 1
 				num_added.val = SMODS.applied_stakes_UI(G.P_STAKES["stake_" .. v].stake_level, stake_desc_rows,
@@ -44,17 +69,13 @@ function G.UIDEF.deck_stake_column(_deck_key)
 	for i = #G.P_CENTER_POOLS['Stake'], 1, -1 do
 		local _wins = deck_usage and deck_usage.wins[i] or 0
 		if (deck_usage and deck_usage.wins[i - 1]) or i == 1 or G.PROFILES[G.SETTINGS.profile].all_unlocked then valid_option = true end
-		stake_col[#stake_col + 1] = {
-			n = G.UIT.R,
-			config = { id = i, align = "cm", colour = _wins > 0 and G.C.GREY or G.C.CLEAR, outline = 0, outline_colour = G.C.WHITE, r = 0.1, minh = 2 / num_stakes, minw = valid_option and 0.45 or 0.25, func = 'RUN_SETUP_check_back_stake_highlight' },
-			nodes = {
-				{ n = G.UIT.R, config = { align = "cm", minh = valid_option and 1.36 / num_stakes or 1.04 / num_stakes, minw = valid_option and 0.37 or 0.13, colour = _wins > 0 and get_stake_col(i) or G.C.UI.TRANSPARENT_LIGHT, r = 0.1 }, nodes = {} }
-			}
-		}
-		if i > 1 then stake_col[#stake_col + 1] = { n = G.UIT.R, config = { align = "cm", minh = 0.8 / num_stakes, minw = 0.04 }, nodes = {} } end
+		stake_col[#stake_col + 1] = {n = G.UIT.R, config = {id = i, align = "cm", colour = _wins > 0 and G.C.GREY or G.C.CLEAR, outline = 0, outline_colour = G.C.WHITE, r = 0.1, minh = 2 / num_stakes, minw = valid_option and 0.45 or 0.25, func = 'RUN_SETUP_check_back_stake_highlight'}, nodes = {
+			{n = G.UIT.R, config = {align = "cm", minh = valid_option and 1.36 / num_stakes or 1.04 / num_stakes, minw = valid_option and 0.37 or 0.13, colour = _wins > 0 and get_stake_col(i) or G.C.UI.TRANSPARENT_LIGHT, r = 0.1}, nodes = {}}}}
+		if i > 1 then stake_col[#stake_col + 1] = {n = G.UIT.R, config = {align = "cm", minh = 0.8 / num_stakes, minw = 0.04 }, nodes = {} } end
 	end
-	return { n = G.UIT.ROOT, config = { align = 'cm', colour = G.C.CLEAR }, nodes = stake_col }
+	return {n = G.UIT.ROOT, config = {align = 'cm', colour = G.C.CLEAR}, nodes = stake_col}
 end
+
 --#endregion
 --#region straights and view deck UI
 function get_straight(hand)
@@ -188,21 +209,15 @@ function G.UIDEF.deck_preview(args)
 	end
 
 	wheel_flipped_text = (wheel_flipped > 0) and
-		{ n = G.UIT.T, config = { text = '?', colour = G.C.FILTER, scale = 0.25, shadow = true } } or nil
+		{n = G.UIT.T, config = {text = '?', colour = G.C.FILTER, scale = 0.25, shadow = true}}
+	or nil
 	flip_col = wheel_flipped_text and mix_colours(G.C.FILTER, G.C.WHITE, 0.7) or G.C.WHITE
 
-	suit_labels[#suit_labels + 1] = {
-		n = G.UIT.R,
-		config = { align = "cm", r = 0.1, padding = 0.04, minw = _minw, minh = 2 * _minh + 0.25 },
-		nodes = {
-			stones and
-			{ n = G.UIT.T, config = { text = localize('ph_deck_preview_stones') .. ': ', colour = G.C.WHITE, scale = 0.25, shadow = true } }
-			or nil,
-			stones and
-			{ n = G.UIT.T, config = { text = '' .. stones, colour = (stones > 0 and G.C.WHITE or G.C.UI.TRANSPARENT_LIGHT), scale = 0.4, shadow = true } }
-			or nil,
-		}
-	}
+	suit_labels[#suit_labels + 1] = {n = G.UIT.R, config = {align = "cm", r = 0.1, padding = 0.04, minw = _minw, minh = 2 * _minh + 0.25}, nodes = {
+		stones and {n = G.UIT.T, config = {text = localize('ph_deck_preview_stones') .. ': ', colour = G.C.WHITE, scale = 0.25, shadow = true}}
+		or nil,
+		stones and {n = G.UIT.T, config = {text = '' .. stones, colour = (stones > 0 and G.C.WHITE or G.C.UI.TRANSPARENT_LIGHT), scale = 0.4, shadow = true}}
+		or nil,}}
 
 	local _row = {}
 	local _bg_col = G.C.JOKER_GREY
@@ -212,35 +227,15 @@ function G.UIDEF.deck_preview(args)
 		local rank_col = SMODS.Ranks[v].face and G.C.WHITE or _bg_col
 		rank_col = mix_colours(rank_col, _bg_col, 0.8)
 
-		local _col = {
-			n = G.UIT.C,
-			config = { align = "cm" },
-			nodes = {
-				{
-					n = G.UIT.C,
-					config = { align = "cm", r = 0.1, minw = _minw, minh = _minh, colour = rank_col, emboss = 0.04, padding = 0.03 },
-					nodes = {
-						{
-							n = G.UIT.R,
-							config = { align = "cm" },
-							nodes = {
-								{ n = G.UIT.T, config = { text = '' .. SMODS.Ranks[v].shorthand, colour = _colour, scale = 1.6 * _tscale } },
-							}
-						},
-						{
-							n = G.UIT.R,
-							config = { align = "cm", minw = _minw + 0.04, minh = _minh, colour = G.C.L_BLACK, r = 0.1 },
-							nodes = {
-								{ n = G.UIT.T, config = { text = '' .. (rank_counts[v] or 0), colour = flip_col, scale = _tscale, shadow = true } }
-							}
-						}
-					}
-				}
-			}
-		}
+		local _col = {n = G.UIT.C, config = {align = "cm" }, nodes = {
+			{n = G.UIT.C, config = {align = "cm", r = 0.1, minw = _minw, minh = _minh, colour = rank_col, emboss = 0.04, padding = 0.03 }, nodes = {
+				{n = G.UIT.R, config = {align = "cm" }, nodes = {
+					{n = G.UIT.T, config = {text = '' .. SMODS.Ranks[v].shorthand, colour = _colour, scale = 1.6 * _tscale } },}},
+				{n = G.UIT.R, config = {align = "cm", minw = _minw + 0.04, minh = _minh, colour = G.C.L_BLACK, r = 0.1 }, nodes = {
+					{n = G.UIT.T, config = {text = '' .. (rank_counts[v] or 0), colour = flip_col, scale = _tscale, shadow = true } }}}}}}}
 		table.insert(_row, _col)
 	end
-	table.insert(deck_tables, { n = G.UIT.R, config = { align = "cm", padding = 0.04 }, nodes = _row })
+	table.insert(deck_tables, {n = G.UIT.R, config = {align = "cm", padding = 0.04 }, nodes = _row })
 
 	for _, suit in ipairs(suit_map) do
 		if not SMODS.Suits[suit].disabled then
@@ -250,22 +245,13 @@ function G.UIDEF.deck_preview(args)
 				local _tscale = #SUITS[suit][rank] > 0 and 0.3 or 0.25
 				local _colour = #SUITS[suit][rank] > 0 and flip_col or G.C.UI.TRANSPARENT_LIGHT
 
-				local _col = {
-					n = G.UIT.C,
-					config = { align = "cm", padding = 0.05, minw = _minw + 0.098, minh = _minh },
-					nodes = {
-						{ n = G.UIT.T, config = { text = '' .. #SUITS[suit][rank], colour = _colour, scale = _tscale, shadow = true, lang = G.LANGUAGES['en-us'] } },
-					}
-				}
+				local _col = {n = G.UIT.C, config = {align = "cm", padding = 0.05, minw = _minw + 0.098, minh = _minh }, nodes = {
+					{n = G.UIT.T, config = {text = '' .. #SUITS[suit][rank], colour = _colour, scale = _tscale, shadow = true, lang = G.LANGUAGES['en-us'] } },}}
 				table.insert(_row, _col)
 			end
 			table.insert(deck_tables,
-				{
-					n = G.UIT.R,
-					config = { align = "cm", r = 0.1, padding = 0.04, minh = 0.4, colour = _bg_col },
-					nodes =
-						_row
-				})
+				{n = G.UIT.R, config = {align = "cm", r = 0.1, padding = 0.04, minh = 0.4, colour = _bg_col }, nodes =
+					_row})
 		end
 	end
 
@@ -281,79 +267,35 @@ function G.UIDEF.deck_preview(args)
 			if mod_suit_counts[v] ~= suit_counts[v] then mod_suit_diff = true end
 
 			suit_labels[#suit_labels + 1] =
-			{
-				n = G.UIT.R,
-				config = { align = "cm", r = 0.1, padding = 0.03, colour = G.C.JOKER_GREY },
-				nodes = {
-					{
-						n = G.UIT.C,
-						config = { align = "cm", minw = _minw, minh = _minh },
-						nodes = {
-							{ n = G.UIT.O, config = { can_collide = false, object = t_s } }
-						}
-					},
-					{
-						n = G.UIT.C,
-						config = { align = "cm", minw = _minw * 2.4, minh = _minh, colour = G.C.L_BLACK, r = 0.1 },
-						nodes = {
-							{ n = G.UIT.T, config = { text = '' .. suit_counts[v], colour = flip_col, scale = 0.3, shadow = true, lang = G.LANGUAGES['en-us'] } },
-							mod_suit_counts[v] ~= suit_counts[v] and
-							{ n = G.UIT.T, config = { text = ' (' .. mod_suit_counts[v] .. ')', colour = mix_colours(G.C.BLUE, G.C.WHITE, 0.7), scale = 0.28, shadow = true, lang = G.LANGUAGES['en-us'] } } or
-							nil,
-						}
-					}
-				}
-			}
+			{n = G.UIT.R, config = {align = "cm", r = 0.1, padding = 0.03, colour = G.C.JOKER_GREY }, nodes = {
+				{n = G.UIT.C, config = {align = "cm", minw = _minw, minh = _minh }, nodes = {
+					{n = G.UIT.O, config = {can_collide = false, object = t_s } }}},
+				{n = G.UIT.C, config = {align = "cm", minw = _minw * 2.4, minh = _minh, colour = G.C.L_BLACK, r = 0.1 }, nodes = {
+					{n = G.UIT.T, config = {text = '' .. suit_counts[v], colour = flip_col, scale = 0.3, shadow = true, lang = G.LANGUAGES['en-us'] } },
+					mod_suit_counts[v] ~= suit_counts[v] and {n = G.UIT.T, config = {text = ' (' .. mod_suit_counts[v] .. ')', colour = mix_colours(G.C.BLUE, G.C.WHITE, 0.7), scale = 0.28, shadow = true, lang = G.LANGUAGES['en-us'] } }
+					or nil,}}}}
 		end
 	end
 
 
-	local t =
-	{
-		n = G.UIT.ROOT,
-		config = { align = "cm", colour = G.C.JOKER_GREY, r = 0.1, emboss = 0.05, padding = 0.07 },
-		nodes = {
-			{
-				n = G.UIT.R,
-				config = { align = "cm", r = 0.1, emboss = 0.05, colour = G.C.BLACK, padding = 0.1 },
-				nodes = {
-					{
-						n = G.UIT.R,
-						config = { align = "cm" },
-						nodes = {
-							{ n = G.UIT.C, config = { align = "cm", padding = 0.04 }, nodes = suit_labels },
-							{ n = G.UIT.C, config = { align = "cm", padding = 0.02 }, nodes = deck_tables }
-						}
-					},
-					mod_suit_diff and {
-						n = G.UIT.R,
-						config = { align = "cm" },
-						nodes = {
-							{ n = G.UIT.C, config = { padding = 0.3, r = 0.1, colour = mix_colours(G.C.BLUE, G.C.WHITE, 0.7) },              nodes = {} },
-							{ n = G.UIT.T, config = { text = ' ' .. localize('ph_deck_preview_effective'), colour = G.C.WHITE, scale = 0.3 } },
-						}
-					} or nil,
-					wheel_flipped_text and {
-						n = G.UIT.R,
-						config = { align = "cm" },
-						nodes = {
-							{ n = G.UIT.C, config = { padding = 0.3, r = 0.1, colour = flip_col }, nodes = {} },
-							{
-								n = G.UIT.T,
-								config = {
-									text = ' ' .. (wheel_flipped > 1 and
-										localize { type = 'variable', key = 'deck_preview_wheel_plural', vars = { wheel_flipped } } or
-										localize { type = 'variable', key = 'deck_preview_wheel_singular', vars = { wheel_flipped } }),
-									colour = G.C.WHITE,
-									scale = 0.3
-								}
-							},
-						}
-					} or nil,
-				}
-			}
-		}
-	}
+	local t = {n = G.UIT.ROOT, config = {align = "cm", colour = G.C.JOKER_GREY, r = 0.1, emboss = 0.05, padding = 0.07}, nodes = {
+		{n = G.UIT.R, config = {align = "cm", r = 0.1, emboss = 0.05, colour = G.C.BLACK, padding = 0.1}, nodes = {
+			{n = G.UIT.R, config = {align = "cm"}, nodes = {
+				{n = G.UIT.C, config = {align = "cm", padding = 0.04}, nodes = suit_labels },
+				{n = G.UIT.C, config = {align = "cm", padding = 0.02}, nodes = deck_tables }}},
+			mod_suit_diff and {n = G.UIT.R, config = {align = "cm" }, nodes = {
+				{n = G.UIT.C, config = {padding = 0.3, r = 0.1, colour = mix_colours(G.C.BLUE, G.C.WHITE, 0.7) }, nodes = {} },
+				{n = G.UIT.T, config = {text = ' ' .. localize('ph_deck_preview_effective'), colour = G.C.WHITE, scale = 0.3 } },}}
+			or nil,
+			wheel_flipped_text and {n = G.UIT.R, config = {align = "cm" }, nodes = {
+				{n = G.UIT.C, config = {padding = 0.3, r = 0.1, colour = flip_col }, nodes = {} },
+				{n = G.UIT.T, config = {
+						text = ' ' .. (wheel_flipped > 1 and
+							localize { type = 'variable', key = 'deck_preview_wheel_plural', vars = { wheel_flipped } } or
+							localize { type = 'variable', key = 'deck_preview_wheel_singular', vars = { wheel_flipped } }),
+						colour = G.C.WHITE,
+						scale = 0.3}},}}
+			or nil,}}}}
 	return t
 end
 
@@ -391,13 +333,8 @@ function G.UIDEF.view_deck(unplayed_only)
 					draw_layers = { 'card' }
 				})
 			table.insert(deck_tables,
-				{
-					n = G.UIT.R,
-					config = { align = "cm", padding = 0 },
-					nodes = {
-						{ n = G.UIT.O, config = { object = view_deck } }
-					}
-				}
+				{n = G.UIT.R, config = {align = "cm", padding = 0}, nodes = {
+					{n = G.UIT.O, config = {object = view_deck}}}}
 			)
 
 			for i = 1, #SUITS[suit_map[j]] do
@@ -479,64 +416,53 @@ function G.UIDEF.view_deck(unplayed_only)
 	local rank_cols = {}
 	for i = #rank_name_mapping, 1, -1 do
 		local mod_delta = mod_rank_tallies[i] ~= rank_tallies[i]
-		rank_cols[#rank_cols + 1] = {
-			n = G.UIT.R,
-			config = { align = "cm", padding = 0.07 },
-			nodes = {
-				{
-					n = G.UIT.C,
-					config = { align = "cm", r = 0.1, padding = 0.04, emboss = 0.04, minw = 0.5, colour = G.C.L_BLACK },
-					nodes = {
-						{ n = G.UIT.T, config = { text = SMODS.Ranks[rank_name_mapping[i]].shorthand, colour = G.C.JOKER_GREY, scale = 0.35, shadow = true } },
-					}
-				},
-				{
-					n = G.UIT.C,
-					config = { align = "cr", minw = 0.4 },
-					nodes = {
-						mod_delta and
-						{ n = G.UIT.O, config = { object = DynaText({ string = { { string = '' .. rank_tallies[i], colour = flip_col }, { string = '' .. mod_rank_tallies[i], colour = G.C.BLUE } }, colours = { G.C.RED }, scale = 0.4, y_offset = -2, silent = true, shadow = true, pop_in_rate = 10, pop_delay = 4 }) } } or
-						{ n = G.UIT.T, config = { text = rank_tallies[rank_name_mapping[i]], colour = flip_col, scale = 0.45, shadow = true } },
-					}
-				}
-			}
-		}
+		rank_cols[#rank_cols + 1] = {n = G.UIT.R, config = {align = "cm", padding = 0.07}, nodes = {
+			{n = G.UIT.C, config = {align = "cm", r = 0.1, padding = 0.04, emboss = 0.04, minw = 0.5, colour = G.C.L_BLACK}, nodes = {
+				{n = G.UIT.T, config = {text = SMODS.Ranks[rank_name_mapping[i]].shorthand, colour = G.C.JOKER_GREY, scale = 0.35, shadow = true}},}},
+			{n = G.UIT.C, config = {align = "cr", minw = 0.4}, nodes = {
+				mod_delta and {n = G.UIT.O, config = {
+						object = DynaText({
+							string = { { string = '' .. rank_tallies[i], colour = flip_col }, { string = '' .. mod_rank_tallies[i], colour = G.C.BLUE } },
+							colours = { G.C.RED }, scale = 0.4, y_offset = -2, silent = true, shadow = true, pop_in_rate = 10, pop_delay = 4
+						})}}
+				or {n = G.UIT.T, config = {text = rank_tallies[rank_name_mapping[i]], colour = flip_col, scale = 0.45, shadow = true } },}}}}
 	end
 
 	local tally_ui = {
 		-- base cards
-		{
-			n = G.UIT.R,
-			config = { align = "cm", minh = 0.05, padding = 0.07 },
-			nodes = {
-				{ n = G.UIT.O, config = { object = DynaText({ string = { { string = localize('k_base_cards'), colour = G.C.RED }, modded and { string = localize('k_effective'), colour = G.C.BLUE } or nil }, colours = { G.C.RED }, silent = true, scale = 0.4, pop_in_rate = 10, pop_delay = 4 }) } }
-			}
-		},
+		{n = G.UIT.R, config = {align = "cm", minh = 0.05, padding = 0.07}, nodes = {
+			{n = G.UIT.O, config = {
+					object = DynaText({ 
+						string = { 
+							{ string = localize('k_base_cards'), colour = G.C.RED }, 
+							modded and { string = localize('k_effective'), colour = G.C.BLUE } or nil
+						},
+						colours = { G.C.RED }, silent = true, scale = 0.4, pop_in_rate = 10, pop_delay = 4
+					})
+				}}}},
 		-- aces, faces and numbered cards
-		{
-			n = G.UIT.R,
-			config = { align = "cm", minh = 0.05, padding = 0.1 },
-			nodes = {
-				tally_sprite({ x = 1, y = 0 },
-					{ { string = '' .. ace_tally, colour = flip_col }, { string = '' .. mod_ace_tally, colour = G.C.BLUE } },
-					{ localize('k_aces') }), --Aces
-				tally_sprite({ x = 2, y = 0 },
-					{ { string = '' .. face_tally, colour = flip_col }, { string = '' .. mod_face_tally, colour = G.C.BLUE } },
-					{ localize('k_face_cards') }), --Face
-				tally_sprite({ x = 3, y = 0 },
-					{ { string = '' .. num_tally, colour = flip_col }, { string = '' .. mod_num_tally, colour = G.C.BLUE } },
-					{ localize('k_numbered_cards') }), --Numbers
-			}
-		},
+		{n = G.UIT.R, config = {align = "cm", minh = 0.05, padding = 0.1}, nodes = {
+			tally_sprite(
+				{ x = 1, y = 0 },
+				{ { string = '' .. ace_tally, colour = flip_col }, { string = '' .. mod_ace_tally, colour = G.C.BLUE } },
+				{ localize('k_aces') }
+			), --Aces
+			tally_sprite(
+				{ x = 2, y = 0 },
+				{ { string = '' .. face_tally, colour = flip_col }, { string = '' .. mod_face_tally, colour = G.C.BLUE } },
+				{ localize('k_face_cards') }
+			), --Face
+			tally_sprite(
+				{ x = 3, y = 0 },
+				{ { string = '' .. num_tally, colour = flip_col }, { string = '' .. mod_num_tally, colour = G.C.BLUE } },
+				{ localize('k_numbered_cards') }
+			), --Numbers
+		}},
 	}
 	-- add suit tallies
 	local i = 1
 	while i <= #suit_map do
-		local n = {
-			n = G.UIT.R,
-			config = { align = "cm", minh = 0.05, padding = 0.1 },
-			nodes = {}
-		}
+		local n = {n = G.UIT.R, config = {align = "cm", minh = 0.05, padding = 0.1}, nodes = {}}
 		for _ = 1, 2 do
 			while i <= #suit_map and SMODS.Suits[suit_map[i]].disabled do
 				i = i + 1
@@ -545,14 +471,8 @@ function G.UIDEF.view_deck(unplayed_only)
 			table.insert(n.nodes, tally_sprite(
 				SMODS.Suits[suit_map[i]].ui_pos,
 				{
-					{
-						string = '' .. suit_tallies[suit_map[i]],
-						colour = flip_col
-					},
-					{
-						string = '' .. mod_suit_tallies[suit_map[i]],
-						colour = G.C.BLUE
-					}
+					{ string = '' .. suit_tallies[suit_map[i]], colour = flip_col },
+					{ string = '' .. mod_suit_tallies[suit_map[i]], colour = G.C.BLUE }
 				},
 				{ localize(suit_map[i], 'suits_plural') },
 				suit_map[i]
@@ -561,97 +481,46 @@ function G.UIDEF.view_deck(unplayed_only)
 		end
 		table.insert(tally_ui, n)
 	end
-	local t =
-	{
-		n = G.UIT.ROOT,
-		config = { align = "cm", colour = G.C.CLEAR },
-		nodes = {
-			{ n = G.UIT.R, config = { align = "cm", padding = 0.05 }, nodes = {} },
-			{
-				n = G.UIT.R,
-				config = { align = "cm" },
-				nodes = {
-					{
-						n = G.UIT.C,
-						config = { align = "cm", minw = 1.5, minh = 2, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
-						nodes = {
-							{
-								n = G.UIT.C,
-								config = { align = "cm", padding = 0.1 },
-								nodes = {
-									{
-										n = G.UIT.R,
-										config = { align = "cm", r = 0.1, colour = G.C.L_BLACK, emboss = 0.05, padding = 0.15 },
-										nodes = {
-											{
-												n = G.UIT.R,
-												config = { align = "cm" },
-												nodes = {
-													{ n = G.UIT.O, config = { object = DynaText({ string = G.GAME.selected_back.loc_name, colours = { G.C.WHITE }, bump = true, rotate = true, shadow = true, scale = 0.6 - string.len(G.GAME.selected_back.loc_name) * 0.01 }) } },
-												}
-											},
-											{
-												n = G.UIT.R,
-												config = { align = "cm", r = 0.1, padding = 0.1, minw = 2.5, minh = 1.3, colour = G.C.WHITE, emboss = 0.05 },
-												nodes = {
-													{
-														n = G.UIT.O,
-														config = {
-															object = UIBox {
-																definition = G.GAME.selected_back:generate_UI(nil, 0.7, 0.5, G.GAME.challenge),
-																config = { offset = { x = 0, y = 0 } }
-															}
-														}
-													}
-												}
-											}
-										}
-									},
-									{ n = G.UIT.R, config = { align = "cm", r = 0.1, outline_colour = G.C.L_BLACK, line_emboss = 0.05, outline = 1.5 }, nodes = tally_ui } }
-							},
-							{ n = G.UIT.C, config = { align = "cm" },    nodes = rank_cols },
-							{ n = G.UIT.B, config = { w = 0.1, h = 0.1 } },
-						}
-					},
-					{ n = G.UIT.B, config = { w = 0.2, h = 0.1 } },
-					{ n = G.UIT.C, config = { align = "cm", padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables }
-				}
-			},
-			{
-				n = G.UIT.R,
-				config = { align = "cm", minh = 0.8, padding = 0.05 },
-				nodes = {
-					modded and {
-						n = G.UIT.R,
-						config = { align = "cm" },
-						nodes = {
-							{ n = G.UIT.C, config = { padding = 0.3, r = 0.1, colour = mix_colours(G.C.BLUE, G.C.WHITE, 0.7) },              nodes = {} },
-							{ n = G.UIT.T, config = { text = ' ' .. localize('ph_deck_preview_effective'), colour = G.C.WHITE, scale = 0.3 } },
-						}
-					} or nil,
-					wheel_flipped > 0 and {
-						n = G.UIT.R,
-						config = { align = "cm" },
-						nodes = {
-							{ n = G.UIT.C, config = { padding = 0.3, r = 0.1, colour = flip_col }, nodes = {} },
-							{
-								n = G.UIT.T,
-								config = {
-									text = ' ' .. (wheel_flipped > 1 and
-										localize { type = 'variable', key = 'deck_preview_wheel_plural', vars = { wheel_flipped } } or
-										localize { type = 'variable', key = 'deck_preview_wheel_singular', vars = { wheel_flipped } }),
-									colour = G.C.WHITE,
-									scale = 0.3
-								}
-							},
-						}
-					} or nil,
-				}
-			}
-		}
-	}
+	local t = {n = G.UIT.ROOT, config = {align = "cm", colour = G.C.CLEAR}, nodes = {
+		{n = G.UIT.R, config = {align = "cm", padding = 0.05}, nodes = {}},
+		{n = G.UIT.R, config = {align = "cm"}, nodes = {
+			{n = G.UIT.C, config = {align = "cm", minw = 1.5, minh = 2, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = {
+				{n = G.UIT.C, config = {align = "cm", padding = 0.1}, nodes = {
+					{n = G.UIT.R, config = {align = "cm", r = 0.1, colour = G.C.L_BLACK, emboss = 0.05, padding = 0.15}, nodes = {
+						{n = G.UIT.R, config = {align = "cm"}, nodes = {
+							{n = G.UIT.O, config = {
+									object = DynaText({ string = G.GAME.selected_back.loc_name, colours = {G.C.WHITE}, bump = true, rotate = true, shadow = true, scale = 0.6 - string.len(G.GAME.selected_back.loc_name) * 0.01 })
+								}},}},
+						{n = G.UIT.R, config = {align = "cm", r = 0.1, padding = 0.1, minw = 2.5, minh = 1.3, colour = G.C.WHITE, emboss = 0.05}, nodes = {
+							{n = G.UIT.O, config = {
+									object = UIBox {
+										definition = G.GAME.selected_back:generate_UI(nil, 0.7, 0.5, G.GAME.challenge), config = {offset = { x = 0, y = 0 } }
+									}
+								}}}}}},
+					{n = G.UIT.R, config = {align = "cm", r = 0.1, outline_colour = G.C.L_BLACK, line_emboss = 0.05, outline = 1.5}, nodes = 
+						tally_ui}}},
+				{n = G.UIT.C, config = {align = "cm"}, nodes = rank_cols},
+				{n = G.UIT.B, config = {w = 0.1, h = 0.1}},}},
+			{n = G.UIT.B, config = {w = 0.2, h = 0.1}},
+			{n = G.UIT.C, config = {align = "cm", padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes =
+				deck_tables}}},
+		{n = G.UIT.R, config = {align = "cm", minh = 0.8, padding = 0.05}, nodes = {
+			modded and {n = G.UIT.R, config = {align = "cm"}, nodes = {
+				{n = G.UIT.C, config = {padding = 0.3, r = 0.1, colour = mix_colours(G.C.BLUE, G.C.WHITE, 0.7)}, nodes = {}},
+				{n = G.UIT.T, config = {text = ' ' .. localize('ph_deck_preview_effective'), colour = G.C.WHITE, scale = 0.3}},}}
+			or nil,
+			wheel_flipped > 0 and {n = G.UIT.R, config = {align = "cm"}, nodes = {
+				{n = G.UIT.C, config = {padding = 0.3, r = 0.1, colour = flip_col}, nodes = {}},
+				{n = G.UIT.T, config = {
+						text = ' ' .. (wheel_flipped > 1 and
+							localize { type = 'variable', key = 'deck_preview_wheel_plural', vars = { wheel_flipped } } or
+							localize { type = 'variable', key = 'deck_preview_wheel_singular', vars = { wheel_flipped } }),
+						colour = G.C.WHITE, scale = 0.3
+					}},}}
+			or nil,}}}}
 	return t
 end
+
 --#endregion
 --#region poker hands
 local init_game_object_ref = Game.init_game_object
@@ -726,50 +595,28 @@ function create_UIBox_current_hands(simple)
 			localize('k_page') .. ' ' .. tostring(i) .. '/' .. tostring(math.ceil(#visible_hands / 10)))
 	end
 
-	local object = {
-		n = G.UIT.ROOT,
-		config = { align = "cm", colour = G.C.CLEAR },
-		nodes = {
-			{
-				n = G.UIT.R,
-				config = { align = "cm", padding = 0.04 },
-				nodes = G.current_hands
-			},
-			{
-				n = G.UIT.R,
-				config = { align = "cm", padding = 0 },
-				nodes = {
-					create_option_cycle({
-						options = hand_options,
-						w = 4.5,
-						cycle_shoulders = true,
-						opt_callback = 'your_hands_page',
-						focus_args = { snap_to = true, nav = 'wide' },
-						current_option = 1,
-						colour = G.C.RED,
-						no_pips = true
-					})
-				}
-			}
-		}
-	}
+	local object = {n = G.UIT.ROOT, config = {align = "cm", colour = G.C.CLEAR}, nodes = {
+		{n = G.UIT.R, config = {align = "cm", padding = 0.04}, nodes =
+			G.current_hands},
+		{n = G.UIT.R, config = {align = "cm", padding = 0}, nodes = {
+			create_option_cycle({
+				options = hand_options,
+				w = 4.5,
+				cycle_shoulders = true,
+				opt_callback = 'your_hands_page',
+				focus_args = { snap_to = true, nav = 'wide' },
+				current_option = 1,
+				colour = G.C.RED,
+				no_pips = true
+			})}}}}
 
-	local t = {
-		n = G.UIT.ROOT,
-		config = { align = "cm", minw = 3, padding = 0.1, r = 0.1, colour = G.C.CLEAR },
-		nodes = {
-			{
-				n = G.UIT.O,
-				config = {
-					id = 'hand_list',
-					object = UIBox {
-						definition = object,
-						config = { offset = { x = 0, y = 0 }, align = 'cm' }
-					}
+	local t = {n = G.UIT.ROOT, config = {align = "cm", minw = 3, padding = 0.1, r = 0.1, colour = G.C.CLEAR}, nodes = {
+		{n = G.UIT.O, config = {
+				id = 'hand_list',
+				object = UIBox {
+					definition = object, config = {offset = { x = 0, y = 0 }, align = 'cm'}
 				}
-			}
-		}
-	}
+			}}}}
 	return t
 end
 
@@ -807,19 +654,10 @@ G.FUNCS.your_hands_page = function(args)
 			localize('k_page') .. ' ' .. tostring(i) .. '/' .. tostring(math.ceil(#visible_hands / 10)))
 	end
 
-	local object = {
-		n = G.UIT.ROOT,
-		config = { align = "cm", colour = G.C.CLEAR },
-		nodes = {
-			{
-				n = G.UIT.R,
-				config = { align = "cm", padding = 0.04 },
-				nodes = G.current_hands
+	local object = {n = G.UIT.ROOT, config = {align = "cm", colour = G.C.CLEAR }, nodes = {
+			{n = G.UIT.R, config = {align = "cm", padding = 0.04 }, nodes = G.current_hands
 			},
-			{
-				n = G.UIT.R,
-				config = { align = "cm", padding = 0 },
-				nodes = {
+			{n = G.UIT.R, config = {align = "cm", padding = 0 }, nodes = {
 					create_option_cycle({
 						options = hand_options,
 						w = 4.5,
@@ -843,130 +681,136 @@ G.FUNCS.your_hands_page = function(args)
 			hand_list.config.object:remove()
 		end
 		hand_list.config.object = UIBox {
-			definition = object,
-			config = { offset = { x = 0, y = 0 }, align = 'cm', parent = hand_list }
+			definition = object, config = {offset = { x = 0, y = 0 }, align = 'cm', parent = hand_list }
 		}
 	end
 end
 --#endregion
 --#region editions
 function create_UIBox_your_collection_editions(exit)
-    local deck_tables = {}
-    local rows, cols = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1), 5
-    local page = 0
+	local deck_tables = {}
+	local rows, cols = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1), 5
+	local page = 0
 
-    G.your_collection = {}
-    for j = 1, rows do
-        G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
-            {
-                card_limit = cols,
-                type = 'title',
-                highlight_limit = 0,
-                collection = true
-            })
-        table.insert(deck_tables, { n = G.UIT.R, config = { align = "cm", padding = 0, no_fill = true },
-            nodes = {{ n = G.UIT.O, config = { object = G.your_collection[j] } }}
-        })
-    end
+	G.your_collection = {}
+	for j = 1, rows do
+		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
+			{
+				card_limit = cols,
+				type = 'title',
+				highlight_limit = 0,
+				collection = true
+			})
+		table.insert(deck_tables,
+			{n = G.UIT.R, config = {align = "cm", padding = 0, no_fill = true}, nodes = {
+				{n = G.UIT.O, config = {object = G.your_collection[j]}}}}
+		)
+	end
 
-	table.sort(G.P_CENTER_POOLS.Edition, function(a,b) return a.order < b.order end)
+	table.sort(G.P_CENTER_POOLS.Edition, function(a, b) return a.order < b.order end)
 
-    local count = math.min(cols * rows, #G.P_CENTER_POOLS["Edition"])
-    local index = 1 + (rows * cols * page)
-    for j = 1, rows do
-        for i = 1, cols do
+	local count = math.min(cols * rows, #G.P_CENTER_POOLS["Edition"])
+	local index = 1 + (rows * cols * page)
+	for j = 1, rows do
+		for i = 1, cols do
+			local edition = G.P_CENTER_POOLS.Edition[index]
 
-            local edition = G.P_CENTER_POOLS.Edition[index]
+			if not edition then
+				break
+			end
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+				G.CARD_W, G.CARD_H, nil, edition)
+			card:start_materialize(nil, i > 1 or j > 1)
+			if edition.discovered then card:set_edition(edition.key, true, true) end
+			G.your_collection[j]:emplace(card)
+			index = index + 1
+		end
+		if index > count then
+			break
+		end
+	end
 
-            if not edition then
-                break
-            end
-            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                G.CARD_W, G.CARD_H, nil, edition)
-            card:start_materialize(nil, i > 1 or j > 1)
-            if edition.discovered then card:set_edition(edition.key, true, true) end
-            G.your_collection[j]:emplace(card)
-            index = index + 1
-        end
-        if index > count then
-            break
-        end
-    end
+	local edition_options = {}
 
-    local edition_options = {}
+	local t = create_UIBox_generic_options({
+		infotip = localize('ml_edition_seal_enhancement_explanation'),
+		back_func = exit or 'your_collection',
+		snap_back = true,
+		contents = { 
+			{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+				deck_tables}}
+	})
 
-    local t = create_UIBox_generic_options({
-        infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
-        contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
-            nodes = deck_tables }}
-    })
-
-    if #G.P_CENTER_POOLS["Edition"] > rows * cols then
-        for i = 1, math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) do
-            table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
-                tostring(math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))))
-        end
-        t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
-            contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
-                nodes = deck_tables
-            }, { n = G.UIT.R, config = { align = "cm" },
-                nodes = {create_option_cycle({
-                    options = edition_options,
-                    w = 4.5,
-                    cycle_shoulders = true,
-                    opt_callback = 'your_collection_editions_page',
-                    focus_args = { snap_to = true, nav = 'wide' },
-                    current_option = 1,
-                    r = rows,
-                    c = cols,
-                    colour = G.C.RED,
-                    no_pips = true
-                })}
-            }}
-        })
-    end
-    return t
+	if #G.P_CENTER_POOLS["Edition"] > rows * cols then
+		for i = 1, math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) do
+			table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+				tostring(math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))))
+		end
+		t = create_UIBox_generic_options({
+			infotip = localize('ml_edition_seal_enhancement_explanation'),
+			back_func = exit or 'your_collection',
+			snap_back = true,
+			contents = {
+				{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+					deck_tables},
+				{n = G.UIT.R, config = {align = "cm"}, nodes = { 
+					create_option_cycle({
+						options = edition_options,
+						w = 4.5,
+						cycle_shoulders = true,
+						opt_callback = 'your_collection_editions_page',
+						focus_args = { snap_to = true, nav = 'wide' },
+						current_option = 1,
+						r = rows,
+						c = cols,
+						colour = G.C.RED,
+						no_pips = true
+					})}}
+			}
+		})
+	end
+	return t
 end
 
 G.FUNCS.your_collection_editions_page = function(args)
-    if not args or not args.cycle_config then
-        return
-    end
-    local rows = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1)
-    local cols = 5
-    local page = args.cycle_config.current_option
-    if page > math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) then
-        page = page - math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))
-    end
-    local count = rows * cols
-    local offset = (rows * cols) * (page - 1)
+	if not args or not args.cycle_config then
+		return
+	end
+	local rows = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1)
+	local cols = 5
+	local page = args.cycle_config.current_option
+	if page > math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) then
+		page = page - math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))
+	end
+	local count = rows * cols
+	local offset = (rows * cols) * (page - 1)
 
-    for j = 1, #G.your_collection do
-        for i = #G.your_collection[j].cards, 1, -1 do
-            if G.your_collection[j] ~= nil then
-                local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
-                c:remove()
-                c = nil
-            end
-        end
-    end
+	for j = 1, #G.your_collection do
+		for i = #G.your_collection[j].cards, 1, -1 do
+			if G.your_collection[j] ~= nil then
+				local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+				c:remove()
+				c = nil
+			end
+		end
+	end
 
-    for j = 1, rows do
-        for i = 1, cols do
-            if count % rows > 0 and i <= count % rows and j == cols then
-                offset = offset - 1
-                break
-            end
-            local idx = i + (j - 1) * cols + offset
-            if idx > #G.P_CENTER_POOLS["Edition"] then return end
-            local edition = G.P_CENTER_POOLS["Edition"][idx]
-            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                G.CARD_W, G.CARD_H, G.P_CARDS.empty, edition)
+	for j = 1, rows do
+		for i = 1, cols do
+			if count % rows > 0 and i <= count % rows and j == cols then
+				offset = offset - 1
+				break
+			end
+			local idx = i + (j - 1) * cols + offset
+			if idx > #G.P_CENTER_POOLS["Edition"] then return end
+			local edition = G.P_CENTER_POOLS["Edition"][idx]
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+				G.CARD_W, G.CARD_H, G.P_CARDS.empty, edition)
 			if edition.discovered then card:set_edition(edition.key, true, true) end
-            card:start_materialize(nil, i > 1 or j > 1)
-            G.your_collection[j]:emplace(card)
-        end
-    end
+			card:start_materialize(nil, i > 1 or j > 1)
+			G.your_collection[j]:emplace(card)
+		end
+	end
 end
 
 -- self = pass the card
@@ -988,7 +832,7 @@ function Card:set_edition(edition, immediate, silent)
 			G.hand.config.card_limit = G.hand.config.card_limit - self.edition.card_limit
 		end
 	end
-	
+
 	local edition_type = nil
 	if type(edition) == 'string' then
 		assert(string.sub(edition, 1, 2) == 'e_')
@@ -1005,7 +849,7 @@ function Card:set_edition(edition, immediate, silent)
 			end
 		end
 	end
-	
+
 	if not edition_type or edition_type == 'base' then
 		if self.edition == nil then -- early exit
 			return
@@ -1024,15 +868,15 @@ function Card:set_edition(edition, immediate, silent)
 				end
 			}))
 		end
-        return
-    end
-    
+		return
+	end
+
 	self.edition = {}
 	self.edition[edition_type] = true
 	self.edition.type = edition_type
-	self.edition.key = 'e_'..edition_type
+	self.edition.key = 'e_' .. edition_type
 
-	for k, v in pairs(G.P_CENTERS['e_'..edition_type].config) do
+	for k, v in pairs(G.P_CENTERS['e_' .. edition_type].config) do
 		if type(v) == 'table' then
 			self.edition[k] = copy_table(v)
 		else
@@ -1044,63 +888,61 @@ function Card:set_edition(edition, immediate, silent)
 			elseif self.ability.set == 'Joker' then
 				G.jokers.config.card_limit = G.jokers.config.card_limit + v
 			elseif self.area == G.hand and not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) then
-			    G.hand.config.card_limit = G.hand.config.card_limit + v
-			    G.E_MANAGER:add_event(Event({
-			        trigger = 'immediate',
-			        func = function()
-			            G.FUNCS.draw_from_deck_to_hand()
-			            return true
-			        end
-			    }))
+				G.hand.config.card_limit = G.hand.config.card_limit + v
+				G.E_MANAGER:add_event(Event({
+					trigger = 'immediate',
+					func = function()
+						G.FUNCS.draw_from_deck_to_hand()
+						return true
+					end
+				}))
 			end
 		end
 	end
 
-    if self.area and self.area == G.jokers then 
-        if self.edition then
-            if not G.P_CENTERS['e_'..(self.edition.type)].discovered then 
-                discover_card(G.P_CENTERS['e_'..(self.edition.type)])
-            end
-        else
-            if not G.P_CENTERS['e_base'].discovered then 
-                discover_card(G.P_CENTERS['e_base'])
-            end
-        end
-    end
+	if self.area and self.area == G.jokers then
+		if self.edition then
+			if not G.P_CENTERS['e_' .. (self.edition.type)].discovered then
+				discover_card(G.P_CENTERS['e_' .. (self.edition.type)])
+			end
+		else
+			if not G.P_CENTERS['e_base'].discovered then
+				discover_card(G.P_CENTERS['e_base'])
+			end
+		end
+	end
 
-    if self.edition and not silent then
-        G.CONTROLLER.locks.edition = true
-        G.E_MANAGER:add_event(Event({
-            trigger = 'after',
-            delay = not immediate and 0.2 or 0,
-            blockable = not immediate,
-            func = function()
+	if self.edition and not silent then
+		G.CONTROLLER.locks.edition = true
+		G.E_MANAGER:add_event(Event({
+			trigger = 'after',
+			delay = not immediate and 0.2 or 0,
+			blockable = not immediate,
+			func = function()
 				if self.edition then
 					self:juice_up(1, 0.5)
-					local ed = G.P_CENTERS['e_'..(self.edition.type)]
+					local ed = G.P_CENTERS['e_' .. (self.edition.type)]
 					play_sound(ed.sound.sound, ed.sound.per, ed.sound.vol)
 				end
 				return true
-            end
-        }))
-        G.E_MANAGER:add_event(Event({
-            trigger = 'after',
-            delay = 0.1,
-            func = function()
-                G.CONTROLLER.locks.edition = false
-                return true
-            end
-        }))
-    end
+			end
+		}))
+		G.E_MANAGER:add_event(Event({
+			trigger = 'after',
+			delay = 0.1,
+			func = function()
+				G.CONTROLLER.locks.edition = false
+				return true
+			end
+		}))
+	end
 
-	if G.jokers and self.area == G.jokers then 
-        check_for_unlock({type = 'modify_jokers'})
-    end
+	if G.jokers and self.area == G.jokers then
+		check_for_unlock({ type = 'modify_jokers' })
+	end
 
-    self:set_cost()
-
+	self:set_cost()
 end
-
 
 -- _key = key value for random seed
 -- _mod = scale of chance against base card (does not change guaranteed weights)
@@ -1109,15 +951,15 @@ end
 -- _options = list of keys of editions to include in the poll
 -- OR list of tables { name = key, weight = number }
 function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
-    local _modifier = 1
-    local edition_poll = pseudorandom(pseudoseed(_key or 'edition_generic')) -- Generate the poll value
-	local available_editions = {} -- Table containing a list of editions and their weights
+	local _modifier = 1
+	local edition_poll = pseudorandom(pseudoseed(_key or 'edition_generic')) -- Generate the poll value
+	local available_editions = {}                                          -- Table containing a list of editions and their weights
 
 	if not _options then
-		_options = {'e_negative', 'e_polychrome', 'e_holo', 'e_foil'}
+		_options = { 'e_negative', 'e_polychrome', 'e_holo', 'e_foil' }
 		if _key == "wheel_of_fortune" or _key == "aura" then -- set base game edition polling
 		else
-			for _,v in ipairs(G.P_CENTER_POOLS.Edition) do
+			for _, v in ipairs(G.P_CENTER_POOLS.Edition) do
 				if v.in_shop then
 					sendDebugMessage(v.key)
 					table.insert(_options, v.key)
@@ -1125,7 +967,7 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 			end
 		end
 	end
-	for _,v in ipairs(_options) do
+	for _, v in ipairs(_options) do
 		local edition_option = {}
 		if type(v) == 'string' then
 			assert(string.sub(v, 1, 2) == 'e_')
@@ -1137,32 +979,31 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 		table.insert(available_editions, edition_option)
 	end
 
-    -- Calculate total weight of editions
-    local total_weight = 0
-    for _,v in ipairs(available_editions) do
+	-- Calculate total weight of editions
+	local total_weight = 0
+	for _, v in ipairs(available_editions) do
 		total_weight = total_weight + (v.weight) -- total all the weights of the polled editions
-    end
-    -- sendDebugMessage("Edition weights: "..total_weight, "EditionAPI")
-    -- If not guaranteed, calculate the base card rate to maintain base 4% chance of editions
-    if not _guaranteed then
-        _modifier = _mod or 1
-        total_weight = total_weight + (total_weight / 4 * 96)  -- Find total weight with base_card_rate as 96%
-		for _,v in ipairs(available_editions) do
-			v.weight = G.P_CENTERS[v.name]:get_weight() -- Apply game modifiers where appropriate (defined in edition declaration)
+	end
+	-- sendDebugMessage("Edition weights: "..total_weight, "EditionAPI")
+	-- If not guaranteed, calculate the base card rate to maintain base 4% chance of editions
+	if not _guaranteed then
+		_modifier = _mod or 1
+		total_weight = total_weight + (total_weight / 4 * 96) -- Find total weight with base_card_rate as 96%
+		for _, v in ipairs(available_editions) do
+			v.weight = G.P_CENTERS[v.name]:get_weight()   -- Apply game modifiers where appropriate (defined in edition declaration)
 		end
-    
-    end
-    -- sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
-    -- sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
-    -- sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
-    
-    -- Calculate whether edition is selected
-    local weight_i = 0
-    for _,v in ipairs(available_editions) do
-		weight_i = weight_i + v.weight*_modifier
+	end
+	-- sendDebugMessage("Total weight: "..total_weight, "EditionAPI")
+	-- sendDebugMessage("Editions: "..#available_editions, "EditionAPI")
+	-- sendDebugMessage("Poll: "..edition_poll, "EditionAPI")
+
+	-- Calculate whether edition is selected
+	local weight_i = 0
+	for _, v in ipairs(available_editions) do
+		weight_i = weight_i + v.weight * _modifier
 		-- sendDebugMessage(v.name.." weight is "..v.weight*_modifier)
 		-- sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
-		if edition_poll > 1 - (weight_i)/total_weight then
+		if edition_poll > 1 - (weight_i) / total_weight then
 			if not (v.name == 'e_negative' and _no_neg) then -- skip return if negative is selected and _no_neg is true
 				-- sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
 				return v.name
@@ -1170,123 +1011,133 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 		end
 	end
 
-    return nil
+	return nil
 end
+
 --#endregion
 --#region enhancements UI
 function create_UIBox_your_collection_enhancements(exit)
-    local deck_tables = {}
-    local rows, cols = 2, 4
-    local page = 0
+	local deck_tables = {}
+	local rows, cols = 2, 4
+	local page = 0
 
-    G.your_collection = {}
-    for j = 1, rows do
-        G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 4.25 * G.CARD_W, 1.03 * G.CARD_H,
-            {
-                card_limit = cols,
-                type = 'title',
-                highlight_limit = 0,
-                collection = true
-            })
-        table.insert(deck_tables, { n = G.UIT.R, config = { align = "cm", padding = 0, no_fill = true },
-            nodes = {{ n = G.UIT.O, config = { object = G.your_collection[j] } }}
-        })
-    end
+	G.your_collection = {}
+	for j = 1, rows do
+		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 4.25 * G.CARD_W, 1.03 * G.CARD_H,
+			{
+				card_limit = cols,
+				type = 'title',
+				highlight_limit = 0,
+				collection = true
+			})
+		table.insert(deck_tables,
+			{n = G.UIT.R, config = {align = "cm", padding = 0, no_fill = true}, nodes = {
+				{n = G.UIT.O, config = {object = G.your_collection[j]}}}
+		})
+	end
 
-	table.sort(G.P_CENTER_POOLS.Enhanced, function(a,b) return a.order < b.order end)
+	table.sort(G.P_CENTER_POOLS.Enhanced, function(a, b) return a.order < b.order end)
 
-    local count = math.min(cols * rows, #G.P_CENTER_POOLS.Enhanced)
-    local index = 1 + (rows * cols * page)
-    for j = 1, rows do
-        for i = 1, cols do
+	local count = math.min(cols * rows, #G.P_CENTER_POOLS.Enhanced)
+	local index = 1 + (rows * cols * page)
+	for j = 1, rows do
+		for i = 1, cols do
+			local center = G.P_CENTER_POOLS.Enhanced[index]
+			if not center then
+				break
+			end
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y, G
+			.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+			card:set_ability(center, true, true)
+			G.your_collection[j]:emplace(card)
+			index = index + 1
+		end
+		if index > count then
+			break
+		end
+	end
 
-            local center = G.P_CENTER_POOLS.Enhanced[index]
-            if not center then
-                break
-            end
-            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
-            card:set_ability(center, true, true)
-            G.your_collection[j]:emplace(card)
-            index = index + 1
-        end
-        if index > count then
-            break
-        end
-    end
+	local enhancement_options = {}
 
-    local enhancement_options = {}
+	local t = create_UIBox_generic_options({
+		infotip = localize('ml_edition_seal_enhancement_explanation'),
+		back_func = exit or 'your_collection',
+		snap_back = true,
+		contents = {
+			{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes =
+				deck_tables}
+		}
+	})
 
-    local t = create_UIBox_generic_options({
-        infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
-        contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
-            nodes = deck_tables }}
-    })
-
-    if #G.P_CENTER_POOLS["Enhanced"] > rows * cols then
-        for i = 1, math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) do
-            table.insert(enhancement_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
-                tostring(math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))))
-        end
-        t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
-            contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
-                nodes = deck_tables
-            }, { n = G.UIT.R, config = { align = "cm" },
-                nodes = {create_option_cycle({
-                    options = enhancement_options,
-                    w = 4.5,
-                    cycle_shoulders = true,
-                    opt_callback = 'your_collection_enhancements_page',
-                    focus_args = { snap_to = true, nav = 'wide' },
-                    current_option = 1,
-                    r = rows,
-                    c = cols,
-                    colour = G.C.RED,
-                    no_pips = true
-                })}
-            }}
-        })
-    end
-    return t
+	if #G.P_CENTER_POOLS["Enhanced"] > rows * cols then
+		for i = 1, math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) do
+			table.insert(enhancement_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+				tostring(math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))))
+		end
+		t = create_UIBox_generic_options({
+			infotip = localize('ml_edition_seal_enhancement_explanation'),
+			back_func = exit or 'your_collection',
+			snap_back = true,
+			contents = {
+				{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+					deck_tables},
+				{n = G.UIT.R, config = {align = "cm"}, nodes = {
+					create_option_cycle({
+						options = enhancement_options,
+						w = 4.5,
+						cycle_shoulders = true,
+						opt_callback = 'your_collection_enhancements_page',
+						focus_args = { snap_to = true, nav = 'wide' },
+						current_option = 1,
+						r = rows,
+						c = cols,
+						colour = G.C.RED,
+						no_pips = true
+					})}}
+			}
+		})
+	end
+	return t
 end
 
 G.FUNCS.your_collection_enhancements_page = function(args)
-    if not args or not args.cycle_config then
-        return
-    end
-    local rows = 2
-    local cols = 4
-    local page = args.cycle_config.current_option
-    if page > math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) then
-        page = page - math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))
-    end
-    local count = rows * cols
-    local offset = (rows * cols) * (page - 1)
+	if not args or not args.cycle_config then
+		return
+	end
+	local rows = 2
+	local cols = 4
+	local page = args.cycle_config.current_option
+	if page > math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) then
+		page = page - math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))
+	end
+	local count = rows * cols
+	local offset = (rows * cols) * (page - 1)
 
-    for j = 1, #G.your_collection do
-        for i = #G.your_collection[j].cards, 1, -1 do
-            if G.your_collection[j] ~= nil then
-                local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
-                c:remove()
-                c = nil
-            end
-        end
-    end
+	for j = 1, #G.your_collection do
+		for i = #G.your_collection[j].cards, 1, -1 do
+			if G.your_collection[j] ~= nil then
+				local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+				c:remove()
+				c = nil
+			end
+		end
+	end
 
-    for j = 1, rows do
-        for i = 1, cols do
-            if count % rows > 0 and i <= count % rows and j == cols then
-                offset = offset - 1
-                break
-            end
-            local idx = i + (j - 1) * cols + offset
-            if idx > #G.P_CENTER_POOLS.Enhanced then return end
-            local center = G.P_CENTER_POOLS.Enhanced[idx]
-            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
-            card:set_ability(center, true, true)
-            card:start_materialize(nil, i > 1 or j > 1)
-            G.your_collection[j]:emplace(card)
-        end
-    end
+	for j = 1, rows do
+		for i = 1, cols do
+			if count % rows > 0 and i <= count % rows and j == cols then
+				offset = offset - 1
+				break
+			end
+			local idx = i + (j - 1) * cols + offset
+			if idx > #G.P_CENTER_POOLS.Enhanced then return end
+			local center = G.P_CENTER_POOLS.Enhanced[idx]
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+				G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+			card:set_ability(center, true, true)
+			card:start_materialize(nil, i > 1 or j > 1)
+			G.your_collection[j]:emplace(card)
+		end
+	end
 end
 --#endregion

@@ -215,6 +215,14 @@ function SMODS.remove_pool(pool, key)
     if j then return table.remove(pool, j) end
 end
 
+function SMODS.juice_up_blind()
+    local ui_elem = G.HUD_blind:get_UIE_by_ID('HUD_blind_debuff')
+    for _, v in ipairs(ui_elem.children) do
+        v.children[1]:juice_up(0.3, 0)
+    end
+    G.GAME.blind:juice_up()
+end
+
 function SMODS.eval_this(_card, effects)
     if effects then
         local extras = { mult = false, hand_chips = false }
