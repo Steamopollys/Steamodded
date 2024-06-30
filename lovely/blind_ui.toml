@@ -55,7 +55,7 @@ pattern = '''
 [\t ]*\}\},'''
 position = "at"
 payload = '''
-{n=G.UIT.R, config={align = "cm", func = 'HUD_blind_debuff'}, nodes={}},'''
+{n=G.UIT.R, config={align = "cm", id = 'HUD_blind_debuff', func = 'HUD_blind_debuff'}, nodes={}},'''
 line_prepend = '$indent'
 
 # Blind:set_text
@@ -94,3 +94,27 @@ pattern = """
 """
 position = 'at'
 payload = ''
+
+## Patch G.GAME.blind:juice_up() across all files
+
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '''
+(?<indent>[\t ]*)G\.HUD_blind:get_UIE_by_ID\('HUD_blind_debuff_1'\):juice_up\(0\.3, 0\)
+[\t ]*G\.HUD_blind:get_UIE_by_ID\('HUD_blind_debuff_2'\):juice_up\(0\.3, 0\)
+[\t ]*G\.GAME\.blind:juice_up\(\)'''
+position = 'at'
+payload = 'SMODS.juice_up_blind()'
+line_prepend = '$indent'
+
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''
+(?<indent>[\t ]*)G\.HUD_blind:get_UIE_by_ID\('HUD_blind_debuff_1'\):juice_up\(0\.3, 0\)
+[\t ]*G\.HUD_blind:get_UIE_by_ID\('HUD_blind_debuff_2'\):juice_up\(0\.3, 0\)
+[\t ]*G\.GAME\.blind:juice_up\(\)'''
+position = 'at'
+payload = 'SMODS.juice_up_blind()'
+line_prepend = '$indent'

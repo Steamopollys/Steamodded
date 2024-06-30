@@ -13,15 +13,17 @@ G.FUNCS.HUD_blind_debuff = function(e)
 	local minh = 0.3
 	e.config.padding = (allowed_h - num_lines * minh) / (num_lines + 1)
 	e.config.padding = math.min(e.config.padding, 0.05) -- at most 0.05
-	remove_all(e.children)
-	local blind_desc_nodes = {}
-	for k, v in ipairs(G.GAME.blind.loc_debuff_lines) do
-		if v == '' then break end
-		blind_desc_nodes[#blind_desc_nodes + 1] = {n = G.UIT.R, config = {align = "cm", minh = minh, maxw = 4.2}, nodes = {
-			{n = G.UIT.T, config = {ref_table = G.GAME.blind.loc_debuff_lines, ref_value = k, scale = scale * 0.9, colour = G.C.UI.TEXT_LIGHT}}}}
-	end
-	for _, node_def in ipairs(blind_desc_nodes) do
-		e.UIBox:set_parent_child(node_def, e)
+	if num_lines > #e.children then
+		for i = #e.children+1, num_lines do
+			local node_def = {n = G.UIT.R, config = {align = "cm", minh = minh, maxw = 4.2}, nodes = {
+				{n = G.UIT.T, config = {ref_table = G.GAME.blind.loc_debuff_lines, ref_value = i, scale = scale * 0.9, colour = G.C.UI.TEXT_LIGHT}}}}
+			e.UIBox:set_parent_child(node_def, e)
+		end
+	elseif num_lines < #e.children then
+		for i = num_lines+1, #e.children do
+			e.children[i]:remove()
+			e.children[i] = nil
+		end
 	end
 	e.UIBox:recalculate()
 end

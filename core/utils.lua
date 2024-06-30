@@ -216,10 +216,10 @@ function SMODS.remove_pool(pool, key)
 end
 
 function SMODS.juice_up_blind()
-    -- TODO reimplement this function
-    -- Inject it everywhere these 3 lines occur
-    G.HUD_blind:get_UIE_by_ID('HUD_blind_debuff_1'):juice_up(0.3, 0)
-    G.HUD_blind:get_UIE_by_ID('HUD_blind_debuff_2'):juice_up(0.3, 0)
+    local ui_elem = G.HUD_blind:get_UIE_by_ID('HUD_blind_debuff')
+    for _, v in ipairs(ui_elem.children) do
+        v.children[1]:juice_up(0.3, 0)
+    end
     G.GAME.blind:juice_up()
 end
 
