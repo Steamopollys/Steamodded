@@ -21,13 +21,9 @@ G.FUNCS.HUD_blind_debuff = function(e)
 			{n = G.UIT.T, config = {ref_table = G.GAME.blind.loc_debuff_lines, ref_value = k, scale = scale * 0.9, colour = G.C.UI.TEXT_LIGHT}}}}
 	end
 	for _, node_def in ipairs(blind_desc_nodes) do
-		e.UIBox:add_child(node_def, e)
+		e.UIBox:set_parent_child(node_def, e)
 	end
-	HUD_blind_debuff_COUNTER = (HUD_blind_debuff_COUNTER or 0) + 1
-	if HUD_blind_debuff_COUNTER % 60 * 3 == 0 then
-		print("HUD_blind UIBox:")
-		print(G.HUD_blind:print_topology())
-	end
+	e.UIBox:recalculate()
 end
 --#endregion
 --#region stakes UI
