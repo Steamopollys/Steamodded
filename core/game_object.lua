@@ -2296,6 +2296,9 @@ function loadAPIs()
         -- calculate(self)
         register = function(self)
             self.config = self.config or {}
+            if type(self.shader) == "string" then
+                self.shader = {self.shader}
+            end
             SMODS.Edition.super.register(self)
         end,
         process_loc_text = function(self)
