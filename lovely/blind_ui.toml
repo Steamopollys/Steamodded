@@ -95,6 +95,25 @@ pattern = """
 position = 'at'
 payload = ''
 
+## Add an empty node below 'row_blind'
+# create_UIBox_HUD
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = """{n=G.UIT.R, config={align = "cm", id = 'row_blind', minw = 1, minh = 3.75}, nodes={}},"""
+position = 'after'
+payload = """{n=G.UIT.R, config={align = "cm", id = 'row_blind_bottom'}, nodes={}},"""
+match_indent = true
+
+## Blind UI's bottom edge is aligned to it
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "config = {major = G.HUD:get_UIE_by_ID('row_blind'), align = 'cm', offset = {x=0,y=-10}, bond = 'Weak'}"
+position = 'at'
+payload = "config = {major = G.HUD:get_UIE_by_ID('row_blind_bottom'), align = 'tm', offset = {x=0,y=-10}, bond = 'Weak'}"
+match_indent = true
+
 ## Patch G.GAME.blind:juice_up() across all files
 
 [[patches]]
