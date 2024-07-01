@@ -1140,7 +1140,8 @@ G.FUNCS.your_collection_enhancements_page = function(args)
 	end
 end
 --#endregion
---#region altTexture UI
+--#region AltTexture UI
+-- Menu button click effect
 G.FUNCS.card_colours = function(e)
     G.SETTINGS.paused = true
     G.FUNCS.overlay_menu{
@@ -1148,6 +1149,7 @@ G.FUNCS.card_colours = function(e)
     }
 end
 
+-- Create dynamic UIBox for settings
 create_alt_texture_Box = function()
 	local selectors = SMODS.GUI.DynamicUIManager.initTab({updateFunctions = {cardsList = G.FUNCS.dynamic_card_colours_content,},staticPageDefinition = static_texture_settings()})
 	return (create_UIBox_generic_options({ back_func = 'options', contents = {
@@ -1156,6 +1158,7 @@ create_alt_texture_Box = function()
 	}}))
 end
 
+-- Static view with object to be updated dynamically
 function static_texture_settings()
 	local pages = {}
 	if #SMODS.AltTextures.Types > 4 then
@@ -1191,6 +1194,7 @@ function G.FUNCS.dynamic_card_colours_content(args)
 	})
 end
 
+-- Dynamic content for list
 function dynamic_card_colours(page)
 	if page > math.ceil(#SMODS.AltTextures.Types / 4) then
         page = page - math.ceil(#SMODS.AltTextures.Types / 4)
@@ -1198,7 +1202,6 @@ function dynamic_card_colours(page)
     local count = 4
     local offset = (4 * (page - 1)) + 1
 	local dynamic_selectors = {}
-	G.palette_options = {}
 	for i=offset, page*count do
 		if i > #SMODS.AltTextures.Types then break end
 		local dynamic_type = SMODS.AltTextures.Types[i]
@@ -1206,21 +1209,22 @@ function dynamic_card_colours(page)
         if #v.names > 1 then
             table.insert(dynamic_selectors,
 			SMODS.GUI.createOptionSelector({
-					w = 4,
-					scale = 0.8,
-					label = dynamic_type.." colours",
-					colour = G.C.BLUE,
-					options = v.names,
-					opt_callback = "update_recolor",
-					current_option = G.SETTINGS.selected_texture[dynamic_type],
-					type = dynamic_type
-				}))
-			sendDebugMessage(i .. " " .. dynamic_type)
-        end
+				w = 4,
+				scale = 0.8,
+				label = dynamic_type.." colours",
+				colour = G.C.BLUE,
+				options = v.names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture[dynamic_type],
+				type = dynamic_type
+			}))
+		end
     end
 	return { n = G.UIT.R, config = { r = 0.1, align = "cm", }, nodes = dynamic_selectors }
 end
 
+
+-- Add selector buttons to collection views and deck view
 local deck_view_ui = G.UIDEF.view_deck
 function G.UIDEF.view_deck(_show_remaining)
 	local t = deck_view_ui(_show_remaining)
