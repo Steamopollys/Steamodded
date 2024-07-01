@@ -12,20 +12,17 @@ target = 'engine/controller.lua'
 pattern = "if not _RELEASE_MODE then"
 position = "before"
 payload = '''
-if SMODS and SMODS.Keybinds then
-    for _, keybind in pairs(SMODS.Keybinds) do
-        if keybind.action and keybind.key_pressed == key then
-            local execute = true
-
-            for _, other_key in pairs(keybind.held_keys) do
-                if not self.held_keys[other_key] then
-                    execute = false
-                    break
-                end
+for _, keybind in pairs(SMODS.Keybinds) do
+    if keybind.action and keybind.key_pressed == key then
+        local execute = true
+        for _, other_key in pairs(keybind.held_keys) do
+            if not self.held_keys[other_key] then
+                execute = false
+                break
             end
-            if execute then
-                keybind.action(self)
-            end
+        end
+        if execute then
+            keybind.action(self)
         end
     end
 end
