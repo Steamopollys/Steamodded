@@ -26,8 +26,6 @@ if SMODS and SMODS.Keybinds then
             if execute then
                 keybind.action(self)
             end
-        else
-            sendInfoMessage("no key or action")
         end
     end
 end
