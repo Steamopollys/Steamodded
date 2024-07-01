@@ -9,10 +9,10 @@
 G.FUNCS.HUD_blind_debuff = function(e)
 	local scale = 0.4
 	local num_lines = #G.GAME.blind.loc_debuff_lines
-	local allowed_h = 2.74 - 1.85
+	--local allowed_h = 2.74 - 1.85
 	local minh = 0.3
-	e.config.padding = (allowed_h - num_lines * minh) / (num_lines + 1)
-	e.config.padding = math.min(e.config.padding, 0.05) -- at most 0.05
+	e.config.padding = num_lines > 5 and -0.05 or 0.05
+	G.GAME.HUD_blind_h = e.config.padding * (num_lines + 1) + num_lines * minh
 	if num_lines > #e.children then
 		for i = #e.children+1, num_lines do
 			local node_def = {n = G.UIT.R, config = {align = "cm", minh = minh, maxw = 4.2}, nodes = {

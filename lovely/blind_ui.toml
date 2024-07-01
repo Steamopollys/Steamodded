@@ -95,6 +95,19 @@ pattern = """
 position = 'at'
 payload = ''
 
+# Make the blind UI move up if text is longer than 2 lines
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = "G.HUD_blind.alignment.offset.y = 0"
+position = 'at'
+payload = '''
+G.GAME.HUD_blind_h = G.GAME.HUD_blind_h or (2.74 - 1.85)
+G.HUD_blind.alignment.offset.y = (G.GAME.HUD_blind_h - (2.74 - 1.85))/2
+G.HUD_blind.alignment.offset.y = -math.abs(G.HUD_blind.alignment.offset.y)
+'''
+match_indent = true
+
 ## Patch G.GAME.blind:juice_up() across all files
 
 [[patches]]
