@@ -1,7 +1,7 @@
 [manifest]
 version = "1.0.0"
 dump_lua = true
-priority = 0
+priority = 1
 
 ### Fixes for either base game code or general mod compatibility
 
@@ -43,6 +43,7 @@ end
 """
 
 ## Fix loading a blind with $0 reward
+## (also blind_ui change because it patches the same place)
 # Blind:load()
 [[patches]]
 [patches.regex]
@@ -54,7 +55,8 @@ position = 'at'
 payload = '''
 end
 if G.GAME.blind.name and G.GAME.blind.name ~= '' then
-    G.HUD_blind.alignment.offset.y = 0
+    G.GAME.HUD_blind_h = G.GAME.HUD_blind_h or (2.74 - 1.85)
+    G.HUD_blind.alignment.offset.y = -((G.GAME.HUD_blind_h - (2.74 - 1.85))/2)
     G.HUD_blind:recalculate()
 end'''
 line_prepend = '$indent'
