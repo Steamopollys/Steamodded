@@ -152,16 +152,8 @@ align = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or 
 offset = {x = 0, y = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and -0.2 or 0},'''
 line_prepend = '$indent'
 
-# G.FUNCS.use_card()
-[[patches]]
-[patches.pattern]
-target = "functions/button_callbacks.lua"
-pattern = "e.config.ref_table:redeem()"
-position = "before"
-payload = "if area == G.pack_cards then e.config.ref_table.cost = 0 end"
-match_indent = true
-
-## Stopping ease_dollars anim from playing when voucher is free
+## Stop ease_dollars anim from playing when voucher is free,
+## voucher counts as free if self.area == G.pack_cards
 # Card:redeem()
 [[patches]]
 [patches.regex]
@@ -169,7 +161,7 @@ target = "card.lua"
 pattern = '''(?<indent>[\t ]*)ease_dollars\(-self\.cost\)\n[\s\S]{8}inc_career_stat\('c_shop_dollars_spent', self\.cost\)'''
 position = "at"
 payload = '''
-if self.cost ~= 0 then
+if self.cost ~= 0 and not self.area == G.pack_cards then
     ease_dollars(-self.cost)
     inc_career_stat('c_shop_dollars_spent', self.cost)
 end'''
