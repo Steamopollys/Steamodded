@@ -18,7 +18,7 @@ payload = "G.ASSET_ATLAS[(G.GAME.viewed_back or G.GAME.selected_back) and ((G.GA
 target = 'card.lua'
 pattern = 'G.ASSET_ATLAS\[_center.atlas or _center.set\]'
 position = 'at'
-payload = "G.ASSET_ATLAS[SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas or _center.set]"
+payload = "G.ASSET_ATLAS[SMODS.UndiscoveredSprites[_center.set] and (SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas) or _center.set]"
 
 [[patches]]
 [patches.regex]
