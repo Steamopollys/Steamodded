@@ -2428,10 +2428,10 @@ function loadAPIs()
 
     SMODS.alt_textures = {}
     SMODS.AltTextures = {
-        Types = {"Suit", "Tarot", "Planet", "Spectral", "Joker", "Voucher", "Booster", "Back", "tags"},
-        Suit = {names = {}}, Tarot = {names = {}}, Planet = {names = {}},
-        Spectral = {names = {}}, Joker = {names = {}}, Voucher = {names = {}},
-        Booster = {names = {}}, Back = {names = {}}, tags = {names= {}}}
+        Types = {"Suit", "Tarot", "Planet", "Spectral", "Joker", "Voucher", "Booster", "Back", "Tag", "Seal", "Blind"},
+        Suit = {names = {}}, Tarot = {names = {}}, Planet = {names = {}}, Spectral = {names = {}},
+        Joker = {names = {}}, Voucher = {names = {}}, Booster = {names = {}},
+        Back = {names = {}}, Tag = {names = {}}, Seal = {names = {}}, Blind = {names = {}}}
 
         
     ---@param key string @Missing required parameter for %s declaration: %s

@@ -1144,52 +1144,88 @@ end
 G.FUNCS.card_colours = function(e)
     G.SETTINGS.paused = true
     G.FUNCS.overlay_menu{
-		definition = G.UIDEF.card_colours(),
+		definition = create_alt_texture_Box(),
     }
 end
 
-G.UIDEF.card_colours = function()
-	local page = 0
-    G.palette_options = {}
-	local node_ret = {}
-	for i=1, 4 do
-		G.palette_options[#G.palette_options + 1] = SMODS.AltTextures.Types[i]
-	end
-    for i=1, #G.palette_options do
-		local v = SMODS.AltTextures[G.palette_options[i]]
-        if #v.names > 1 then
-            node_ret[#node_ret+1] = { n = G.UIT.R, config = { align = "cm" },
-			nodes = {SMODS.GUI.createOptionSelector({w = 4,scale = 0.8, label = G.palette_options[i].." colours" ,options = v.names, opt_callback = "update_recolor", current_option = G.SETTINGS.selected_texture[G.palette_options[i]], type=G.palette_options[i]})}}
-        end
-    end
-	local t = create_UIBox_generic_options({back_func = 'options', contents = node_ret})
+create_alt_texture_Box = function()
+	return (create_UIBox_generic_options({ back_func = 'exit_mods', contents = {
+		{n = G.UIT.R, w = 2, config = { padding = 0, align = "cm" },
+			nodes = {create_tabs({ snap_to_nav = true, colour = G.C.BOOSTER, tabs = {
+						{ chosen = true, tab_definition_function = function()
+								return SMODS.GUI.DynamicUIManager.initTab({
+									updateFunctions = {
+										cardsList = G.FUNCS.dynamic_card_colours_content,
+									},
+									staticPageDefinition = static_texture_settings()
+								})
+							end
+						}
+	}})}}}}))
+end
+
+function static_texture_settings()
+	local pages = {}
 	if #SMODS.AltTextures.Types > 4 then
-		local palette_types = {}
         for i = 1, math.ceil(#SMODS.AltTextures.Types / 4) do
-            table.insert(palette_types, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+            table.insert(pages, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
                 tostring(math.ceil(#SMODS.AltTextures.Types / 4)))
         end
-        t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit, snap_back = true,
-            contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
-                nodes = node_ret
-            }, { n = G.UIT.R, config = { align = "cm" },
-                nodes = {create_option_cycle({
-                    options = palette_types,
-                    w = 4.5,
-                    cycle_shoulders = true,
-                    opt_callback = 'card_colours_pages',
-                    focus_args = { snap_to = true, nav = 'wide' },
-                    current_option = 1,
-                    r = rows,
-                    c = cols,
-                    colour = G.C.RED,
-                    no_pips = true
-                })}
-            }}
-        })
-    end
+	end
+   	return { n = G.UIT.C, config = { align = "cm" }, nodes = {					
+		-- add some empty rows for spacing
+		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
+		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
+		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
+		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
+			-- list of 4 mods on the current page
+		{ n = G.UIT.R, config = { padding = 0.05, align = "cm", minh = 2, }, nodes = {
+			{n=G.UIT.O, config={align = "cm", id = 'cardsList', object = Moveable()}},
+		}},
 
-    return t
+		-- another empty row for spacing
+		{ n = G.UIT.R, config = { align = "cm", minh = 2,  }, nodes = {} },
+
+		-- page selector
+		SMODS.GUI.createOptionSelector({label = "", scale = 0.8, options = pages, opt_callback = 'dynamic_card_colours_content', no_pips = true, current_option = (
+			localize('k_page') .. ' ' .. tostring(1) .. '/' .. tostring(math.ceil(#SMODS.AltTextures.Types / 3)))})
+	}}
+end
+
+function G.FUNCS.dynamic_card_colours_content(args)
+	if not args or not args.cycle_config then return end
+	SMODS.GUI.DynamicUIManager.updateDynamicAreas({
+		["cardsList"] = dynamic_card_colours(args.cycle_config.current_option)
+	})
+end
+
+function dynamic_card_colours(page)
+	if page > math.ceil(#SMODS.AltTextures.Types / 4) then
+        page = page - math.ceil(#SMODS.AltTextures.Types / 4)
+    end
+    local count = 4
+    local offset = (4 * (page - 1)) + 1
+	local dynamic_selectors = {}
+	G.palette_options = {}
+	for i=offset, page*count do
+		if i > #SMODS.AltTextures.Types then break end
+		local dynamic_type = SMODS.AltTextures.Types[i]
+		local v = SMODS.AltTextures[dynamic_type]
+        if #v.names > 1 then
+            table.insert(dynamic_selectors,
+			SMODS.GUI.createOptionSelector({
+					w = 4,
+					scale = 0.8,
+					label = dynamic_type.." colours",
+					options = v.names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture[dynamic_type],
+					type = dynamic_type
+				}))
+			sendDebugMessage(i .. " " .. dynamic_type)
+        end
+    end
+	return { n = G.UIT.R, config = { r = 0.1, align = "cm", }, nodes = dynamic_selectors }
 end
 
 G.FUNCS.card_colours_pages = function(args)
