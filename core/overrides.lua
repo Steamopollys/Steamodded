@@ -1149,19 +1149,11 @@ G.FUNCS.card_colours = function(e)
 end
 
 create_alt_texture_Box = function()
-	return (create_UIBox_generic_options({ back_func = 'exit_mods', contents = {
-		{n = G.UIT.R, w = 2, config = { padding = 0, align = "cm" },
-			nodes = {create_tabs({ snap_to_nav = true, colour = G.C.BOOSTER, tabs = {
-						{ chosen = true, tab_definition_function = function()
-								return SMODS.GUI.DynamicUIManager.initTab({
-									updateFunctions = {
-										cardsList = G.FUNCS.dynamic_card_colours_content,
-									},
-									staticPageDefinition = static_texture_settings()
-								})
-							end
-						}
-	}})}}}}))
+	local selectors = SMODS.GUI.DynamicUIManager.initTab({updateFunctions = {cardsList = G.FUNCS.dynamic_card_colours_content,},staticPageDefinition = static_texture_settings()})
+	return (create_UIBox_generic_options({ back_func = 'options', contents = {
+		{n = G.UIT.R, w = 2, config = { minh = 7, padding = 0, align = "bm" },
+			nodes = selectors.nodes}
+	}}))
 end
 
 function static_texture_settings()
@@ -1184,7 +1176,7 @@ function static_texture_settings()
 		}},
 
 		-- another empty row for spacing
-		{ n = G.UIT.R, config = { align = "cm", minh = 2,  }, nodes = {} },
+		{ n = G.UIT.R, config = { align = "cm", minh = 1.6,  }, nodes = {} },
 
 		-- page selector
 		SMODS.GUI.createOptionSelector({label = "", scale = 0.8, options = pages, opt_callback = 'dynamic_card_colours_content', no_pips = true, current_option = (
@@ -1217,6 +1209,7 @@ function dynamic_card_colours(page)
 					w = 4,
 					scale = 0.8,
 					label = dynamic_type.." colours",
+					colour = G.C.BLUE,
 					options = v.names,
 					opt_callback = "update_recolor",
 					current_option = G.SETTINGS.selected_texture[dynamic_type],
@@ -1227,29 +1220,6 @@ function dynamic_card_colours(page)
     end
 	return { n = G.UIT.R, config = { r = 0.1, align = "cm", }, nodes = dynamic_selectors }
 end
-
-G.FUNCS.card_colours_pages = function(args)
-    if not args or not args.cycle_config then
-        return
-    end
-    local page = args.cycle_config.current_option
-    if page > math.ceil(#SMODS.AltTextures.Types / 4) then
-        page = page - math.ceil(#SMODS.AltTextures.Types / 4)
-    end
-    local count = 4
-    local offset = (4 * (page - 1)) + 1
-
-	G.palette_options = {}
-	for i=offset, page*count do
-		if i > #SMODS.AltTextures.Types then return end
-		local v = SMODS.AltTextures[SMODS.AltTextures.Types[i]]
-        if #v.names > 1 then
-            G.palette_options[#G.palette_options+1] = SMODS.AltTextures.Types[i]
-			sendDebugMessage(i .. " " .. G.palette_options[#G.palette_options])
-        end
-    end
-end
-
 
 local deck_view_ui = G.UIDEF.view_deck
 function G.UIDEF.view_deck(_show_remaining)
