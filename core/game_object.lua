@@ -2452,7 +2452,7 @@ function loadAPIs()
         inject = function(self)
             self.name = (self.name:len() < 18 and self.name or self.name:sub(1,16).."...")
             -- Do not create palettes for any types that do not exist
-            if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suit" and self.type ~= "Blind" then return end
+            if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suit" and self.type ~= "Blind" or SMODS.AltTextures[self.type] and SMODS.AltTextures[self.type][self.name] then return end
             
             -- Initialize new palette types, including a default palette 
             if not SMODS.AltTextures[self.type] then
@@ -2462,13 +2462,8 @@ function loadAPIs()
             if #SMODS.AltTextures[self.type].names == 0 then
                 if self.name ~= "Default" then SMODS.AltTexture:create_default(self.type) end
             end
+            table.insert(SMODS.AltTextures[self.type].names, self.name)
 
-            -- Catch duplicate palettes
-            if SMODS.AltTextures[self.type][self.name] then
-                SMODS.AltTextures[self.type][self.name] = {} 
-            else
-                table.insert(SMODS.AltTextures[self.type].names, self.name)
-            end
             SMODS.AltTextures[self.type][self.name] = {
                 name = self.name,
                 order = #SMODS.AltTextures[self.type].names,
