@@ -55,6 +55,5 @@ payload = '''
 end
 if G.GAME.blind.name and G.GAME.blind.name ~= '' then
     G.HUD_blind.alignment.offset.y = 0
-    G.HUD_blind:recalculate()
 end'''
 line_prepend = '$indent'
