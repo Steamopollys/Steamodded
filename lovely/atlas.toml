@@ -9,30 +9,30 @@ priority = 0
 [[patches]]
 [patches.regex]
 target = 'card.lua'
-pattern = '(?<start>.*)G.ASSET_ATLAS\["centers"\](?<end>.*)'
+pattern = 'G.ASSET_ATLAS\["centers"\]'
 position = 'at'
-payload = "$start G.ASSET_ATLAS[(G.GAME.viewed_back or G.GAME.selected_back) and ((G.GAME.viewed_back or G.GAME.selected_back)[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or (G.GAME.viewed_back or G.GAME.selected_back).atlas) or 'centers']$end"
+payload = "G.ASSET_ATLAS[(G.GAME.viewed_back or G.GAME.selected_back) and ((G.GAME.viewed_back or G.GAME.selected_back)[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or (G.GAME.viewed_back or G.GAME.selected_back).atlas) or 'centers']"
 
 [[patches]]
 [patches.regex]
 target = 'card.lua'
-pattern = '(?<start>.*)G.ASSET_ATLAS\[_center.atlas or _center.set\](?<end>.*)'
+pattern = 'G.ASSET_ATLAS\[_center.atlas or _center.set\]'
 position = 'at'
-payload = "$start G.ASSET_ATLAS[SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas or _center.set]$end"
+payload = "G.ASSET_ATLAS[SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas or _center.set]"
 
 [[patches]]
 [patches.regex]
 target = 'card.lua'
-pattern = "(?<start>.*)G.ASSET_ATLAS\\['Joker'\\](?<end>.*)"
+pattern = "G.ASSET_ATLAS\\['Joker'\\]"
 position = 'at'
-payload = "$start G.ASSET_ATLAS[_center[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.atlas or _center.set]$end"
+payload = "G.ASSET_ATLAS[_center[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.atlas or _center.set]"
 
 [[patches]]
 [patches.regex]
 target = 'card.lua' 
-pattern = '(?<start>.*)G.ASSET_ATLAS\[_center.set\](?<end>.*)'
+pattern = 'G.ASSET_ATLAS\[_center.set\]'
 position = 'at'
-payload = "$start G.ASSET_ATLAS[_center[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.atlas or _center.set]$end"
+payload = "G.ASSET_ATLAS[_center[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.atlas or _center.set]"
 
 [[patches]]
 [patches.pattern]
@@ -45,9 +45,9 @@ match_indent = true
 [[patches]]
 [patches.regex]
 target = 'card.lua' 
-pattern = '(?<start>.*?)(_front\.atlas and )?G.ASSET_ATLAS\[_front\.atlas\](?<end>.*)'
+pattern = '(_front\.atlas and )?G.ASSET_ATLAS\[_front\.atlas\]'
 position = 'at'
-payload = '$start G.ASSET_ATLAS[G.SETTINGS.colourblind_option and _front.hc_atlas or _front.lc_atlas] or G.ASSET_ATLAS[_front.atlas]$end'
+payload = 'G.ASSET_ATLAS[G.SETTINGS.colourblind_option and _front.hc_atlas or _front.lc_atlas] or G.ASSET_ATLAS[_front.atlas]'
 
 
 # Game:set_render_settings()
