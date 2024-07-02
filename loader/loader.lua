@@ -207,9 +207,8 @@ function loadMods(modsDirectory)
                     end
                 
                     if mod.outdated then
-                        mod.omit_mod_prefix = true
-                    end
-                    if not mod.omit_mod_prefix then
+                        mod.prefix_config = { key = { mod = false }, atlas = false }
+                    else
                         mod.prefix = mod.prefix or (mod.id or ''):lower():sub(1, 4)
                     end
                     if mod.prefix and used_prefixes[mod.prefix] then

@@ -22,35 +22,48 @@ function loadAPIs()
     function SMODS.GameObject:__call(o)
         o = o or {}
         o.mod = SMODS.current_mod
-        if o.mod and not o.raw_atlas_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
-            for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
-                if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
-            end
-        end
-        if o.mod and not o.raw_shader_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
-            if o['shader'] then o['shader'] = ('%s_%s'):format(o.mod.prefix, o['shader']) end
-        end
         setmetatable(o, self)
         for _, v in ipairs(o.required_params or {}) do
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
         end
-        if not o.omit_prefix and o.mod then
-            if o['palette'] then
-                if o.mod.omit_mod_prefix or o.omit_mod_prefix then
-                    o.key = ('%s_%s_%s'):format(o.prefix, o.type:lower(), o.key)
-                else
-                    o.key = ('%s_%s_%s_%s'):format(o.prefix, o.mod.prefix, o.type:lower(), o.key)
-                end
-            else
-                if o.mod.omit_mod_prefix or o.omit_mod_prefix then
-                    o.key = ('%s_%s'):format(o.prefix, o.key)
-                else
-                    o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
-                end
-            end
-        end
+        -- keep class defaults for unmodified keys in prefix_config
+        SMODS.merge_defaults(o.prefix_config, self.prefix_config)
+        o:add_prefixes()
         o:register()
         return o
+    end
+
+    function SMODS.GameObject:modify_key(prefix, condition, key)
+        key = key or 'key'
+        if condition ~= false and self[key] and prefix then
+            self[key] = self[key] .. '_' .. prefix
+        end
+    end
+
+    function SMODS.GameObject:add_prefixes()
+        if self.registered then return end
+        if self.prefix_config == false then return end
+        SMODS.merge_defaults(self.prefix_config, self.mod and self.mod.prefix_config)
+        self.prefix_config = self.prefix_config or {}
+        self.original_key = self.key
+        local key_cfg = self.prefix_config.key
+        if key_cfg ~= false then
+            if type(key_cfg ~= 'table') then key_cfg = {} end
+            self:modify_key(self.class_prefix, key_cfg.class)
+            self:modify_key(self.mod and self.mod.prefix, key_cfg.mod)
+            if self.set == 'Palette' then self:modify_key(self.type and self.type:lower(), key_cfg.type) end
+        end
+        local atlas_cfg = self.prefix_config.atlas
+        if atlas_cfg ~= false then
+            if type(atlas_cfg ~= 'table') then atlas_cfg = {} end
+            for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
+                self:modify_key(self.mod and self.mod.prefix, atlas_cfg[v], v)
+            end
+        end
+        local shader_cfg = self.prefix_config.shader
+        self:modify_key(self.mod and self.mod.prefix, shader_cfg, 'shader')
+        local card_key_cfg = self.prefix_config.card_key
+        self:modify_key(self.mod and self.mod.prefix, card_key_cfg, 'card_key')
     end
 
     function SMODS.GameObject:register()
@@ -112,8 +125,15 @@ function loadAPIs()
 
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
     function SMODS.GameObject:take_ownership(key, obj, silent)
-        key = (self.omit_prefix or obj.omit_prefix or key:sub(1, #self.prefix + 1) == self.prefix .. '_') and key or
-            ('%s_%s'):format(self.prefix, key)
+        -- TODO declutter this and try to integrate with add_prefixes
+        SMODS.merge_defaults(obj.prefix_config, self.prefix_config)
+        local conf = obj.prefix_config or self.prefix_config
+        local no_class_prefix = not self.class_prefix or
+            conf == false or
+            (conf and (conf.key == false)) or
+            conf and conf.key and (conf.key.class == false)
+        key = (no_class_prefix or key:sub(1, #self.class_prefix + 1) == self.class_prefix .. '_') and key or
+            ('%s_%s'):format(self.class_prefix, key)
         local o = self.obj_table[key] or self:get_obj(key)
         if not o then
             sendWarnMessage(
@@ -142,12 +162,13 @@ function loadAPIs()
             o.rarity_original = o.rarity
         end
         for k, v in pairs(obj) do o[k] = v end
-        if o.mod and not o.raw_atlas_key and not o.mod.omit_mod_prefix then
+        if o.mod and not (conf == false or (conf and conf.atlas == false)) then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 -- was a new atlas provided with this call?
+
                 if obj[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then
-                    o[v] = ('%s_%s'):format(
-                        SMODS.current_mod.prefix, o[v])
+                    local atlas_cfg = conf and conf.atlas and conf.atlas[v] or {}
+                    o:modify_key(SMODS.current_mod and SMODS.current_mod.prefix, atlas_cfg[v], v)
                 end
             end
         end
@@ -192,7 +213,7 @@ function loadAPIs()
             'path',
             'font',
         },
-        omit_prefix = true,
+        prefix_config = { key = false },
         process_loc_text = function() end,
         inject = function(self)
             self.full_path = self.mod.path .. 'localization/' .. self.path
@@ -243,14 +264,10 @@ function loadAPIs()
         },
         atlas_table = 'ASSET_ATLAS',
         set = 'Atlas',
-        omit_prefix = true,
         register = function(self)
             if self.registered then
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
                 return
-            end
-            if not self.raw_key and self.mod and not (self.mod.omit_mod_prefix or self.omit_mod_prefix) then
-                self.key = ('%s_%s'):format(self.mod.prefix, self.key)
             end
             if self.language then
                 self.key_noloc = self.key
@@ -301,16 +318,15 @@ function loadAPIs()
         obj_table = SMODS.Sounds,
         stop_sounds = {},
         replace_sounds = {},
-        omit_prefix = true,
         required_params = {
             'key',
             'path'
         },
         process_loc_text = function() end,
         register = function(self)
-            if self.obj_table[self.key] then return end
-            if not self.raw_key and self.mod and not (self.mod.omit_mod_prefix or self.omit_mod_prefix) then
-                self.key = ('%s_%s'):format(self.mod.prefix, self.key)
+            if self.registered then
+                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+                return
             end
             if self.language then
                 self.key = ('%s_%s'):format(self.key, self.language)
@@ -442,7 +458,7 @@ function loadAPIs()
     SMODS.Stake = SMODS.GameObject:extend {
         obj_table = SMODS.Stakes,
         obj_buffer = {},
-        prefix = 'stake',
+        class_prefix = 'stake',
         unlocked = false,
         set = 'Stake',
         atlas = 'chips',
@@ -463,7 +479,7 @@ function loadAPIs()
                 -- Inject stake in the correct spot
                 local count = #G.P_CENTER_POOLS[self.set] + 1
                 if self.above_stake then
-                    count = G.P_STAKES[self.prefix .. "_" .. self.above_stake].stake_level + 1
+                    count = G.P_STAKES[self.class_prefix .. "_" .. self.above_stake].stake_level + 1
                 end
                 self.order = count
                 self.stake_level = count
@@ -506,7 +522,7 @@ function loadAPIs()
             for _, v in pairs(self.applied_stakes) do
                 any_applied = true
                 applied_text = applied_text ..
-                    localize { set = self.set, key = self.prefix .. '_' .. v, type = 'name_text' } .. ', '
+                    localize { set = self.set, key = self.class_prefix .. '_' .. v, type = 'name_text' } .. ', '
             end
             applied_text = applied_text:sub(1, -3)
             if not any_applied then
@@ -538,7 +554,7 @@ function loadAPIs()
     SMODS.Stake {
         name = "White Stake",
         key = "stake_white",
-        omit_prefix = true,
+        prefix_config = { key = false },
         unlocked_stake = "red",
         unlocked = true,
         applied_stakes = {},
@@ -550,7 +566,7 @@ function loadAPIs()
     SMODS.Stake {
         name = "Red Stake",
         key = "stake_red",
-        omit_prefix = true,
+        prefix_config = { key = false },
         unlocked_stake = "green",
         applied_stakes = { "white" },
         pos = { x = 1, y = 0 },
@@ -565,7 +581,7 @@ function loadAPIs()
     SMODS.Stake {
         name = "Green Stake",
         key = "stake_green",
-        omit_prefix = true,
+        prefix_config = { key = false },
         unlocked_stake = "black",
         applied_stakes = { "red" },
         pos = { x = 2, y = 0 },
@@ -579,7 +595,7 @@ function loadAPIs()
     SMODS.Stake {
         name = "Black Stake",
         key = "stake_black",
-        omit_prefix = true,
+        prefix_config = { key = false },
         unlocked_stake = "blue",
         applied_stakes = { "green" },
         pos = { x = 4, y = 0 },
@@ -593,7 +609,7 @@ function loadAPIs()
     SMODS.Stake {
         name = "Blue Stake",
         key = "stake_blue",
-        omit_prefix = true,
+        prefix_config = { key = false },
         unlocked_stake = "purple",
         applied_stakes = { "black" },
         pos = { x = 3, y = 0 },
@@ -607,7 +623,7 @@ function loadAPIs()
     SMODS.Stake {
         name = "Purple Stake",
         key = "stake_purple",
-        omit_prefix = true,
+        prefix_config = { key = false },
         unlocked_stake = "orange",
         applied_stakes = { "blue" },
         pos = { x = 0, y = 1 },
@@ -621,7 +637,7 @@ function loadAPIs()
     SMODS.Stake {
         name = "Orange Stake",
         key = "stake_orange",
-        omit_prefix = true,
+        prefix_config = { key = false },
         unlocked_stake = "gold",
         applied_stakes = { "purple" },
         pos = { x = 1, y = 1 },
@@ -635,7 +651,7 @@ function loadAPIs()
     SMODS.Stake {
         name = "Gold Stake",
         key = "stake_gold",
-        omit_prefix = true,
+        prefix_config = { key = false },
         applied_stakes = { "orange" },
         pos = { x = 2, y = 1 },
         sticker_pos = { x = 3, y = 1 },
@@ -662,7 +678,7 @@ function loadAPIs()
             'primary_colour',
             'secondary_colour',
         },
-        omit_prefix = true,
+        prefix_config = { key = false }, -- TODO? should consumable types have a mod prefix?
         collection_rows = { 6, 6 },
         create_UIBox_your_collection = function(self)
             local deck_tables = {}
@@ -954,7 +970,7 @@ function loadAPIs()
         config = {},
         set = 'Joker',
         atlas = 'Joker',
-        prefix = 'j',
+        class_prefix = 'j',
         required_params = {
             'key',
         },
@@ -983,7 +999,7 @@ function loadAPIs()
         legendaries = {},
         cost = 3,
         config = {},
-        prefix = 'c',
+        class_prefix = 'c',
         required_params = {
             'set',
             'key',
@@ -1040,7 +1056,7 @@ function loadAPIs()
         available = true,
         pos = { x = 0, y = 0 },
         config = {},
-        prefix = 'v',
+        class_prefix = 'v',
         required_params = {
             'key',
         }
@@ -1058,7 +1074,7 @@ function loadAPIs()
         pos = { x = 0, y = 0 },
         config = {},
         stake = 1,
-        prefix = 'b',
+        class_prefix = 'b',
         required_params = {
             'key',
         },
@@ -1092,7 +1108,7 @@ function loadAPIs()
         required_params = {
             'key',
         },
-        prefix = 'p',
+        class_prefix = 'p',
         set = "Booster",
         atlas = "Booster",
         pos = {x = 0, y = 0},
@@ -1226,7 +1242,7 @@ function loadAPIs()
         obj_buffer = {},
         obj_table = SMODS.UndiscoveredSprites,
         inject_class = function() end,
-        omit_prefix = true,
+        prefix_config = { key = false },
         required_params = {
             'key',
             'atlas',
@@ -1249,7 +1265,7 @@ function loadAPIs()
     SMODS.Blind = SMODS.GameObject:extend {
         obj_table = SMODS.Blinds,
         obj_buffer = {},
-        prefix = 'bl',
+        class_prefix = 'bl',
         debuff = {},
         vars = {},
         dollars = 5,
@@ -1310,7 +1326,7 @@ function loadAPIs()
         -- a badge, so badge_to_key, maybe?
         reverse_lookup = {},
         set = 'Seal',
-        prefix = 's',
+        class_prefix = 's',
         atlas = 'centers',
         pos = { x = 0, y = 0 },
         discovered = false,
@@ -1339,25 +1355,6 @@ function loadAPIs()
     ----- API CODE GameObject.Suit
     -------------------------------------------------------------------------------------------------
 
-    SMODS.permutations = function(list, n)
-        list = list or
-            { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
-                'V',
-                'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
-                'r',
-                's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9' }
-        n = n or 2
-        if n <= 1 then return list end
-        local t = SMODS.permutations(list, n - 1)
-        local o = {}
-        for _, a in ipairs(list) do
-            for _, b in ipairs(t) do
-                table.insert(o, a .. b)
-            end
-        end
-        return o
-    end
-    SMODS.valid_card_keys = SMODS.permutations()
     SMODS.inject_p_card = function(suit, rank)
         G.P_CARDS[suit.card_key .. '_' .. rank.card_key] = {
             name = rank.key .. ' of ' .. suit.key,
@@ -1376,10 +1373,11 @@ function loadAPIs()
     SMODS.Suit = SMODS.GameObject:extend {
         obj_table = SMODS.Suits,
         obj_buffer = {},
+        used_card_keys = {},
         set = 'Suit',
-        omit_prefix = true,
         required_params = {
             'key',
+            'card_key',
             'pos',
             'ui_pos',
         },
@@ -1393,7 +1391,11 @@ function loadAPIs()
             value = 0,
         },
         register = function(self)
-            self.card_key = self:get_card_key(self.card_key)
+            if self.used_card_keys[self.card_key] then
+                sendWarnMessage(('Tried to use duplicate card key %s, aborting registration'):format(self.card_key), self.set)
+                return
+            end
+            self.used_card_keys[self.card_key] = true
             self.max_nominal.value = self.max_nominal.value + 0.01
             self.suit_nominal = self.max_nominal.value
             SMODS.Suit.super.register(self)
@@ -1411,24 +1413,8 @@ function loadAPIs()
             for _, rank in pairs(SMODS.Ranks) do
                 SMODS.remove_p_card(self, rank)
             end
+            self.used_card_keys[self.card_key] = nil
             table.remove(self.obj_buffer, i)
-        end,
-        get_card_key = function(self, card_key)
-            local set = {}
-            for _, v in ipairs(SMODS.valid_card_keys) do set[v] = true end
-            for _, v in pairs(self.obj_table) do
-                set[v.card_key] = false
-            end
-            if not card_key or (set[card_key] == false) then
-                for _, v in pairs(SMODS.valid_card_keys) do
-                    if set[v] then
-                        card_key = v
-                        break
-                    end
-                end
-            end
-            if not card_key then error(('Unable to find valid ID for %s: %s'):format(self.set, self.key)) end
-            return card_key
         end,
         process_loc_text = function(self)
             -- empty loc_txt indicates there are existing values that shouldn't be changed
@@ -1479,8 +1465,8 @@ function loadAPIs()
     SMODS.Rank = SMODS.GameObject:extend {
         obj_table = SMODS.Ranks,
         obj_buffer = {},
+        used_card_keys = {},
         set = 'Rank',
-        omit_prefix = true,
         required_params = {
             'key',
             'pos',
@@ -1514,10 +1500,12 @@ function loadAPIs()
         max_id = {
             value = 1,
         },
-        valid_cards_keys = SMODS.Suit.valid_card_keys,
-        get_card_key = SMODS.Suit.get_card_key,
         register = function(self)
-            self.card_key = self:get_card_key(self.card_key)
+            if self.used_card_keys[self.card_key] then
+                sendWarnMessage(('Tried to use duplicate card key %s, aborting registration'):format(self.card_key), self.set)
+                return
+            end
+            self.used_card_keys[self.card_key] = true
             self.max_id.value = self.max_id.value + 1
             self.id = self.max_id.value
             self.shorthand = self.shorthand or self.key
@@ -1555,6 +1543,7 @@ function loadAPIs()
             for _, suit in pairs(SMODS.Suits) do
                 SMODS.remove_p_card(suit, self)
             end
+            self.used_card_keys[self.card_key] = nil
             table.remove(self.obj_buffer, i)
         end
     }
@@ -1935,7 +1924,7 @@ function loadAPIs()
         played = 0,
         played_this_round = 0,
         level = 1,
-        prefix = 'h',
+        class_prefix = 'h',
         set = 'PokerHand',
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.poker_hands, self.key, self.loc_txt, 'name')
@@ -1988,7 +1977,7 @@ function loadAPIs()
         vouchers = {},
         restrictions = { banned_cards = {}, banned_tags = {}, banned_other = {} },
         unlocked = function(self) return true end,
-        prefix = 'c',
+        class_prefix = 'c',
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.loc_txt)
         end,
@@ -2048,7 +2037,7 @@ function loadAPIs()
         discovered = false,
         min_ante = nil,
         atlas = 'tags',
-        prefix = 'tag',
+        class_prefix = 'tag',
         set = 'Tag',
         pos = { x = 0, y = 0 },
         config = {},
@@ -2099,7 +2088,7 @@ function loadAPIs()
         required_params = {
             'key',
         },
-        prefix = 'st',
+        class_prefix = 'st',
         rate = 0.3,
         atlas = 'stickers',
         pos = { x = 0, y = 0 },
@@ -2128,7 +2117,7 @@ function loadAPIs()
         obj_buffer = {},
         obj_table = {},
         set = 'Payout Argument',
-        prefix = 'p',
+        class_prefix = 'p',
         required_params = {
             'key'
         },
@@ -2145,7 +2134,7 @@ function loadAPIs()
 
     SMODS.Enhancement = SMODS.Center:extend {
         set = 'Enhanced',
-        prefix = 'm',
+        class_prefix = 'm',
         atlas = 'centers',
         pos = { x = 0, y = 0 },
         required_params = {
@@ -2242,7 +2231,6 @@ function loadAPIs()
             'path',
         },
         set = 'Shader',
-        omit_prefix = true,
         inject = function(self)
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/shaders/' .. self.path
@@ -2251,17 +2239,6 @@ function loadAPIs()
             G.SHADERS[self.key] = love.graphics.newShader(self.key .. "-temp.fs")
             love.filesystem.remove(self.key .. "-temp.fs")
             -- G.SHADERS[self.key] = love.graphics.newShader(self.full_path)
-        end,
-        register = function(self)
-            if self.registered then
-                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
-                return
-            end
-            self.original_key = self.key
-            if not self.raw_key and self.mod and not (self.mod.omit_mod_prefix or self.omit_mod_prefix) then
-                self.key = ('%s_%s'):format(self.mod.prefix, self.key)
-            end
-            SMODS.Shader.super.register(self)
         end,
         process_loc_text = function() end
     }
@@ -2275,7 +2252,7 @@ function loadAPIs()
         -- atlas only matters for displaying editions in the collection
         atlas = 'Joker',
         pos = { x = 0, y = 0 },
-        prefix = 'e',
+        class_prefix = 'e',
         discovered = false,
         unlocked = true,
         apply_to_float = false,
@@ -2435,7 +2412,7 @@ function loadAPIs()
             'name'
         },
         set = 'Palette',
-        prefix = 'pal',
+        class_prefix = 'pal',
         inject = function(self)
             if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suits" then return end
             if not SMODS.Palettes[self.type] then
@@ -2602,7 +2579,7 @@ function loadAPIs()
             'action',
         },
         set = 'Keybind',
-        prefix = 'keybind',
+        class_prefix = 'keybind',
 
         inject = function(_) end
     }
