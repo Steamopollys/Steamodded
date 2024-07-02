@@ -36,7 +36,7 @@ function loadAPIs()
     function SMODS.GameObject:modify_key(prefix, condition, key)
         key = key or 'key'
         if condition ~= false and self[key] and prefix then
-            self[key] = self[key] .. '_' .. prefix
+            self[key] = prefix .. '_' .. self[key]
         end
     end
 
@@ -49,15 +49,15 @@ function loadAPIs()
         local key_cfg = self.prefix_config.key
         if key_cfg ~= false then
             if type(key_cfg ~= 'table') then key_cfg = {} end
-            self:modify_key(self.class_prefix, key_cfg.class)
-            self:modify_key(self.mod and self.mod.prefix, key_cfg.mod)
             if self.set == 'Palette' then self:modify_key(self.type and self.type:lower(), key_cfg.type) end
+            self:modify_key(self.mod and self.mod.prefix, key_cfg.mod)
+            self:modify_key(self.class_prefix, key_cfg.class)
         end
         local atlas_cfg = self.prefix_config.atlas
         if atlas_cfg ~= false then
             if type(atlas_cfg ~= 'table') then atlas_cfg = {} end
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
-                self:modify_key(self.mod and self.mod.prefix, atlas_cfg[v], v)
+                if rawget(self, v) then self:modify_key(self.mod and self.mod.prefix, atlas_cfg[v], v) end
             end
         end
         local shader_cfg = self.prefix_config.shader
@@ -2488,13 +2488,13 @@ function loadAPIs()
     end
 
     for k, v in pairs(G.P_CENTER_POOLS.Tarot) do
-        SMODS.Consumable:take_ownership(v.key, { atlas = "Tarot" })
+        SMODS.Consumable:take_ownership(v.key, { atlas = "Tarot", prefix_config = { atlas = false } })
     end
     for _, v in pairs(G.P_CENTER_POOLS.Planet) do
-        SMODS.Consumable:take_ownership(v.key, { atlas = "Planet" })
+        SMODS.Consumable:take_ownership(v.key, { atlas = "Planet", prefix_config = { atlas = false } })
     end
     for _, v in pairs(G.P_CENTER_POOLS.Spectral) do
-        SMODS.Consumable:take_ownership(v.key, { atlas = "Spectral" })
+        SMODS.Consumable:take_ownership(v.key, { atlas = "Spectral", prefix_config = { atlas = false } })
     end
     SMODS.Atlas({
         key = "Planet",
