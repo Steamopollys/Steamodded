@@ -27,7 +27,7 @@ function loadAPIs()
                 if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
             end
         end
-        if o.mod and not o.raw_shader_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
+        if o.mod and not o.raw_shader_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) and not type(o['shader']) == "table" then
             if o['shader'] then o['shader'] = ('%s_%s'):format(o.mod.prefix, o['shader']) end
         end
         setmetatable(o, self)
@@ -2296,6 +2296,9 @@ function loadAPIs()
         -- calculate(self)
         register = function(self)
             self.config = self.config or {}
+            if type(self.shader) == "string" then
+                self.shader = {self.shader}
+            end
             SMODS.Edition.super.register(self)
         end,
         process_loc_text = function(self)

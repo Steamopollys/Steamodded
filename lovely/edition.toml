@@ -92,9 +92,11 @@ payload = '''
 if self.edition then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if self.edition[v.key:sub(3)] then
-            self.children.center:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
-            if self.children.front and self.ability.effect ~= 'Stone Card' and not self.config.center.replace_base_card then
-                self.children.front:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
+            for _,shader in ipairs(v.shader) do        
+                self.children.center:draw_shader(shader, nil, self.ARGS.send_to_shader)
+                if self.children.front and self.ability.effect ~= 'Stone Card' and not self.config.center.replace_base_card then
+                    self.children.front:draw_shader(shader, nil, self.ARGS.send_to_shader)
+                end
             end
         end
     end
@@ -111,8 +113,10 @@ payload = '''
 if self.edition then 
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if v.apply_to_float then
-            if self.edition[v.key:sub(3)] then
-                self.children.floating_sprite:draw_shader(v.shader, nil, nil, nil, self.children.center, scale_mod, rotate_mod)
+            for _,shader in ipairs(v.shader) do
+                if self.edition[v.key:sub(3)] then
+                    self.children.floating_sprite:draw_shader(shader, nil, nil, nil, self.children.center, scale_mod, rotate_mod)
+                end
             end
         end
     end
