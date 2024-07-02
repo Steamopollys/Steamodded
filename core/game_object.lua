@@ -22,35 +22,41 @@ function loadAPIs()
     function SMODS.GameObject:__call(o)
         o = o or {}
         o.mod = SMODS.current_mod
-        if o.mod and not o.raw_atlas_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
-            for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
-                if o[v] then o[v] = ('%s_%s'):format(o.mod.prefix, o[v]) end
-            end
-        end
-        if o.mod and not o.raw_shader_key and not (o.mod.omit_mod_prefix or o.omit_mod_prefix) then
-            if o['shader'] then o['shader'] = ('%s_%s'):format(o.mod.prefix, o['shader']) end
-        end
         setmetatable(o, self)
         for _, v in ipairs(o.required_params or {}) do
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
         end
-        if not o.omit_prefix and o.mod then
-            if o['palette'] then
-                if o.mod.omit_mod_prefix or o.omit_mod_prefix then
-                    o.key = ('%s_%s_%s'):format(o.prefix, o.type:lower(), o.key)
-                else
-                    o.key = ('%s_%s_%s_%s'):format(o.prefix, o.mod.prefix, o.type:lower(), o.key)
-                end
-            else
-                if o.mod.omit_mod_prefix or o.omit_mod_prefix then
-                    o.key = ('%s_%s'):format(o.prefix, o.key)
-                else
-                    o.key = ('%s_%s_%s'):format(o.prefix, o.mod.prefix, o.key)
-                end
-            end
-        end
+        o:add_prefixes()
         o:register()
         return o
+    end
+
+    function SMODS.GameObject:modify_key(prefix, condition, key)
+        key = key or 'key'
+        if condition ~= false and prefix then
+            self[key] = self[key] .. '_' .. prefix
+        end
+    end
+
+    function SMODS.GameObject:add_prefixes()
+        if self.registered then return end
+        self.prefix_config = self.prefix_config or (self.mod and self.mod.prefix_config) or {}
+        local key_cfg = self.prefix_config.key
+        if key_cfg ~= false then
+            if type(key_cfg ~= 'table') then key_cfg = {} end
+            self:modify_key(self.class_prefix, key_cfg.class)
+            self:modify_key(self.mod and self.mod.prefix, key_cfg.mod)
+            self:modify_key(self.type and self.type:lower(), not not self.palette and key_cfg.type)
+        end
+        local atlas_cfg = self.prefix_config.atlas
+        if atlas_cfg ~= false then
+            if type(atlas_cfg ~= 'table') then key_cfg = {} end
+            for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
+                self:modify_key(self.mod and self.mod.prefix, atlas_cfg[v], v)
+            end
+        end
+        local shader_cfg = self.prefix_config.shader
+        self:modify_key(self.mod and self.mod.prefix, shader_cfg, 'shader')
     end
 
     function SMODS.GameObject:register()
