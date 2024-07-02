@@ -689,9 +689,18 @@ end
 --#region editions
 function create_UIBox_your_collection_editions(exit)
 	local deck_tables = {}
-	local rows, cols = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1), 5
+	local edition_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in pairs(G.P_CENTER_POOLS.Edition) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then edition_pool[#edition_pool+1] = v end
+		end
+	else
+		edition_pool = G.P_CENTER_POOLS.Edition
+	end
+	local rows, cols = (#edition_pool > 5 and 2 or 1), 5
 	local page = 0
 
+	sendInfoMessage("Creating collections")
 	G.your_collection = {}
 	for j = 1, rows do
 		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
@@ -707,13 +716,17 @@ function create_UIBox_your_collection_editions(exit)
 		)
 	end
 
-	table.sort(G.P_CENTER_POOLS.Edition, function(a, b) return a.order < b.order end)
+	sendInfoMessage("Sorting collections")
+	table.sort(edition_pool, function(a, b) return a.order < b.order end)
 
-	local count = math.min(cols * rows, #G.P_CENTER_POOLS["Edition"])
+	local count = math.min(cols * rows, #edition_pool)
 	local index = 1 + (rows * cols * page)
+	sendInfoMessage("Adding cards")
 	for j = 1, rows do
+		sendInfoMessage("Adding card in row "..tostring(j))
 		for i = 1, cols do
-			local edition = G.P_CENTER_POOLS.Edition[index]
+			sendInfoMessage("Adding card in pos "..tostring(i))
+			local edition = edition_pool[index]
 
 			if not edition then
 				break
@@ -734,21 +747,21 @@ function create_UIBox_your_collection_editions(exit)
 
 	local t = create_UIBox_generic_options({
 		infotip = localize('ml_edition_seal_enhancement_explanation'),
-		back_func = exit or 'your_collection',
+		back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection',
 		snap_back = true,
 		contents = { 
 			{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
 				deck_tables}}
 	})
 
-	if #G.P_CENTER_POOLS["Edition"] > rows * cols then
-		for i = 1, math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) do
+	if #edition_pool > rows * cols then
+		for i = 1, math.ceil(#edition_pool / (rows * cols)) do
 			table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
-				tostring(math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))))
+				tostring(math.ceil(#edition_pool / (rows * cols))))
 		end
 		t = create_UIBox_generic_options({
 			infotip = localize('ml_edition_seal_enhancement_explanation'),
-			back_func = exit or 'your_collection',
+			back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection',
 			snap_back = true,
 			contents = {
 				{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
@@ -776,11 +789,19 @@ G.FUNCS.your_collection_editions_page = function(args)
 	if not args or not args.cycle_config then
 		return
 	end
-	local rows = (#G.P_CENTER_POOLS.Edition > 5 and 2 or 1)
+	local edition_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in ipairs(G.P_CENTER_POOLS.Edition) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then edition_pool[#edition_pool+1] = v end
+		end
+	else
+		edition_pool = G.P_CENTER_POOLS.Edition
+	end
+	local rows = (#edition_pool > 5 and 2 or 1)
 	local cols = 5
 	local page = args.cycle_config.current_option
-	if page > math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols)) then
-		page = page - math.ceil(#G.P_CENTER_POOLS.Edition / (rows * cols))
+	if page > math.ceil(#edition_pool / (rows * cols)) then
+		page = page - math.ceil(#edition_pool / (rows * cols))
 	end
 	local count = rows * cols
 	local offset = (rows * cols) * (page - 1)
@@ -802,8 +823,8 @@ G.FUNCS.your_collection_editions_page = function(args)
 				break
 			end
 			local idx = i + (j - 1) * cols + offset
-			if idx > #G.P_CENTER_POOLS["Edition"] then return end
-			local edition = G.P_CENTER_POOLS["Edition"][idx]
+			if idx > #edition_pool then return end
+			local edition = edition_pool[idx]
 			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
 				G.CARD_W, G.CARD_H, G.P_CARDS.empty, edition)
 			if edition.discovered then card:set_edition(edition.key, true, true) end
@@ -1020,6 +1041,14 @@ function create_UIBox_your_collection_enhancements(exit)
 	local deck_tables = {}
 	local rows, cols = 2, 4
 	local page = 0
+	local enhancement_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in ipairs(G.P_CENTER_POOLS.Enhanced) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then enhancement_pool[#enhancement_pool+1] = v end
+		end
+	else
+		enhancement_pool = G.P_CENTER_POOLS.Enhanced
+	end
 
 	G.your_collection = {}
 	for j = 1, rows do
@@ -1036,13 +1065,13 @@ function create_UIBox_your_collection_enhancements(exit)
 		})
 	end
 
-	table.sort(G.P_CENTER_POOLS.Enhanced, function(a, b) return a.order < b.order end)
+	table.sort(enhancement_pool, function(a, b) return a.order < b.order end)
 
-	local count = math.min(cols * rows, #G.P_CENTER_POOLS.Enhanced)
+	local count = math.min(cols * rows, #enhancement_pool)
 	local index = 1 + (rows * cols * page)
 	for j = 1, rows do
 		for i = 1, cols do
-			local center = G.P_CENTER_POOLS.Enhanced[index]
+			local center = enhancement_pool[index]
 			if not center then
 				break
 			end
@@ -1061,7 +1090,7 @@ function create_UIBox_your_collection_enhancements(exit)
 
 	local t = create_UIBox_generic_options({
 		infotip = localize('ml_edition_seal_enhancement_explanation'),
-		back_func = exit or 'your_collection',
+		back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection',
 		snap_back = true,
 		contents = {
 			{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes =
@@ -1069,14 +1098,14 @@ function create_UIBox_your_collection_enhancements(exit)
 		}
 	})
 
-	if #G.P_CENTER_POOLS["Enhanced"] > rows * cols then
-		for i = 1, math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) do
+	if #enhancement_pool > rows * cols then
+		for i = 1, math.ceil(#enhancement_pool / (rows * cols)) do
 			table.insert(enhancement_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
-				tostring(math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))))
+				tostring(math.ceil(#enhancement_pool / (rows * cols))))
 		end
 		t = create_UIBox_generic_options({
 			infotip = localize('ml_edition_seal_enhancement_explanation'),
-			back_func = exit or 'your_collection',
+			back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection',
 			snap_back = true,
 			contents = {
 				{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
@@ -1107,8 +1136,16 @@ G.FUNCS.your_collection_enhancements_page = function(args)
 	local rows = 2
 	local cols = 4
 	local page = args.cycle_config.current_option
-	if page > math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) then
-		page = page - math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))
+	local enhancement_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in ipairs(G.P_CENTER_POOLS.Enhanced) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then enhancement_pool[#enhancement_pool+1] = v end
+		end
+	else
+		enhancement_pool = G.P_CENTER_POOLS.Enhanced
+	end
+	if page > math.ceil(#enhancement_pool / (rows * cols)) then
+		page = page - math.ceil(#enhancement_pool / (rows * cols))
 	end
 	local count = rows * cols
 	local offset = (rows * cols) * (page - 1)
@@ -1130,8 +1167,8 @@ G.FUNCS.your_collection_enhancements_page = function(args)
 				break
 			end
 			local idx = i + (j - 1) * cols + offset
-			if idx > #G.P_CENTER_POOLS.Enhanced then return end
-			local center = G.P_CENTER_POOLS.Enhanced[idx]
+			if idx > #enhancement_pool then return end
+			local center = enhancement_pool[idx]
 			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
 				G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
 			card:set_ability(center, true, true)
