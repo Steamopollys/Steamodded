@@ -46,7 +46,7 @@ function loadAPIs()
             if type(key_cfg ~= 'table') then key_cfg = {} end
             self:modify_key(self.class_prefix, key_cfg.class)
             self:modify_key(self.mod and self.mod.prefix, key_cfg.mod)
-            self:modify_key(self.type and self.type:lower(), not not self.palette and key_cfg.type)
+            if self.set == 'Palette' then self:modify_key(self.type and self.type:lower(), key_cfg.type) end
         end
         local atlas_cfg = self.prefix_config.atlas
         if atlas_cfg ~= false then
@@ -448,7 +448,7 @@ function loadAPIs()
     SMODS.Stake = SMODS.GameObject:extend {
         obj_table = SMODS.Stakes,
         obj_buffer = {},
-        prefix = 'stake',
+        class_prefix = 'stake',
         unlocked = false,
         set = 'Stake',
         atlas = 'chips',
@@ -960,7 +960,7 @@ function loadAPIs()
         config = {},
         set = 'Joker',
         atlas = 'Joker',
-        prefix = 'j',
+        class_prefix = 'j',
         required_params = {
             'key',
         },
@@ -989,7 +989,7 @@ function loadAPIs()
         legendaries = {},
         cost = 3,
         config = {},
-        prefix = 'c',
+        class_prefix = 'c',
         required_params = {
             'set',
             'key',
@@ -1046,7 +1046,7 @@ function loadAPIs()
         available = true,
         pos = { x = 0, y = 0 },
         config = {},
-        prefix = 'v',
+        class_prefix = 'v',
         required_params = {
             'key',
         }
@@ -1064,7 +1064,7 @@ function loadAPIs()
         pos = { x = 0, y = 0 },
         config = {},
         stake = 1,
-        prefix = 'b',
+        class_prefix = 'b',
         required_params = {
             'key',
         },
@@ -1098,7 +1098,7 @@ function loadAPIs()
         required_params = {
             'key',
         },
-        prefix = 'p',
+        class_prefix = 'p',
         set = "Booster",
         atlas = "Booster",
         pos = {x = 0, y = 0},
@@ -1255,7 +1255,7 @@ function loadAPIs()
     SMODS.Blind = SMODS.GameObject:extend {
         obj_table = SMODS.Blinds,
         obj_buffer = {},
-        prefix = 'bl',
+        class_prefix = 'bl',
         debuff = {},
         vars = {},
         dollars = 5,
@@ -1316,7 +1316,7 @@ function loadAPIs()
         -- a badge, so badge_to_key, maybe?
         reverse_lookup = {},
         set = 'Seal',
-        prefix = 's',
+        class_prefix = 's',
         atlas = 'centers',
         pos = { x = 0, y = 0 },
         discovered = false,
@@ -1941,7 +1941,7 @@ function loadAPIs()
         played = 0,
         played_this_round = 0,
         level = 1,
-        prefix = 'h',
+        class_prefix = 'h',
         set = 'PokerHand',
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.poker_hands, self.key, self.loc_txt, 'name')
@@ -1994,7 +1994,7 @@ function loadAPIs()
         vouchers = {},
         restrictions = { banned_cards = {}, banned_tags = {}, banned_other = {} },
         unlocked = function(self) return true end,
-        prefix = 'c',
+        class_prefix = 'c',
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.loc_txt)
         end,
@@ -2054,7 +2054,7 @@ function loadAPIs()
         discovered = false,
         min_ante = nil,
         atlas = 'tags',
-        prefix = 'tag',
+        class_prefix = 'tag',
         set = 'Tag',
         pos = { x = 0, y = 0 },
         config = {},
@@ -2105,7 +2105,7 @@ function loadAPIs()
         required_params = {
             'key',
         },
-        prefix = 'st',
+        class_prefix = 'st',
         rate = 0.3,
         atlas = 'stickers',
         pos = { x = 0, y = 0 },
@@ -2134,7 +2134,7 @@ function loadAPIs()
         obj_buffer = {},
         obj_table = {},
         set = 'Payout Argument',
-        prefix = 'p',
+        class_prefix = 'p',
         required_params = {
             'key'
         },
@@ -2151,7 +2151,7 @@ function loadAPIs()
 
     SMODS.Enhancement = SMODS.Center:extend {
         set = 'Enhanced',
-        prefix = 'm',
+        class_prefix = 'm',
         atlas = 'centers',
         pos = { x = 0, y = 0 },
         required_params = {
@@ -2281,7 +2281,7 @@ function loadAPIs()
         -- atlas only matters for displaying editions in the collection
         atlas = 'Joker',
         pos = { x = 0, y = 0 },
-        prefix = 'e',
+        class_prefix = 'e',
         discovered = false,
         unlocked = true,
         apply_to_float = false,
@@ -2441,7 +2441,7 @@ function loadAPIs()
             'name'
         },
         set = 'Palette',
-        prefix = 'pal',
+        class_prefix = 'pal',
         inject = function(self)
             if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suits" then return end
             if not SMODS.Palettes[self.type] then
@@ -2608,7 +2608,7 @@ function loadAPIs()
             'action',
         },
         set = 'Keybind',
-        prefix = 'keybind',
+        class_prefix = 'keybind',
 
         inject = function(_) end
     }
