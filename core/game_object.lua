@@ -162,7 +162,7 @@ function loadAPIs()
             o.rarity_original = o.rarity
         end
         for k, v in pairs(obj) do o[k] = v end
-        if o.mod and not (conf == false or (conf and conf.atlas == false) or (conf.atlas and conf.atlas == false)) then
+        if o.mod and not (conf == false or (conf and conf.atlas == false)) then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 -- was a new atlas provided with this call?
 
