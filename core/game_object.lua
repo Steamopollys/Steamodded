@@ -55,7 +55,7 @@ function loadAPIs()
         end
         local atlas_cfg = self.prefix_config.atlas
         if atlas_cfg ~= false then
-            if type(atlas_cfg ~= 'table') then key_cfg = {} end
+            if type(atlas_cfg ~= 'table') then atlas_cfg = {} end
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 self:modify_key(self.mod and self.mod.prefix, atlas_cfg[v], v)
             end
