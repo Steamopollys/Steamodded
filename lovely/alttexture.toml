@@ -13,6 +13,22 @@ payload = '''
 self.ASSET_ATLAS[self.asset_atli[i].name].image_data = love.image.newImageData(self.asset_atli[i].path)
 self.ASSET_ATLAS[self.asset_atli[i].name].image = love.graphics.newImage(self.ASSET_ATLAS[self.asset_atli[i].name].image_data, {mipmaps = true, dpiscale = self.SETTINGS.GRAPHICS.texture_scaling})'''
 match_indent = true
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = '''{name = "centers", path = "resources/textures/"..self.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",px=71,py=95},'''
+position = "after"
+payload = '''
+{name = "soul", path = "resources/textures/"..self.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",px=71,py=95},'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = '''self.shared_soul = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS["centers"], self.P_CENTERS.soul.pos)'''
+position = "at"
+payload = '''
+self.shared_soul = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS["soul"], self.P_CENTERS.soul.pos)'''
+match_indent = true
 
 ## Create menu option for card colours
 [[patches]]
@@ -20,12 +36,12 @@ match_indent = true
 target = "functions/UI_definitions.lua"
 pattern = '''local high_scores = UIBox_button{ label = {localize('b_stats')}, button = "high_scores", minw = 5}'''
 position = "after"
-payload = '''local colours = UIBox_button{ label = {"Card Colours"}, button = "card_colours", minw = 5}'''
+payload = '''local colours = UIBox_button{ label = {"Textures"}, button = "card_colours", minw = 5}'''
 match_indent = true
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"
-pattern = '''credits'''
+pattern = '''your_collection,'''
 position = "before"
 payload = '''colours,'''
 match_indent = true
@@ -36,3 +52,12 @@ pattern = '''if not self.bypass_lock and self.config.center.unlocked ~= false an
 position = "before"
 payload = '''if self.base.colour then self.base.colour = G.C.SUITS[self.config.card.suit] end'''
 match_indent = true
+
+# Game:set_render_settings()
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "self.ASSET_ATLAS.Spectral = self.ASSET_ATLAS.Tarot"
+position = 'after'
+match_indent = true
+payload = "if SMODS.booted then SMODS.injectObjects(SMODS.AltTexture) end"

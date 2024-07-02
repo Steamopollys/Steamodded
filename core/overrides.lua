@@ -967,12 +967,12 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 		else
 			for _, v in ipairs(G.P_CENTER_POOLS.Edition) do
 				if v.in_shop then
-					sendDebugMessage(v.key)
 					table.insert(_options, v.key)
 				end
 			end
 		end
 	end
+  
 	for _, v in ipairs(_options) do
 		local edition_option = {}
 		if type(v) == 'string' then
@@ -1011,7 +1011,6 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 		-- sendDebugMessage("Checking for "..v.name.." at "..(1 - (weight_i)/total_weight), "EditionAPI")
 		if edition_poll > 1 - (weight_i) / total_weight then
 			if not (v.name == 'e_negative' and _no_neg) then -- skip return if negative is selected and _no_neg is true
-				-- sendDebugMessage("Matched edition: "..v.name, "EditionAPI")
 				return v.name
 			end
 		end
@@ -1023,87 +1022,87 @@ end
 --#endregion
 --#region enhancements UI
 function create_UIBox_your_collection_enhancements(exit)
-	local deck_tables = {}
-	local rows, cols = 2, 4
-	local page = 0
+    local deck_tables = {}
+    local rows, cols = 2, 4
+    local page = 0
 
-	G.your_collection = {}
-	for j = 1, rows do
-		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 4.25 * G.CARD_W, 1.03 * G.CARD_H,
-			{
-				card_limit = cols,
-				type = 'title',
-				highlight_limit = 0,
-				collection = true
-			})
-		table.insert(deck_tables,
-			{n = G.UIT.R, config = {align = "cm", padding = 0, no_fill = true}, nodes = {
-				{n = G.UIT.O, config = {object = G.your_collection[j]}}}
-		})
+    G.your_collection = {}
+    for j = 1, rows do
+        G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 4.25 * G.CARD_W, 1.03 * G.CARD_H,
+            {
+                card_limit = cols,
+                type = 'title',
+                highlight_limit = 0,
+                collection = true
+            })
+        table.insert(deck_tables, { n = G.UIT.R, config = { align = "cm", padding = 0, no_fill = true },
+            nodes = {{ n = G.UIT.O, config = { object = G.your_collection[j] } }}
+        })
+    end
+
+	table.sort(G.P_CENTER_POOLS.Enhanced, function(a,b) return a.order < b.order end)
+
+    local count = math.min(cols * rows, #G.P_CENTER_POOLS.Enhanced)
+    local index = 1 + (rows * cols * page)
+    for j = 1, rows do
+        for i = 1, cols do
+
+            local center = G.P_CENTER_POOLS.Enhanced[index]
+            if not center then
+                break
+            end
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
+            card:set_ability(center, true, true)
+            G.your_collection[j]:emplace(card)
+            index = index + 1
+        end
+        if index > count then
+            break
+        end
+    end
+
+    local enhancement_options = {}
+
+    if #G.P_CENTER_POOLS["Enhanced"] > rows * cols then
+        for i = 1, math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) do
+            table.insert(enhancement_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+                tostring(math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))))
+        end
 	end
-
-	table.sort(G.P_CENTER_POOLS.Enhanced, function(a, b) return a.order < b.order end)
-
-	local count = math.min(cols * rows, #G.P_CENTER_POOLS.Enhanced)
-	local index = 1 + (rows * cols * page)
-	for j = 1, rows do
-		for i = 1, cols do
-			local center = G.P_CENTER_POOLS.Enhanced[index]
-			if not center then
-				break
-			end
-			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y, G
-			.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
-			card:set_ability(center, true, true)
-			G.your_collection[j]:emplace(card)
-			index = index + 1
-		end
-		if index > count then
-			break
-		end
-	end
-
-	local enhancement_options = {}
-
-	local t = create_UIBox_generic_options({
-		infotip = localize('ml_edition_seal_enhancement_explanation'),
-		back_func = exit or 'your_collection',
-		snap_back = true,
-		contents = {
-			{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes =
-				deck_tables}
+    local t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true,
+            contents = {{ n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 },
+                nodes = deck_tables
+            },
+			{ n = G.UIT.R, config = { align = "cm", padding = -0.2},
+                nodes = {
+					(enhancement_options[1] and { n = G.UIT.R, config = { align = "cm" },
+						nodes = {create_option_cycle({
+							options = enhancement_options,
+							w = 4.5,
+							cycle_shoulders = true,
+							opt_callback = 'your_collection_enhancements_page',
+							current_option = 1,
+							colour = G.C.RED,
+							no_pips = true
+					})}}), 
+					(SMODS.AltTextures["Enhanced"] and #SMODS.AltTextures["Enhanced"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
+						nodes = {SMODS.GUI.createOptionSelector({
+							w = 4.5,
+							scale = 0.8,
+							colour = G.C.BLUE,
+							options = SMODS.AltTextures["Enhanced"].names,
+							opt_callback = "update_recolor",
+							current_option = G.SETTINGS.selected_texture["Enhanced"],
+							type = "Enhanced",
+					})}}),
+					
+				}
+            }
 		}
-	})
+    })
+    
+    return t
 
-	if #G.P_CENTER_POOLS["Enhanced"] > rows * cols then
-		for i = 1, math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols)) do
-			table.insert(enhancement_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
-				tostring(math.ceil(#G.P_CENTER_POOLS.Enhanced / (rows * cols))))
-		end
-		t = create_UIBox_generic_options({
-			infotip = localize('ml_edition_seal_enhancement_explanation'),
-			back_func = exit or 'your_collection',
-			snap_back = true,
-			contents = {
-				{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
-					deck_tables},
-				{n = G.UIT.R, config = {align = "cm"}, nodes = {
-					create_option_cycle({
-						options = enhancement_options,
-						w = 4.5,
-						cycle_shoulders = true,
-						opt_callback = 'your_collection_enhancements_page',
-						focus_args = { snap_to = true, nav = 'wide' },
-						current_option = 1,
-						r = rows,
-						c = cols,
-						colour = G.C.RED,
-						no_pips = true
-					})}}
-			}
-		})
-	end
-	return t
 end
 
 G.FUNCS.your_collection_enhancements_page = function(args)
@@ -1146,4 +1145,316 @@ G.FUNCS.your_collection_enhancements_page = function(args)
 		end
 	end
 end
+--#endregion
+--#region AltTexture UI
+-- Menu button click effect
+G.FUNCS.card_colours = function(e)
+    G.SETTINGS.paused = true
+    G.FUNCS.overlay_menu{
+		definition = create_alt_texture_Box(),
+    }
+end
+
+-- Create dynamic UIBox for settings
+create_alt_texture_Box = function()
+	local selectors = SMODS.GUI.DynamicUIManager.initTab({updateFunctions = {cardsList = G.FUNCS.dynamic_card_colours_content,},staticPageDefinition = static_texture_settings()})
+	return (create_UIBox_generic_options({ back_func = 'options', contents = {
+		{n = G.UIT.R, w = 2, config = { minh = 7, padding = 0, align = "bm" },
+			nodes = selectors.nodes}
+	}}))
+end
+
+-- Static view with object to be updated dynamically
+function static_texture_settings()
+	local AltTextures = {}
+	for i = 1, #SMODS.AltTextures.Types do
+		if #SMODS.AltTextures[SMODS.AltTextures.Types[i]].names > 1 then
+			table.insert(AltTextures, SMODS.AltTextures.Types[i])
+		end
+	end
+	local pages = {}
+	if #AltTextures > 4 then
+        for i = 1, math.ceil(#AltTextures / 4) do
+            table.insert(pages, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+                tostring(math.ceil(#AltTextures / 4)))
+        end
+	end
+   	return { n = G.UIT.C, config = { align = "cm" }, nodes = {					
+		-- add some empty rows for spacing
+		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
+		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
+		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
+		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
+			-- list of 4 mods on the current page
+		{ n = G.UIT.R, config = { padding = 0.05, align = "cm", minh = 2, }, nodes = {
+			{n=G.UIT.O, config={align = "cm", id = 'cardsList', object = Moveable()}},
+		}},
+
+		-- another empty row for spacing
+		{ n = G.UIT.R, config = { align = "cm", minh = 1.6,  }, nodes = {} },
+
+		-- page selector
+		SMODS.GUI.createOptionSelector({label = "", scale = 0.8, options = pages, opt_callback = 'dynamic_card_colours_content', no_pips = true, current_option = (
+			localize('k_page') .. ' ' .. tostring(1) .. '/' .. tostring(math.ceil(#AltTextures / 4)))})
+	}}
+end
+
+function G.FUNCS.dynamic_card_colours_content(args)
+	if not args or not args.cycle_config then return end
+	SMODS.GUI.DynamicUIManager.updateDynamicAreas({
+		["cardsList"] = dynamic_card_colours(args.cycle_config.current_option)
+	})
+end
+
+-- Dynamic content for list
+function dynamic_card_colours(page)
+	local AltTextures = {}
+	for i = 1, #SMODS.AltTextures.Types do
+		if #SMODS.AltTextures[SMODS.AltTextures.Types[i]].names > 1 then
+			table.insert(AltTextures, SMODS.AltTextures.Types[i])
+		end
+	end
+	if page > math.ceil(#AltTextures / 4) then
+        page = page - math.ceil(#AltTextures / 4)
+    end
+    local count = 4
+    local offset = (4 * (page - 1)) + 1
+	local dynamic_selectors = {}
+	for i=offset, page*count do
+		if i > #AltTextures then break end
+		local dynamic_type = AltTextures[i]
+		local v = SMODS.AltTextures[dynamic_type]
+        if true then
+            table.insert(dynamic_selectors,
+			SMODS.GUI.createOptionSelector({
+				w = 4,
+				scale = 0.8,
+				label = dynamic_type.." colours",
+				colour = G.C.BLUE,
+				options = v.names or "Default",
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture[dynamic_type] or "Default",
+				type = dynamic_type
+			}))
+		end
+    end
+	return { n = G.UIT.R, config = { r = 0.1, align = "cm", }, nodes = dynamic_selectors }
+end
+
+
+-- Add selector buttons to collection views and deck view
+local deck_view_ui = G.UIDEF.view_deck
+function G.UIDEF.view_deck(_show_remaining)
+	local t = deck_view_ui(_show_remaining)
+	local nodes_present = 0
+	for _,_ in pairs(t.nodes[3].nodes) do
+		nodes_present = nodes_present + 1
+	end
+	print(nodes_present)
+	if nodes_present < 1 then
+		table.insert(t.nodes[3].nodes, {n=G.UIT.R, config={align = "cm"}, nodes={
+			{n=G.UIT.C, config={padding = 0.3, r = 0.1}, nodes = {}},
+			{n=G.UIT.T, config={text ="",colour = G.C.WHITE, scale =0.3}},
+		  }})
+	end
+	if nodes_present < 2 then
+		table.insert(t.nodes[3].nodes, {n=G.UIT.R, config={align = "cm"}, nodes={
+			{n=G.UIT.C, config={padding = 0.3, r = 0.1}, nodes = {}},
+			{n=G.UIT.T, config={text ="",colour = G.C.WHITE, scale =0.3}},
+		  }})
+	end
+	local selector = { n = G.UIT.R, config = { align = "tr", padding = -0.7, minw = 15},
+		nodes = {
+			(SMODS.AltTextures["Suit"] and #SMODS.AltTextures["Suit"].names > 1 and { n = G.UIT.C,
+				nodes = {SMODS.GUI.createOptionSelector({
+					w = 3,
+					scale = 0.8,
+					text_scale = 0.38,
+					colour = G.C.BLUE,
+					options = SMODS.AltTextures["Suit"].names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture["Suit"],
+					type = "Suit",
+			})}} or {n = G.UIT.C}),
+		}
+	}
+	-- t.nodes[3].nodes[2].nodes = {}
+	-- table.insert(t.nodes[3].nodes[2].nodes, 1, spacer)
+	table.insert(t.nodes[3].nodes, selector)
+	
+	return t
+end
+
+local UIBox_collection_deck_ref = create_UIBox_your_collection_decks
+function create_UIBox_your_collection_decks()
+	local t = UIBox_collection_deck_ref()
+	local selector = { n = G.UIT.R, config = { align = "cm", padding = -0.2},
+		nodes = { 
+			(SMODS.AltTextures["Back"] and #SMODS.AltTextures["Back"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
+				nodes = {SMODS.GUI.createOptionSelector({
+					w = 4.5,
+					scale = 0.8,
+					colour = G.C.BLUE,
+					options = SMODS.AltTextures["Back"].names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture["Back"],
+					type = "Back",
+			})}} or {n = G.UIT.R}),
+		}
+	}
+	table.insert(t.nodes[1].nodes[1].nodes, 2, selector)
+
+	return t
+end
+
+local blinds_UI = create_UIBox_your_collection_blinds
+function create_UIBox_your_collection_blinds(exit)
+	local t = blinds_UI(exit)
+	local blind_tab = {}
+	for k, v in pairs(G.P_BLINDS) do
+		blind_tab[#blind_tab+1] = v
+	end
+	print(#blind_tab)
+	local selector = { n = G.UIT.R, config = { align = "cm", padding = -0.2},
+		nodes = {
+			{ n = G.UIT.R, config = {minh = 0.4}},
+			(#blind_tab > 54 and { n = G.UIT.R, config = { align = "cm" },
+				nodes = {create_option_cycle({
+					options = {"NYI"},
+					w = 4.5,
+					scale = 0.8,
+					cycle_shoulders = true,
+					-- opt_callback = 'your_collection_blinds_page',
+					current_option = 1,
+					colour = G.C.RED,
+					no_pips = true
+			})}} or { n = G.UIT.R, config = {minh = 1}}), 
+			(SMODS.AltTextures["Blind"] and #SMODS.AltTextures["Blind"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
+				nodes = {SMODS.GUI.createOptionSelector({
+					w = 4.5,
+					scale = 0.6,
+					colour = G.C.BLUE,
+					options = SMODS.AltTextures["Blind"].names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture["Blind"],
+					type = "Blind",
+			})}} or { n = G.UIT.R }),
+		}
+	}
+	table.insert(t.nodes[1].nodes[1].nodes[1].nodes[1].nodes[2].nodes, selector)		
+	return t
+end
+
+local joker_ui = create_UIBox_your_collection_jokers
+function create_UIBox_your_collection_jokers()
+	local t = joker_ui()
+	local selector = (SMODS.AltTextures["Joker"] and #SMODS.AltTextures["Joker"].names > 1 and
+	{ n = G.UIT.R, config = { align = "cm", padding = -0.3 },
+		nodes = {SMODS.GUI.createOptionSelector({
+				w = 4.5,
+				scale = 0.8,
+				colour = G.C.BLUE,
+				options = SMODS.AltTextures["Joker"].names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture["Joker"],
+				type = "Joker",
+			})
+		}
+	}
+	or {n = G.UIT.R})
+	table.insert(t.nodes[1].nodes[1].nodes[1].nodes, selector)
+	return t
+end
+
+local tag_ui = create_UIBox_your_collection_tags
+function create_UIBox_your_collection_tags()
+	local t = tag_ui()
+	local selector = (SMODS.AltTextures["Tag"] and #SMODS.AltTextures["Tag"].names > 1 and
+	{ n = G.UIT.R, config = { align = "cm", padding = -0.3 },
+		nodes = {SMODS.GUI.createOptionSelector({
+				w = 4.5,
+				scale = 0.7,
+				colour = G.C.BLUE,
+				options = SMODS.AltTextures["Tag"].names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture["Tag"],
+				type = "Tag",
+			}), {n = G.UIT.R, config = {minh = 0.5}}
+		}
+	}
+	or {n = G.UIT.R})
+	table.insert(t.nodes[1].nodes[1].nodes, 2, selector)
+	return t
+end
+
+local voucher_ui = create_UIBox_your_collection_vouchers
+function create_UIBox_your_collection_vouchers()
+	local t = voucher_ui()
+	local selector = 
+		(SMODS.AltTextures["Voucher"] and #SMODS.AltTextures["Voucher"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = -0.3 },
+			nodes = {SMODS.GUI.createOptionSelector({
+				w = 4.5,
+				scale = 0.8,
+				colour = G.C.BLUE,
+				options = SMODS.AltTextures["Voucher"].names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture["Voucher"],
+				type = "Voucher",
+		})}} or { n = G.UIT.R})
+	table.insert(t.nodes[1].nodes[1].nodes[1].nodes, selector)
+	return t
+end
+
+local booster_ui = create_UIBox_your_collection_boosters
+function create_UIBox_your_collection_boosters()
+	local t = booster_ui()
+	local selector = 
+		(SMODS.AltTextures["Booster"] and #SMODS.AltTextures["Booster"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = -0.3 },
+			nodes = {SMODS.GUI.createOptionSelector({
+				w = 4.5,
+				scale = 0.8,
+				colour = G.C.BLUE,
+				options = SMODS.AltTextures["Booster"].names,
+				opt_callback = "update_recolor",
+				current_option = G.SETTINGS.selected_texture["Booster"],
+				type = "Booster",
+		})}} or { n = G.UIT.R})
+	table.insert(t.nodes[1].nodes[1].nodes[1].nodes, selector)
+	return t
+end
+
+local seals_ui = create_UIBox_your_collection_seals
+function create_UIBox_your_collection_seals(exit)
+	local t = seals_ui(exit)
+	
+	local selector = { n = G.UIT.R, config = { align = "cm", padding = -0.2},
+		nodes = {
+			{ n = G.UIT.R, config = {minh = 0.4}},
+			(#G.P_CENTER_POOLS.Seal > 4 and { n = G.UIT.R, config = { align = "cm" },
+				nodes = {create_option_cycle({
+					options = {"NYI"},
+					w = 4.5,
+					scale = 0.8,
+					cycle_shoulders = true,
+					-- opt_callback = 'your_collection_blinds_page',
+					current_option = 1,
+					colour = G.C.RED,
+					no_pips = true
+			})}} or { n = G.UIT.R }), 
+			(SMODS.AltTextures["Seal"] and #SMODS.AltTextures["Seal"].names > 1 and { n = G.UIT.R, config = { align = "cm", padding = 0.1 },
+				nodes = {SMODS.GUI.createOptionSelector({
+					w = 4.5,
+					scale = 0.6,
+					colour = G.C.BLUE,
+					options = SMODS.AltTextures["Seal"].names,
+					opt_callback = "update_recolor",
+					current_option = G.SETTINGS.selected_texture["Seal"],
+					type = "Seal",
+			})}} or { n = G.UIT.R }),
+		}
+	}
+	table.insert(t.nodes[1].nodes[1].nodes[1].nodes, selector)		
+	return t
+end
+
 --#endregion
