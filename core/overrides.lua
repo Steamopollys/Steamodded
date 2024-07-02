@@ -31,6 +31,16 @@ G.FUNCS.HUD_blind_debuff = function(e)
 		end
 	end
 	e.UIBox:recalculate()
+	assert(G.HUD_blind == e.UIBox)
+	if G.TIMERS.REAL - (HUD_blind_debuff_last_print_time or 0) >= 4 then
+		print("major T:")
+		print(tprint(G.HUD_blind.role.major.T))
+		print("HUD_blind T:")
+		print(tprint(G.HUD_blind.T))
+		print("HUD_blind topology:")
+		print(G.HUD_blind:print_topology(0))
+		HUD_blind_debuff_last_print_time = G.TIMERS.REAL
+	end
 end
 --#endregion
 --#region stakes UI

@@ -57,3 +57,15 @@ if G.GAME.blind.name and G.GAME.blind.name ~= '' then
     G.HUD_blind.alignment.offset.y = 0
 end'''
 line_prepend = '$indent'
+
+## Remove incorrect check for Moveable alignment change
+# Moveable:align_to_major()
+[[patches]]
+[patches.regex]
+target = 'engine/moveable.lua'
+pattern = '''
+(?<indent>[\t ]*)if +self\.alignment\.prev_offset\.x == self\.alignment\.offset\.x[\s\S]*?return end
+'''
+position = 'at'
+payload = 'if not self.alignment.type_list then return end'
+line_prepend = '$indent'
