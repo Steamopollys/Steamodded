@@ -399,10 +399,10 @@ payload = '''
 local nc
 if card.ability.consumeable then
     local obj = card.config.center
-    	if obj.keep_on_use and type(obj.keep_on_use) == 'function' then
-        	nc = obj:keep_on_use(card)
-      	end
-    end
+	if obj.keep_on_use and type(obj.keep_on_use) == 'function' then
+		nc = obj:keep_on_use(card)
+	end
+end
 if not nc and card.area then card.area:remove_card(card) end'''
 
 [[patches]]
