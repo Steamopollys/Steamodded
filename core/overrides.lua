@@ -1160,11 +1160,17 @@ end
 
 -- Static view with object to be updated dynamically
 function static_texture_settings()
+	local AltTextures = {}
+	for i = 1, #SMODS.AltTextures.Types do
+		if #SMODS.AltTextures[SMODS.AltTextures.Types[i]].names > 1 then
+			table.insert(AltTextures, SMODS.AltTextures.Types[i])
+		end
+	end
 	local pages = {}
-	if #SMODS.AltTextures.Types > 4 then
-        for i = 1, math.ceil(#SMODS.AltTextures.Types / 4) do
+	if #AltTextures > 4 then
+        for i = 1, math.ceil(#AltTextures / 4) do
             table.insert(pages, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
-                tostring(math.ceil(#SMODS.AltTextures.Types / 4)))
+                tostring(math.ceil(#AltTextures / 4)))
         end
 	end
    	return { n = G.UIT.C, config = { align = "cm" }, nodes = {					
@@ -1183,7 +1189,7 @@ function static_texture_settings()
 
 		-- page selector
 		SMODS.GUI.createOptionSelector({label = "", scale = 0.8, options = pages, opt_callback = 'dynamic_card_colours_content', no_pips = true, current_option = (
-			localize('k_page') .. ' ' .. tostring(1) .. '/' .. tostring(math.ceil(#SMODS.AltTextures.Types / 3)))})
+			localize('k_page') .. ' ' .. tostring(1) .. '/' .. tostring(math.ceil(#AltTextures / 4)))})
 	}}
 end
 
@@ -1196,26 +1202,32 @@ end
 
 -- Dynamic content for list
 function dynamic_card_colours(page)
-	if page > math.ceil(#SMODS.AltTextures.Types / 4) then
-        page = page - math.ceil(#SMODS.AltTextures.Types / 4)
+	local AltTextures = {}
+	for i = 1, #SMODS.AltTextures.Types do
+		if #SMODS.AltTextures[SMODS.AltTextures.Types[i]].names > 1 then
+			table.insert(AltTextures, SMODS.AltTextures.Types[i])
+		end
+	end
+	if page > math.ceil(#AltTextures / 4) then
+        page = page - math.ceil(#AltTextures / 4)
     end
     local count = 4
     local offset = (4 * (page - 1)) + 1
 	local dynamic_selectors = {}
 	for i=offset, page*count do
-		if i > #SMODS.AltTextures.Types then break end
-		local dynamic_type = SMODS.AltTextures.Types[i]
+		if i > #AltTextures then break end
+		local dynamic_type = AltTextures[i]
 		local v = SMODS.AltTextures[dynamic_type]
-        if #v.names > 1 then
+        if true then
             table.insert(dynamic_selectors,
 			SMODS.GUI.createOptionSelector({
 				w = 4,
 				scale = 0.8,
 				label = dynamic_type.." colours",
 				colour = G.C.BLUE,
-				options = v.names,
+				options = v.names or "Default",
 				opt_callback = "update_recolor",
-				current_option = G.SETTINGS.selected_texture[dynamic_type],
+				current_option = G.SETTINGS.selected_texture[dynamic_type] or "Default",
 				type = dynamic_type
 			}))
 		end
