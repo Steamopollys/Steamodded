@@ -9,13 +9,18 @@
 G.FUNCS.HUD_blind_debuff = function(e)
 	local scale = 0.4
 	local num_lines = #G.GAME.blind.loc_debuff_lines
-	local allowed_h = 2.74 - 1.85
-	local minh = 0.3
-	e.config.padding = (allowed_h - num_lines * minh) / (num_lines + 1)
-	e.config.padding = math.min(e.config.padding, 0.05) -- at most 0.05
+	while G.GAME.blind.loc_debuff_lines[num_lines] == '' do
+		num_lines = num_lines - 1
+	end
+	local padding = 0.05
+	if num_lines > 5 then
+		local excess_height = (0.3 + padding)*(num_lines - 5)
+		padding = padding - excess_height / (num_lines + 1)
+	end
+	e.config.padding = padding
 	if num_lines > #e.children then
 		for i = #e.children+1, num_lines do
-			local node_def = {n = G.UIT.R, config = {align = "cm", minh = minh, maxw = 4.2}, nodes = {
+			local node_def = {n = G.UIT.R, config = {align = "cm", minh = 0.3, maxw = 4.2}, nodes = {
 				{n = G.UIT.T, config = {ref_table = G.GAME.blind.loc_debuff_lines, ref_value = i, scale = scale * 0.9, colour = G.C.UI.TEXT_LIGHT}}}}
 			e.UIBox:set_parent_child(node_def, e)
 		end
@@ -26,6 +31,16 @@ G.FUNCS.HUD_blind_debuff = function(e)
 		end
 	end
 	e.UIBox:recalculate()
+	assert(G.HUD_blind == e.UIBox)
+	if G.TIMERS.REAL - (HUD_blind_debuff_last_print_time or 0) >= 4 then
+		print("major T:")
+		print(tprint(G.HUD_blind.role.major.T))
+		print("HUD_blind T:")
+		print(tprint(G.HUD_blind.T))
+		print("HUD_blind topology:")
+		print(G.HUD_blind:print_topology(0))
+		HUD_blind_debuff_last_print_time = G.TIMERS.REAL
+	end
 end
 --#endregion
 --#region stakes UI
