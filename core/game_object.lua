@@ -125,6 +125,7 @@ function loadAPIs()
 
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
     function SMODS.GameObject:take_ownership(key, obj, silent)
+        -- TODO declutter this and try to integrate with add_prefixes
         SMODS.merge_defaults(obj.prefix_config, self.prefix_config)
         local conf = obj.prefix_config or self.prefix_config
         local no_class_prefix = not self.class_prefix or
@@ -161,12 +162,13 @@ function loadAPIs()
             o.rarity_original = o.rarity
         end
         for k, v in pairs(obj) do o[k] = v end
-        if o.mod and not o.raw_atlas_key and not o.mod.omit_mod_prefix then
+        if o.mod and not (conf == false or (conf and conf.atlas == false) or (conf.atlas and conf.atlas == false)) then
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 -- was a new atlas provided with this call?
+
                 if obj[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then
-                    o[v] = ('%s_%s'):format(
-                        SMODS.current_mod.prefix, o[v])
+                    local atlas_cfg = conf and conf.atlas and conf.atlas[v] or {}
+                    o:modify_key(SMODS.current_mod and SMODS.current_mod.prefix, atlas_cfg[v], v)
                 end
             end
         end
@@ -477,7 +479,7 @@ function loadAPIs()
                 -- Inject stake in the correct spot
                 local count = #G.P_CENTER_POOLS[self.set] + 1
                 if self.above_stake then
-                    count = G.P_STAKES[self.prefix .. "_" .. self.above_stake].stake_level + 1
+                    count = G.P_STAKES[self.class_prefix .. "_" .. self.above_stake].stake_level + 1
                 end
                 self.order = count
                 self.stake_level = count
@@ -520,7 +522,7 @@ function loadAPIs()
             for _, v in pairs(self.applied_stakes) do
                 any_applied = true
                 applied_text = applied_text ..
-                    localize { set = self.set, key = self.prefix .. '_' .. v, type = 'name_text' } .. ', '
+                    localize { set = self.set, key = self.class_prefix .. '_' .. v, type = 'name_text' } .. ', '
             end
             applied_text = applied_text:sub(1, -3)
             if not any_applied then
