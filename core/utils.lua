@@ -388,6 +388,14 @@ function serialize_string(s)
 	return string.format("%q", s)
 end
 
+-- fill in only the values from t2 that don't exist in t1
+function SMODS.merge_defaults(t, defaults)
+    if not (t and defaults) then return end
+    for k, v in pairs(defaults) do
+        t[k] = t[k] or v
+    end
+end
+
 --#region palettes
 G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
 G.PALETTE = {}
