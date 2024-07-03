@@ -2563,6 +2563,33 @@ function loadAPIs()
         inject = create_default_atlas
     })
 
+    -------------------------------------------------------------------------------------------------
+    ------- API CODE GameObject.Keybind
+    -------------------------------------------------------------------------------------------------
+    SMODS.Keybinds = {}
+    SMODS.Keybind = SMODS.GameObject:extend {
+        obj_table = SMODS.Keybinds,
+        obj_buffer = {},
+
+        -- key_pressed = 'x',
+        held_keys = {}, -- other key(s) that need to be held
+        -- action = function(controller)
+        --     print("Keybind pressed")
+        -- end,
+
+        -- TODO : option to specify if keybind activates on hold, press or release
+
+        required_params = {
+            'key',
+            'key_pressed',
+            'action',
+        },
+        set = 'Keybind',
+        prefix = 'keybind',
+
+        inject = function(_) end
+    }
+
     
     -------------------------------------------------------------------------------------------------
     ----- INTERNAL API CODE GameObject._Loc_Post
