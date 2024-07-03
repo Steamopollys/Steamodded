@@ -1153,7 +1153,7 @@ end
 create_alt_texture_Box = function()
 	local selectors = SMODS.GUI.DynamicUIManager.initTab({updateFunctions = {cardsList = G.FUNCS.dynamic_card_colours_content,},staticPageDefinition = static_texture_settings()})
 	return (create_UIBox_generic_options({ back_func = 'options', contents = {
-		{n = G.UIT.R, w = 2, config = { minh = 7, padding = 0, align = "bm" },
+		{n = G.UIT.R, config = { minh = 7, minw = 7, padding = 0, align = "bm", colour = G.C.BLACK, r=0.1 },
 			nodes = selectors.nodes}
 	}}))
 end
@@ -1173,14 +1173,14 @@ function static_texture_settings()
                 tostring(math.ceil(#AltTextures / 4)))
         end
 	end
-   	return { n = G.UIT.C, config = { align = "cm" }, nodes = {					
+   	return { n = G.UIT.C, config = { align = "cm"}, nodes = {					
 		-- add some empty rows for spacing
 		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
 		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
 		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
 		{ n = G.UIT.R, config = { align = "cm", padding = 0.1 }, nodes = {} },
 			-- list of 4 mods on the current page
-		{ n = G.UIT.R, config = { padding = 0.05, align = "cm", minh = 2, }, nodes = {
+		{ n = G.UIT.R, config = { padding = 0.05, align = "cm", minh = 2}, nodes = {
 			{n=G.UIT.O, config={align = "cm", id = 'cardsList', object = Moveable()}},
 		}},
 
