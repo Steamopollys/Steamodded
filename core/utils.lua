@@ -392,7 +392,9 @@ end
 function SMODS.merge_defaults(t, defaults)
     if not (t and defaults) then return end
     for k, v in pairs(defaults) do
-        t[k] = t[k] or v
+        if t[k] == nil then
+            t[k] = v
+        end
     end
 end
 
