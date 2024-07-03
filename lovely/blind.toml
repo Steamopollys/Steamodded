@@ -156,8 +156,8 @@ end'''
 [[patches]]
 [patches.pattern]
 target = 'blind.lua'
-pattern = 'local loc_vars = nil'
-position = 'after'
+pattern = "local loc_target = localize{type = 'raw_descriptions', key = self.config.blind.key, set = 'Blind', vars = loc_vars or self.config.blind.vars}"
+position = 'before'
 match_indent = true
 payload = '''
 local obj = self.config.blind
@@ -259,13 +259,13 @@ match_indent = true
 position = 'at'
 payload = '''
 local loc_vars = nil
+if blind_choice.config.name == 'The Ox' then
+   	loc_vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
+end
 local obj = blind_choice.config
 if obj.loc_vars and _G['type'](obj.loc_vars) == 'function' then
 	local res = obj:loc_vars() or {}
 	loc_vars = res.vars or {}
-end
-if blind_choice.config.name == 'The Ox' then
-   	loc_vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
 end
 local loc_target = localize{type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = loc_vars or blind_choice.config.vars}'''
 
