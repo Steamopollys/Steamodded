@@ -1161,9 +1161,9 @@ end
 -- Static view with object to be updated dynamically
 function static_texture_settings()
 	local AltTextures = {}
-	for i = 1, #SMODS.AltTextures.Types do
-		if #SMODS.AltTextures[SMODS.AltTextures.Types[i]].names > 1 then
-			table.insert(AltTextures, SMODS.AltTextures.Types[i])
+	for i = 1, #SMODS.AltTexturesTypes do
+		if #SMODS.AltTextures[SMODS.AltTexturesTypes[i]].names > 1 then
+			table.insert(AltTextures, SMODS.AltTexturesTypes[i])
 		end
 	end
 	local pages = {}
@@ -1203,9 +1203,9 @@ end
 -- Dynamic content for list
 function dynamic_card_colours(page)
 	local AltTextures = {}
-	for i = 1, #SMODS.AltTextures.Types do
-		if #SMODS.AltTextures[SMODS.AltTextures.Types[i]].names > 1 then
-			table.insert(AltTextures, SMODS.AltTextures.Types[i])
+	for i = 1, #SMODS.AltTexturesTypes do
+		if #SMODS.AltTextures[SMODS.AltTexturesTypes[i]].names > 1 then
+			table.insert(AltTextures, SMODS.AltTexturesTypes[i])
 		end
 	end
 	if page > math.ceil(#AltTextures / 4) then

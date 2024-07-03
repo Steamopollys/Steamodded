@@ -391,7 +391,6 @@ end
 --#region alt textures
 G.SETTINGS.selected_texture = G.SETTINGS.selected_texture or {}
 G.PALETTE = {}
-G.C.AltTexture = HEX("277a97")
 default_palettes = { -- Default palettes mostly used for auto generated palettes
 	Spectral = { 
 	"344245","4f6367","bfc7d5","96aacb",
@@ -412,6 +411,109 @@ function create_default_atlas(self)
     G[self.atlas_table][self.key_noloc or self.key] = self
   end
 
+  function create_palette(self)
+    SMODS.AltTextures[self.type][self.name].old_colours = {}
+    SMODS.AltTextures[self.type][self.name].new_colours = {}
+    
+    -- Grab the default palette if one is not given (mostly used for auto generated palettes)
+    if not self.old_colours then self.old_colours = default_palettes[self.type] end
+    for i=1, #self.old_colours do
+        SMODS.AltTextures[self.type][self.name].old_colours[i] = type(self.old_colours[i]) == "string" and HEX(self.old_colours[i]) or self.old_colours[i]
+        SMODS.AltTextures[self.type][self.name].new_colours[i] = type(self.new_colours[i]) == "string" and HEX(self.new_colours[i]) or self.new_colours[i]
+    end
+    
+    if not G.SETTINGS.selected_texture[self.type] then
+        G.SETTINGS.selected_texture[self.type] = SMODS.AltTextures[self.type][self.name]
+    end
+
+    create_atlas(self.type, self.name)
+end
+
+function create_default(type)
+    table.insert(SMODS.AltTextures[type].names, "Default")
+    SMODS.AltTextures[type]["Default"] = {
+        name = "Default",
+        order = 1,
+        old_colours = {},
+        new_colours = {},
+    }
+    create_atlas(type, "Default")
+end
+
+function create_atlas(type, name)
+    local atlas_keys = {}
+    if type == "Suit" then
+        atlas_keys = {"cards_1", "ui_1"}
+    elseif type == "Seal" then
+        atlas_keys = {"centers"}
+    elseif type == "Tag" then
+        atlas_keys = {"tags"}
+    elseif type == "Blind" then
+        atlas_keys = {"Blind"}
+    else
+        for _,v in pairs(G.P_CENTER_POOLS[type]) do
+            atlas_keys[v.atlas or type] = v.atlas or type
+        end
+        if type == "Spectral" then atlas_keys["soul"] = "soul" end
+    end
+    G.PALETTE = SMODS.AltTextures[type][name]
+    for _,v in pairs(atlas_keys) do
+        G.ASSET_ATLAS[v][name] = {image_data = G.ASSET_ATLAS[v].image_data:clone()}
+        if #SMODS.AltTextures[type][name].old_colours > 0 then 
+            G.ASSET_ATLAS[v][name].image_data:mapPixel(G.FUNCS.recolour_image)
+        end
+        G.ASSET_ATLAS[v][name].image = love.graphics.newImage(G.ASSET_ATLAS[v][name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+    end
+end
+
+function create_new_atlas(self)
+    SMODS.AltTextures[self.type][self.name].old_colours = {}
+    SMODS.AltTextures[self.type][self.name].new_colours = {}
+    create_atlas(self.type, self.name)
+    local atlas_key
+    if self.type == "Suit" then
+        atlas_key = "cards_1"
+        G.ASSET_ATLAS["ui_1"][self.name] = {image_data = G.ASSET_ATLAS["ui_1"]["Default"].image_data:clone()}
+        G.PALETTE = {
+            old_colours = {HEX("235955"),HEX("3c4368"),HEX("f06b3f"),HEX("f03464")},
+            new_colours = {HEX(SMODS.AltTextures[self.type][self.name].suits.Clubs), HEX(SMODS.AltTextures[self.type][self.name].suits.Spades), HEX(SMODS.AltTextures[self.type][self.name].suits.Diamonds), HEX(SMODS.AltTextures[self.type][self.name].suits.Hearts)}
+        }
+        G.ASSET_ATLAS["ui_1"][self.name].image_data:mapPixel(G.FUNCS.recolour_image)
+        G.ASSET_ATLAS["ui_1"][self.name].image = love.graphics.newImage(G.ASSET_ATLAS["ui_1"][self.name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+    elseif self.type == "Spectral" then
+        atlas_key = "Spectral"
+        if G.ASSET_ATLAS[self.atlas_key.."_e"] then
+            G.ASSET_ATLAS["soul"][self.name] = G.ASSET_ATLAS[self.atlas_key.."_e"]
+        else
+            G.ASSET_ATLAS["soul"][self.name] = {image_data = G.ASSET_ATLAS["soul"].image_data:clone()}
+            G.ASSET_ATLAS["soul"][self.name].image = love.graphics.newImage(G.ASSET_ATLAS["soul"][self.name].image_data, {mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling})
+        end
+    elseif self.type == "Seal" then
+        atlas_key = "centers"
+    elseif self.type == "Tag" then
+        atlas_key = "tags"
+    elseif self.type == "Blind" then
+        atlas_key = "Blind"
+    else
+        if G.ASSET_ATLAS[self.type] then
+            atlas_key = self.type
+        else
+            for _,v in pairs(G.P_CENTER_POOLS[self.type]) do
+                atlas_key = v.atlas
+            end
+        end
+    end
+    G.ASSET_ATLAS[atlas_key][self.name] = G.ASSET_ATLAS[self.atlas_key]
+end
+
+-- Call the `generate_colours` function of the appropriate type
+function create_colours(type, base_colours)
+    if SMODS.ConsumableTypes[type].generate_colours then
+        return SMODS.ConsumableTypes[type]:generate_colours(base_colours)
+    end
+    return {(type(base_colours) == 'table' and HEX(base_colours[1]) or HEX(base_colours))}
+end 
+
 -- Called from option selectors that control each type
 G.FUNCS.update_recolor = function(args)
     G.SETTINGS.selected_texture[args.cycle_config.type] = args.to_val
@@ -419,7 +521,7 @@ G.FUNCS.update_recolor = function(args)
 	G.FUNCS.update_atlas(args.cycle_config.type)
 end
 
--- Set the atlases of all cards of the correct type to be the new palette
+-- Set the atlases of all cards of the correct type to be the new texture
 G.FUNCS.update_atlas = function(type)
     local name = G.SETTINGS.selected_texture[type]
 	if not SMODS.AltTextures[type][name] then return end
@@ -438,9 +540,6 @@ G.FUNCS.update_atlas = function(type)
     elseif type == "Blind" then
         if G.ASSET_ATLAS[type][name] then
             G.ANIMATION_ATLAS["blind_chips"].image = G.ASSET_ATLAS[type][name].image
-        else
-            sendDebugMessage("Can't find type "..type.." with name "..name)
-            print(tprint(G.ASSET_ATLAS[type]))    
         end
         return
 	else
