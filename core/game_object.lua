@@ -720,7 +720,7 @@ function loadAPIs()
                         scale = 0.8,
                         colour = G.C.BLUE,
                         options = SMODS.AltTextures[self.key].names,
-                        opt_callback = "update_recolor",
+                        opt_callback = "select_texture",
                         current_option = G.SETTINGS.selected_texture[self.key],
                         type = self.key,
                 })}} or {n = G.UIT.R}),
@@ -2459,7 +2459,7 @@ function loadAPIs()
                 SMODS.AltTextures[self.type] = {names = {}}
             end
             if #SMODS.AltTextures[self.type].names == 0 then
-                if self.name ~= "Default" then create_default(self.type) end
+                if self.name ~= "Default" then create_default_alt_texture(self.type) end
             end
             table.insert(SMODS.AltTextures[self.type].names, self.name)
 
@@ -2472,12 +2472,19 @@ function loadAPIs()
             end
 
             -- Initialize the new texture
-            if self.palette then create_palette(self)
-            elseif self.texture then create_new_atlas(self) end
+            if self.palette then 
+                SMODS.AltTextures[self.type][self.name].palette = true
+                prepare_palette(self)
+            elseif self.texture then 
+                SMODS.AltTextures[self.type][self.name].texture = true
+                atlas_to_texture(self)
+            end
+
+            if not G.SETTINGS.selected_texture[self.type] then
+                G.SETTINGS.selected_texture[self.type] = SMODS.AltTextures[self.type][self.name]
+            end
         end
     }
-
-    
 
     -- Default palettes defined for base game suits
     SMODS.AltTexture({
@@ -2529,35 +2536,35 @@ function loadAPIs()
         path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Tarots.png",
         px = 71,
         py = 95,
-        inject = create_default_atlas
+        inject = create_base_game_atlas
     })
     SMODS.Atlas({
         key = "Spectral",
         path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Tarots.png",
         px = 71,
         py = 95,
-        inject = create_default_atlas
+        inject = create_base_game_atlas
     })
     SMODS.Atlas({
         key = "Enhanced",
         path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",
         px = 71,
         py = 95,
-        inject = create_default_atlas
+        inject = create_base_game_atlas
     })
     SMODS.Atlas({
         key = "Back",
         path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/Enhancers.png",
         px = 71,
         py = 95,
-        inject = create_default_atlas
+        inject = create_base_game_atlas
     })
     SMODS.Atlas({
         key = "Blind",
         path = "resources/textures/"..G.SETTINGS.GRAPHICS.texture_scaling.."x/BlindChips.png",
         px = 34,
         py = 34,
-        inject = create_default_atlas
+        inject = create_base_game_atlas
     })
 
     -------------------------------------------------------------------------------------------------

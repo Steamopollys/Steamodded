@@ -363,7 +363,7 @@ function SMODS.injectItems()
     for k,v in pairs(SMODS.AltTextures) do
         boot_print_stage('Setting texture - '..k)
         G.SETTINGS.selected_texture[k] = G.SETTINGS.selected_texture[k] or "Default"
-        G.FUNCS.update_atlas(k)
+        G.FUNCS.update_atlases(k)
     end
     if SMODS.dump_loc then
         boot_print_stage('Dumping Localization')
