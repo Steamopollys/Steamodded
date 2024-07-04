@@ -1159,7 +1159,7 @@ end
 create_alt_texture_Box = function()
 	local selectors = SMODS.GUI.DynamicUIManager.initTab({updateFunctions = {cardsList = G.FUNCS.dynamic_card_colours_content,},staticPageDefinition = static_texture_settings()})
 	return (create_UIBox_generic_options({ back_func = 'options', contents = {
-		{n = G.UIT.R, config = { minh = 7, minw = 7, padding = 0, align = "tm", colour = G.C.BLACK, r=0.1 },
+		{n = G.UIT.R, config = { minh = 7, minw = 7, padding = 0, align = "bm", colour = G.C.BLACK, r=0.1 },
 			nodes = selectors.nodes}
 	}}))
 end
@@ -1456,5 +1456,6 @@ function create_UIBox_your_collection_seals(exit)
 	table.insert(t.nodes[1].nodes[1].nodes[1].nodes, selector)		
 	return t
 end
+
 
 --#endregion
