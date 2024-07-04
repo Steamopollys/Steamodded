@@ -2508,19 +2508,19 @@ function loadAPIs()
         name = "High Contrast",
     })
     for k,v in pairs(G.P_CENTER_POOLS.Tarot) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Tarot"})
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Tarot"}, nil, true)
     end
     for _,v in pairs(G.P_CENTER_POOLS.Planet) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Planet"})
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Planet"}, nil, true)
     end
     for _,v in pairs(G.P_CENTER_POOLS.Spectral) do
-        SMODS.Consumable:take_ownership(v.key, {atlas = "Spectral"})
+        SMODS.Consumable:take_ownership(v.key, {atlas = "Spectral"}, nil, true)
     end
     for _,v in pairs(G.P_CENTER_POOLS.Enhanced) do
-        SMODS.Enhancement:take_ownership(v.key, {atlas = "Enhanced"})
+        SMODS.Enhancement:take_ownership(v.key, {atlas = "Enhanced"}, nil, true)
     end
     for _,v in pairs(G.P_CENTER_POOLS.Back) do
-        SMODS.Back:take_ownership(v.key, {atlas = "Back"})
+        SMODS.Back:take_ownership(v.key, {atlas = "Back"}, nil, true)
     end
     
    
