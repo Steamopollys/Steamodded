@@ -2509,6 +2509,7 @@ function loadAPIs()
         key = "high_contrast_cards",
         texture = true,
         atlas_key = "cards_2",
+        suit_pips = "ui_2",
         suits = {
             Clubs = "008ee6",
             Spades = "3c4368",

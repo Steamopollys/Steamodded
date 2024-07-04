@@ -1159,7 +1159,7 @@ end
 create_alt_texture_Box = function()
 	local selectors = SMODS.GUI.DynamicUIManager.initTab({updateFunctions = {cardsList = G.FUNCS.dynamic_card_colours_content,},staticPageDefinition = static_texture_settings()})
 	return (create_UIBox_generic_options({ back_func = 'options', contents = {
-		{n = G.UIT.R, config = { minh = 7, minw = 7, padding = 0, align = "bm", colour = G.C.BLACK, r=0.1 },
+		{n = G.UIT.R, config = { minh = 7, minw = 7, padding = 0, align = "tm", colour = G.C.BLACK, r=0.1 },
 			nodes = selectors.nodes}
 	}}))
 end
@@ -1194,8 +1194,8 @@ function static_texture_settings()
 		{ n = G.UIT.R, config = { align = "cm", minh = 1.6,  }, nodes = {} },
 
 		-- page selector
-		SMODS.GUI.createOptionSelector({label = "", scale = 0.8, options = pages, opt_callback = 'dynamic_card_colours_content', no_pips = true, current_option = (
-			localize('k_page') .. ' ' .. tostring(1) .. '/' .. tostring(math.ceil(#AltTextures / 4)))})
+		#AltTextures > 4 and SMODS.GUI.createOptionSelector({label = "", scale = 0.8, options = pages, opt_callback = 'dynamic_card_colours_content', no_pips = true, current_option = (
+			localize('k_page') .. ' ' .. tostring(1) .. '/' .. tostring(math.ceil(#AltTextures / 4)))}) or nil
 	}}
 end
 
