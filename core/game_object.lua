@@ -806,6 +806,7 @@ function loadAPIs()
             SMODS.process_loc_text(G.localization.descriptions.Other, 'undiscovered_' .. string.lower(self.key),
                 self.loc_txt, 'undiscovered')
         end,
+        -- TODO: Move to external mod
         generate_colours = function(self, base_colours)
             if not self.colour_shifter then return (type(base_colours) == 'table' and HEX(base_colours[1]) or HEX(base_colours)) end
             local colours = {}
@@ -838,6 +839,7 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
+        --TODO: Move to external mod
         colour_shifter = {{{0, -0.06, -0.40, 0}, {0, 0.30, -0.32, 0}, {0, 0.20, -0.15, 0}, {0, 0, 0, 0}, {0, -0.50, 0.20, 0}}}
     }
     SMODS.ConsumableType {
@@ -854,6 +856,7 @@ function loadAPIs()
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
+        --TODO: Move to external mod
         colour_shifter = {{{0,-0.23,-0.26,0}, {0,0,0,0}, {0, -0.10, 0.16, 0}, {0.04, -0.35, 0.42, 0}, {-1, -1, 1, 0}}}
     }
     SMODS.ConsumableType {
@@ -862,6 +865,7 @@ function loadAPIs()
         primary_colour = G.C.SET.Spectral,
         secondary_colour = G.C.SECONDARY_SET.Spectral,
         loc_txt = {},
+        --TODO: Move to external mod
         colour_shifter = {
             {
                 {-0.3,-0.48,-0.61,0}, {-0.3,-0.49,-0.48,0},{0,-0.46,-0.05,0},{-0.02,-0.3,-0.085,0},
