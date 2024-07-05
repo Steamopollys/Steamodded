@@ -28,42 +28,42 @@ function loadAPIs()
         end
         -- keep class defaults for unmodified keys in prefix_config
         SMODS.merge_defaults(o.prefix_config, self.prefix_config)
-        o:add_prefixes()
+        SMODS.add_prefixes(o)
         o:register()
         return o
     end
 
-    function SMODS.GameObject:modify_key(prefix, condition, key)
+    function SMODS.modify_key(obj, prefix, condition, key)
         key = key or 'key'
-        if condition ~= false and self[key] and prefix then
-            self[key] = prefix .. '_' .. self[key]
+        if condition ~= false and obj[key] and prefix then
+            obj[key] = prefix .. '_' .. obj[key]
         end
     end
 
-    function SMODS.GameObject:add_prefixes()
-        if self.registered then return end
-        if self.prefix_config == false then return end
-        SMODS.merge_defaults(self.prefix_config, self.mod and self.mod.prefix_config)
-        self.prefix_config = self.prefix_config or {}
-        self.original_key = self.key
-        local key_cfg = self.prefix_config.key
+    function SMODS.add_prefixes(obj)
+        if obj.prefix_config == false then return end
+        SMODS.merge_defaults(obj.prefix_config, obj.mod and obj.mod.prefix_config)
+        local mod = SMODS.current_mod
+        obj.prefix_config = obj.prefix_config or {}
+        obj.original_key = obj.key
+        local key_cfg = obj.prefix_config.key
         if key_cfg ~= false then
             if type(key_cfg ~= 'table') then key_cfg = {} end
-            if self.set == 'Palette' then self:modify_key(self.type and self.type:lower(), key_cfg.type) end
-            self:modify_key(self.mod and self.mod.prefix, key_cfg.mod)
-            self:modify_key(self.class_prefix, key_cfg.class)
+            if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
+            SMODS.modify_key(obj, mod and mod.prefix, key_cfg.mod)
+            SMODS.modify_key(obj, obj.class_prefix, key_cfg.class)
         end
-        local atlas_cfg = self.prefix_config.atlas
+        local atlas_cfg = obj.prefix_config.atlas
         if atlas_cfg ~= false then
             if type(atlas_cfg ~= 'table') then atlas_cfg = {} end
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
-                if rawget(self, v) then self:modify_key(self.mod and self.mod.prefix, atlas_cfg[v], v) end
+                if rawget(obj, v) then SMODS.modify_key(obj, mod and mod.prefix, atlas_cfg[v], v) end
             end
         end
-        local shader_cfg = self.prefix_config.shader
-        self:modify_key(self.mod and self.mod.prefix, shader_cfg, 'shader')
-        local card_key_cfg = self.prefix_config.card_key
-        self:modify_key(self.mod and self.mod.prefix, card_key_cfg, 'card_key')
+        local shader_cfg = obj.prefix_config.shader
+        SMODS.modify_key(obj, mod and mod.prefix, shader_cfg, 'shader')
+        local card_key_cfg = obj.prefix_config.card_key
+        SMODS.modify_key(obj, mod and mod.prefix, card_key_cfg, 'card_key')
     end
 
     function SMODS.GameObject:register()
@@ -125,7 +125,6 @@ function loadAPIs()
 
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
     function SMODS.GameObject:take_ownership(key, obj, silent)
-        -- TODO declutter this and try to integrate with add_prefixes
         SMODS.merge_defaults(obj.prefix_config, self.prefix_config)
         local conf = obj.prefix_config or self.prefix_config
         local no_class_prefix = not self.class_prefix or
@@ -142,11 +141,9 @@ function loadAPIs()
             )
             return
         end
-        -- keep track of previous atlases in case of taking ownership multiple times
-        local atlas_override = {}
-        for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
-            if o[v] then atlas_override[v] = o[v] end
-        end
+        obj.prefix_config = conf or {}
+        obj.prefix_config.key = false
+        SMODS.add_prefixes(obj)
         local original_has_loc = o.taken_ownership and (o.loc_txt or o.loc_vars or (o.generate_ui ~= self.generate_ui))
         local is_loc_modified = obj.loc_txt or obj.loc_vars or obj.generate_ui
         if not original_has_loc and not is_loc_modified then obj.generate_ui = 0 end
@@ -162,16 +159,6 @@ function loadAPIs()
             o.rarity_original = o.rarity
         end
         for k, v in pairs(obj) do o[k] = v end
-        if o.mod and not (conf == false or (conf and conf.atlas == false)) then
-            for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
-                -- was a new atlas provided with this call?
-
-                if obj[v] and (not atlas_override[v] or (atlas_override[v] ~= o[v])) then
-                    local atlas_cfg = conf and conf.atlas and conf.atlas[v] or {}
-                    o:modify_key(SMODS.current_mod and SMODS.current_mod.prefix, atlas_cfg[v], v)
-                end
-            end
-        end
         o.taken_ownership = true
         o:register()
         return o
