@@ -63,3 +63,26 @@ payload = '''
 		local o = obj:trigger_effect(args)
 		if o then return o end
 	end'''
+
+# Back:generate_UI
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = "if name_to_check == 'Blue Deck'*"
+position = 'at'
+match_indent = true
+payload = '''
+local key_override
+if back_config.loc_vars and type(back_config.loc_vars) == 'function' then
+	local res = back_config:loc_vars() or {}
+	loc_args = res.vars or {}
+	key_override = res.key
+elseif name_to_check == 'Blue Deck' then loc_args = {effect_config.hands}
+'''
+
+[[patches]]
+[patches.regex]
+target = 'back.lua'
+pattern = "key = back_config\\.key"
+position = 'at'
+payload = "key = key_override or back_config.key"
