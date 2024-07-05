@@ -16,11 +16,14 @@ SMODS.Back{
 	loc_txt = {
 		name = "Labyrinth Deck",
 		text = {
-			"{C:red}+5{} discards",
-			"{C:blue}-3{} hands",
+			"{C:red}+#1#{} discards",
+			"{C:blue}#2#{} hands",
 			"every round"
 		}
 	},
+	loc_vars = function(self)
+		return { vars = { self.config.discards, self.config.hands }}
+	end
 }
 
 ----------------------------------------------
