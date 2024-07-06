@@ -47,7 +47,7 @@ function loadAPIs()
         end
     end
 
-    function SMODS.add_prefixes(cls, obj, from_take_ownership)
+    function SMODS.add_prefixes(cls, obj)
         if obj.prefix_config == false then return end
         -- keep class defaults for unmodified keys in prefix_config
         obj.prefix_config = SMODS.merge_defaults(obj.prefix_config, cls.prefix_config)
@@ -57,10 +57,8 @@ function loadAPIs()
         local key_cfg = obj.prefix_config.key
         if key_cfg ~= false then
             if type(key_cfg) ~= 'table' then key_cfg = {} end
-            if not from_take_ownership then
-                if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
-                SMODS.modify_key(obj, obj.mod and obj.mod.prefix, key_cfg.mod)
-            end
+            if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
+            SMODS.modify_key(obj, obj.mod and obj.mod.prefix, key_cfg.mod)
             SMODS.modify_key(obj, cls.class_prefix, key_cfg.class)
         end
         local atlas_cfg = obj.prefix_config.atlas
@@ -152,7 +150,7 @@ function loadAPIs()
         if self.check_duplicate_register(obj) then return end
         obj.key = key
         assert(obj.mod == nil)
-        SMODS.add_prefixes(self, obj, true)
+        SMODS.add_prefixes(self, obj)
         key = obj.key
         local o = self.obj_table[key] or (self.get_obj and self:get_obj(key))
         if not o then
