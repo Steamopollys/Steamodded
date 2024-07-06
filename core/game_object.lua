@@ -557,10 +557,10 @@ function loadAPIs()
     end
 
     --Register vanilla stakes
+    G.P_STAKES = {}
     SMODS.Stake {
         name = "White Stake",
-        key = "stake_white",
-        prefix_config = { key = false },
+        key = "white",
         unlocked_stake = "red",
         unlocked = true,
         applied_stakes = {},
@@ -571,8 +571,7 @@ function loadAPIs()
     }
     SMODS.Stake {
         name = "Red Stake",
-        key = "stake_red",
-        prefix_config = { key = false },
+        key = "red",
         unlocked_stake = "green",
         applied_stakes = { "white" },
         pos = { x = 1, y = 0 },
@@ -586,8 +585,7 @@ function loadAPIs()
     }
     SMODS.Stake {
         name = "Green Stake",
-        key = "stake_green",
-        prefix_config = { key = false },
+        key = "green",
         unlocked_stake = "black",
         applied_stakes = { "red" },
         pos = { x = 2, y = 0 },
@@ -600,8 +598,7 @@ function loadAPIs()
     }
     SMODS.Stake {
         name = "Black Stake",
-        key = "stake_black",
-        prefix_config = { key = false },
+        key = "black",
         unlocked_stake = "blue",
         applied_stakes = { "green" },
         pos = { x = 4, y = 0 },
@@ -614,8 +611,7 @@ function loadAPIs()
     }
     SMODS.Stake {
         name = "Blue Stake",
-        key = "stake_blue",
-        prefix_config = { key = false },
+        key = "blue",
         unlocked_stake = "purple",
         applied_stakes = { "black" },
         pos = { x = 3, y = 0 },
@@ -628,8 +624,7 @@ function loadAPIs()
     }
     SMODS.Stake {
         name = "Purple Stake",
-        key = "stake_purple",
-        prefix_config = { key = false },
+        key = "purple",
         unlocked_stake = "orange",
         applied_stakes = { "blue" },
         pos = { x = 0, y = 1 },
@@ -642,8 +637,7 @@ function loadAPIs()
     }
     SMODS.Stake {
         name = "Orange Stake",
-        key = "stake_orange",
-        prefix_config = { key = false },
+        key = "orange",
         unlocked_stake = "gold",
         applied_stakes = { "purple" },
         pos = { x = 1, y = 1 },
@@ -656,8 +650,7 @@ function loadAPIs()
     }
     SMODS.Stake {
         name = "Gold Stake",
-        key = "stake_gold",
-        prefix_config = { key = false },
+        key = "gold",
         applied_stakes = { "orange" },
         pos = { x = 2, y = 1 },
         sticker_pos = { x = 3, y = 1 },
