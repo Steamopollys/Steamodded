@@ -35,7 +35,8 @@ function loadAPIs()
 
     function SMODS.modify_key(obj, prefix, condition, key)
         key = key or 'key'
-        if condition and obj[key] and prefix then
+        -- condition == nil counts as true
+        if condition ~= false and obj[key] and prefix then
             obj[key] = prefix .. '_' .. obj[key]
         end
     end
