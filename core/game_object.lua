@@ -49,14 +49,14 @@ function loadAPIs()
         obj.original_key = obj.key
         local key_cfg = obj.prefix_config.key
         if key_cfg ~= false then
-            if type(key_cfg ~= 'table') then key_cfg = {} end
+            if type(key_cfg) ~= 'table' then key_cfg = {} end
             if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
             SMODS.modify_key(obj, mod and mod.prefix, key_cfg.mod)
             SMODS.modify_key(obj, obj.class_prefix, key_cfg.class)
         end
         local atlas_cfg = obj.prefix_config.atlas
         if atlas_cfg ~= false then
-            if type(atlas_cfg ~= 'table') then atlas_cfg = {} end
+            if type(atlas_cfg) ~= 'table' then atlas_cfg = {} end
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
                 if rawget(obj, v) then SMODS.modify_key(obj, mod and mod.prefix, atlas_cfg[v], v) end
             end
