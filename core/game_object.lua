@@ -26,9 +26,10 @@ function loadAPIs()
         for _, v in ipairs(o.required_params or {}) do
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
         end
-        -- keep class defaults for unmodified keys in prefix_config
-        SMODS.merge_defaults(o.prefix_config, self.prefix_config)
-        SMODS.add_prefixes(o)
+        -- also updates o.prefix_config
+        SMODS.add_prefixes(self, o)
+        if o:check_duplicate_register() then return end
+        if o:check_duplicate_key() then return end
         o:register()
         return o
     end
@@ -37,13 +38,19 @@ function loadAPIs()
         key = key or 'key'
         -- condition == nil counts as true
         if condition ~= false and obj[key] and prefix then
+            if string.sub(obj[key], 1, #prefix + 1) == prefix..'_' then
+                sendWarnMessage(("Attempted to prefix field %s on object %s, already prefixed"):format(key, obj.key), obj.set)
+                return
+            end
             obj[key] = prefix .. '_' .. obj[key]
         end
     end
 
-    function SMODS.add_prefixes(obj)
+    function SMODS.add_prefixes(cls, obj)
         if obj.prefix_config == false then return end
-        SMODS.merge_defaults(obj.prefix_config, obj.mod and obj.mod.prefix_config)
+        -- keep class defaults for unmodified keys in prefix_config
+        obj.prefix_config = SMODS.merge_defaults(obj.prefix_config, cls.prefix_config)
+        obj.prefix_config = SMODS.merge_defaults(obj.prefix_config, obj.mod and obj.mod.prefix_config)
         local mod = SMODS.current_mod
         obj.prefix_config = obj.prefix_config or {}
         obj.original_key = obj.key
@@ -52,7 +59,7 @@ function loadAPIs()
             if type(key_cfg) ~= 'table' then key_cfg = {} end
             if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
             SMODS.modify_key(obj, mod and mod.prefix, key_cfg.mod)
-            SMODS.modify_key(obj, obj.class_prefix, key_cfg.class)
+            SMODS.modify_key(obj, cls.class_prefix, key_cfg.class)
         end
         local atlas_cfg = obj.prefix_config.atlas
         if atlas_cfg ~= false then
@@ -67,12 +74,26 @@ function loadAPIs()
         SMODS.modify_key(obj, mod and mod.prefix, card_key_cfg, 'card_key')
     end
 
-    function SMODS.GameObject:register()
+    function SMODS.GameObject:check_duplicate_register()
         if self.registered then
             sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
-            return
+            return true
         end
-        if self:check_dependencies() and not self.obj_table[self.key] then
+        return false
+    end
+
+    -- Checked on __call but not take_ownership. For take_ownership, the key must exist
+    function SMODS.GameObject:check_duplicate_key()
+        if self.obj_table[self.key] or (self.get_obj and self:get_obj(self.key)) then
+            sendWarnMessage(('Object %s has the same key as an existing object, not registering.'):format(self.key), self.set)
+            sendWarnMessage('If you want to modify an existing object, use take_ownership()')
+            return true
+        end
+        return false
+    end
+
+    function SMODS.GameObject:register()
+        if self:check_dependencies() then
             self.obj_table[self.key] = self
             self.obj_buffer[#self.obj_buffer + 1] = self.key
             self.registered = true
@@ -126,29 +147,25 @@ function loadAPIs()
 
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
     function SMODS.GameObject:take_ownership(key, obj, silent)
-        SMODS.merge_defaults(obj.prefix_config, self.prefix_config)
-        local conf = obj.prefix_config or self.prefix_config
-        local no_class_prefix = not self.class_prefix or
-            conf == false or
-            (conf and (conf.key == false)) or
-            conf and conf.key and (conf.key.class == false)
-        key = (no_class_prefix or key:sub(1, #self.class_prefix + 1) == self.class_prefix .. '_') and key or
-            ('%s_%s'):format(self.class_prefix, key)
-        local o = self.obj_table[key] or self:get_obj(key)
+        obj.key = key
+        SMODS.add_prefixes(self, obj)
+        print(tprint(obj))
+        key = obj.key
+        if self.check_duplicate_register(obj) then return end
+        local o = self.obj_table[key] or (self.get_obj and self:get_obj(key))
         if not o then
             sendWarnMessage(
-                ('Cannot take ownership of %s: Does not exist.'):format(key),
-                self.set
+                ('Cannot take ownership of %s: Does not exist.'):format(key), self.set
             )
             return
         end
-        obj.prefix_config = conf or {}
-        obj.prefix_config.key = false
-        SMODS.add_prefixes(obj)
         local original_has_loc = o.taken_ownership and (o.loc_txt or o.loc_vars or (o.generate_ui ~= self.generate_ui))
         local is_loc_modified = obj.loc_txt or obj.loc_vars or obj.generate_ui
         if not original_has_loc and not is_loc_modified then obj.generate_ui = 0 end
         if is_loc_modified and o.generate_ui == 0 then obj.generate_ui = obj.generate_ui or self.generate_ui end
+        -- TODO
+        -- it's unclear how much we should modify `obj` on a failed take_ownership call.
+        -- do we make sure the metatable is set early, or wait until the end?
         setmetatable(o, self)
         if o.mod then
             o.dependencies = o.dependencies or {}
@@ -156,7 +173,6 @@ function loadAPIs()
         else
             o.mod = SMODS.current_mod
             if silent then o.no_main_mod_badge = true end
-            o.key = key
             o.rarity_original = o.rarity
         end
         for k, v in pairs(obj) do o[k] = v end
