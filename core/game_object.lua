@@ -46,7 +46,7 @@ function loadAPIs()
         end
     end
 
-    function SMODS.add_prefixes(cls, obj)
+    function SMODS.add_prefixes(cls, obj, from_take_ownership)
         if obj.prefix_config == false then return end
         -- keep class defaults for unmodified keys in prefix_config
         obj.prefix_config = SMODS.merge_defaults(obj.prefix_config, cls.prefix_config)
@@ -57,8 +57,10 @@ function loadAPIs()
         local key_cfg = obj.prefix_config.key
         if key_cfg ~= false then
             if type(key_cfg) ~= 'table' then key_cfg = {} end
-            if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
-            SMODS.modify_key(obj, mod and mod.prefix, key_cfg.mod)
+            if not from_take_ownership then
+                if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
+                SMODS.modify_key(obj, mod and mod.prefix, key_cfg.mod)
+            end
             SMODS.modify_key(obj, cls.class_prefix, key_cfg.class)
         end
         local atlas_cfg = obj.prefix_config.atlas
@@ -86,7 +88,7 @@ function loadAPIs()
     function SMODS.GameObject:check_duplicate_key()
         if self.obj_table[self.key] or (self.get_obj and self:get_obj(self.key)) then
             sendWarnMessage(('Object %s has the same key as an existing object, not registering.'):format(self.key), self.set)
-            sendWarnMessage('If you want to modify an existing object, use take_ownership()')
+            sendWarnMessage('If you want to modify an existing object, use take_ownership()', self.set)
             return true
         end
         return false
@@ -148,7 +150,7 @@ function loadAPIs()
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
     function SMODS.GameObject:take_ownership(key, obj, silent)
         obj.key = key
-        SMODS.add_prefixes(self, obj)
+        SMODS.add_prefixes(self, obj, true)
         print(tprint(obj))
         key = obj.key
         if self.check_duplicate_register(obj) then return end
@@ -512,7 +514,7 @@ function loadAPIs()
             table.sort(G.P_CENTER_POOLS[self.set], function(a, b) return a.stake_level < b.stake_level end)
             G.C.STAKES = {}
             for i = 1, #G.P_CENTER_POOLS[self.set] do
-                G.C.STAKES[i] = G.P_CENTER_POOLS[self.set][i].color or G.C.WHITE
+                G.C.STAKES[i] = G.P_CENTER_POOLS[self.set][i].colour or G.C.WHITE
             end
             self.injected = true
         end,
