@@ -47,31 +47,34 @@ function loadAPIs()
         end
     end
 
-    function SMODS.add_prefixes(cls, obj)
+    function SMODS.add_prefixes(cls, obj, from_take_ownership)
         if obj.prefix_config == false then return end
         -- keep class defaults for unmodified keys in prefix_config
         obj.prefix_config = SMODS.merge_defaults(obj.prefix_config, cls.prefix_config)
-        obj.prefix_config = SMODS.merge_defaults(obj.prefix_config, obj.mod and obj.mod.prefix_config)
+        local mod = SMODS.current_mod
+        obj.prefix_config = SMODS.merge_defaults(obj.prefix_config, mod and mod.prefix_config)
         obj.prefix_config = obj.prefix_config or {}
         obj.original_key = obj.key
         local key_cfg = obj.prefix_config.key
         if key_cfg ~= false then
             if type(key_cfg) ~= 'table' then key_cfg = {} end
-            if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
-            SMODS.modify_key(obj, obj.mod and obj.mod.prefix, key_cfg.mod)
+            if not from_take_ownership then
+                if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
+                SMODS.modify_key(obj, mod and mod.prefix, key_cfg.mod)
+            end
             SMODS.modify_key(obj, cls.class_prefix, key_cfg.class)
         end
         local atlas_cfg = obj.prefix_config.atlas
         if atlas_cfg ~= false then
             if type(atlas_cfg) ~= 'table' then atlas_cfg = {} end
             for _, v in ipairs({ 'atlas', 'hc_atlas', 'lc_atlas', 'hc_ui_atlas', 'lc_ui_atlas', 'sticker_atlas' }) do
-                if rawget(obj, v) then SMODS.modify_key(obj, obj.mod and obj.mod.prefix, atlas_cfg[v], v) end
+                if rawget(obj, v) then SMODS.modify_key(obj, mod and mod.prefix, atlas_cfg[v], v) end
             end
         end
         local shader_cfg = obj.prefix_config.shader
-        SMODS.modify_key(obj, obj.mod and obj.mod.prefix, shader_cfg, 'shader')
+        SMODS.modify_key(obj, mod and mod.prefix, shader_cfg, 'shader')
         local card_key_cfg = obj.prefix_config.card_key
-        SMODS.modify_key(obj, obj.mod and obj.mod.prefix, card_key_cfg, 'card_key')
+        SMODS.modify_key(obj, mod and mod.prefix, card_key_cfg, 'card_key')
     end
 
     function SMODS.GameObject:check_duplicate_register()
@@ -151,7 +154,7 @@ function loadAPIs()
         assert(obj.key == nil or obj.key == key)
         obj.key = key
         assert(obj.mod == nil)
-        SMODS.add_prefixes(self, obj)
+        SMODS.add_prefixes(self, obj, true)
         key = obj.key
         local orig_o = self.obj_table[key] or (self.get_obj and self:get_obj(key))
         if not orig_o then
