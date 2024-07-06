@@ -21,14 +21,15 @@ function loadAPIs()
 
     function SMODS.GameObject:__call(o)
         o = o or {}
+        assert(o.mod == nil)
         o.mod = SMODS.current_mod
         setmetatable(o, self)
         for _, v in ipairs(o.required_params or {}) do
             assert(not (o[v] == nil), ('Missing required parameter for %s declaration: %s'):format(o.set, v))
         end
+        if o:check_duplicate_register() then return end
         -- also updates o.prefix_config
         SMODS.add_prefixes(self, o)
-        if o:check_duplicate_register() then return end
         if o:check_duplicate_key() then return end
         o:register()
         return o
@@ -148,11 +149,11 @@ function loadAPIs()
 
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
     function SMODS.GameObject:take_ownership(key, obj, silent)
-        obj.key = key
-        SMODS.add_prefixes(self, obj, true)
-        print(tprint(obj))
-        key = obj.key
         if self.check_duplicate_register(obj) then return end
+        obj.key = key
+        assert(obj.mod == nil)
+        SMODS.add_prefixes(self, obj, true)
+        key = obj.key
         local o = self.obj_table[key] or (self.get_obj and self:get_obj(key))
         if not o then
             sendWarnMessage(
