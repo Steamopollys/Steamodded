@@ -49,11 +49,16 @@ function loadAPIs()
 
     function SMODS.add_prefixes(cls, obj, from_take_ownership)
         if obj.prefix_config == false then return end
+        obj.prefix_config = obj.prefix_config or {}
+        if obj.raw_key then
+            sendWarnMessage(([[The field `raw_key` on %s is deprecated.
+Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.set)
+            obj.prefix_config.key = false
+        end
         -- keep class defaults for unmodified keys in prefix_config
         obj.prefix_config = SMODS.merge_defaults(obj.prefix_config, cls.prefix_config)
         local mod = SMODS.current_mod
         obj.prefix_config = SMODS.merge_defaults(obj.prefix_config, mod and mod.prefix_config)
-        obj.prefix_config = obj.prefix_config or {}
         obj.original_key = obj.key
         local key_cfg = obj.prefix_config.key
         if key_cfg ~= false then
