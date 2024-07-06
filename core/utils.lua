@@ -388,6 +388,30 @@ function serialize_string(s)
 	return string.format("%q", s)
 end
 
+-- Starting with `t`, insert any key-value pairs from `defaults` that don't already
+-- exist in `t` into `t`. Modifies `t`.
+-- Returns `t`, the result of the merge.
+--
+-- `nil` inputs count as {}; `false` inputs count as a table where
+-- every possible key maps to `false`. Therefore,
+-- * `t == nil` is weak and falls back to `defaults`
+-- * `t == false` explicitly ignores `defaults`
+-- (This function might not return a table, due to the above)
+function SMODS.merge_defaults(t, defaults)
+    if t == false then return false end
+    if defaults == false then return false end
+
+    -- Add in the keys from `defaults`, returning a table
+    if defaults == nil then return t end
+    if t == nil then t = {} end
+    for k, v in pairs(defaults) do
+        if t[k] == nil then
+            t[k] = v
+        end
+    end
+    return t
+end
+
 --#region palettes
 G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
 G.PALETTE = {}
