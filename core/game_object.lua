@@ -2047,7 +2047,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         set = 'Tag',
         pos = { x = 0, y = 0 },
         config = {},
-        get_obj = function(key) return G.P_TAGS[key] end,
+        get_obj = function(self, key) return G.P_TAGS[key] end,
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.descriptions.Tag, self.key, self.loc_txt)
         end,
