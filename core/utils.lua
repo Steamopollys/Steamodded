@@ -94,6 +94,7 @@ function SMODS.SAVE_UNLOCKS()
     meta.discovered = meta.discovered or {}
     meta.alerted = meta.alerted or {}
 
+    G.P_LOCKED = {}
     for k, v in pairs(G.P_CENTERS) do
         if not v.wip and not v.demo then
             if TESTHELPER_unlocks then
