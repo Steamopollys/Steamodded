@@ -574,7 +574,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         applied_stakes = {},
         pos = { x = 0, y = 0 },
         sticker_pos = { x = 1, y = 0 },
-        color = G.C.WHITE,
+        colour = G.C.WHITE,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -588,7 +588,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G.GAME.modifiers.no_blind_reward = G.GAME.modifiers.no_blind_reward or {}
             G.GAME.modifiers.no_blind_reward.Small = true
         end,
-        color = G.C.RED,
+        colour = G.C.RED,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -601,7 +601,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 2)
         end,
-        color = G.C.GREEN,
+        colour = G.C.GREEN,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -614,7 +614,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.modifiers.enable_eternals_in_shop = true
         end,
-        color = G.C.BLACK,
+        colour = G.C.BLACK,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -627,7 +627,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.starting_params.discards = G.GAME.starting_params.discards - 1
         end,
-        color = G.C.BLUE,
+        colour = G.C.BLUE,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -640,7 +640,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 3)
         end,
-        color = G.C.PURPLE,
+        colour = G.C.PURPLE,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -653,7 +653,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.modifiers.enable_perishables_in_shop = true
         end,
-        color = G.C.ORANGE,
+        colour = G.C.ORANGE,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -665,7 +665,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.modifiers.enable_rentals_in_shop = true
         end,
-        color = G.C.GOLD,
+        colour = G.C.GOLD,
         shiny = true,
         loc_txt = {}
     }
