@@ -1326,11 +1326,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         obj_table = SMODS.Seals,
         obj_buffer = {},
         rng_buffer = { 'Purple', 'Gold', 'Blue', 'Red' },
-        -- I immediately thought this was a table where (key, value) pairs were (value, key) pairs.
-        -- I'd call this something like remove_suffix_table or something?
-        -- alternatively, the purpose seems to be to get the object key from the name of
-        -- a badge, so badge_to_key, maybe?
-        reverse_lookup = {},
+        badge_to_key = {},
         set = 'Seal',
         class_prefix = 's',
         atlas = 'centers',
@@ -1345,7 +1341,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G.P_SEALS[self.key] = self
             G.shared_seals[self.key] = Sprite(0, 0, G.CARD_W, G.CARD_H,
                 G.ASSET_ATLAS[self.atlas] or G.ASSET_ATLAS['centers'], self.pos)
-            self.reverse_lookup[self.key:lower() .. '_seal'] = self.key
+            self.badge_to_key[self.key:lower() .. '_seal'] = self.key
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
             self.rng_buffer[#self.rng_buffer + 1] = self.key
         end,
