@@ -368,6 +368,16 @@ function SMODS.injectItems()
     boot_print_stage('Initializing Localization')
     init_localization()
     SMODS.SAVE_UNLOCKS()
+    for _, t in ipairs{
+        G.P_CENTERS,
+        G.P_BLINDS,
+        G.P_TAGS,
+        G.P_SEALS,
+    } do
+        for k, v in pairs(t) do
+            assert(v._discovered_unlocked_overwritten)
+        end
+    end
 end
 
 local function initializeModUIFunctions()

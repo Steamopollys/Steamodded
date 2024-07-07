@@ -134,10 +134,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             boot_print_stage(('Injecting %s: %s'):format(o.set, o.key))
             o.atlas = o.atlas or o.set
 
-            if o._d == nil and o._u == nil then
-                o._d, o._u = o.discovered, o.unlocked
-            else
+            if o._discovered_unlocked_overwritten then
+                assert(o._saved_d_u)
                 o.discovered, o.unlocked = o._d, o._u
+                o._discovered_unlocked_overwritten = false
+            else
+                SMODS._save_d_u(o)
             end
 
             -- Add centers to pools
@@ -147,7 +149,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             o:process_loc_text()
 
             sendInfoMessage(
-                ('Registered game object %s of type %s')
+                ('Injected game object %s of type %s')
                 :format(o.key, o.set), o.set or 'GameObject'
             )
         end
@@ -183,6 +185,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             orig_o.mod = SMODS.current_mod
             if silent then orig_o.no_main_mod_badge = true end
             orig_o.rarity_original = orig_o.rarity
+        end
+        if orig_o._saved_d_u then
+            orig_o.discovered, orig_o.unlocked = orig_o._d, orig_o._u
+            orig_o._saved_d_u = false
+            orig_o._discovered_unlocked_overwritten = false
         end
         for k, v in pairs(obj) do orig_o[k] = v end
         orig_o.taken_ownership = true
@@ -573,7 +580,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         applied_stakes = {},
         pos = { x = 0, y = 0 },
         sticker_pos = { x = 1, y = 0 },
-        color = G.C.WHITE,
+        colour = G.C.WHITE,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -587,7 +594,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G.GAME.modifiers.no_blind_reward = G.GAME.modifiers.no_blind_reward or {}
             G.GAME.modifiers.no_blind_reward.Small = true
         end,
-        color = G.C.RED,
+        colour = G.C.RED,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -600,7 +607,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 2)
         end,
-        color = G.C.GREEN,
+        colour = G.C.GREEN,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -613,7 +620,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.modifiers.enable_eternals_in_shop = true
         end,
-        color = G.C.BLACK,
+        colour = G.C.BLACK,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -626,7 +633,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.starting_params.discards = G.GAME.starting_params.discards - 1
         end,
-        color = G.C.BLUE,
+        colour = G.C.BLUE,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -639,7 +646,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 3)
         end,
-        color = G.C.PURPLE,
+        colour = G.C.PURPLE,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -652,7 +659,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.modifiers.enable_perishables_in_shop = true
         end,
-        color = G.C.ORANGE,
+        colour = G.C.ORANGE,
         loc_txt = {}
     }
     SMODS.Stake {
@@ -664,7 +671,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         modifiers = function()
             G.GAME.modifiers.enable_rentals_in_shop = true
         end,
-        color = G.C.GOLD,
+        colour = G.C.GOLD,
         shiny = true,
         loc_txt = {}
     }
@@ -2043,7 +2050,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         set = 'Tag',
         pos = { x = 0, y = 0 },
         config = {},
-        get_obj = function(key) return G.P_TAGS[key] end,
+        get_obj = function(self, key) return G.P_TAGS[key] end,
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.descriptions.Tag, self.key, self.loc_txt)
         end,
