@@ -134,11 +134,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             boot_print_stage(('Injecting %s: %s'):format(o.set, o.key))
             o.atlas = o.atlas or o.set
 
-            if not o._saved_d_u then
-                o._d, o._u = o.discovered, o.unlocked
-                o._saved_d_u = true
-            else
+            if o._discovered_unlocked_overwritten then
+                assert(o._saved_d_u)
                 o.discovered, o.unlocked = o._d, o._u
+                o._discovered_unlocked_overwritten = false
+            else
+                SMODS._save_d_u(o)
             end
 
             -- Add centers to pools
@@ -184,6 +185,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             orig_o.mod = SMODS.current_mod
             if silent then orig_o.no_main_mod_badge = true end
             orig_o.rarity_original = orig_o.rarity
+        end
+        if orig_o._saved_d_u then
+            orig_o.discovered, orig_o.unlocked = orig_o._d, orig_o._u
+            orig_o._saved_d_u = false
+            orig_o._discovered_unlocked_overwritten = false
         end
         for k, v in pairs(obj) do orig_o[k] = v end
         orig_o.taken_ownership = true

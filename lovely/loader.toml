@@ -14,15 +14,14 @@ pattern = "meta.alerted = meta.alerted or {}"
 position = 'after'
 payload = '''
 for _, t in ipairs{
-        G.GAME.P_CENTERS,
-        G.GAME.P_BLINDS,
-        G.GAME.P_TAGS,
-        G.GAME.P_SEALS,
-        G.GAME.P_STAKES,
+    G.P_CENTERS,
+    G.P_BLINDS,
+    G.P_TAGS,
+    G.P_SEALS,
 } do
     for k, v in pairs(t) do
-        v._d, v._u = v.discovered, v.unlocked
-        v._saved_d_u = true
+        SMODS._save_d_u(v)
+        v._discovered_unlocked_overwritten = true
     end
 end'''
 match_indent = true
