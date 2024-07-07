@@ -1,0 +1,28 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Supporting code for loader.lua
+
+## Save discovered, unlocked states
+# Game:init_item_prototypes()
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "meta.alerted = meta.alerted or {}"
+position = 'after'
+payload = '''
+for _, t in ipairs{
+        G.GAME.P_CENTERS,
+        G.GAME.P_BLINDS,
+        G.GAME.P_TAGS,
+        G.GAME.P_SEALS,
+        G.GAME.P_STAKES,
+} do
+    for k, v in pairs(t) do
+        v._d, v._u = v.discovered, v.unlocked
+        v._saved_d_u = true
+    end
+end'''
+match_indent = true
