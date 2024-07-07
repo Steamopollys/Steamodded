@@ -1,0 +1,23 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Supporting code for loader.lua
+
+## re-inject on reload
+# Game:init_item_prototypes()
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "meta.alerted = meta.alerted or {}"
+position = 'after'
+payload = '''
+if SMODS.ready_inject_items then
+    SMODS.injectItems()
+else
+    meta.unlocked = {}
+    meta.discovered = {}
+    meta.alerted = {}
+end'''
+match_indent = true

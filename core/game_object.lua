@@ -134,8 +134,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             boot_print_stage(('Injecting %s: %s'):format(o.set, o.key))
             o.atlas = o.atlas or o.set
 
-            if o._d == nil and o._u == nil then
+            if not o._saved_d_u then
                 o._d, o._u = o.discovered, o.unlocked
+                o._saved_d_u = true
             else
                 o.discovered, o.unlocked = o._d, o._u
             end
@@ -147,7 +148,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             o:process_loc_text()
 
             sendInfoMessage(
-                ('Registered game object %s of type %s')
+                ('Injected game object %s of type %s')
                 :format(o.key, o.set), o.set or 'GameObject'
             )
         end

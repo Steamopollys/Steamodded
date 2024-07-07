@@ -391,17 +391,9 @@ function initSteamodded()
     loadMods(SMODS.MODS_DIR)
     initializeModUIFunctions()
     boot_print_stage("Injecting Items")
-    SMODS.injectItems()
+    SMODS.ready_inject_items = true
+    G:init_item_prototypes()
     SMODS.booted = true
-end
-
--- re-inject on reload
-local init_item_prototypes_ref = Game.init_item_prototypes
-function Game:init_item_prototypes()
-    init_item_prototypes_ref(self)
-    if SMODS.booted then
-        SMODS.injectItems()
-    end
 end
 
 SMODS.booted = false
