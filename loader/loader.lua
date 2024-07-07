@@ -352,7 +352,9 @@ function loadMods(modsDirectory)
         local Card_generate_UIBox_ability_table_ref = Card.generate_UIBox_ability_table
         function Card:generate_UIBox_ability_table(...)
             SMODS.compat_0_9_8.generate_UIBox_ability_table_card = self
-            return Card_generate_UIBox_ability_table_ref(self, ...)
+            local ret = Card_generate_UIBox_ability_table_ref(self, ...)
+            SMODS.compat_0_9_8.generate_UIBox_ability_table_card = nil
+            return ret
         end
     end
 end
