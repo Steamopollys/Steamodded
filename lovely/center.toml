@@ -156,15 +156,6 @@ position = 'at'
 root_capture = 'a'
 payload = ' not custom_check and '
 
-# Game:init_item_prototypes()
-[[patches]]
-[patches.pattern]
-target = 'game.lua'
-pattern = 'if TESTHELPER_unlocks then v.unlocked = true; v.discovered = true;v.alerted = true end --REMOVE THIS'
-position = 'before'
-match_indent = true
-payload = 'v._d, v._u = v.discovered, v.unlocked'
-
 #Card:use_consumable()
 [[patches]]
 [patches.regex]
