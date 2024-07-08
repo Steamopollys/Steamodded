@@ -368,6 +368,7 @@ function SMODS.injectItems()
     boot_print_stage('Initializing Localization')
     init_localization()
     SMODS.SAVE_UNLOCKS()
+    table.sort(G.P_CENTER_POOLS["Back"], function (a, b) return (a.order - (a.unlocked and 100 or 0)) < (b.order - (b.unlocked and 100 or 0)) end)
     for _, t in ipairs{
         G.P_CENTERS,
         G.P_BLINDS,
