@@ -11,9 +11,9 @@
 
 sendDebugMessage("Launching Negate Texture Pack!")
 
-SMODS.Atlas{key = "Joker", path = "Jokers-negate.png", px = 71, py = 95, raw_key = true}
-SMODS.Atlas{key = "Booster", path = "boosters-negate.png", px = 71, py = 95, raw_key = true}
-SMODS.Atlas{key = "blind_chips", path = "BlindChips-negate.png", px = 34, py = 34, raw_key = true, atlas_table = 'ANIMATION_ATLAS', frames = 21}
+SMODS.Atlas{key = "Joker", path = "Jokers-negate.png", px = 71, py = 95, prefix_config = { key = false } }
+SMODS.Atlas{key = "Booster", path = "boosters-negate.png", px = 71, py = 95, prefix_config = { key = false } }
+SMODS.Atlas{key = "blind_chips", path = "BlindChips-negate.png", px = 34, py = 34, prefix_config = { key = false }, atlas_table = 'ANIMATION_ATLAS', frames = 21}
 
 ----------------------------------------------
 ------------MOD CODE END----------------------

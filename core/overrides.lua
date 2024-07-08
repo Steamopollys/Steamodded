@@ -536,6 +536,10 @@ function Game:init_game_object()
 		t.hands[key] = {}
 		for k, v in pairs(SMODS.PokerHands[key]) do
 			-- G.GAME needs to be able to be serialized
+            -- TODO this is too specific; ex. nested tables with simple keys
+            -- are fine.
+            -- In fact, the check should just warn you if you have a key that
+            -- can't be serialized.
 			if type(v) == 'number' or type(v) == 'boolean' or k == 'example' then
 				t.hands[key][k] = v
 			end

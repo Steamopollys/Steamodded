@@ -67,4 +67,14 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 
-if SMODS.Seals[v] or SMODS.Seal.reverse_lookup[v] then info_queue[#info_queue+1] = {key = v, set = 'Other' } end'''
+local seal = SMODS.Seals[v] or SMODS.Seal.badge_to_key[v] and SMODS.Seals[SMODS.Seal.badge_to_key[v]]
+if seal then
+	local t = { key = v, set = 'Other' }
+	info_queue[#info_queue+1] = t
+	if seal.loc_vars and type(seal.loc_vars) == 'function' then
+		local res = seal:loc_vars(info_queue, card) or {}
+		t.vars = res.vars
+		t.key = res.key or t.key
+	end
+end
+'''

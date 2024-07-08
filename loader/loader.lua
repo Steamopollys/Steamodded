@@ -217,9 +217,8 @@ function loadMods(modsDirectory)
                     end
                 
                     if mod.outdated then
-                        mod.omit_mod_prefix = true
-                    end
-                    if not mod.omit_mod_prefix then
+                        mod.prefix_config = { key = { mod = false }, atlas = false }
+                    else
                         mod.prefix = mod.prefix or (mod.id or ''):lower():sub(1, 4)
                     end
                     if mod.prefix and used_prefixes[mod.prefix] then
@@ -363,7 +362,9 @@ function loadMods(modsDirectory)
         local Card_generate_UIBox_ability_table_ref = Card.generate_UIBox_ability_table
         function Card:generate_UIBox_ability_table(...)
             SMODS.compat_0_9_8.generate_UIBox_ability_table_card = self
-            return Card_generate_UIBox_ability_table_ref(self, ...)
+            local ret = Card_generate_UIBox_ability_table_ref(self, ...)
+            SMODS.compat_0_9_8.generate_UIBox_ability_table_card = nil
+            return ret
         end
     end
 end
@@ -377,6 +378,17 @@ function SMODS.injectItems()
     boot_print_stage('Initializing Localization')
     init_localization()
     SMODS.SAVE_UNLOCKS()
+    table.sort(G.P_CENTER_POOLS["Back"], function (a, b) return (a.order - (a.unlocked and 100 or 0)) < (b.order - (b.unlocked and 100 or 0)) end)
+    for _, t in ipairs{
+        G.P_CENTERS,
+        G.P_BLINDS,
+        G.P_TAGS,
+        G.P_SEALS,
+    } do
+        for k, v in pairs(t) do
+            assert(v._discovered_unlocked_overwritten)
+        end
+    end
 end
 
 local function initializeModUIFunctions()
