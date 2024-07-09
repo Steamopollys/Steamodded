@@ -28,7 +28,7 @@ match_indent = true
 position = "before"
 payload = '''
 local sticker = SMODS.Stickers[v]
-if sticker then
+if sticker and sticker.generate_ui ~= 0 then
     local t = { key = v, set = 'Other' }
     info_queue[#info_queue+1] = t
     if sticker.loc_vars and type(sticker.loc_vars) == 'function' then
