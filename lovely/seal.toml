@@ -41,7 +41,7 @@ line_prepend = '$indent'
 payload = '''
 local obj = G.P_SEALS[self.seal] or {}
 if obj.calculate and type(obj.calculate) == 'function' then
-	local o = obj.calculate(self, context)
+	local o = obj:calculate(self, context)
 	if o then return o end
 end'''
 
