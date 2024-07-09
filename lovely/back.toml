@@ -12,17 +12,16 @@ target = 'back.lua'
 pattern = "if not selected_back then selected_back = G.P_CENTERS.b_red end"
 position = 'after'
 match_indent = true
-payload = "self.atlas = selected_back.atlas"
+payload = "self.atlas = selected_back.unlocked and selected_back.atlas or nil"
 
 # Back:change_to()
-
 [[patches]]
 [patches.pattern]
 target = 'back.lua'
 pattern = "if not new_back then new_back = G.P_CENTERS.b_red end"
 position = 'after'
 match_indent = true
-payload = "self.atlas = new_back.atlas"
+payload = "self.atlas = new_back.unlocked and new_back.atlas or nil"
 
 # G.FUNCS.change_viewed_back
 [[patches]]
