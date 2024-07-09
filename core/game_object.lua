@@ -188,9 +188,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end
         if orig_o._saved_d_u then
             orig_o.discovered, orig_o.unlocked = orig_o._d, orig_o._u
+            orig_o._saved_d_u = false
             orig_o._discovered_unlocked_overwritten = false
         end
         for k, v in pairs(obj) do orig_o[k] = v end
+        SMODS._save_d_u(orig_o)
         orig_o.taken_ownership = true
         orig_o:register()
         return orig_o
