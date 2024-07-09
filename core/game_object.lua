@@ -188,7 +188,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end
         if orig_o._saved_d_u then
             orig_o.discovered, orig_o.unlocked = orig_o._d, orig_o._u
-            orig_o._saved_d_u = false
             orig_o._discovered_unlocked_overwritten = false
         end
         for k, v in pairs(obj) do orig_o[k] = v end
@@ -1103,6 +1102,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         return {
             inject = function(self)
                 self.unlock_condition.stake = SMODS.Stakes[stake].stake_level
+                SMODS.Back.inject(self)
             end
         }
     end
