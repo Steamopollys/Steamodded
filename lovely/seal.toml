@@ -41,7 +41,7 @@ line_prepend = '$indent'
 payload = '''
 local obj = G.P_SEALS[self.seal] or {}
 if obj.calculate and type(obj.calculate) == 'function' then
-	local o = obj.calculate(self, context)
+	local o = obj:calculate(self, context)
 	if o then return o end
 end'''
 
@@ -60,15 +60,14 @@ elseif $cond'''
 
 # generate_card_ui()
 [[patches]]
-[patches.regex]
+[patches.pattern]
 target = 'functions/common_events.lua'
-pattern = "(?<indent>[\t ]*)if v == 'eternal'"
-line_prepend = '$indent'
+pattern = "if v == 'gold_seal'*"
+match_indent = true
 position = 'before'
 payload = '''
-
 local seal = SMODS.Seals[v] or SMODS.Seal.badge_to_key[v] and SMODS.Seals[SMODS.Seal.badge_to_key[v]]
-if seal then
+if seal and seal.generate_ui ~= 0 then
 	local t = { key = v, set = 'Other' }
 	info_queue[#info_queue+1] = t
 	if seal.loc_vars and type(seal.loc_vars) == 'function' then
@@ -76,5 +75,12 @@ if seal then
 		t.vars = res.vars
 		t.key = res.key or t.key
 	end
-end
-'''
+else'''
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if v == 'purple_seal'*"
+match_indent = true
+position = 'after'
+payload = 'end'
+

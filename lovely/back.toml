@@ -130,8 +130,7 @@ if back_config.loc_vars and type(back_config.loc_vars) == 'function' then
 	local res = back_config:loc_vars() or {}
 	loc_args = res.vars or {}
 	key_override = res.key
-elseif name_to_check == 'Blue Deck' then loc_args = {effect_config.hands}
-'''
+elseif name_to_check == 'Blue Deck' then loc_args = {effect_config.hands}'''
 
 [[patches]]
 [patches.regex]
