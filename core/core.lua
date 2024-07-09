@@ -351,7 +351,6 @@ function buildAdditionsTab(mod)
 		UIBox_button({button = 'your_collection_boosters', label = {localize('b_booster_packs')}, count = modsCollectionTally(G.P_CENTER_POOLS["Booster"]), minw = 5, id = 'your_collection_boosters', func = 'is_collection_empty'}),
 		UIBox_button({button = 'your_collection_tags', label = {localize('b_tags')}, count = modsCollectionTally(G.P_TAGS), minw = 5, id = 'your_collection_tags', func = 'is_collection_empty'}),
 		UIBox_button({button = 'your_collection_blinds', label = {localize('b_blinds')}, count = modsCollectionTally(G.P_BLINDS), minw = 5, minh = 2.0, id = 'your_collection_blinds', focus_args = {snap_to = true}, func = 'is_collection_empty'}),
-		SMODS.D6_Sides and UIBox_button({button = 'your_collection_d6_sides', label = {localize('b_d6_sides')}, count = modsCollectionTally(G.P_D6_SIDES), minw = 5, minh = 2.0, id = 'your_collection_d6_sides', focus_args = {snap_to = true}, func = 'is_collection_empty'}) or nil,
 	  }}
 	}}
 
