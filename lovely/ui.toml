@@ -49,7 +49,9 @@ line_prepend = '$indent'
 target = "functions/UI_definitions.lua"
 pattern = '''local center = G.P_CENTER_POOLS["Joker"][i+(j-1)*5]'''
 position = "at"
-payload = '''local center = joker_pool[i+(j-1)*5]'''
+payload = '''
+local center = joker_pool[i+(j-1)*5]
+if not center then break end'''
 match_indent = true
 
 # create_UIBox_your_collection_jokers()
@@ -243,6 +245,17 @@ payload = '''
     table.insert(voucher_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#voucher_pool/(4*#G.your_collection))))'''
 line_prepend = '$indent'
 
+# create_UIBox_your_collection_boosters()
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''local center = G.P_CENTER_POOLS["Voucher"][i+(j-1)*4]'''
+position = 'at'
+payload = '''
+local center = voucher_pool[i+(j-1)*4]
+if not center then break end'''
+match_indent = true
+
 ## Note: This covers Blinds and Vouchers
 # create_UIBox_your_collection_vouchers() and create_UIBox_your_collection_blinds()
 [[patches]]
@@ -296,7 +309,9 @@ if G.ACTIVE_MOD_UI then
         if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then blind_tab[#blind_tab+1] = v end
     end
 else
-    blind_tab = G.P_BLINDS
+    for k, v in pairs(G.P_BLINDS) do
+        blind_tab[#blind_tab+1] = v
+    end
 end'''
 line_prepend = '$indent'
 

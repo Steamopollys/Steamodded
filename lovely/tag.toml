@@ -34,8 +34,8 @@ local counter = 0
 local tag_tab = {}
 local tag_pool = {}
 if G.ACTIVE_MOD_UI then
-    for _, v in ipairs(G.P_TAGS) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then tag_pool[#tag_pool+1] = v end
+    for k, v in pairs(G.P_TAGS) do
+        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then tag_pool[k] = v end
     end
 else
     tag_pool = G.P_TAGS
