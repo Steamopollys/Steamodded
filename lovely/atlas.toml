@@ -58,3 +58,17 @@ pattern = "G:set_render_settings()"
 position = 'at'
 match_indent = true
 payload = "SMODS.injectObjects(SMODS.Atlas)"
+
+
+# create_UIBox_notify_alert()
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = 'G.ASSET_ATLAS["icons"]'
+position = 'after'
+match_indent = false
+payload = '''
+	local _smods_atlas = (G.SETTINGS.colourblind_option and _c.hc_atlas or _c.lc_atlas) or _c.atlas
+	if _smods_atlas then
+		_atlas = G.ASSET_ATLAS[_smods_atlas] or _atlas
+	end'''
