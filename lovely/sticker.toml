@@ -29,16 +29,21 @@ position = "before"
 payload = '''
 local sticker = SMODS.Stickers[v]
 if sticker then
-    local vars
-    local key = v
+    local t = { key = v, set = 'Other' }
+    info_queue[#info_queue+1] = t
     if sticker.loc_vars and type(sticker.loc_vars) == 'function' then
         local res = sticker:loc_vars(info_queue, card) or {}
-        vars = res.vars
-        key = res.key or key
+        t.vars = res.vars
+        t.key = res.key or t.key
     end
-    info_queue[#info_queue+1] = { key = key, set = 'Other', vars = vars }
-    v = ''
-end'''
+else'''
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if v == 'rental' then*"
+match_indent = true
+position = "after"
+payload = '''end'''
 
 # create_card()
 [[patches]]
