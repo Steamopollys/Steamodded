@@ -12,17 +12,16 @@ target = 'back.lua'
 pattern = "if not selected_back then selected_back = G.P_CENTERS.b_red end"
 position = 'after'
 match_indent = true
-payload = "self.atlas = selected_back.atlas"
+payload = "self.atlas = selected_back.unlocked and selected_back.atlas or nil"
 
 # Back:change_to()
-
 [[patches]]
 [patches.pattern]
 target = 'back.lua'
 pattern = "if not new_back then new_back = G.P_CENTERS.b_red end"
 position = 'after'
 match_indent = true
-payload = "self.atlas = new_back.atlas"
+payload = "self.atlas = new_back.unlocked and new_back.atlas or nil"
 
 # G.FUNCS.change_viewed_back
 [[patches]]
@@ -64,7 +63,61 @@ payload = '''
 		if o then return o end
 	end'''
 
-# Back:generate_UI
+## Back:generate_UI
+
+# Localization with `unlock` field in loc_txt, same as for Jokers
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = 'if not back_config.unlock_condition then'
+position = 'at'
+payload = '''
+local localized_by_smods
+local key_override
+if back_config.locked_loc_vars and type(back_config.locked_loc_vars) == 'function' then
+	local res = back_config:locked_loc_vars() or {}
+	loc_args = res.vars or {}
+	key_override = res.key
+end
+if G.localization.descriptions.Back[key_override or back_config.key].unlock_parsed then
+	localize{type = 'unlocks', key = key_override or back_config.key, set = 'Back', nodes = loc_nodes, vars = loc_args}
+	localized_by_smods = true
+end
+if not back_config.unlock_condition then'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = '''localize{type = 'descriptions', key = 'demo_locked', set = "Other", nodes = loc_nodes, vars = loc_args}'''
+position = 'at'
+payload = '''
+if not localized_by_smods then
+	localize{type = 'descriptions', key = 'demo_locked', set = "Other", nodes = loc_nodes, vars = loc_args}
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = 'loc_args = {other_name}'
+position = 'at'
+payload = 'loc_args = loc_args or {other_name}'
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = 'loc_args = {tostring(back_config.unlock_condition.amount)}'
+position = 'at'
+payload = 'loc_args = loc_args or {tostring(back_config.unlock_condition.amount)}'
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = 'loc_args = {other_name, colours = {get_stake_col(back_config.unlock_condition.stake)}}'
+position = 'at'
+payload = 'loc_args = loc_args or {other_name, colours = {get_stake_col(back_config.unlock_condition.stake)}}'
+match_indent = true
+
 [[patches]]
 [patches.pattern]
 target = 'back.lua'
@@ -77,8 +130,7 @@ if back_config.loc_vars and type(back_config.loc_vars) == 'function' then
 	local res = back_config:loc_vars() or {}
 	loc_args = res.vars or {}
 	key_override = res.key
-elseif name_to_check == 'Blue Deck' then loc_args = {effect_config.hands}
-'''
+elseif name_to_check == 'Blue Deck' then loc_args = {effect_config.hands}'''
 
 [[patches]]
 [patches.regex]

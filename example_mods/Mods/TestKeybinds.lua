@@ -1,7 +1,7 @@
 --- STEAMODDED HEADER
 --- MOD_NAME: CustomKeybinds
 --- MOD_ID: CKeybinds
---- MOD_AUTHOR: [stupid]
+--- MOD_AUTHOR: [stupxd]
 --- MOD_DESCRIPTION: Custom keybinds example!
 
 ----------------------------------------------
