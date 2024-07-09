@@ -1103,6 +1103,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         return {
             inject = function(self)
                 self.unlock_condition.stake = SMODS.Stakes[stake].stake_level
+                SMODS.Back.inject(self)
             end
         }
     end
