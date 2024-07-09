@@ -176,10 +176,15 @@ function SMODS.SAVE_UNLOCKS()
 end
 
 function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
-    local target = (type(loc_txt) == 'table') and
-    (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
-    if key and (type(target) == 'table') then target = target[key] end
-    if not (type(target) == 'string' or target and next(target)) then return end
+    local target = (type(loc_txt) == 'table')
+                    and (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us'])
+                    or loc_txt
+    if key and (type(target) == 'table') then 
+        target = target[key]
+    end
+    if not (type(target) == 'string' or target and next(target)) then
+        return
+    end
     ref_table[ref_value] = target
 end
 
