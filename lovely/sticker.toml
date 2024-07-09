@@ -23,17 +23,21 @@ end'''
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
-pattern = "if v == 'pinned_left' then info_queue[#info_queue+1] = {key = 'pinned_left', set = 'Other'} end"
+pattern = "if v == 'eternal' then*"
 match_indent = true
-position = "after"
+position = "before"
 payload = '''
 local sticker = SMODS.Stickers[v]
 if sticker then
-    if sticker.tooltip and type(sticker.tooltip) == 'function' then
-        sticker:tooltip(_c, info_queue)
-    else
-        info_queue[#info_queue+1] = { key = v, set = 'Other' }
+    local vars
+    local key = v
+    if sticker.loc_vars and type(sticker.loc_vars) == 'function' then
+        local res = sticker:loc_vars(info_queue, card) or {}
+        vars = res.vars
+        key = res.key or key
     end
+    info_queue[#info_queue+1] = { key = key, set = 'Other', vars = vars }
+    v = ''
 end'''
 
 # create_card()
