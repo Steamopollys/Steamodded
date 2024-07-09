@@ -15,7 +15,9 @@ payload = '''
 local obj = self.config.center
 if obj.set_ability and type(obj.set_ability) == 'function' then
 	obj:set_ability(self, initial, delay_sprites)
-end'''
+end
+
+'''
 line_prepend = '$indent'
 [[patches]]
 [patches.pattern]
