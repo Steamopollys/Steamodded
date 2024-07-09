@@ -170,10 +170,13 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             )
             return
         end
-        local original_has_loc = orig_o.taken_ownership and (orig_o.loc_txt or orig_o.loc_vars or (orig_o.generate_ui ~= self.generate_ui))
         local is_loc_modified = obj.loc_txt or obj.loc_vars or obj.generate_ui
-        if not original_has_loc and not is_loc_modified then obj.generate_ui = 0 end
-        if is_loc_modified and orig_o.generate_ui == 0 then obj.generate_ui = obj.generate_ui or self.generate_ui end
+        if is_loc_modified then orig_o.is_loc_modified = true end
+        if not orig_o.is_loc_modified then
+            -- Setting generate_ui to this sentinel value
+            -- makes vanilla localization code run instead of SMODS's code
+            orig_o.generate_ui = 0
+        end
         -- TODO
         -- it's unclear how much we should modify `obj` on a failed take_ownership call.
         -- do we make sure the metatable is set early, or wait until the end?
