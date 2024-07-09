@@ -129,6 +129,17 @@ elseif _type == 'Enhanced' then'''
 
 ## G.GAME.used_jokers now checks keys, not names
 # Card:set_ability()
+# Remove the old center from `used_jokers` if set_ability overrides
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "local old_center = self.config.center"
+position = 'after'
+payload = '''
+if not next(SMODS.find_card(old_center.key, true)) then
+    G.GAME.used_jokers[old_center.key] = nil
+end'''
+match_indent = true
 [[patches]]
 [patches.regex]
 target = "card.lua"
