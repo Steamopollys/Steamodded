@@ -198,7 +198,7 @@ function G.UIDEF.deck_preview(args)
 			stones = stones or 0
 		end
 		if (v.area and v.area == G.deck) or v.ability.wheel_flipped then
-			if v.ability.wheel_flipped then wheel_flipped = wheel_flipped + 1 end
+			if v.ability.wheel_flipped and not (v.area and v.area == G.deck) then wheel_flipped = wheel_flipped + 1 end
 			if v.ability.effect == 'Stone Card' then
 				stones = stones + 1
 			else
@@ -386,7 +386,7 @@ function G.UIDEF.view_deck(unplayed_only)
 
 	for k, v in ipairs(G.playing_cards) do
 		if v.ability.name ~= 'Stone Card' and (not unplayed_only or ((v.area and v.area == G.deck) or v.ability.wheel_flipped)) then
-			if v.ability.wheel_flipped and unplayed_only then wheel_flipped = wheel_flipped + 1 end
+			if v.ability.wheel_flipped and not (v.area and v.area == G.deck) and unplayed_only then wheel_flipped = wheel_flipped + 1 end
 			--For the suits
 			suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1
 			for kk, vv in pairs(mod_suit_tallies) do
