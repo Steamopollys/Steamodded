@@ -2196,6 +2196,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 end
             end
         end,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.descriptions.Other, self.key:lower(), self.loc_txt)
+        end,
         -- other methods:
         -- calculate(self, context, effect)
     }
