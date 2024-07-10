@@ -79,3 +79,12 @@ pattern = 'if G.pack_cards and (G.pack_cards.cards[1]) and'
 position = 'at'
 payload = 'if G.pack_cards and'
 match_indent = true
+
+## Set `G.your_collection.config.collection` to true in all cases
+# create_UIBox_your_collection_seals()
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = '''\{card_limit = 4, type = 'title', highlight_limit = 0\}'''
+position = 'at'
+payload = '''{card_limit = 4, type = 'title', highlight_limit = 0, collection = true}'''
