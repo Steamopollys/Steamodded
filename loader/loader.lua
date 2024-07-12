@@ -360,6 +360,12 @@ function loadMods(modsDirectory)
 end
 
 function SMODS.injectItems()
+    -- Set .key for vanilla undiscovered, locked objects
+    for k, v in pairs(G) do
+        if type(k) == 'string' and (k:sub(-12, -1) == 'undiscovered' or k:sub(-6, -1) == 'locked') then
+            v.key = k
+        end
+    end
     SMODS.injectObjects(SMODS.GameObject)
     if SMODS.dump_loc then
         boot_print_stage('Dumping Localization')
