@@ -330,7 +330,7 @@ function SMODS.create_mod_badges(obj, badges)
             local len = string.len(mod_name)
             local size = 0.9 - (len > 6 and 0.02 * (len - 6) or 0)
             badges[#badges + 1] = {n=G.UIT.R, config={align = "cm"}, nodes={
-                {n=G.UIT.R, config={align = "cm", colour = mod.badge_colour or G.C.GREEN, r = 0.1, minw = 2, minh = 0.4, emboss = 0.05, padding = 0.03*size}, nodes={
+                {n=G.UIT.R, config={align = "cm", colour = mod.badge_colour or G.C.GREEN, r = 0.1, minw = 2, minh = 0.36, emboss = 0.05, padding = 0.03*size}, nodes={
                   {n=G.UIT.B, config={h=0.1,w=0.03}},
                   {n=G.UIT.O, config={object = DynaText({string = mod_name or 'ERROR', colours = {mod.text_colour or G.C.WHITE},float = true, shadow = true, offset_y = -0.05, silent = true, spacing = 1, scale = 0.33*size})}},
                   {n=G.UIT.B, config={h=0.1,w=0.03}},
