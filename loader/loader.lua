@@ -89,6 +89,7 @@ function loadMods(modsDirectory)
         description   = { pattern = '%-%-%- MOD_DESCRIPTION: (.-)\n', required = true },
         priority      = { pattern = '%-%-%- PRIORITY: (%-?%d+)\n', handle = function(x) return x and x + 0 or 0 end },
         badge_colour  = { pattern = '%-%-%- BADGE_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or '666666FF') end },
+        text_colour   = { pattern = '%-%-%- TEXT_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or 'FFFFFF') end },
         display_name  = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
         dependencies  = {
             pattern = '%-%-%- DEPENDENCIES: %[(.-)%]\n',
