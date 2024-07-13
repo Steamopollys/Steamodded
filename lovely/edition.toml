@@ -302,7 +302,7 @@ position = "after"
 payload = '''
     if card.edition and card.edition.card_limit and (self == G.hand) then
         self.config.card_limit = self.config.card_limit + card.edition.card_limit
-        self:draw_card_from(area, stay_flipped, discarded_only)
+        -- TODO fix
     end'''
 match_indent = true
 # CardArea:remove_card()
