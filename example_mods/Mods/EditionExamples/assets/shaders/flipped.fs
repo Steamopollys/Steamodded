@@ -1,20 +1,63 @@
 #if defined(VERTEX) || __VERSION__ > 100 || defined(GL_FRAGMENT_PRECISION_HIGH)
-	#define MY_HIGHP_OR_MEDIUMP highp
+	#define PRECISION highp
 #else
-	#define MY_HIGHP_OR_MEDIUMP mediump
+	#define PRECISION mediump
 #endif
 
-extern MY_HIGHP_OR_MEDIUMP vec2 flipped;
+// Card rotation
+extern PRECISION vec2 flipped;
 
-extern MY_HIGHP_OR_MEDIUMP number dissolve;
-extern MY_HIGHP_OR_MEDIUMP number time;
-extern MY_HIGHP_OR_MEDIUMP vec4 texture_details;
-extern MY_HIGHP_OR_MEDIUMP vec2 image_details;
+extern PRECISION number dissolve;
+extern PRECISION number time;
+// (sprite_pos_x, sprite_pos_y, sprite_width, sprite_height) [not normalized]
+extern PRECISION vec4 texture_details;
+// (width, height) for atlas texture [not normalized]
+extern PRECISION vec2 image_details;
 extern bool shadow;
-extern MY_HIGHP_OR_MEDIUMP vec4 burn_colour_1;
-extern MY_HIGHP_OR_MEDIUMP vec4 burn_colour_2;
+extern PRECISION vec4 burn_colour_1;
+extern PRECISION vec4 burn_colour_2;
 
-// the following four vec4 are (as far as I can tell) required and shouldn't be changed
+// [Required] 
+// Apply dissolve effect (when card is being "burnt", e.g. when consumable is used)
+vec4 dissolve_mask(vec4 tex, vec2 texture_coords, vec2 uv);
+
+// This is what actually changes the look of card
+vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords )
+{
+
+    // Position of a pixel within the sprite
+	vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.ba)/texture_details.ba;
+    
+    float sprite_height = texture_details.a / image_details.y; // Normalized height
+    float sprite_pos_y = texture_details.y * sprite_height; // Normalized pos_y
+
+    float newY = sprite_pos_y + sprite_height - (texture_coords.y - sprite_pos_y);
+    // Take pixel color (rgba) from `texture` at `texture_coords`, equivalent of texture2D in GLSL
+    vec4 tex = Texel(texture, vec2(texture_coords.x, newY));
+
+    //vec2 rotater = vec2(cos(flipped.r*0.1221), sin(flipped.r*0.3512));
+
+
+    if (flipped.g > 0.0 || flipped.g < 0.0) {
+        // vec4 hsl = HSL(tex);
+    }
+
+    // Does not do anything
+    if (uv.x > 2. * uv.x) {
+        uv = flipped;
+    }
+
+
+    // Mix with base texture
+    //tex = RGB(0.7*hsl + 0.3*bhsl);
+    float ratio = 1;
+    // tex = ratio*RGB(hsl) + (1-ratio)*RGB(bhsl);
+
+
+
+    // required
+	return dissolve_mask(tex*colour, texture_coords, uv);
+}
 
 vec4 dissolve_mask(vec4 tex, vec2 texture_coords, vec2 uv)
 {
@@ -54,85 +97,10 @@ vec4 dissolve_mask(vec4 tex, vec2 texture_coords, vec2 uv)
     return vec4(shadow ? vec3(0.,0.,0.) : tex.xyz, res > adjusted_dissolve ? (shadow ? tex.a*0.3: tex.a) : .0);
 }
 
-number hue(number s, number t, number h)
-{
-	number hs = mod(h, 1.)*6.;
-	if (hs < 1.) return (t-s) * hs + s;
-	if (hs < 3.) return t;
-	if (hs < 4.) return (t-s) * (4.-hs) + s;
-	return s;
-}
-
-vec4 RGB(vec4 c)
-{
-	if (c.y < 0.0001)
-		return vec4(vec3(c.z), c.a);
-
-	number t = (c.z < .5) ? c.y*c.z + c.z : -c.y*c.z + (c.y+c.z);
-	number s = 2.0 * c.z - t;
-	return vec4(hue(s,t,c.x + 1./3.), hue(s,t,c.x), hue(s,t,c.x - 1./3.), c.w);
-}
-
-vec4 HSL(vec4 c)
-{
-	number low = min(c.r, min(c.g, c.b));
-	number high = max(c.r, max(c.g, c.b));
-	number delta = high - low;
-	number sum = high+low;
-
-	vec4 hsl = vec4(.0, .0, .5 * sum, c.a);
-	if (delta == .0)
-		return hsl;
-
-	hsl.y = (hsl.z < .5) ? delta / sum : delta / (2.0 - sum);
-
-	if (high == c.r)
-		hsl.x = (c.g - c.b) / delta;
-	else if (high == c.g)
-		hsl.x = (c.b - c.r) / delta + 2.0;
-	else
-		hsl.x = (c.r - c.g) / delta + 4.0;
-
-	hsl.x = mod(hsl.x / 6., 1.);
-	return hsl;
-}
-
-// this is what actually changes the look of card
-vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords )
-{
-    
-    // turns the texture into pixels
-    float newY = 1 - (texture_coords.y / texture_details.b);
-    vec4 tex = Texel(texture, vec2(texture_coords.x, newY));
-	vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.ba)/texture_details.ba;
-    
-    
-
-
-    //vec2 rotater = vec2(cos(flipped.r*0.1221), sin(flipped.r*0.3512));
-
-
-    if (flipped.g > 0.0 || flipped.g < 0.0) {
-        vec4 hsl = HSL(tex);
-    }
-
-
-
-    // Mix with base texture
-    //tex = RGB(0.7*hsl + 0.3*bhsl);
-    float ratio = 1;
-    // tex = ratio*RGB(hsl) + (1-ratio)*RGB(bhsl);
-
-
-
-    // required
-	return dissolve_mask(tex*colour, texture_coords, uv);
-}
-
 // for transforming the card while your mouse is on it
-extern MY_HIGHP_OR_MEDIUMP vec2 mouse_screen_pos;
-extern MY_HIGHP_OR_MEDIUMP float hovering;
-extern MY_HIGHP_OR_MEDIUMP float screen_scale;
+extern PRECISION vec2 mouse_screen_pos;
+extern PRECISION float hovering;
+extern PRECISION float screen_scale;
 
 #ifdef VERTEX
 vec4 position( mat4 transform_projection, vec4 vertex_position )
