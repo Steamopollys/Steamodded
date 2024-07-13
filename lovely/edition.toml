@@ -302,7 +302,6 @@ position = "after"
 payload = '''
     if card.edition and card.edition.card_limit and (self == G.hand) then
         self.config.card_limit = self.config.card_limit + card.edition.card_limit
-        -- TODO fix
     end'''
 match_indent = true
 # CardArea:remove_card()
@@ -316,6 +315,26 @@ if card.edition and card.edition.card_limit and (self == G.hand) then
     self.config.card_limit = self.config.card_limit - card.edition.card_limit
 end'''
 match_indent = true
+# G.FUNCS.draw_from_deck_to_hand()
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local hand_space = e or*"
+position = "at"
+payload = """local hand_space = e
+if not hand_space then
+    local limit = G.hand.config.card_limit - #G.hand.cards
+    local n = 0
+    while n < #G.deck.cards do
+        local card = G.deck.cards[#G.deck.cards-n]
+        limit = limit - 1 + (card.edition and card.edition.card_limit or 0)
+        if limit < 0 then break end
+        n = n + 1
+    end
+    hand_space = n
+end"""
+match_indent = true
+
 [[patches]]
 [patches.pattern]
 target = "card.lua"
