@@ -116,3 +116,12 @@ pattern = 'if highest_win >= 8 then'
 position = "at"
 payload = 'if highest_win >= G.P_STAKES["stake_gold"].stake_level then'
 match_indent = true
+
+# make the stakes button appear in run info if any stakes apply
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = 'G.GAME.stake > 1 and {'
+position = "at"
+payload = "#G.P_CENTER_POOLS['Stake'][G.GAME.stake].applied_stakes ~= 0 and {"
+match_indent = true
