@@ -125,3 +125,46 @@ pattern = 'G.GAME.stake > 1 and {'
 position = "at"
 payload = "#G.P_CENTER_POOLS['Stake'][G.GAME.stake].applied_stakes ~= 0 and {"
 match_indent = true
+
+# check the previous stakes for modifiers to determine whether "also applies" should be drawn or not
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = 'if G.GAME.stake > 2 then'
+position = "at"
+payload = '''
+local searched_stakes = {}
+local found_stakes = 0
+local function search_stakes(s)
+	local searched = false
+	
+	for fk, fv in pairs(searched_stakes) do
+		if s == fv then
+			searched = true
+			break
+		end
+	end
+	
+	if searched == false then
+		if G.P_STAKES["stake_"..s].modifiers then 
+			found_stakes = found_stakes + 1 
+		end
+		searched_stakes[#searched_stakes+1] = s
+		
+		for sk,sv in pairs(G.P_STAKES["stake_"..s].applied_stakes) do
+			if found_stakes > 0 then break end
+			search_stakes(v)
+		end
+	end
+	
+end
+
+for k,v in pairs(G.P_CENTER_POOLS['Stake'][G.GAME.stake].applied_stakes) do
+	if found_stakes > 0 then break end
+	search_stakes(v)
+end
+
+if found_stakes > 0 then
+
+'''
+match_indent = true
