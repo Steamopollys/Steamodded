@@ -1,5 +1,5 @@
-# Ionized
-A Balatro example mod for adding a custom Edition in Steamodded.
+# Introduction
+A Balatro example mod for adding a custom Editions in Steamodded.
 
 Feel free to copy and use this for any of projects!
 
@@ -22,4 +22,5 @@ Again, you'd have to write it yourself.
 For a general guide, look at [LOVE2D introduction to shaders](https://blogs.love2d.org/content/beginners-guide-shaders).
 
 If you want to see vanilla Balatro shaders, unzip the Balatro.exe and go to `resources/shaders` folder.
+
 To see values for default externs check out `engine/sprite.lua` -> `Sprite:draw_shader`.
