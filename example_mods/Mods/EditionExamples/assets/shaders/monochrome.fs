@@ -22,7 +22,7 @@ extern PRECISION vec4 burn_colour_2;
 vec4 RGB(vec4 c);
 
 // [Util]
-// Transform color RGB to HSL
+// Transform color from RGB to HSL
 vec4 HSL(vec4 c);
 
 // [Required] 

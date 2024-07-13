@@ -22,7 +22,7 @@ extern PRECISION vec4 burn_colour_2;
 vec4 RGB(vec4 c);
 
 // [Util]
-// Transform color RGB to HSL
+// Transform color from RGB to HSL
 vec4 HSL(vec4 c);
 
 // [Required] 
@@ -36,7 +36,7 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
     float displacement_x = (0.1*cos(anaglyphic.g*0.3)+0.3)/texture_details.b;
     float displacement_y = (0.03*sin(anaglyphic.r)+0.03)/texture_details.a;
     
-    // turns the texture into pixels
+    // Take pixel color (rgba) from `texture` at `texture_coords`, equivalent of texture2D in GLSL
     vec4 tex = Texel(texture, texture_coords);
     vec4 red_tex = Texel(texture, vec2(texture_coords.x + displacement_x, texture_coords.y + displacement_y));
     vec4 blue_tex = Texel(texture, vec2(texture_coords.x - displacement_x, texture_coords.y - displacement_y));

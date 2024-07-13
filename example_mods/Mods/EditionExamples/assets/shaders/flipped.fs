@@ -28,32 +28,22 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
     // Position of a pixel within the sprite
 	vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.ba)/texture_details.ba;
     
+    float sprite_width = texture_details.z / image_details.x; // Normalized width
+    float sprite_pos_x = texture_details.x * sprite_width; // Normalized pos_x
+
+    float newX = sprite_pos_x + sprite_width - (texture_coords.x - sprite_pos_x);
+
     float sprite_height = texture_details.a / image_details.y; // Normalized height
     float sprite_pos_y = texture_details.y * sprite_height; // Normalized pos_y
 
     float newY = sprite_pos_y + sprite_height - (texture_coords.y - sprite_pos_y);
     // Take pixel color (rgba) from `texture` at `texture_coords`, equivalent of texture2D in GLSL
-    vec4 tex = Texel(texture, vec2(texture_coords.x, newY));
+    vec4 tex = Texel(texture, vec2(newX, newY));
 
-    //vec2 rotater = vec2(cos(flipped.r*0.1221), sin(flipped.r*0.3512));
-
-
-    if (flipped.g > 0.0 || flipped.g < 0.0) {
-        // vec4 hsl = HSL(tex);
-    }
-
-    // Does not do anything
+    // Does not do anything. Required for shader to not crash.
     if (uv.x > 2. * uv.x) {
         uv = flipped;
     }
-
-
-    // Mix with base texture
-    //tex = RGB(0.7*hsl + 0.3*bhsl);
-    float ratio = 1;
-    // tex = ratio*RGB(hsl) + (1-ratio)*RGB(bhsl);
-
-
 
     // required
 	return dissolve_mask(tex*colour, texture_coords, uv);
