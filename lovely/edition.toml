@@ -292,25 +292,27 @@ match_indent = true
 
 
 
-# Negative playing card logic
+## Negative playing card logic
+# CardArea:emplace()
 [[patches]]
 [patches.pattern]
 target = "cardarea.lua"
-pattern = "self:emplace(card, nil, stay_flipped)"
-position = "before"
+pattern = "function CardArea:emplace(*"
+position = "after"
 payload = '''
-if card.edition and card.edition.card_limit then
-    self.config.card_limit = self.config.card_limit + card.edition.card_limit
-    self:draw_card_from(area, stay_flipped, discarded_only)
-end'''
+    if card.edition and card.edition.card_limit and (self == G.hand) then
+        self.config.card_limit = self.config.card_limit + card.edition.card_limit
+        self:draw_card_from(area, stay_flipped, discarded_only)
+    end'''
 match_indent = true
+# CardArea:remove_card()
 [[patches]]
 [patches.pattern]
 target = "cardarea.lua"
 pattern = "card:remove_from_area()"
 position = "before"
 payload = '''
-if card.edition and card.edition.card_limit and (card.area == G.hand or card.area == G.play) then
+if card.edition and card.edition.card_limit and (self == G.hand) then
     self.config.card_limit = self.config.card_limit - card.edition.card_limit
 end'''
 match_indent = true
