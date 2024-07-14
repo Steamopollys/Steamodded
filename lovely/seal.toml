@@ -130,3 +130,36 @@ match_indent = true
 position = 'after'
 payload = 'end'
 
+# Card:update_alert()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = "function Card:update_alert()"
+match_indent = true
+position = 'after'
+payload = '''
+    if self.ability.set == 'Default' and self.config.center and self.config.center.key == 'c_base' and self.seal then
+        if G.P_SEALS[self.seal].alerted and self.children.alert then
+            self.children.alert:remove()
+            self.children.alert = nil
+        elseif not G.P_SEALS[self.seal].alerted and not self.children.alert and G.P_SEALS[self.seal].discovered then
+            self.children.alert = UIBox{
+                definition = create_UIBox_card_alert(), 
+                config = {align="tli",
+                        offset = {x = 0.1, y = 0.1},
+                        parent = self}
+            }
+        end
+    end'''
+
+# Card:hover()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = "G:save_progress()"
+match_indent = false
+position = "after"
+payload = '''
+        elseif self.children.alert and self.seal and not G.P_SEALS[self.seal].alerted then
+            G.P_SEALS[self.seal].alerted = true
+            G:save_progress()'''

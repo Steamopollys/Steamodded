@@ -314,10 +314,18 @@ SMODS.Back({
     discovered = true,
     unlocked = true
 })
-SMODS.Shader({key = 'greyscale', path = 'greyscale.fs'})
-SMODS.Shader({key = 'fluorescent', path = 'fluorescent.fs'})
+
 SMODS.Shader({key = 'anaglyphic', path = 'anaglyphic.fs'})
+-- SMODS.Shader({key = 'flipped', path = 'flipped.fs'})
+SMODS.Shader({key = 'fluorescent', path = 'fluorescent.fs'})
+-- SMODS.Shader({key = 'gilded', path = 'gilded.fs'})
+SMODS.Shader({key = 'greyscale', path = 'greyscale.fs'})
+-- SMODS.Shader({key = 'ionized', path = 'ionized.fs'})
+-- SMODS.Shader({key = 'laminated', path = 'laminated.fs'})
+-- SMODS.Shader({key = 'monochrome', path = 'monochrome.fs'})
 SMODS.Shader({key = 'overexposed', path = 'overexposed.fs'})
+-- SMODS.Shader({key = 'sepia', path = 'sepia.fs'})
+
 SMODS.Edition({
     key = "greyscale",
     loc_txt = {

@@ -295,7 +295,7 @@ function SMODS.compat_0_9_8.load()
     SMODS.Spectrals = SMODS.Centers
 
     SMODS.compat_0_9_8.Seal_new = SMODS.Seal:extend {
-        omit_prefix = true,
+        class_prefix = false,
         register = function(self)
             if self.delay_register then
                 self.delay_register = nil

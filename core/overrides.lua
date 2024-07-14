@@ -198,7 +198,7 @@ function G.UIDEF.deck_preview(args)
 			stones = stones or 0
 		end
 		if (v.area and v.area == G.deck) or v.ability.wheel_flipped then
-			if v.ability.wheel_flipped then wheel_flipped = wheel_flipped + 1 end
+			if v.ability.wheel_flipped and not (v.area and v.area == G.deck) then wheel_flipped = wheel_flipped + 1 end
 			if v.ability.effect == 'Stone Card' then
 				stones = stones + 1
 			else
@@ -244,7 +244,7 @@ function G.UIDEF.deck_preview(args)
 	table.insert(deck_tables, {n = G.UIT.R, config = {align = "cm", padding = 0.04 }, nodes = _row })
 
 	for _, suit in ipairs(suit_map) do
-		if not SMODS.Suits[suit].disabled then
+		if not (SMODS.Suits[suit].hidden and suit_counts[suit] == 0) then
 			_row = {}
 			_bg_col = mix_colours(G.C.SUITS[suit], G.C.L_BLACK, 0.7)
 			for _, rank in ipairs(rank_name_mapping) do
@@ -262,7 +262,7 @@ function G.UIDEF.deck_preview(args)
 	end
 
 	for k, v in ipairs(suit_map) do
-		if not SMODS.Suits[v].disabled then
+		if not (SMODS.Suits[v].hidden and suit_counts[v] == 0) then
 			local t_s = Sprite(0, 0, 0.3, 0.3,
 				G.ASSET_ATLAS[SMODS.Suits[v][G.SETTINGS.colourblind_option and "hc_ui_atlas" or "lc_ui_atlas"]] or
 				G.ASSET_ATLAS[("ui_" .. (G.SETTINGS.colourblind_option and "2" or "1"))], SMODS.Suits[v].ui_pos)
@@ -386,7 +386,7 @@ function G.UIDEF.view_deck(unplayed_only)
 
 	for k, v in ipairs(G.playing_cards) do
 		if v.ability.name ~= 'Stone Card' and (not unplayed_only or ((v.area and v.area == G.deck) or v.ability.wheel_flipped)) then
-			if v.ability.wheel_flipped and unplayed_only then wheel_flipped = wheel_flipped + 1 end
+			if v.ability.wheel_flipped and not (v.area and v.area == G.deck) and unplayed_only then wheel_flipped = wheel_flipped + 1 end
 			--For the suits
 			suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1
 			for kk, vv in pairs(mod_suit_tallies) do
@@ -467,25 +467,27 @@ function G.UIDEF.view_deck(unplayed_only)
 	}
 	-- add suit tallies
 	local i = 1
+	local n_nodes = {}
 	while i <= #suit_map do
-		local n = {n = G.UIT.R, config = {align = "cm", minh = 0.05, padding = 0.1}, nodes = {}}
-		for _ = 1, 2 do
-			while i <= #suit_map and SMODS.Suits[suit_map[i]].disabled do
-				i = i + 1
+		while #n_nodes < 2 and i <= #suit_map do
+			if not (SMODS.Suits[suit_map[i]].hidden and suit_tallies[suit_map[i]] == 0) then
+				table.insert(n_nodes, tally_sprite(
+					SMODS.Suits[suit_map[i]].ui_pos,
+					{
+						{ string = '' .. suit_tallies[suit_map[i]], colour = flip_col },
+						{ string = '' .. mod_suit_tallies[suit_map[i]], colour = G.C.BLUE }
+					},
+					{ localize(suit_map[i], 'suits_plural') },
+					suit_map[i]
+				))
 			end
-			if not suit_map[i] then break end
-			table.insert(n.nodes, tally_sprite(
-				SMODS.Suits[suit_map[i]].ui_pos,
-				{
-					{ string = '' .. suit_tallies[suit_map[i]], colour = flip_col },
-					{ string = '' .. mod_suit_tallies[suit_map[i]], colour = G.C.BLUE }
-				},
-				{ localize(suit_map[i], 'suits_plural') },
-				suit_map[i]
-			))
 			i = i + 1
 		end
-		table.insert(tally_ui, n)
+		if #n_nodes > 0 then
+			local n = {n = G.UIT.R, config = {align = "cm", minh = 0.05, padding = 0.1}, nodes = n_nodes}
+			table.insert(tally_ui, n)
+			n_nodes = {}
+		end
 	end
 	local t = {n = G.UIT.ROOT, config = {align = "cm", colour = G.C.CLEAR}, nodes = {
 		{n = G.UIT.R, config = {align = "cm", padding = 0.05}, nodes = {}},

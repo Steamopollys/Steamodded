@@ -1,17 +1,55 @@
 #if defined(VERTEX) || __VERSION__ > 100 || defined(GL_FRAGMENT_PRECISION_HIGH)
-	#define MY_HIGHP_OR_MEDIUMP highp
+	#define PRECISION highp
 #else
-	#define MY_HIGHP_OR_MEDIUMP mediump
+	#define PRECISION mediump
 #endif
 
-extern MY_HIGHP_OR_MEDIUMP vec2 laminated;
-extern MY_HIGHP_OR_MEDIUMP number dissolve;
-extern MY_HIGHP_OR_MEDIUMP number time;
-extern MY_HIGHP_OR_MEDIUMP vec4 texture_details;
-extern MY_HIGHP_OR_MEDIUMP vec2 image_details;
+// Card rotation
+extern PRECISION vec2 laminated;
+
+extern PRECISION number dissolve;
+extern PRECISION number time;
+// (sprite_pos_x, sprite_pos_y, sprite_width, sprite_height) [not normalized]
+extern PRECISION vec4 texture_details;
+// (width, height) for atlas texture [not normalized]
+extern PRECISION vec2 image_details;
 extern bool shadow;
-extern MY_HIGHP_OR_MEDIUMP vec4 burn_colour_1;
-extern MY_HIGHP_OR_MEDIUMP vec4 burn_colour_2;
+extern PRECISION vec4 burn_colour_1;
+extern PRECISION vec4 burn_colour_2;
+
+// [Required] 
+// Apply dissolve effect (when card is being "burnt", e.g. when consumable is used)
+vec4 dissolve_mask(vec4 tex, vec2 texture_coords, vec2 uv);
+
+// This is what actually changes the look of card
+vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords )
+{
+    // Take pixel color (rgba) from `texture` at `texture_coords`, equivalent of texture2D in GLSL
+    vec4 tex = Texel(texture, texture_coords);
+    // Position of a pixel within the sprite
+	vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.ba)/texture_details.ba;
+
+    number low = min(tex.r, min(tex.g, tex.b));
+    number high = max(tex.r, max(tex.g, tex.b));
+	number delta = high-low -0.1;
+
+    number fac = 0.8 + 0.9*sin(11.*uv.x+4.32*uv.y + laminated.r*12. + cos(laminated.r*5.3 + uv.y*4.2 - uv.x*4.));
+    number fac2 = 0.5 + 0.5*sin(8.*uv.x+2.32*uv.y + laminated.r*5. - cos(laminated.r*2.3 + uv.x*8.2));
+    number fac3 = 0.5 + 0.5*sin(10.*uv.x+5.32*uv.y + laminated.r*6.111 + sin(laminated.r*5.3 + uv.y*3.2));
+    number fac4 = 0.5 + 0.5*sin(3.*uv.x+2.32*uv.y + laminated.r*8.111 + sin(laminated.r*1.3 + uv.y*11.2));
+    number fac5 = sin(0.9*16.*uv.x+5.32*uv.y + laminated.r*12. + cos(laminated.r*5.3 + uv.y*4.2 - uv.x*4.));
+
+    number maxfac = 0.7*max(max(fac, max(fac2, max(fac3,0.0))) + (fac+fac2+fac3*fac4), 0.);
+
+    tex.rgb = tex.rgb*0.5 + vec3(0.4, 0.4, 0.8);
+
+    tex.r = tex.r-delta + delta*maxfac*(0.7 + fac5*0.27) - 0.1;
+    tex.g = tex.g-delta + delta*maxfac*(0.7 - fac5*0.27) - 0.1;
+    tex.b = tex.b-delta + delta*maxfac*0.7 - 0.1;
+    tex.a = tex.a*(0.5*max(min(1., max(0.,0.3*max(low*0.2, delta)+ min(max(maxfac*0.1,0.), 0.4)) ), 0.) + 0.15*maxfac*(0.1+delta));
+
+    return dissolve_mask(tex*colour, texture_coords, uv);
+}
 
 vec4 dissolve_mask(vec4 tex, vec2 texture_coords, vec2 uv)
 {
@@ -51,36 +89,10 @@ vec4 dissolve_mask(vec4 tex, vec2 texture_coords, vec2 uv)
     return vec4(shadow ? vec3(0.,0.,0.) : tex.xyz, res > adjusted_dissolve ? (shadow ? tex.a*0.3: tex.a) : .0);
 }
 
-vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords )
-{
-    vec4 tex = Texel( texture, texture_coords);
-    vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.ba)/texture_details.ba;
-
-    number low = min(tex.r, min(tex.g, tex.b));
-    number high = max(tex.r, max(tex.g, tex.b));
-	number delta = high-low -0.1;
-
-    number fac = 0.8 + 0.9*sin(11.*uv.x+4.32*uv.y + laminated.r*12. + cos(laminated.r*5.3 + uv.y*4.2 - uv.x*4.));
-    number fac2 = 0.5 + 0.5*sin(8.*uv.x+2.32*uv.y + laminated.r*5. - cos(laminated.r*2.3 + uv.x*8.2));
-    number fac3 = 0.5 + 0.5*sin(10.*uv.x+5.32*uv.y + laminated.r*6.111 + sin(laminated.r*5.3 + uv.y*3.2));
-    number fac4 = 0.5 + 0.5*sin(3.*uv.x+2.32*uv.y + laminated.r*8.111 + sin(laminated.r*1.3 + uv.y*11.2));
-    number fac5 = sin(0.9*16.*uv.x+5.32*uv.y + laminated.r*12. + cos(laminated.r*5.3 + uv.y*4.2 - uv.x*4.));
-
-    number maxfac = 0.7*max(max(fac, max(fac2, max(fac3,0.0))) + (fac+fac2+fac3*fac4), 0.);
-
-    tex.rgb = tex.rgb*0.5 + vec3(0.4, 0.4, 0.8);
-
-    tex.r = tex.r-delta + delta*maxfac*(0.7 + fac5*0.27) - 0.1;
-    tex.g = tex.g-delta + delta*maxfac*(0.7 - fac5*0.27) - 0.1;
-    tex.b = tex.b-delta + delta*maxfac*0.7 - 0.1;
-    tex.a = tex.a*(0.5*max(min(1., max(0.,0.3*max(low*0.2, delta)+ min(max(maxfac*0.1,0.), 0.4)) ), 0.) + 0.15*maxfac*(0.1+delta));
-
-    return dissolve_mask(tex*colour, texture_coords, uv);
-}
-
-extern MY_HIGHP_OR_MEDIUMP vec2 mouse_screen_pos;
-extern MY_HIGHP_OR_MEDIUMP float hovering;
-extern MY_HIGHP_OR_MEDIUMP float screen_scale;
+// for transforming the card while your mouse is on it
+extern PRECISION vec2 mouse_screen_pos;
+extern PRECISION float hovering;
+extern PRECISION float screen_scale;
 
 #ifdef VERTEX
 vec4 position( mat4 transform_projection, vec4 vertex_position )
