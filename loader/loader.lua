@@ -93,10 +93,9 @@ function loadMods(modsDirectory)
         mod_config = { 
             pattern = '%-%-%- MOD_CONFIG_PATH: (.-)\n', 
             handle = function(x)
-                local config = {}
                 if x then
-                    local file, err = NFS.load(SMODS.MODS_DIR.."/"..x.."/mod_config.lua")
-                    if err then sendWarnMessage("Error loading mod config file: "..err) else return file() end
+                    local file = assert(load(NFS.read(SMODS.MODS_DIR.."/"..x.."/mod_config.lua")))()
+                    return file
                 end
             end
         },

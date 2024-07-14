@@ -265,6 +265,9 @@ function create_UIBox_mods(args)
 
 										for _, credit_info in ipairs(credits_list) do
 											local text_desc = wrapText(localize(credit_info.title).. ': ' .. concatAuthors(credit_info.name_list), maxCharsPerLine)
+											-- TODO: Improve this? 
+											-- I don't line the idea of requiring the mod dev to build the credits tabs themselves
+											-- But this might be too limiting of a setup
 											table.insert(subNodes.nodes, {
 												n = G.UIT.R,
 												config = {
@@ -351,10 +354,62 @@ function buildAdditionsTab(mod)
 		UIBox_button({button = 'your_collection_boosters', label = {localize('b_booster_packs')}, count = modsCollectionTally(G.P_CENTER_POOLS["Booster"]), minw = 5, id = 'your_collection_boosters', func = 'is_collection_empty'}),
 		UIBox_button({button = 'your_collection_tags', label = {localize('b_tags')}, count = modsCollectionTally(G.P_TAGS), minw = 5, id = 'your_collection_tags', func = 'is_collection_empty'}),
 		UIBox_button({button = 'your_collection_blinds', label = {localize('b_blinds')}, count = modsCollectionTally(G.P_BLINDS), minw = 5, minh = 2.0, id = 'your_collection_blinds', focus_args = {snap_to = true}, func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, minh = 2.0, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}}),
 	  }}
 	}}
 
 	return t
+end
+
+G.FUNCS.your_collection_other_gameobjects = function(e)
+	G.SETTINGS.paused = true
+	print("asdf")
+	G.FUNCS.overlay_menu{
+	  definition = create_UIBox_Other_GameObjects(),
+	}
+end
+
+function create_UIBox_Other_GameObjects()
+	set_discover_tallies()
+	print("SMODS.Mods: "..tostring(SMODS.Mods))
+	G.E_MANAGER:add_event(Event({
+	  blockable = false,
+	  func = function()
+		G.REFRESH_ALERTS = true
+	  return true
+	  end
+	}))
+
+	local custom_gameobject_tabs = {{}}
+	for _, mod in pairs(SMODS.Mods) do
+		local curr_height = 0
+		local curr_col = 1
+		if mod.custom_collection_tabs and type(mod.custom_collection_tabs) == "function" then
+			object_tabs = mod.custom_collection_tabs()
+			for _, tab in ipairs(object_tabs) do
+				table.insert(custom_gameobject_tabs[curr_col], tab)
+				sendInfoMessage(tostring(#custom_gameobject_tabs[curr_col]))
+				curr_height = curr_height + tab.nodes[1].config.minh
+				if curr_height > 6 then --TODO: Verify that this is the ideal number to use
+					curr_height = 0
+					curr_col = curr_col + 1
+					custom_gameobject_tabs[curr_col] = {}
+				end
+				sendInfoMessage(tostring(curr_height))
+			end
+		end
+	end
+
+	local custom_gameobject_rows = {}
+	for _, v in ipairs(custom_gameobject_tabs) do
+		print(tostring(#v))
+		table.insert(custom_gameobject_rows, {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes = v})
+	end
+	local t = {n=G.UIT.C, config={align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05, minw = 7}, nodes={
+		{n=G.UIT.R, config={align = "cm", padding = 0.15}, nodes = custom_gameobject_rows}
+	}}
+
+	return create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', contents = {t}})
 end
 
 -- TODO: Optimize this. 
