@@ -1,9 +1,9 @@
-# Ionized
-A Balatro example mod for adding a custom Edition in Steamodded.
+# Introduction
+A Balatro example mod for adding a custom Editions in Steamodded.
 
 Feel free to copy and use this for any of projects!
 
-## Notes incase you can't read
+## Notes in case you can't read
 **If you want an Edition to have more than one of the following:**
 - mult
 - chips
@@ -18,10 +18,9 @@ Then you will have to write the code for it yourself!
 Again, you'd have to write it yourself.
 
 ## Working with Shaders
-I have also detailed a bit on how to work with shaders within the ionized.fs comments.
-Read it for some information, but if you need more take a look through the decompiled balatro source
-All shaders for cards are in resources/shaders
+[ionized.fs](assets/shaders/ionized.fs) has shader code explanation with comments.
+For a general guide, look at [LOVE2D introduction to shaders](https://blogs.love2d.org/content/beginners-guide-shaders).
 
-## Current Bugs
-- The description of cards doesn't display properly
-    - Should be fixed whenever a new version of Steamodded comes out
+If you want to see vanilla Balatro shaders, unzip the Balatro.exe and go to `resources/shaders` folder.
+
+To see values for default externs check out `engine/sprite.lua` -> `Sprite:draw_shader`.
