@@ -81,15 +81,6 @@ position = 'at'
 match_indent = true
 payload = 'return generate_card_ui(self.config.center, nil, loc_vars, card_type, badges, hide_desc, main_start, main_end, self)'
 
-# generate_card_ui()
-[[patches]]
-[patches.pattern]
-target = 'functions/common_events.lua'
-pattern = 'function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)'
-position = 'at'
-match_indent = true
-payload = 'function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end, card)'
-
 [[patches]]
 [patches.pattern]
 target = 'functions/common_events.lua'

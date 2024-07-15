@@ -113,3 +113,28 @@ if cardTable.unique_val__saved_ID and G.ID <= cardTable.unique_val__saved_ID the
     G.ID = cardTable.unique_val__saved_ID + 1
 end"""
 match_indent = true
+
+## Vars in card descriptions should use `card.ability` instead of `_c.config` where possible
+# generate_card_ui()
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = 'function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)'
+position = 'at'
+match_indent = true
+payload = 'function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end, card)'
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if _c.set == 'Other' then"
+position = 'before'
+match_indent = true
+payload = "local cfg = (card and card.ability) or _c['config']" # string index to make sure the next patch doesn't eat it
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = '_c.config'
+position = 'at'
+payload = 'cfg'
