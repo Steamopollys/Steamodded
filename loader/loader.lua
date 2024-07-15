@@ -388,6 +388,7 @@ function initSteamodded()
     loadAPIs()
     boot_print_stage("Loading Mods")
     loadMods(SMODS.MODS_DIR)
+    SMODS.current_mod = nil
     initializeModUIFunctions()
     boot_print_stage("Injecting Items")
     SMODS.injectItems()
@@ -432,6 +433,32 @@ function boot_timer(_label, _next, progress)
 
     G.ARGS.bt = G.ARGS.bt or love.timer.getTime()
     G.ARGS.bt = love.timer.getTime()
+end
+
+function SMODS.load_file(path, id)
+    if not path or path == "" then
+        error("No path was provided to load.")
+    end
+    local mod
+    if not id then
+        if not SMODS.current_mod then
+            error("No ID was provided! Usage without an ID is only available when file is first loaded.")
+        end
+        mod = SMODS.current_mod
+    else 
+        mod = SMODS.Mods[id]
+    end
+    if not mod then
+        error("Mod not found. Ensure you are passing the correct ID.")
+    end 
+    local file_path = mod.path .. path
+    print(file_path)
+    local file_content, err = NFS.read(file_path)
+    if not file_content then return  nil, "Error reading file '" .. path .. "' for mod with ID '" .. mod.id .. "': " .. err end
+    print(file_content)
+    local chunk, err = load(file_content, "=[SMODS " .. mod.id .. ' "' .. path .. '"]')
+    if not chunk then return nil, "Error processing file '" .. path .. "' for mod with ID '" .. mod.id .. "': " .. err end
+    return chunk
 end
 
 ----------------------------------------------

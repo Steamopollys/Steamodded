@@ -353,12 +353,27 @@ Stack Traceback
                 if string_sub(info.source, 1, 1) == "@" then
                     dumper:add_f("(%d) main chunk of file '%s' at line %d\r\n", level_to_show,
                         string_sub(info.source, 2), info.currentline)
-                elseif info.source and info.source:sub(1, 21) == "--- STEAMODDED HEADER" then
-                    local modName, modID = info.source:match("%-%-%- MOD_NAME: ([^\n]+)\n%-%-%- MOD_ID: ([^\n]+)")
-                    dumper:add_f("(%d) main chunk of mod %s (%s) at line %d\r\n", level_to_show, modName, modID,
-                        info.currentline)
+                elseif info.source and info.source:sub(1, 1) == "=" then
+                    local str = info.source:sub(3, -2)
+                    local props = {}
+                    -- Split by space
+                    for v in string.gmatch(str, "[^%s]+") do
+                        table.insert(props, v)
+                    end
+                    local source = table.remove(props, 1)
+                    if source == "love" then
+                        dumper:add_f("(%d) main chunk of Love2D file '%s' at line %d\r\n", level_to_show,
+                            table.concat(props, " "):sub(2, -2), info.currentline)
+                    elseif source == "SMODS" then
+                        local modID = table.remove(props, 1)
+                        local fileName = table.concat(props, " ")
+                        dumper:add_f("(%d) main chunk of file '%s' at line %d (from mod with id %s)\r\n", level_to_show,
+                            fileName:sub(2, -2), info.currentline, modID)
+                    else
+                        dumper:add_f("(%d) main chunk of %s at line %d\r\n", level_to_show, info.source, info.currentline)
+                    end
                 else
-                    dumper:add_f("(%d) main chunk of %s at line %d\r\n", level_to_show, info.short_src, info.currentline)
+                    dumper:add_f("(%d) main chunk of %s at line %d\r\n", level_to_show, info.source, info.currentline)
                 end
             elseif info.what == "C" then
                 -- print(info.namewhat, info.name)
