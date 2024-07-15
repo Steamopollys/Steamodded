@@ -148,8 +148,9 @@ pattern = "self.config.center = center"
 position = 'before'
 match_indent = true
 payload = '''
-if old_center and not self.debuff then
+if self.added_to_deck and old_center and not self.debuff then
     self:remove_from_deck()
+    self.added_to_deck = true
 end'''
 
 [[patches]]
@@ -159,6 +160,6 @@ pattern = "if G.consumeables and self.area == G.consumeables then"
 position = 'before'
 match_indent = true
 payload = '''
-if old_center then
+if self.added_to_deck and old_center then
     self:add_to_deck()
 end'''
