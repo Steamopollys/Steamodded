@@ -148,7 +148,7 @@ pattern = "self.config.center = center"
 position = 'before'
 match_indent = true
 payload = '''
-if old_center then
+if old_center and not self.debuff then
     self:remove_from_deck()
 end'''
 
