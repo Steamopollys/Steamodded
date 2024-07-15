@@ -973,7 +973,6 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 		else
 			for _, v in ipairs(G.P_CENTER_POOLS.Edition) do
 				if v.in_shop then
-					sendDebugMessage(v.key)
 					table.insert(_options, v.key)
 				end
 			end

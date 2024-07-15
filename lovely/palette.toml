@@ -25,7 +25,7 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"
-pattern = '''credits'''
+pattern = '''your_collection,'''
 position = "before"
 payload = '''colours,'''
 match_indent = true

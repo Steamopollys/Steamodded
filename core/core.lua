@@ -113,9 +113,14 @@ local function concatAuthors(authors)
 end
 
 SMODS.customUIElements = {}
+SMODS.customSettingsElements = {}
 
 function SMODS.registerUIElement(modID, uiElements)
 	SMODS.customUIElements[modID] = uiElements
+end
+
+function SMODS.registerSettingsElement(modID, uiElements)
+	SMODS.customSettingsElements[modID] = uiElements
 end
 
 function create_UIBox_mods(args)
@@ -213,6 +218,10 @@ function create_UIBox_mods(args)
 									}
 								end
 							},
+							(SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id] and {
+								label = "Config",
+								tab_definition_function = SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]
+							})
 						}
 					})
 				}
