@@ -26,3 +26,11 @@ payload = """
     end
 
 """
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "for _, v in ipairs(info_queue) do"
+position = 'before'
+payload = "SMODS.compat_0_9_8.generate_UIBox_ability_table_card = nil"
+match_indent = true
+
