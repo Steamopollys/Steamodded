@@ -138,3 +138,27 @@ target = 'functions/common_events.lua'
 pattern = '_c.config'
 position = 'at'
 payload = 'cfg'
+
+## When overriding with set_ability and card is added to deck, call add / remove effects
+# Card:set_ability()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = "self.config.center = center"
+position = 'before'
+match_indent = true
+payload = '''
+if old_center then
+    self:remove_from_deck()
+end'''
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = "if G.consumeables and self.area == G.consumeables then"
+position = 'before'
+match_indent = true
+payload = '''
+if old_center then
+    self:add_to_deck()
+end'''
