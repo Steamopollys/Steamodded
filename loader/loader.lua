@@ -89,6 +89,7 @@ function loadMods(modsDirectory)
         description   = { pattern = '%-%-%- MOD_DESCRIPTION: (.-)\n', required = true },
         priority      = { pattern = '%-%-%- PRIORITY: (%-?%d+)\n', handle = function(x) return x and x + 0 or 0 end },
         badge_colour  = { pattern = '%-%-%- BADGE_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or '666666FF') end },
+        badge_text_colour   = { pattern = '%-%-%- BADGE_TEXT_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or 'FFFFFF') end },
         display_name  = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
         mod_config = { 
             pattern = '%-%-%- MOD_CONFIG_PATH: (.-)\n', 
@@ -325,6 +326,10 @@ function loadMods(modsDirectory)
 
     -- load the mod files
     for _, priority in ipairs(keyset) do
+        table.sort(SMODS.mod_priorities[priority],
+            function(mod_a, mod_b)
+                return mod_a.id < mod_b.id
+            end)
         for _, mod in ipairs(SMODS.mod_priorities[priority]) do
             mod.can_load = check_dependencies(mod)
             SMODS.mod_list[#SMODS.mod_list + 1] = mod -- keep mod list in prioritized load order

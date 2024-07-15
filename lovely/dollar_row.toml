@@ -13,7 +13,7 @@ position = "before"
 line_prepend = "$indent"
 payload = '''
 
-for k, v in pairs(SMODS.PayoutArgs) do
+for k, v in pairs(SMODS.DollarRows) do
     if v and v.payout and type(v.payout) == 'function' and v.above_dot_bar then
         money_gained = v:payout()
         add_round_eval_row({dollars = money_gained, bonus = true, name='payout_arg_'..v.key,pitch = pitch, payout_arg = v, above_dot_bar = true})
@@ -30,7 +30,7 @@ position = "before"
 line_prepend = "$indent"
 payload = '''
 
-for k, v in pairs(SMODS.PayoutArgs) do
+for k, v in pairs(SMODS.DollarRows) do
     if v and v.payout and type(v.payout) == 'function' and not v.above_dot_bar then
         money_gained = v:payout()
         add_round_eval_row({dollars = money_gained, bonus = true, name='payout_arg_'..v.key,pitch = pitch, payout_arg = v})

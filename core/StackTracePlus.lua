@@ -465,7 +465,11 @@ function getDebugInfoForCrash()
     end
     if SMODS.mod_list then
         info = info .. "\nSteamodded Mods:"
-        for k, v in ipairs(SMODS.mod_list) do
+        local enabled_mods = {}
+        for _, v in ipairs(SMODS.mod_list) do
+            if v.can_load then table.insert(enabled_mods, v) end
+        end
+        for k, v in ipairs(enabled_mods) do
             info = info .. "\n    " .. k .. ": " .. v.name .. " by " .. concatAuthors(v.author) .. " [ID: " .. v.id ..
                        (v.priority ~= 0 and (", Priority: " .. v.priority) or "") .. (v.version and v.version ~= '0.0.0' and (", Version: " .. v.version) or "") .. "]"
             local debugInfo = v.debug_info
