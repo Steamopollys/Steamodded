@@ -160,7 +160,8 @@ pattern = "if G.consumeables and self.area == G.consumeables then"
 position = 'before'
 match_indent = true
 payload = '''
-if self.added_to_deck and old_center then
+if self.added_to_deck and old_center and not self.debuff then
+    self.added_to_deck = false
     self:add_to_deck()
 end'''
 
