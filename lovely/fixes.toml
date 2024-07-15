@@ -163,3 +163,13 @@ payload = '''
 if self.added_to_deck and old_center then
     self:add_to_deck()
 end'''
+
+## Fix crash if self.config.card == nil for non-vanilla set_ability() calls
+# Card:set_ability()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = "self.label = center.label or self.config.card.label or self.ability.set"
+position = 'at'
+match_indent = true
+payload = "self.label = center.label or self.config.card and self.config.card.label or self.ability.set"
