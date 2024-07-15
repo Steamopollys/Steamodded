@@ -2122,15 +2122,14 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     }
 
     -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.PayoutArg
+    ----- API CODE GameObject.DollarRow
     -------------------------------------------------------------------------------------------------
 
-    -- TODO needs rename- something with Row: DollarRow?
-    SMODS.PayoutArgs = {}
-    SMODS.PayoutArg = SMODS.GameObject:extend {
+    SMODS.DollarRows = {}
+    SMODS.DollarRow = SMODS.GameObject:extend {
         obj_buffer = {},
         obj_table = {},
-        set = 'Payout Argument',
+        set = 'Dollar Row',
         class_prefix = 'p',
         required_params = {
             'key'
