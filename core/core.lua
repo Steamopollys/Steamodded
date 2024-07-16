@@ -148,7 +148,7 @@ function create_UIBox_mods(args)
 			chosen = SMODS.LAST_SELECTED_MOD_TAB == "credits" or false,
 			tab_definition_function = function()
 				SMODS.LAST_SELECTED_MOD_TAB = "credits"
-				return SMODS.customCreditsElements[G.ACTIVE_MOD_UI.id]
+				return SMODS.customCreditsElements[G.ACTIVE_MOD_UI.id]()
 			end
 		})
 	end
@@ -158,7 +158,7 @@ function create_UIBox_mods(args)
 			chosen = SMODS.LAST_SELECTED_MOD_TAB == "config" or false,
 			tab_definition_function = function()
 				SMODS.LAST_SELECTED_MOD_TAB = "config"
-				return SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]
+				return SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]()
 			end
 		})
 	end
