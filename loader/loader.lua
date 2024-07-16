@@ -96,7 +96,7 @@ function loadMods(modsDirectory)
             handle = function(x)
                 if x then
                     local file = assert(load(NFS.read(SMODS.MODS_DIR.."/"..x.."/mod_config.lua")))()
-                    return file
+                    return {info = file, path = x}
                 end
             end
         },

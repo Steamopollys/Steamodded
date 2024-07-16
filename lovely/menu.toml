@@ -10,6 +10,7 @@ pattern = '''local main_menu = nil'''
 position = "after"
 payload = '''local mods = nil'''
 match_indent = true
+
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"
@@ -17,6 +18,7 @@ pattern = '''main_menu = UIBox_button{ label = {localize('b_main_menu')}, button
 position = "after"
 payload = '''mods = UIBox_button{ label = {localize('b_mods')}, button = "mods_button", minw = 5}'''
 match_indent = true
+
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"

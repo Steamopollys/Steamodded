@@ -113,17 +113,25 @@ local function concatAuthors(authors)
 end
 
 SMODS.customUIElements = {}
+SMODS.customCreditsElements = {}
 SMODS.customSettingsElements = {}
 
 function SMODS.registerUIElement(modID, uiElements)
 	SMODS.customUIElements[modID] = uiElements
 end
 
+function SMODS.registerCreditsElement(modID, uiElements)
+	SMODS.customCreditsElements[modID] = uiElements
+end
+
 function SMODS.registerSettingsElement(modID, uiElements)
 	SMODS.customSettingsElements[modID] = uiElements
 end
 
+SMODS.LAST_SELECTED_MOD_TAB = "mod_desc"
 function create_UIBox_mods(args)
+	if not SMODS.LAST_SELECTED_MOD_TAB then SMODS.LAST_SELECTED_MOD_TAB = "mod_desc" end
+	sendInfoMessage(tostring(SMODS.LAST_SELECTED_MOD_TAB))
 	local scale = 0.75  -- Scale factor for text
 	local maxCharsPerLine = 50
 
@@ -133,13 +141,25 @@ function create_UIBox_mods(args)
 
 	local mod_tabs = {}
 	table.insert(mod_tabs, buildModDescTab(G.ACTIVE_MOD_UI))
-	table.insert(mod_tabs, buildAdditionsTab(G.ACTIVE_MOD_UI))
-	if G.ACTIVE_MOD_UI.mod_config and G.ACTIVE_MOD_UI.mod_config.credits then table.insert(mod_tabs, buildCreditsTab(G.ACTIVE_MOD_UI)) end
+	if G.ACTIVE_MOD_UI.added_obj then table.insert(mod_tabs, buildAdditionsTab(G.ACTIVE_MOD_UI)) end
+	if SMODS.customCreditsElements[G.ACTIVE_MOD_UI.id] then 
+		table.insert(mod_tabs, {
+			label = localize("b_credits"),
+			chosen = SMODS.LAST_SELECTED_MOD_TAB == "credits" or false,
+			tab_definition_function = function()
+				SMODS.LAST_SELECTED_MOD_TAB = "credits"
+				return SMODS.customCreditsElements[G.ACTIVE_MOD_UI.id]
+			end
+		})
+	end
 	if SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id] then 
 		table.insert(mod_tabs, {
-			label = "Config",
-			chosen = false,
-			tab_definition_function = SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]
+			label = localize("b_config"),
+			chosen = SMODS.LAST_SELECTED_MOD_TAB == "config" or false,
+			tab_definition_function = function()
+				SMODS.LAST_SELECTED_MOD_TAB = "config"
+				return SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]
+			end
 		})
 	end
 
@@ -233,86 +253,7 @@ function buildModDescTab(mod)
 
 	return {
 		label = G.ACTIVE_MOD_UI.name,
-		chosen = true,
-		tab_definition_function = function()
-			return {
-				n = G.UIT.ROOT,
-				config = {
-					emboss = 0.05,
-					minh = 6,
-					r = 0.1,
-					minw = 6,
-					align = "tm",
-					padding = 0.2,
-					colour = G.C.BLACK
-				},
-				nodes = modNodes
-			}
-		end
-	}
-end
-
-function buildCreditsTab(mod)
-	G.E_MANAGER:add_event(Event({
-		blockable = false,
-		func = function()
-		  G.REFRESH_ALERTS = nil
-		return true
-		end
-	  }))
-	local modNodes = {}
-	local scale = 0.75  -- Scale factor for text
-	local maxCharsPerLine = 50
-
-	--Loop through all tabs
-	for i, v in ipairs(mod.mod_config.credits) do
-		local credits_list = {}
-		local subNodes = {
-			n = G.UIT.C,
-			config = {
-				padding = v.padding or 0.1,
-				align = "cm"
-			},
-			nodes = {}
-		}
-		-- Loop through all keys within a given tab
-		for k, v in pairs(mod.mod_config.credits[i]) do
-			if type(v) == "table" then table.insert(credits_list, v) end
-		end
-
-		table.sort(credits_list, function(a, b) return a.order < b.order end)
-
-		for _, credit_info in ipairs(credits_list) do
-			local text_desc = wrapText(localize(credit_info.title).. ': ' .. concatAuthors(credit_info.name_list), maxCharsPerLine)
-			-- TODO: Improve this? 
-			-- I don't line the idea of requiring the mod dev to build the credits tabs themselves
-			-- But this might be too limiting of a setup
-			table.insert(subNodes.nodes, {
-				n = G.UIT.R,
-				config = {
-					padding = credit_info.padding or 0.1,
-					align = "cm"
-				},
-				nodes = {
-					{
-						n = G.UIT.T,
-						config = {
-							text = text_desc,
-							shadow = true,
-							scale = credit_info.scale or scale * 0.5,
-							colour = G.C.UI.TEXT_LIGHT
-						}
-					}
-				}
-			})
-		end
-
-		table.insert(modNodes, subNodes)
-	end
-
-	return {
-		label = localize("b_credits"),
-		chosen = false,
+		chosen = SMODS.LAST_SELECTED_MOD_TAB == "mod_desc" or false,
 		tab_definition_function = function()
 			return {
 				n = G.UIT.ROOT,
@@ -374,8 +315,9 @@ function buildAdditionsTab(mod)
 	table.insert(modNodes, t)
 	return {
 		label = localize("b_additions"),
-		chosen = false,
+		chosen = SMODS.LAST_SELECTED_MOD_TAB == "additions" or false,
 		tab_definition_function = function()
+			SMODS.LAST_SELECTED_MOD_TAB = "additions"
 			return {
 				n = G.UIT.ROOT,
 				config = {
@@ -869,6 +811,7 @@ end
 
 function G.FUNCS.mods_button(e)
 	G.SETTINGS.paused = true
+	SMODS.LAST_SELECTED_MOD_TAB = nil
 
 	G.FUNCS.overlay_menu({
 		definition = create_UIBox_mods_button()
