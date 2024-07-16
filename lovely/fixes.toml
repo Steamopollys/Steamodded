@@ -168,7 +168,7 @@ end'''
 ## set_ability() transfers over old fields
 # special cases:
 # extra_value should be transferred
-# extra should always be overwritten
+# name, effect, set, extra should always be overwritten
 [[patches]]
 [patches.regex]
 target = 'card.lua'
@@ -186,7 +186,9 @@ self.ability.extra_value = self.ability.extra_value or 0
 for k, v in pairs(new_ability) do
     self.ability[k] = v
 end
-self.ability.extra = new_ability.extra
+for _, k in ipairs{'name', 'effect', 'set', 'extra'} do
+    self.ability[k] = new_ability[k]
+end
 '''
 
 ## Fix crash if self.config.card == nil for non-vanilla set_ability() calls
