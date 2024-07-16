@@ -133,6 +133,14 @@ match_indent = true
 payload = "local cfg = (card and card.ability) or _c['config']" # string index to make sure the next patch doesn't eat it
 
 [[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if _c.name ~= 'Stone Card' and ((specific_vars and specific_vars.bonus_chips) or _c.config.bonus) then"
+position = 'at'
+match_indent = true
+payload = "if _c.name ~= 'Stone Card' and ((specific_vars and specific_vars.bonus_chips) or (cfg.bonus ~= 0 and cfg.bonus)) then"
+
+[[patches]]
 [patches.regex]
 target = 'functions/common_events.lua'
 pattern = '_c.config'
