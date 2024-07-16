@@ -1,0 +1,26 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '''local main_menu = nil'''
+position = "after"
+payload = '''local mods = nil'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '''main_menu = UIBox_button{ label = {localize('b_main_menu')}, button = "go_to_menu", minw = 5}'''
+position = "after"
+payload = '''mods = UIBox_button{ label = {localize('b_mods')}, button = "mods_button", minw = 5}'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '''main_menu,'''
+position = "after"
+payload = '''mods,'''
+match_indent = true

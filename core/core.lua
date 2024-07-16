@@ -113,9 +113,14 @@ local function concatAuthors(authors)
 end
 
 SMODS.customUIElements = {}
+SMODS.customSettingsElements = {}
 
 function SMODS.registerUIElement(modID, uiElements)
 	SMODS.customUIElements[modID] = uiElements
+end
+
+function SMODS.registerSettingsElement(modID, uiElements)
+	SMODS.customSettingsElements[modID] = uiElements
 end
 
 function create_UIBox_mods(args)
@@ -130,6 +135,10 @@ function create_UIBox_mods(args)
 	table.insert(mod_tabs, buildModDescTab(G.ACTIVE_MOD_UI))
 	table.insert(mod_tabs, buildAdditionsTab(G.ACTIVE_MOD_UI))
 	if G.ACTIVE_MOD_UI.mod_config and G.ACTIVE_MOD_UI.mod_config.credits then table.insert(mod_tabs, buildCreditsTab(G.ACTIVE_MOD_UI)) end
+  							--[[							(SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id] and {
+								label = "Config",
+								tab_definition_function = SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]
+							})]]
 
 	return (create_UIBox_generic_options({
 		back_func = "mods_button",
