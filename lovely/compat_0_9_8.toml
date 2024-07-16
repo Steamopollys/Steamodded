@@ -14,6 +14,8 @@ payload = "if not self.ability.name then self.ability.name = center.key end"
 match_indent = true
 
 # generate_card_ui()
+# `card_type` is used to check whether card should be nil; non-recursive calls
+# to generate_card_ui always have that arg set
 [[patches]]
 [patches.regex]
 target = "functions/common_events.lua"
@@ -21,8 +23,16 @@ pattern = '(?<indent>[\t ]*)function generate_card_ui\([^)]*\)\n'
 position = "after"
 line_prepend = '$indent'
 payload = """
-    if card == nil then
+    if card == nil and card_type then
         card = SMODS.compat_0_9_8.generate_UIBox_ability_table_card
     end
 
 """
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "for _, v in ipairs(info_queue) do"
+position = 'before'
+payload = "SMODS.compat_0_9_8.generate_UIBox_ability_table_card = nil"
+match_indent = true
+

@@ -945,6 +945,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         obj_table = SMODS.Centers,
         obj_buffer = {},
         get_obj = function(self, key) return G.P_CENTERS[key] end,
+        register = function(self)
+            -- 0.9.8 defense
+            self.name = self.name or self.key
+            SMODS.Center.super.register(self)
+        end,
         inject = function(self)
             G.P_CENTERS[self.key] = self
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
