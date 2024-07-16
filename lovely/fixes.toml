@@ -248,7 +248,14 @@ target = 'blind.lua'
 pattern = "local _card = pseudorandom_element(jokers, pseudoseed('crimson_heart'))"
 position = "after"
 match_indent = true
-payload = "self.crimson_heart_choice = _card and _card.unique_val"
+payload = """self.crimson_heart_choice = _card and _card.unique_val"""
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "_card:set_debuff(true)"
+position = "at"
+match_indent = true
+payload = "SMODS.recalc_debuff(_card)"
 
 ## Blind:debuff_card()
 [[patches]]
@@ -259,6 +266,22 @@ position = "after"
 match_indent = true
 payload = """
     if card.unique_val == self.crimson_heart_choice then
-        card:set_debuff(true)
+        card:set_debuff(true);
         if card.debuff then card.debuffed_by_blind = true end
     end"""
+
+### Fix Matador
+[[patches]]
+[patches.regex]
+target = 'functions/state_events.lua'
+pattern = '''
+if scoring_hand\[i\]\.debuff then
+(?<indent>[\t ]*)(G\.GAME\.blind\.triggered = true)'''
+root_capture = '$2'
+position = "at"
+line_prepend = '$indent'
+payload = '''
+
+if scoring_hand[i].debuffed_by_blind then
+    G.GAME.blind.triggered = true
+end'''

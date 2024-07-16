@@ -8,14 +8,12 @@ priority = 0
 ## Set debuffed_by_blind, use it for Matador behavior
 ## Blind:debuff_card()
 [[patches]]
-[patches.regex]
+[patches.pattern]
 target = 'blind.lua'
-pattern = '(?<indent>[\t ]*)card:set_debuff\(true\)'
+pattern = 'card:set_debuff(true)'
 position = 'after'
-payload = """
-
-if card.debuff then card.debuffed_by_blind = true end"""
-line_prepend = '$indent'
+payload = "if card.debuff then card.debuffed_by_blind = true end"
+match_indent = true
 
 ## Card:set_debuff()
 [[patches]]
@@ -26,7 +24,9 @@ self\.debuff = should_debuff
 (?<indent>[\t ]*)end
 '''
 position = 'after'
-payload = "if not self.debuff then self.debuffed_by_blind = false end"
+payload = """if not self.debuff then self.debuffed_by_blind = false end
+
+"""
 line_prepend = '$indent'
 
 ## Blind functions
