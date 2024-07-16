@@ -32,7 +32,15 @@ payload = '''
 local tag_matrix = {}
 local counter = 0
 local tag_tab = {}
-for k, v in pairs(G.P_TAGS) do
+local tag_pool = {}
+if G.ACTIVE_MOD_UI then
+    for k, v in pairs(G.P_TAGS) do
+        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then tag_pool[k] = v end
+    end
+else
+    tag_pool = G.P_TAGS
+end
+for k, v in pairs(tag_pool) do
 	counter = counter + 1
 	tag_tab[#tag_tab+1] = v
 end
@@ -43,16 +51,22 @@ end'''
 [[patches]]
 [patches.regex]
 target = "functions/UI_definitions.lua"
-pattern = "(?<indent>[\t ]*)(?<t>local t = create_UIBox_generic_options\\(\\{ back_func = 'your_collection', contents = \\{\n[\t ]*\\{n=G\\.UIT\\.C, config=\\{align = \"cm\", r = 0\\.1, colour = G\\.C\\.BLACK, padding = 0\\.1, emboss = 0\\.05\\}, nodes=\\{(\n.*?){2}nodes=)\\{(\n.*){5}"
-position = 'at'
+pattern = '''(?<indent>[\t ]*)v\.children\.alert\.states\.collide\.can = false\n[\s\S]{8}end\n[\s\S]{8}return true\n[\s\S]{4}end\)\n[\s\S]{2}\}\)\)\n{3}'''
+position = 'after'
 line_prepend = '$indent'
 payload = '''
 local table_nodes = {}
 for i = 1, math.ceil(counter / 6) do
 	table.insert(table_nodes, {n=G.UIT.R, config={align = "cm"}, nodes=tag_matrix[i]})
-end
-$t table_nodes
-}'''
+end'''
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''(?<indent>[\t ]*)\{\n[\s\S]{10}\{n=G\.UIT\.R, config=\{align = "cm"\}, nodes=tag_matrix\[1\]},[\s\S]*tag_matrix\[4\]\},\n[\s\S]{8}\}'''
+position = 'at'
+line_prepend = '$indent'
+payload = '''table_nodes'''
 
 # Tag:generate_UI()
 [[patches]]

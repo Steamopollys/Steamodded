@@ -718,11 +718,20 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 )
             end
 
+            local consumable_pool = {}
+            if G.ACTIVE_MOD_UI then
+                for _, v in ipairs(G.P_CENTER_POOLS[self.key]) do
+                    if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then consumable_pool[#consumable_pool+1] = v end
+                end
+            else
+                consumable_pool = G.P_CENTER_POOLS[self.key]
+            end
+
             local sum = 0
             for j = 1, #G.your_collection do
                 for i = 1, self.collection_rows[j] do
                     sum = sum + 1
-                    local center = G.P_CENTER_POOLS[self.key][sum]
+                    local center = consumable_pool[sum]
                     if not center then break end
                     local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
                         G.CARD_W, G.CARD_H, nil, center)
@@ -732,10 +741,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
 
             local center_options = {}
-            for i = 1, math.ceil(#G.P_CENTER_POOLS[self.key] / sum) do
+            for i = 1, math.ceil(#consumable_pool / sum) do
                 table.insert(center_options,
                     localize('k_page') ..
-                    ' ' .. tostring(i) .. '/' .. tostring(math.ceil(#G.P_CENTER_POOLS[self.key] / sum)))
+                    ' ' .. tostring(i) .. '/' .. tostring(math.ceil(#consumable_pool / sum)))
             end
 
             INIT_COLLECTION_CARD_ALERTS()
@@ -760,7 +769,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 })
             end
             local t = create_UIBox_generic_options({
-                back_func = 'your_collection',
+                back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection',
                 contents = {
                     { n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables },
                     { n = G.UIT.R, config = { align = "cm", padding = 0 },                                                           nodes = option_nodes },
@@ -792,11 +801,21 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 for j = 1, #G.your_collection do
                     sum = sum + self.collection_rows[j]
                 end
+
+                local consumable_pool = {}
+                if G.ACTIVE_MOD_UI then
+                    for _, v in ipairs(G.P_CENTER_POOLS[self.key]) do
+                        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then consumable_pool[#consumable_pool+1] = v end
+                    end
+                else
+                    consumable_pool = G.P_CENTER_POOLS[self.key]
+                end
+
                 sum = sum * (args.cycle_config.current_option - 1)
                 for j = 1, #G.your_collection do
                     for i = 1, self.collection_rows[j] do
                         sum = sum + 1
-                        local center = G.P_CENTER_POOLS[self.key][sum]
+                        local center = consumable_pool[sum]
                         if not center then break end
                         local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2,
                             G.your_collection[j].T.y, G
@@ -2122,15 +2141,14 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     }
 
     -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.PayoutArg
+    ----- API CODE GameObject.DollarRow
     -------------------------------------------------------------------------------------------------
 
-    -- TODO needs rename- something with Row: DollarRow?
-    SMODS.PayoutArgs = {}
-    SMODS.PayoutArg = SMODS.GameObject:extend {
+    SMODS.DollarRows = {}
+    SMODS.DollarRow = SMODS.GameObject:extend {
         obj_buffer = {},
         obj_table = {},
-        set = 'Payout Argument',
+        set = 'Dollar Row',
         class_prefix = 'p',
         required_params = {
             'key'

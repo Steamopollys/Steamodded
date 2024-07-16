@@ -91,6 +91,15 @@ function loadMods(modsDirectory)
         badge_colour  = { pattern = '%-%-%- BADGE_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or '666666FF') end },
         badge_text_colour   = { pattern = '%-%-%- BADGE_TEXT_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or 'FFFFFF') end },
         display_name  = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
+        mod_config = { 
+            pattern = '%-%-%- MOD_CONFIG_PATH: (.-)\n', 
+            handle = function(x)
+                if x then
+                    local file = assert(load(NFS.read(SMODS.MODS_DIR.."/"..x.."/mod_config.lua")))()
+                    return file
+                end
+            end
+        },
         dependencies  = {
             pattern = '%-%-%- DEPENDENCIES: %[(.-)%]\n',
             parse_array = true,

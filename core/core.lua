@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0714a-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0715d-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -131,6 +131,15 @@ function create_UIBox_mods(args)
 
 	local authors = localize('b_author'.. (#G.ACTIVE_MOD_UI.author > 1 and 's' or '')) .. ': ' .. concatAuthors(G.ACTIVE_MOD_UI.author)
 
+	local mod_tabs = {}
+	table.insert(mod_tabs, buildModDescTab(G.ACTIVE_MOD_UI))
+	table.insert(mod_tabs, buildAdditionsTab(G.ACTIVE_MOD_UI))
+	if G.ACTIVE_MOD_UI.mod_config and G.ACTIVE_MOD_UI.mod_config.credits then table.insert(mod_tabs, buildCreditsTab(G.ACTIVE_MOD_UI)) end
+  							--[[							(SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id] and {
+								label = "Config",
+								tab_definition_function = SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]
+							})]]
+
 	return (create_UIBox_generic_options({
 		back_func = "mods_button",
 		contents = {
@@ -144,85 +153,7 @@ function create_UIBox_mods(args)
 					create_tabs({
 						snap_to_nav = true,
 						colour = G.C.BOOSTER,
-						tabs = {
-							{
-								label = G.ACTIVE_MOD_UI.name,
-								chosen = true,
-								tab_definition_function = function()
-									local modNodes = {}
-
-
-									-- Authors names in blue
-									table.insert(modNodes, {
-										n = G.UIT.R,
-										config = {
-											padding = 0,
-											align = "cm",
-											r = 0.1,
-											emboss = 0.1,
-											outline = 1,
-											padding = 0.07
-										},
-										nodes = {
-											{
-												n = G.UIT.T,
-												config = {
-													text = authors,
-													shadow = true,
-													scale = scale * 0.65,
-													colour = G.C.BLUE,
-												}
-											}
-										}
-									})
-
-									-- Mod description
-									table.insert(modNodes, {
-										n = G.UIT.R,
-										config = {
-											padding = 0.2,
-											align = "cm"
-										},
-										nodes = {
-											{
-												n = G.UIT.T,
-												config = {
-													text = wrappedDescription,
-													shadow = true,
-													scale = scale * 0.5,
-													colour = G.C.UI.TEXT_LIGHT
-												}
-											}
-										}
-									})
-
-									local customUI = SMODS.customUIElements[G.ACTIVE_MOD_UI.id]
-									if customUI then
-										for _, uiElement in ipairs(customUI) do
-											table.insert(modNodes, uiElement)
-										end
-									end
-
-									return {
-										n = G.UIT.ROOT,
-										config = {
-											emboss = 0.05,
-											minh = 6,
-											r = 0.1,
-											minw = 6,
-											align = "tm",
-											padding = 0.2,
-											colour = G.C.BLACK
-										},
-										nodes = modNodes
-									}
-								end
-							},
-							(SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id] and {
-								label = "Config",
-								tab_definition_function = SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]
-							})
-						}
+						tabs = mod_tabs
 					})
 				}
 			}
@@ -230,7 +161,343 @@ function create_UIBox_mods(args)
 	}))
 end
 
+function buildModDescTab(mod)
+	G.E_MANAGER:add_event(Event({
+		blockable = false,
+		func = function()
+		  G.REFRESH_ALERTS = nil
+		return true
+		end
+	}))
+	local modNodes = {}
+	local scale = 0.75  -- Scale factor for text
+	local maxCharsPerLine = 50
 
+	local wrappedDescription = wrapText(G.ACTIVE_MOD_UI.description, maxCharsPerLine)
+
+	local authors = localize('b_author'.. (#G.ACTIVE_MOD_UI.author > 1 and 's' or '')) .. ': ' .. concatAuthors(G.ACTIVE_MOD_UI.author)
+
+	-- Authors names in blue
+	table.insert(modNodes, {
+		n = G.UIT.R,
+		config = {
+			padding = 0,
+			align = "cm",
+			r = 0.1,
+			emboss = 0.1,
+			outline = 1,
+			padding = 0.07
+		},
+		nodes = {
+			{
+				n = G.UIT.T,
+				config = {
+					text = authors,
+					shadow = true,
+					scale = scale * 0.65,
+					colour = G.C.BLUE,
+				}
+			}
+		}
+	})
+
+	-- Mod description
+	table.insert(modNodes, {
+		n = G.UIT.R,
+		config = {
+			padding = 0.2,
+			align = "cm"
+		},
+		nodes = {
+			{
+				n = G.UIT.T,
+				config = {
+					text = wrappedDescription,
+					shadow = true,
+					scale = scale * 0.5,
+					colour = G.C.UI.TEXT_LIGHT
+				}
+			}
+		}
+	})
+
+	local customUI = SMODS.customUIElements[mod.id]
+	if customUI then
+		for _, uiElement in ipairs(customUI) do
+			table.insert(modNodes, uiElement)
+		end
+	end
+
+	return {
+		label = G.ACTIVE_MOD_UI.name,
+		chosen = true,
+		tab_definition_function = function()
+			return {
+				n = G.UIT.ROOT,
+				config = {
+					emboss = 0.05,
+					minh = 6,
+					r = 0.1,
+					minw = 6,
+					align = "tm",
+					padding = 0.2,
+					colour = G.C.BLACK
+				},
+				nodes = modNodes
+			}
+		end
+	}
+end
+
+function buildCreditsTab(mod)
+	G.E_MANAGER:add_event(Event({
+		blockable = false,
+		func = function()
+		  G.REFRESH_ALERTS = nil
+		return true
+		end
+	  }))
+	local modNodes = {}
+	local scale = 0.75  -- Scale factor for text
+	local maxCharsPerLine = 50
+
+	--Loop through all tabs
+	for i, v in ipairs(mod.mod_config.credits) do
+		local credits_list = {}
+		local subNodes = {
+			n = G.UIT.C,
+			config = {
+				padding = v.padding or 0.1,
+				align = "cm"
+			},
+			nodes = {}
+		}
+		-- Loop through all keys within a given tab
+		for k, v in pairs(mod.mod_config.credits[i]) do
+			if type(v) == "table" then table.insert(credits_list, v) end
+		end
+
+		table.sort(credits_list, function(a, b) return a.order < b.order end)
+
+		for _, credit_info in ipairs(credits_list) do
+			local text_desc = wrapText(localize(credit_info.title).. ': ' .. concatAuthors(credit_info.name_list), maxCharsPerLine)
+			-- TODO: Improve this? 
+			-- I don't line the idea of requiring the mod dev to build the credits tabs themselves
+			-- But this might be too limiting of a setup
+			table.insert(subNodes.nodes, {
+				n = G.UIT.R,
+				config = {
+					padding = credit_info.padding or 0.1,
+					align = "cm"
+				},
+				nodes = {
+					{
+						n = G.UIT.T,
+						config = {
+							text = text_desc,
+							shadow = true,
+							scale = credit_info.scale or scale * 0.5,
+							colour = G.C.UI.TEXT_LIGHT
+						}
+					}
+				}
+			})
+		end
+
+		table.insert(modNodes, subNodes)
+	end
+
+	return {
+		label = localize("b_credits"),
+		chosen = false,
+		tab_definition_function = function()
+			return {
+				n = G.UIT.ROOT,
+				config = {
+					emboss = 0.05,
+					minh = 6,
+					r = 0.1,
+					minw = 6,
+					align = "tm",
+					padding = 0.2,
+					colour = G.C.BLACK
+				},
+				nodes = modNodes
+			}
+		end
+	}
+end
+
+function buildAdditionsTab(mod)
+	set_discover_tallies()
+	G.E_MANAGER:add_event(Event({
+	  blockable = false,
+	  func = function()
+		G.REFRESH_ALERTS = true
+	  return true
+	  end
+	}))
+	
+	local consumable_nodes = {}
+	for _, key in ipairs(SMODS.ConsumableType.obj_buffer) do
+		local id = 'your_collection_'..key:lower()..'s'
+		consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = modsCollectionTally(G.P_CENTER_POOLS[key]), minw = 4, id = id, colour = G.C.SECONDARY_SET[key], func = 'is_collection_empty'})
+	end
+
+	local t = {n=G.UIT.R, config={align = "cm",padding = 0.2, minw = 7}, nodes={
+		{n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes={
+		UIBox_button({button = 'your_collection_jokers', label = {localize('b_jokers')}, count = modsCollectionTally(G.P_CENTER_POOLS["Joker"]),  minw = 5, minh = 1.7, scale = 0.6, id = 'your_collection_jokers', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_decks', label = {localize('b_decks')}, count = modsCollectionTally(G.P_CENTER_POOLS["Back"]), minw = 5, id = 'your_collection_decks', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_vouchers', label = {localize('b_vouchers')}, count = modsCollectionTally(G.P_CENTER_POOLS["Voucher"]), minw = 5, id = 'your_collection_vouchers', func = 'is_collection_empty'}),
+		{n=G.UIT.R, config={align = "cm", padding = 0.1, r=0.2, colour = G.C.BLACK}, nodes={
+		  {n=G.UIT.C, config={align = "cm", maxh=2.9}, nodes={
+			{n=G.UIT.T, config={text = localize('k_cap_consumables'), scale = 0.45, colour = G.C.L_BLACK, vert = true, maxh=2.2}},
+		  }},
+		  {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes = consumable_nodes}
+		}},
+	  }},
+	  {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes={
+		UIBox_button({button = 'your_collection_enhancements', label = {localize('b_enhanced_cards')}, count = modsCollectionTally(G.P_CENTER_POOLS["Enhanced"]), minw = 5, id = 'your_collection_enhancements', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_seals', label = {localize('b_seals')}, count = modsCollectionTally(G.P_CENTER_POOLS["Seal"]), minw = 5, id = 'your_collection_seals', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_editions', label = {localize('b_editions')}, count = modsCollectionTally(G.P_CENTER_POOLS["Edition"]), minw = 5, id = 'your_collection_editions', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_boosters', label = {localize('b_booster_packs')}, count = modsCollectionTally(G.P_CENTER_POOLS["Booster"]), minw = 5, id = 'your_collection_boosters', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_tags', label = {localize('b_tags')}, count = modsCollectionTally(G.P_TAGS), minw = 5, id = 'your_collection_tags', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_blinds', label = {localize('b_blinds')}, count = modsCollectionTally(G.P_BLINDS), minw = 5, minh = 2.0, id = 'your_collection_blinds', focus_args = {snap_to = true}, func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}, func = 'is_other_gameobject_tabs'}),
+	  }}
+	}}
+
+	local modNodes = {}
+	table.insert(modNodes, t)
+	return {
+		label = localize("b_additions"),
+		chosen = false,
+		tab_definition_function = function()
+			return {
+				n = G.UIT.ROOT,
+				config = {
+					emboss = 0.05,
+					minh = 6,
+					r = 0.1,
+					minw = 6,
+					align = "tm",
+					padding = 0.2,
+					colour = G.C.BLACK
+				},
+				nodes = modNodes
+			}
+		end
+	}
+end
+
+G.FUNCS.your_collection_other_gameobjects = function(e)
+	G.SETTINGS.paused = true
+	print("asdf")
+	G.FUNCS.overlay_menu{
+	  definition = create_UIBox_Other_GameObjects(),
+	}
+end
+
+function create_UIBox_Other_GameObjects()
+	set_discover_tallies()
+	print("SMODS.Mods: "..tostring(SMODS.Mods))
+	G.E_MANAGER:add_event(Event({
+	  blockable = false,
+	  func = function()
+		G.REFRESH_ALERTS = true
+	  return true
+	  end
+	}))
+
+	local custom_gameobject_tabs = {{}}
+	for _, mod in pairs(SMODS.Mods) do
+		local curr_height = 0
+		local curr_col = 1
+		if mod.custom_collection_tabs and type(mod.custom_collection_tabs) == "function" then
+			object_tabs = mod.custom_collection_tabs()
+			for _, tab in ipairs(object_tabs) do
+				table.insert(custom_gameobject_tabs[curr_col], tab)
+				sendInfoMessage(tostring(#custom_gameobject_tabs[curr_col]))
+				curr_height = curr_height + tab.nodes[1].config.minh
+				if curr_height > 6 then --TODO: Verify that this is the ideal number to use
+					curr_height = 0
+					curr_col = curr_col + 1
+					custom_gameobject_tabs[curr_col] = {}
+				end
+			end
+		end
+	end
+
+	local custom_gameobject_rows = {}
+	for _, v in ipairs(custom_gameobject_tabs) do
+		table.insert(custom_gameobject_rows, {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes = v})
+	end
+	local t = {n=G.UIT.C, config={align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05, minw = 7}, nodes={
+		{n=G.UIT.R, config={align = "cm", padding = 0.15}, nodes = custom_gameobject_rows}
+	}}
+
+	return create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', contents = {t}})
+end
+
+-- TODO: Optimize this. 
+function modsCollectionTally(pool, set)
+	local set = set or nil
+	local obj_tally = {tally = 0, of = 0}
+
+	for _, v in pairs(pool) do
+		if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then
+			if set then
+				if v.set and v.set == set then
+					obj_tally.of = obj_tally.of+1
+					if v.discovered then 
+						obj_tally.tally = obj_tally.tally+1
+					end
+				end
+			else
+				obj_tally.of = obj_tally.of+1
+				if v.discovered then 
+					obj_tally.tally = obj_tally.tally+1
+				end
+			end
+		end
+	end
+
+	return obj_tally
+end
+
+-- TODO: Make better solution
+G.FUNCS.is_collection_empty = function(e)
+	if e.config.count and e.config.count.of <= 0 then
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    else
+        e.config.colour = G.C.RED
+        e.config.button = e.config.id
+    end
+end
+
+-- TODO: Make more efficient? 
+G.FUNCS.is_other_gameobject_tabs = function(e)
+	local is_other_gameobject_tab = nil
+	for _, mod in pairs(SMODS.Mods) do
+		if mod.custom_collection_tabs then is_other_gameobject_tab = true end
+	end
+	if is_other_gameobject_tab then
+		e.config.colour = G.C.RED
+        e.config.button = e.config.id
+    else
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    end
+end
+
+-- TODO: Make better solution
+local UIBox_button_ref = UIBox_button
+function UIBox_button(args)
+	local button = UIBox_button_ref(args)
+	button.nodes[1].config.count = args.count
+	return button
+end
 
 function buildModtag(mod)
     local tag_pos, tag_message, tag_atlas = { x = 0, y = 0 }, "load_success", mod.prefix and mod.prefix .. '_modicon' or 'modicon'

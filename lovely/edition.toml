@@ -301,7 +301,8 @@ pattern = "function CardArea:emplace(*"
 position = "after"
 payload = '''
     if card.edition and card.edition.card_limit and (self == G.hand) then
-        self.config.card_limit = self.config.card_limit + card.edition.card_limit
+        self.config.real_card_limit = (self.config.real_card_limit or self.config.card_limit) + card.edition.card_limit
+        self.config.card_limit = math.max(0, self.config.real_card_limit)
     end'''
 match_indent = true
 # CardArea:remove_card()
@@ -312,9 +313,11 @@ pattern = "card:remove_from_area()"
 position = "before"
 payload = '''
 if card.edition and card.edition.card_limit and (self == G.hand) then
-    self.config.card_limit = self.config.card_limit - card.edition.card_limit
+    self.config.real_card_limit = (self.config.real_card_limit or self.config.card_limit) - card.edition.card_limit
+    self.config.card_limit = math.max(0, self.config.real_card_limit)
 end'''
 match_indent = true
+
 # G.FUNCS.draw_from_deck_to_hand()
 [[patches]]
 [patches.pattern]
