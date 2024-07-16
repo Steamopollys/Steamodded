@@ -285,3 +285,13 @@ payload = '''
 if scoring_hand[i].debuffed_by_blind then
     G.GAME.blind.triggered = true
 end'''
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "self.triggered = false"
+position = "at"
+payload = """
+
+"""
+match_indent = false
