@@ -200,3 +200,60 @@ pattern = "self.label = center.label or self.config.card.label or self.ability.s
 position = 'at'
 match_indent = true
 payload = "self.label = center.label or self.config.card and self.config.card.label or self.ability.set"
+
+## Set debuffed_by_blind (TODO)
+
+### Fix Crimson Heart
+
+## Blind:drawn_to_hand()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.name == 'Crimson Heart' and self.prepped and G.jokers.cards[1] then"
+position = 'after'
+match_indent = true
+payload = "local crimson_heart_choice_index = nil"
+# Fix bad logic if not enough choices for debuff
+[[patches]]
+[patches.regex]
+target = 'blind.lua'
+pattern = '''
+(?<indent>[\t ]*)if not G\.jokers\.cards\[i\]\.debuff or #G\.jokers\.cards < 2 then jokers\[#jokers\+1\] = ?G\.jokers\.cards\[i\] end
+[\t ]*(G\.jokers\.cards\[i\]:set_debuff\(false\))'''
+position = 'at'
+line_prepend = '$indent'
+payload = """
+$2
+if not G.jokers.cards[i].debuff then 
+    jokers[#jokers+1] = G.jokers.cards[i]
+    if self.crimson_heart_choice == G.jokers.cards[i].unique_val then
+        crimson_heart_choice_index = i
+    end
+end"""
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "local _card = pseudorandom_element(jokers, pseudoseed('crimson_heart'))"
+position = 'before'
+match_indent = true
+payload = """
+if crimson_heart_choice_index and #jokers >= 2 then
+    table.remove(jokers, crimson_heart_choice_index)
+end"""
+# Add variable for Crimson Heart's choice
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "local _card = pseudorandom_element(jokers, pseudoseed('crimson_heart'))"
+position = "after"
+match_indent = true
+payload = "self.crimson_heart_choice = _card and _card.unique_val"
+
+## Blind:debuff_card()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.name == 'Crimson Heart' and not self.disabled and card.area == G.jokers then"
+position = "after"
+match_indent = true
+payload = "    card:set_debuff(card.unique_val == self.crimson_heart_choice)"
