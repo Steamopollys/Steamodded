@@ -135,10 +135,13 @@ function create_UIBox_mods(args)
 	table.insert(mod_tabs, buildModDescTab(G.ACTIVE_MOD_UI))
 	table.insert(mod_tabs, buildAdditionsTab(G.ACTIVE_MOD_UI))
 	if G.ACTIVE_MOD_UI.mod_config and G.ACTIVE_MOD_UI.mod_config.credits then table.insert(mod_tabs, buildCreditsTab(G.ACTIVE_MOD_UI)) end
-  							--[[							(SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id] and {
-								label = "Config",
-								tab_definition_function = SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]
-							})]]
+	if SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id] then 
+		table.insert(mod_tabs, {
+			label = "Config",
+			chosen = false,
+			tab_definition_function = SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]
+		})
+	end
 
 	return (create_UIBox_generic_options({
 		back_func = "mods_button",
