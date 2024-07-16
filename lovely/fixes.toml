@@ -201,18 +201,6 @@ position = 'at'
 match_indent = true
 payload = "self.label = center.label or self.config.card and self.config.card.label or self.ability.set"
 
-## Set debuffed_by_blind, use it for Matador behavior
-## Blind:debuff_card()
-[[patches]]
-[patches.regex]
-target = 'blind.lua'
-pattern = '(?<indent>[\t ]*)card:set_debuff\(true\)'
-position = 'after'
-payload = """
-
-if card.debuff then card.debuffed_by_blind = true end"""
-line_prepend = '$indent'
-
 ### Fix Crimson Heart
 
 ## Blind:drawn_to_hand()
