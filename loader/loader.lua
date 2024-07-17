@@ -347,6 +347,7 @@ function loadMods(modsDirectory)
                 else
                     assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
                 end
+                SMODS.current_mod = nil
             else
                 boot_print_stage('Failed to load Mod: ' .. mod.id)
                 sendWarnMessage(string.format("Mod %s was unable to load: %s%s%s", mod.id,
@@ -415,7 +416,6 @@ end
 
 function initSteamodded()
     initGlobals()
-    SMODS.current_mod = nil
     boot_print_stage("Loading APIs")
     loadAPIs()
     boot_print_stage("Loading Mods")
@@ -464,6 +464,30 @@ function boot_timer(_label, _next, progress)
 
     G.ARGS.bt = G.ARGS.bt or love.timer.getTime()
     G.ARGS.bt = love.timer.getTime()
+end
+
+function SMODS.load_file(path, id)
+    if not path or path == "" then
+        error("No path was provided to load.")
+    end
+    local mod
+    if not id then
+        if not SMODS.current_mod then
+            error("No ID was provided! Usage without an ID is only available when file is first loaded.")
+        end
+        mod = SMODS.current_mod
+    else 
+        mod = SMODS.Mods[id]
+    end
+    if not mod then
+        error("Mod not found. Ensure you are passing the correct ID.")
+    end 
+    local file_path = mod.path .. path
+    local file_content, err = NFS.read(file_path)
+    if not file_content then return  nil, "Error reading file '" .. path .. "' for mod with ID '" .. mod.id .. "': " .. err end
+    local chunk, err = load(file_content, "=[SMODS " .. mod.id .. ' "' .. path .. '"]')
+    if not chunk then return nil, "Error processing file '" .. path .. "' for mod with ID '" .. mod.id .. "': " .. err end
+    return chunk
 end
 
 ----------------------------------------------

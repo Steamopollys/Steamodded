@@ -78,6 +78,13 @@ function SMODS.compat_0_9_8.load()
         return SMODS.Sound.play(nil, pitch, volume, stop_previous_instance, sound_code)
     end
 
+    SMODS.Card = {
+        SUITS = SMODS.Suits,
+        RANKS = SMODS.Ranks,
+        SUIT_LIST = SMODS.Suit.obj_buffer,
+        RANK_LIST = SMODS.Rank.obj_buffer,
+    }
+
     SMODS.compat_0_9_8.Deck_new = SMODS.Back:extend {
         register = function(self)
             SMODS.compat_0_9_8.delay_register(SMODS.compat_0_9_8.Deck_new, self)

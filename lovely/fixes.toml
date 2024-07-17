@@ -108,7 +108,7 @@ target = 'card.lua'
 pattern = "self.bypass_lock = cardTable.bypass_lock"
 position = "after"
 payload = """
-self.unique_val = cardTable.unique_val
+self.unique_val = cardTable.unique_val or self.unique_val
 if cardTable.unique_val__saved_ID and G.ID <= cardTable.unique_val__saved_ID then
     G.ID = cardTable.unique_val__saved_ID + 1
 end"""
@@ -131,6 +131,14 @@ pattern = "if _c.set == 'Other' then"
 position = 'before'
 match_indent = true
 payload = "local cfg = (card and card.ability) or _c['config']" # string index to make sure the next patch doesn't eat it
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if _c.name ~= 'Stone Card' and ((specific_vars and specific_vars.bonus_chips) or _c.config.bonus) then"
+position = 'at'
+match_indent = true
+payload = "if _c.name ~= 'Stone Card' and ((specific_vars and specific_vars.bonus_chips) or (cfg.bonus ~= 0 and cfg.bonus)) then"
 
 [[patches]]
 [patches.regex]

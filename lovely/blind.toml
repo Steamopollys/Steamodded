@@ -14,6 +14,13 @@ pattern = 'card:set_debuff(true)'
 position = 'after'
 payload = "if card.debuff then card.debuffed_by_blind = true end"
 match_indent = true
+[[patches]]
+[patches.regex]
+target = 'blind.lua'
+pattern = 'card:set_debuff\(true\); return end'
+position = 'at'
+payload = """
+card:set_debuff(true); if card.debuff then card.debuffed_by_blind = true end; return end"""
 
 ## Card:set_debuff()
 [[patches]]
