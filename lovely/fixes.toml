@@ -245,64 +245,63 @@ pattern = "if self.name == 'Crimson Heart' and self.prepped and G.jokers.cards[1
 position = 'after'
 match_indent = true
 payload = """
-    local old_crimson_heart_choice = self.crimson_heart_choice
-    self.crimson_heart_choice = nil
-    local old_crimson_heart_choice_index = nil"""
+    local prev_chosen_set = {}
+    local fallback_jokers = {}"""
 # Fix bad logic if not enough choices for debuff
 [[patches]]
 [patches.regex]
 target = 'blind.lua'
 pattern = '''
-(?<indent>[\t ]*)if not G\.jokers\.cards\[i\]\.debuff or #G\.jokers\.cards < 2 then jokers\[#jokers\+1\] = ?G\.jokers\.cards\[i\] end
-[\t ]*G\.jokers\.cards\[i\]:set_debuff\(false\)'''
+(?<indent>[\t ]*)for i = 1, #G\.jokers\.cards do
+[\t ]*if not G\.jokers\.cards\[i\]\.debuff or #G\.jokers\.cards < 2 then jokers\[#jokers\+1\] = ?G\.jokers\.cards\[i\] end
+[\t ]*G\.jokers\.cards\[i\]:set_debuff\(false\)
+[\t ]*end'''
 position = 'at'
 line_prepend = '$indent'
 payload = """
-SMODS.recalc_debuff(G.jokers.cards[i])
-if not G.jokers.cards[i].debuff then 
-    jokers[#jokers+1] = G.jokers.cards[i]
-    if old_crimson_heart_choice == G.jokers.cards[i].unique_val then
-        old_crimson_heart_choice_index = i
+for i = 1, #G.jokers.cards do
+    if G.jokers.cards[i].ability.crimson_heart_chosen then
+        prev_chosen_set[G.jokers.cards[i]] = true
+        G.jokers.cards[i].ability.crimson_heart_chosen = nil
+        if G.jokers.cards[i].debuff then SMODS.recalc_debuff(G.jokers.cards[i]) end
     end
-end"""
-[[patches]]
-[patches.pattern]
-target = 'blind.lua'
-pattern = "local _card = pseudorandom_element(jokers, pseudoseed('crimson_heart'))"
-position = 'before'
-match_indent = true
-payload = """
-if old_crimson_heart_choice_index and #jokers >= 2 then
-    table.remove(jokers, old_crimson_heart_choice_index)
-end"""
+end
+for i = 1, #G.jokers.cards do
+    if not G.jokers.cards[i].debuff then
+        if not prev_chosen_set[G.jokers.cards[i]] then
+            jokers[#jokers+1] = G.jokers.cards[i]
+        end
+        table.insert(fallback_jokers, G.jokers.cards[i])
+    end
+end
+if #jokers == 0 then jokers = fallback_jokers end"""
 # Add variable for Crimson Heart's choice
-[[patches]]
-[patches.pattern]
-target = 'blind.lua'
-pattern = "local _card = pseudorandom_element(jokers, pseudoseed('crimson_heart'))"
-position = "after"
-match_indent = true
-payload = """self.crimson_heart_choice = _card and _card.unique_val"""
 [[patches]]
 [patches.pattern]
 target = 'blind.lua'
 pattern = "_card:set_debuff(true)"
 position = "at"
 match_indent = true
-payload = "SMODS.recalc_debuff(_card)"
+payload = """
+_card.ability.crimson_heart_chosen = true
+SMODS.recalc_debuff(_card)"""
 
 ## Blind:debuff_card()
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = 'blind.lua'
-pattern = "if self.name == 'Crimson Heart' and not self.disabled and card.area == G.jokers then"
-position = "after"
-match_indent = true
+pattern = '''
+if self\.name == 'Crimson Heart' and not self\.disabled and card\.area == G\.jokers then\s+
+((?<indent>[\t ]*)return)'''
+root_capture = '$1'
+position = "at"
+line_prepend = '$indent'
 payload = """
-    if card.unique_val == self.crimson_heart_choice then
-        card:set_debuff(true);
-        if card.debuff then card.debuffed_by_blind = true end
-    end"""
+if card.ability.crimson_heart_chosen then
+    card:set_debuff(true);
+    if card.debuff then card.debuffed_by_blind = true end
+    return
+end"""
 
 ## Blind:press_play()
 # Shouldn't work with Matador
@@ -315,3 +314,31 @@ pattern = '''
 root_capture = '$2'
 position = 'at'
 payload = ""
+
+## Blind:disable()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.name == 'The Water' then"
+position = 'before'
+payload = """
+if self.name == 'Crimson Heart' then
+    for _, v in ipairs(G.jokers.cards) do
+        v.ability.crimson_heart_chosen = nil
+    end
+end"""
+match_indent = true
+
+## Blind:defeat()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.name == 'The Manacle' and not self.disabled then"
+position = 'before'
+payload = """
+if self.name == 'Crimson Heart' then
+    for _, v in ipairs(G.jokers.cards) do
+        v.ability.crimson_heart_chosen = nil
+    end
+end"""
+match_indent = true
