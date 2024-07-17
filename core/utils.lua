@@ -279,6 +279,19 @@ function SMODS.find_card(key, count_debuffed)
     return results
 end
 
+function SMODS.create_card(t)
+    if not t.area and t.key and G.P_CENTERS[t.key] then
+        t.area = G.P_CENTERS[t.key].consumeable and G.consumeables or G.P_CENTERS[t.key].set == 'Joker' and G.jokers
+    end
+    if not t.area and not t.key and t.set and SMODS.ConsumableTypes[t.set] then
+        t.area = G.consumeables
+    end
+    SMODS.bypass_create_card_edition = t.no_edition
+    local _card = create_card(t.set, t.area, t.legendary, t.rarity, t.skip_materialize, t.soulable, t.key, t.key_append)
+    SMODS.bypass_create_card_edition = nil
+    return _card
+end
+
 -- Recalculate whether a card should be debuffed
 function SMODS.recalc_debuff(card)
     G.GAME.blind:debuff_card(card)
