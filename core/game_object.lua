@@ -1116,6 +1116,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         atlas = 'centers',
         pos = { x = 0, y = 0 },
         config = {},
+        unlock_condition = {},
         stake = 1,
         class_prefix = 'b',
         required_params = {

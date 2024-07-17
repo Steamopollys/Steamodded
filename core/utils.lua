@@ -279,6 +279,11 @@ function SMODS.find_card(key, count_debuffed)
     return results
 end
 
+-- Recalculate whether a card should be debuffed
+function SMODS.recalc_debuff(card)
+    G.GAME.blind:debuff_card(card)
+end
+
 function SMODS.reload()
     local lfs = love.filesystem
     local function recurse(dir)

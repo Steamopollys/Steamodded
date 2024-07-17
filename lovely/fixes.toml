@@ -200,3 +200,110 @@ pattern = "self.label = center.label or self.config.card.label or self.ability.s
 position = 'at'
 match_indent = true
 payload = "self.label = center.label or self.config.card and self.config.card.label or self.ability.set"
+
+### Fix Matador
+[[patches]]
+[patches.regex]
+target = 'functions/state_events.lua'
+pattern = '''
+if scoring_hand\[i\]\.debuff then
+(?<indent>[\t ]*)(G\.GAME\.blind\.triggered = true)'''
+root_capture = '$2'
+position = "at"
+line_prepend = '$indent'
+payload = '''
+
+if scoring_hand[i].debuffed_by_blind then
+    G.GAME.blind.triggered = true
+end'''
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "self.triggered = false"
+position = "at"
+payload = """
+
+"""
+match_indent = false
+
+### Fix Crimson Heart
+
+## Blind:drawn_to_hand()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.name == 'Crimson Heart' and self.prepped and G.jokers.cards[1] then"
+position = 'after'
+match_indent = true
+payload = """
+    local old_crimson_heart_choice = self.crimson_heart_choice
+    self.crimson_heart_choice = nil
+    local old_crimson_heart_choice_index = nil"""
+# Fix bad logic if not enough choices for debuff
+[[patches]]
+[patches.regex]
+target = 'blind.lua'
+pattern = '''
+(?<indent>[\t ]*)if not G\.jokers\.cards\[i\]\.debuff or #G\.jokers\.cards < 2 then jokers\[#jokers\+1\] = ?G\.jokers\.cards\[i\] end
+[\t ]*G\.jokers\.cards\[i\]:set_debuff\(false\)'''
+position = 'at'
+line_prepend = '$indent'
+payload = """
+SMODS.recalc_debuff(G.jokers.cards[i])
+if not G.jokers.cards[i].debuff then 
+    jokers[#jokers+1] = G.jokers.cards[i]
+    if old_crimson_heart_choice == G.jokers.cards[i].unique_val then
+        old_crimson_heart_choice_index = i
+    end
+end"""
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "local _card = pseudorandom_element(jokers, pseudoseed('crimson_heart'))"
+position = 'before'
+match_indent = true
+payload = """
+if old_crimson_heart_choice_index and #jokers >= 2 then
+    table.remove(jokers, old_crimson_heart_choice_index)
+end"""
+# Add variable for Crimson Heart's choice
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "local _card = pseudorandom_element(jokers, pseudoseed('crimson_heart'))"
+position = "after"
+match_indent = true
+payload = """self.crimson_heart_choice = _card and _card.unique_val"""
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "_card:set_debuff(true)"
+position = "at"
+match_indent = true
+payload = "SMODS.recalc_debuff(_card)"
+
+## Blind:debuff_card()
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = "if self.name == 'Crimson Heart' and not self.disabled and card.area == G.jokers then"
+position = "after"
+match_indent = true
+payload = """
+    if card.unique_val == self.crimson_heart_choice then
+        card:set_debuff(true);
+        if card.debuff then card.debuffed_by_blind = true end
+    end"""
+
+## Blind:press_play()
+# Shouldn't work with Matador
+[[patches]]
+[patches.regex]
+target = 'blind.lua'
+pattern = '''
+(?<indent>[\t ]*)if G\.jokers\.cards\[1\] then
+([\t ]*self\.triggered = true)'''
+root_capture = '$2'
+position = 'at'
+payload = ""
