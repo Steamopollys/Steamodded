@@ -108,7 +108,7 @@ target = 'card.lua'
 pattern = "self.bypass_lock = cardTable.bypass_lock"
 position = "after"
 payload = """
-self.unique_val = cardTable.unique_val
+self.unique_val = cardTable.unique_val or self.unique_val
 if cardTable.unique_val__saved_ID and G.ID <= cardTable.unique_val__saved_ID then
     G.ID = cardTable.unique_val__saved_ID + 1
 end"""
