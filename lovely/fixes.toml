@@ -115,6 +115,7 @@ end"""
 match_indent = true
 
 ## Vars in card descriptions should use `card.ability` instead of `_c.config` where possible
+## Allow passing in custom vars
 # generate_card_ui()
 [[patches]]
 [patches.pattern]
@@ -122,7 +123,8 @@ target = 'functions/common_events.lua'
 pattern = 'function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)'
 position = 'at'
 match_indent = true
-payload = 'function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end, card)'
+payload = '''function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end, card)
+    if _c.specific_vars then specific_vars = _c.specific_vars end'''
 
 [[patches]]
 [patches.pattern]
