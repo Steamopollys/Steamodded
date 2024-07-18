@@ -344,3 +344,14 @@ if self.name == 'Crimson Heart' then
     end
 end"""
 match_indent = true
+
+
+## Fix Manacle's unnecessary card draw after positive G.hand:change_size()
+# Blind:disable()
+[[patches]]
+[patches.regex]
+target = 'blind.lua'
+pattern = 'G\.hand:change_size\(1\)(\s+G\.FUNCS\.draw_from_deck_to_hand\(1\))'
+root_capture = '$1'
+position = 'at'
+payload = ""
