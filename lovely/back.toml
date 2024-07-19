@@ -59,8 +59,8 @@ match_indent = true
 payload = '''
 	local obj = self.effect.center
 	if obj.trigger_effect and type(obj.trigger_effect) == 'function' then
-		local o = obj:trigger_effect(args)
-		if o then return o end
+		local o = {obj:trigger_effect(args)}
+		if o then return unpack(o) end
 	end'''
 
 ## Back:generate_UI

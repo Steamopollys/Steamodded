@@ -48,6 +48,7 @@ payload = '''
                 if self.debuff then
                     self.debuff = false
                     if self.area == G.jokers then self:add_to_deck(true) end
+					self.debuffed_by_blind = false
                 end
                 return
             end
