@@ -117,13 +117,6 @@ SMODS.LAST_SELECTED_MOD_TAB = "mod_desc"
 function create_UIBox_mods(args)
 	local mod = G.ACTIVE_MOD_UI
 	if not SMODS.LAST_SELECTED_MOD_TAB then SMODS.LAST_SELECTED_MOD_TAB = "mod_desc" end
-	sendInfoMessage(tostring(SMODS.LAST_SELECTED_MOD_TAB))
-	local scale = 0.75  -- Scale factor for text
-	local maxCharsPerLine = 50
-
-	local wrappedDescription = wrapText(mod.description, maxCharsPerLine)
-
-	local authors = localize('b_author'.. (#mod.author > 1 and 's' or '')) .. ': ' .. concatAuthors(mod.author)
 
 	local mod_tabs = {}
 	table.insert(mod_tabs, buildModDescTab(mod))
@@ -276,15 +269,6 @@ function buildModDescTab(mod)
 end
 
 function buildAdditionsTab(mod)
-	set_discover_tallies()
-	G.E_MANAGER:add_event(Event({
-	  blockable = false,
-	  func = function()
-		G.REFRESH_ALERTS = true
-	  return true
-	  end
-	}))
-	
 	local consumable_nodes = {}
 	for _, key in ipairs(SMODS.ConsumableType.obj_buffer) do
 		local id = 'your_collection_'..key:lower()..'s'
@@ -338,25 +322,23 @@ function buildAdditionsTab(mod)
 	}
 end
 
+-- Disable alerts when in Additions tab
+local set_alerts_ref = set_alerts
+function set_alerts()
+	if G.ACTIVE_MOD_UI then
+	else 
+		set_alerts_ref()
+	end
+end
+
 G.FUNCS.your_collection_other_gameobjects = function(e)
 	G.SETTINGS.paused = true
-	print("asdf")
 	G.FUNCS.overlay_menu{
 	  definition = create_UIBox_Other_GameObjects(),
 	}
 end
 
 function create_UIBox_Other_GameObjects()
-	set_discover_tallies()
-	print("SMODS.Mods: "..tostring(SMODS.Mods))
-	G.E_MANAGER:add_event(Event({
-	  blockable = false,
-	  func = function()
-		G.REFRESH_ALERTS = true
-	  return true
-	  end
-	}))
-
 	local custom_gameobject_tabs = {{}}
 	for _, mod in pairs(SMODS.Mods) do
 		local curr_height = 0
@@ -365,7 +347,6 @@ function create_UIBox_Other_GameObjects()
 			object_tabs = mod.custom_collection_tabs()
 			for _, tab in ipairs(object_tabs) do
 				table.insert(custom_gameobject_tabs[curr_col], tab)
-				sendInfoMessage(tostring(#custom_gameobject_tabs[curr_col]))
 				curr_height = curr_height + tab.nodes[1].config.minh
 				if curr_height > 6 then --TODO: Verify that this is the ideal number to use
 					curr_height = 0
