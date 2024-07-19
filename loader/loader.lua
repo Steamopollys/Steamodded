@@ -225,7 +225,6 @@ function loadMods(modsDirectory)
                         if mod.prefix then
                             used_prefixes[mod.prefix] = mod.id
                         end
-                        mod.content = file_content
                         mod.optional_dependencies = {}
                         if mod.dump_loc then
                             SMODS.dump_loc = {
@@ -329,7 +328,8 @@ function loadMods(modsDirectory)
                 SMODS.current_mod = mod
                 if mod.outdated then
                     SMODS.compat_0_9_8.with_compat(function()
-                        assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
+                        mod.config = {}
+                        assert(load(NFS.read(mod.path..mod.main_file), ('=[SMODS %s "%s"]'):format(mod.id, mod.main_file)))()
                         for k, v in pairs(SMODS.compat_0_9_8.init_queue) do
                             v()
                             SMODS.compat_0_9_8.init_queue[k] = nil
@@ -338,9 +338,11 @@ function loadMods(modsDirectory)
                 else
                     local config_path = mod.path..'config.lua'
                     if NFS.getInfo(config_path) then
-                        mod.config = assert(load(NFS.read(config_path), '=[SMODS ' .. mod.id .. ' "config.lua"]'))()
+                        mod.config = assert(load(NFS.read(config_path), ('=[SMODS %s "config.lua"]'):format(mod.id)))()
+                    else
+                        mod.config = {}
                     end
-                    assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
+                    assert(load(NFS.read(mod.path..mod.main_file), ('=[SMODS %s "%s"]'):format(mod.id, mod.main_file)))()
                 end
                 SMODS.current_mod = nil
             else

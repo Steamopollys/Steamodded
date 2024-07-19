@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0718a-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0720a-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -121,43 +121,44 @@ function create_UIBox_mods(args)
 	local mod_tabs = {}
 	table.insert(mod_tabs, buildModDescTab(mod))
 	if mod.added_obj then table.insert(mod_tabs, buildAdditionsTab(mod)) end
-	local credits_func = mod.credits
+	local credits_func = mod.credits_tab
 	if credits_func and type(credits_func) == 'function' then 
 		table.insert(mod_tabs, {
 			label = localize("b_credits"),
 			chosen = SMODS.LAST_SELECTED_MOD_TAB == "credits" or false,
-			tab_definition_function = function()
+			tab_definition_function = function(...)
 				SMODS.LAST_SELECTED_MOD_TAB = "credits"
-				return credits_func()
+				return credits_func(...)
 			end
 		})
 	end
-	local settings_func = mod.settings
-	if settings_func and type(settings_func) == 'function' then 
+	local config_func = mod.config_tab
+	if config_func and type(config_func) == 'function' then 
 		table.insert(mod_tabs, {
 			label = localize("b_config"),
 			chosen = SMODS.LAST_SELECTED_MOD_TAB == "config" or false,
-			tab_definition_function = function()
+			tab_definition_function = function(...)
 				SMODS.LAST_SELECTED_MOD_TAB = "config"
-				return settings_func()
+				return config_func(...)
 			end
 		})
 	end
 
-	local custom_ui_func = mod.extra_mod_ui_tabs
+	local custom_ui_func = mod.extra_tabs
 	if custom_ui_func and type(custom_ui_func) == 'function' then
 		local custom_tabs = custom_ui_func()
 		if next(custom_tabs) and #custom_tabs == 0 then custom_tabs = { custom_tabs } end
 		for i, v in ipairs(custom_tabs) do
 			local id = mod.id..'_'..i
-			v.chosen = SMODS.LAST_SELECTED_MOD_TAB == id or false
+			v.chosen = (SMODS.LAST_SELECTED_MOD_TAB == id) or false
 			v.label = v.label or ''
 			local def = v.tab_definition_function
 			assert(def, ('Custom defined mod tab with label "%s" from mod with id %s is missing definition function'):format(v.label, mod.id))
-			v.tab_definition_function = function()
+			v.tab_definition_function = function(...)
 				SMODS.LAST_SELECTED_MOD_TAB = id
-				def()
+				return def(...)
 			end
+			table.insert(mod_tabs, v)
 		end
 	end
 
@@ -599,7 +600,16 @@ function G.FUNCS.mods_buttons_page(options)
     end
 end
 
+function SMODS.save_mod_config(mod)
+	if not mod.config or not next(mod.config) then return end
+	local serialized = 'return '..serialize(mod.config)
+	NFS.write(mod.path..'config.lua', serialized)
+end
+
 function G.FUNCS.exit_mods(e)
+	for _, v in pairs(SMODS.Mods) do
+		SMODS.save_mod_config(v)
+	end
     if SMODS.full_restart then
 		-- launch a new instance of the game and quit the current one
 		SMODS.restart_game()
@@ -1154,36 +1164,23 @@ function SMODS.GUI.dynamicModListContent(page)
     else
         local modCount = 0
 		local id = 0
-        for _, modInfo in ipairs(SMODS.mod_list) do
-			if modCount >= modsPerPage then break end
-            if not modInfo.can_load and not modInfo.disabled then
-                id = id + 1
-                if id >= startIndex and id <= endIndex then
-                    table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
-                    modCount = modCount + 1
-                end
-            end
-        end
-        for _, modInfo in ipairs(SMODS.mod_list) do
-			if modCount >= modsPerPage then break end
-            if modInfo.can_load then
-                id = id + 1
-                if id >= startIndex and id <= endIndex then
-                    table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
-                    modCount = modCount + 1
-                end
-            end
-        end
-		for _, modInfo in ipairs(SMODS.mod_list) do
-			if modCount >= modsPerPage then break end
-            if modInfo.disabled then
-                id = id + 1
-                if id >= startIndex and id <= endIndex then
-                    table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
-                    modCount = modCount + 1
-                end
-            end
-        end
+		
+		for _, condition in ipairs({
+			function(m) return not m.can_load and not m.disabled end,
+			function(m) return m.can_load end,
+			function(m) return m.disabled end,
+		}) do
+			for _, modInfo in ipairs(SMODS.mod_list) do
+				if modCount >= modsPerPage then break end
+				if condition(modInfo) then
+					id = id + 1
+					if id >= startIndex and id <= endIndex then
+						table.insert(modNodes, createClickableModBox(modInfo, scale * 0.5))
+						modCount = modCount + 1
+					end
+				end
+			end
+		end
     end
 
     return {

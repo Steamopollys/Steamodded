@@ -400,6 +400,9 @@ function SMODS.create_loc_dump()
 	NFS.write(SMODS.dump_loc.path..'localization/dump.lua', str)
 end
 
+-- Serializes an input table in valid Lua syntax
+-- Keys must be of type number or string
+-- Values must be of type number, boolean, string or table
 function serialize(t, indent)
     indent = indent or ''
     local str = '{\n'
@@ -407,26 +410,33 @@ function serialize(t, indent)
         str = str .. indent .. '\t'
 		if type(v) == 'number' then
             str = str .. v
+        elseif type(v) == 'boolean' then
+            str = str .. (v and 'true' or 'false')
         elseif type(v) == 'string' then
             str = str .. serialize_string(v)
         elseif type(v) == 'table' then
             str = str .. serialize(v, indent .. '\t')
         else
-            assert(false)
+            -- not serializable
+            str = str .. 'nil'
         end
 		str = str .. ',\n'
 	end
     for k, v in pairs(t) do
 		if type(k) == 'string' then
         	str = str .. indent .. '\t' .. '[' .. serialize_string(k) .. '] = '
+            
 			if type(v) == 'number' then
 				str = str .. v
+            elseif type(v) == 'boolean' then
+                str = str .. (v and 'true' or 'false')
 			elseif type(v) == 'string' then
 				str = str .. serialize_string(v)
 			elseif type(v) == 'table' then
 				str = str .. serialize(v, indent .. '\t')
 			else
-				assert(false)
+				-- not serializable
+                str = str .. 'nil'
 			end
 			str = str .. ',\n'
 		end
