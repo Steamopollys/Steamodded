@@ -112,55 +112,60 @@ local function concatAuthors(authors)
 	return authors or localize('b_unknown')
 end
 
-SMODS.customUIElements = {}
-SMODS.customCreditsElements = {}
-SMODS.customSettingsElements = {}
-
-function SMODS.registerUIElement(modID, uiElements)
-	SMODS.customUIElements[modID] = uiElements
-end
-
-function SMODS.registerCreditsElement(modID, uiElements)
-	SMODS.customCreditsElements[modID] = uiElements
-end
-
-function SMODS.registerSettingsElement(modID, uiElements)
-	SMODS.customSettingsElements[modID] = uiElements
-end
 
 SMODS.LAST_SELECTED_MOD_TAB = "mod_desc"
 function create_UIBox_mods(args)
+	local mod = G.ACTIVE_MOD_UI
 	if not SMODS.LAST_SELECTED_MOD_TAB then SMODS.LAST_SELECTED_MOD_TAB = "mod_desc" end
 	sendInfoMessage(tostring(SMODS.LAST_SELECTED_MOD_TAB))
 	local scale = 0.75  -- Scale factor for text
 	local maxCharsPerLine = 50
 
-	local wrappedDescription = wrapText(G.ACTIVE_MOD_UI.description, maxCharsPerLine)
+	local wrappedDescription = wrapText(mod.description, maxCharsPerLine)
 
-	local authors = localize('b_author'.. (#G.ACTIVE_MOD_UI.author > 1 and 's' or '')) .. ': ' .. concatAuthors(G.ACTIVE_MOD_UI.author)
+	local authors = localize('b_author'.. (#mod.author > 1 and 's' or '')) .. ': ' .. concatAuthors(mod.author)
 
 	local mod_tabs = {}
-	table.insert(mod_tabs, buildModDescTab(G.ACTIVE_MOD_UI))
-	if G.ACTIVE_MOD_UI.added_obj then table.insert(mod_tabs, buildAdditionsTab(G.ACTIVE_MOD_UI)) end
-	if SMODS.customCreditsElements[G.ACTIVE_MOD_UI.id] then 
+	table.insert(mod_tabs, buildModDescTab(mod))
+	if mod.added_obj then table.insert(mod_tabs, buildAdditionsTab(mod)) end
+	local credits_func = mod.credits
+	if credits_func and type(credits_func) == 'function' then 
 		table.insert(mod_tabs, {
 			label = localize("b_credits"),
 			chosen = SMODS.LAST_SELECTED_MOD_TAB == "credits" or false,
 			tab_definition_function = function()
 				SMODS.LAST_SELECTED_MOD_TAB = "credits"
-				return SMODS.customCreditsElements[G.ACTIVE_MOD_UI.id]()
+				return credits_func()
 			end
 		})
 	end
-	if SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id] then 
+	local settings_func = mod.settings
+	if settings_func and type(settings_func) == 'function' then 
 		table.insert(mod_tabs, {
 			label = localize("b_config"),
 			chosen = SMODS.LAST_SELECTED_MOD_TAB == "config" or false,
 			tab_definition_function = function()
 				SMODS.LAST_SELECTED_MOD_TAB = "config"
-				return SMODS.customSettingsElements[G.ACTIVE_MOD_UI.id]()
+				return settings_func()
 			end
 		})
+	end
+
+	local custom_ui_func = mod.extra_mod_ui_tabs
+	if custom_ui_func and type(custom_ui_func) == 'function' then
+		local custom_tabs = custom_ui_func()
+		if next(custom_tabs) and #custom_tabs == 0 then custom_tabs = { custom_tabs } end
+		for i, v in ipairs(custom_tabs) do
+			local id = mod.id..'_'..i
+			v.chosen = SMODS.LAST_SELECTED_MOD_TAB == id or false
+			v.label = v.label or ''
+			local def = v.tab_definition_function
+			assert(def, ('Custom defined mod tab with label "%s" from mod with id %s is missing definition function'):format(v.label, mod.id))
+			v.tab_definition_function = function()
+				SMODS.LAST_SELECTED_MOD_TAB = id
+				def()
+			end
+		end
 	end
 
 	return (create_UIBox_generic_options({
@@ -196,9 +201,9 @@ function buildModDescTab(mod)
 	local scale = 0.75  -- Scale factor for text
 	local maxCharsPerLine = 50
 
-	local wrappedDescription = wrapText(G.ACTIVE_MOD_UI.description, maxCharsPerLine)
+	local wrappedDescription = wrapText(mod.description, maxCharsPerLine)
 
-	local authors = localize('b_author'.. (#G.ACTIVE_MOD_UI.author > 1 and 's' or '')) .. ': ' .. concatAuthors(G.ACTIVE_MOD_UI.author)
+	local authors = localize('b_author'.. (#mod.author > 1 and 's' or '')) .. ': ' .. concatAuthors(mod.author)
 
 	-- Authors names in blue
 	table.insert(modNodes, {
@@ -244,15 +249,13 @@ function buildModDescTab(mod)
 		}
 	})
 
-	local customUI = SMODS.customUIElements[mod.id]
-	if customUI then
-		for _, uiElement in ipairs(customUI) do
-			table.insert(modNodes, uiElement)
-		end
+	local custom_ui_func = mod.custom_ui
+	if custom_ui_func and type(custom_ui_func) == 'function' then
+		custom_ui_func(modNodes)
 	end
 
 	return {
-		label = G.ACTIVE_MOD_UI.name,
+		label = mod.name,
 		chosen = SMODS.LAST_SELECTED_MOD_TAB == "mod_desc" or false,
 		tab_definition_function = function()
 			return {
