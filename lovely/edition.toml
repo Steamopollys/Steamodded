@@ -354,3 +354,15 @@ pattern = "if v == 'negative_consumable' then v = 'negative' end"
 position = "at"
 payload = '''if v == 'negative_consumable' or v == 'negative_playing_card' then v = 'negative' end'''
 match_indent = true
+
+# 
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = '''(?<indent>[\t ]*)(?<edi>local edition = poll_edition\('edi'\.\.\(key_append or ''\)\.\.G\.GAME\.round_resets\.ante\)(\n.*){2})'''
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+if not SMODS.bypass_create_card_edition then
+    $edi
+end'''

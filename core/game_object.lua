@@ -1432,6 +1432,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             value = 0,
         },
         register = function(self)
+            -- 0.9.8 compat
+            self.name = self.name or self.key
             if self.used_card_keys[self.card_key] then
                 sendWarnMessage(('Tried to use duplicate card key %s, aborting registration'):format(self.card_key), self.set)
                 return
