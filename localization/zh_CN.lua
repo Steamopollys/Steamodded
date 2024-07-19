@@ -78,6 +78,9 @@ return {
 			b_authors = '作者',
             b_unknown = '未知',
             b_by = ' 作者：',
+			--Temp addition here until translated
+			b_config = "Config",
+			b_additions = 'Additions',
             b_applies_stakes_1 = '',
 			b_applies_stakes_2 = '的限制也将起效',
 		}

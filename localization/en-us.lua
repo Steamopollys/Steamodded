@@ -79,6 +79,8 @@ return {
 			b_authors = 'Authors',
             b_unknown = 'Unknown',
             b_by = ' By: ',
+			b_config = "Config",
+			b_additions = 'Additions',
             b_applies_stakes_1 = 'Applies ',
 			b_applies_stakes_2 = '',
 		}

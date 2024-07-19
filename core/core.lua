@@ -112,19 +112,54 @@ local function concatAuthors(authors)
 	return authors or localize('b_unknown')
 end
 
-SMODS.customUIElements = {}
 
-function SMODS.registerUIElement(modID, uiElements)
-	SMODS.customUIElements[modID] = uiElements
-end
-
+SMODS.LAST_SELECTED_MOD_TAB = "mod_desc"
 function create_UIBox_mods(args)
-	local scale = 0.75  -- Scale factor for text
-	local maxCharsPerLine = 50
+	local mod = G.ACTIVE_MOD_UI
+	if not SMODS.LAST_SELECTED_MOD_TAB then SMODS.LAST_SELECTED_MOD_TAB = "mod_desc" end
 
-	local wrappedDescription = wrapText(G.ACTIVE_MOD_UI.description, maxCharsPerLine)
+	local mod_tabs = {}
+	table.insert(mod_tabs, buildModDescTab(mod))
+	if mod.added_obj then table.insert(mod_tabs, buildAdditionsTab(mod)) end
+	local credits_func = mod.credits
+	if credits_func and type(credits_func) == 'function' then 
+		table.insert(mod_tabs, {
+			label = localize("b_credits"),
+			chosen = SMODS.LAST_SELECTED_MOD_TAB == "credits" or false,
+			tab_definition_function = function()
+				SMODS.LAST_SELECTED_MOD_TAB = "credits"
+				return credits_func()
+			end
+		})
+	end
+	local settings_func = mod.settings
+	if settings_func and type(settings_func) == 'function' then 
+		table.insert(mod_tabs, {
+			label = localize("b_config"),
+			chosen = SMODS.LAST_SELECTED_MOD_TAB == "config" or false,
+			tab_definition_function = function()
+				SMODS.LAST_SELECTED_MOD_TAB = "config"
+				return settings_func()
+			end
+		})
+	end
 
-	local authors = localize('b_author'.. (#G.ACTIVE_MOD_UI.author > 1 and 's' or '')) .. ': ' .. concatAuthors(G.ACTIVE_MOD_UI.author)
+	local custom_ui_func = mod.extra_mod_ui_tabs
+	if custom_ui_func and type(custom_ui_func) == 'function' then
+		local custom_tabs = custom_ui_func()
+		if next(custom_tabs) and #custom_tabs == 0 then custom_tabs = { custom_tabs } end
+		for i, v in ipairs(custom_tabs) do
+			local id = mod.id..'_'..i
+			v.chosen = SMODS.LAST_SELECTED_MOD_TAB == id or false
+			v.label = v.label or ''
+			local def = v.tab_definition_function
+			assert(def, ('Custom defined mod tab with label "%s" from mod with id %s is missing definition function'):format(v.label, mod.id))
+			v.tab_definition_function = function()
+				SMODS.LAST_SELECTED_MOD_TAB = id
+				def()
+			end
+		end
+	end
 
 	return (create_UIBox_generic_options({
 		back_func = "mods_button",
@@ -139,81 +174,7 @@ function create_UIBox_mods(args)
 					create_tabs({
 						snap_to_nav = true,
 						colour = G.C.BOOSTER,
-						tabs = {
-							{
-								label = G.ACTIVE_MOD_UI.name,
-								chosen = true,
-								tab_definition_function = function()
-									local modNodes = {}
-
-
-									-- Authors names in blue
-									table.insert(modNodes, {
-										n = G.UIT.R,
-										config = {
-											padding = 0,
-											align = "cm",
-											r = 0.1,
-											emboss = 0.1,
-											outline = 1,
-											padding = 0.07
-										},
-										nodes = {
-											{
-												n = G.UIT.T,
-												config = {
-													text = authors,
-													shadow = true,
-													scale = scale * 0.65,
-													colour = G.C.BLUE,
-												}
-											}
-										}
-									})
-
-									-- Mod description
-									table.insert(modNodes, {
-										n = G.UIT.R,
-										config = {
-											padding = 0.2,
-											align = "cm"
-										},
-										nodes = {
-											{
-												n = G.UIT.T,
-												config = {
-													text = wrappedDescription,
-													shadow = true,
-													scale = scale * 0.5,
-													colour = G.C.UI.TEXT_LIGHT
-												}
-											}
-										}
-									})
-
-									local customUI = SMODS.customUIElements[G.ACTIVE_MOD_UI.id]
-									if customUI then
-										for _, uiElement in ipairs(customUI) do
-											table.insert(modNodes, uiElement)
-										end
-									end
-
-									return {
-										n = G.UIT.ROOT,
-										config = {
-											emboss = 0.05,
-											minh = 6,
-											r = 0.1,
-											minw = 6,
-											align = "tm",
-											padding = 0.2,
-											colour = G.C.BLACK
-										},
-										nodes = modNodes
-									}
-								end
-							},
-						}
+						tabs = mod_tabs
 					})
 				}
 			}
@@ -221,7 +182,251 @@ function create_UIBox_mods(args)
 	}))
 end
 
+function buildModDescTab(mod)
+	G.E_MANAGER:add_event(Event({
+		blockable = false,
+		func = function()
+		  G.REFRESH_ALERTS = nil
+		return true
+		end
+	}))
+	local modNodes = {}
+	local scale = 0.75  -- Scale factor for text
+	local maxCharsPerLine = 50
 
+	local wrappedDescription = wrapText(mod.description, maxCharsPerLine)
+
+	local authors = localize('b_author'.. (#mod.author > 1 and 's' or '')) .. ': ' .. concatAuthors(mod.author)
+
+	-- Authors names in blue
+	table.insert(modNodes, {
+		n = G.UIT.R,
+		config = {
+			padding = 0,
+			align = "cm",
+			r = 0.1,
+			emboss = 0.1,
+			outline = 1,
+			padding = 0.07
+		},
+		nodes = {
+			{
+				n = G.UIT.T,
+				config = {
+					text = authors,
+					shadow = true,
+					scale = scale * 0.65,
+					colour = G.C.BLUE,
+				}
+			}
+		}
+	})
+
+	-- Mod description
+	table.insert(modNodes, {
+		n = G.UIT.R,
+		config = {
+			padding = 0.2,
+			align = "cm"
+		},
+		nodes = {
+			{
+				n = G.UIT.T,
+				config = {
+					text = wrappedDescription,
+					shadow = true,
+					scale = scale * 0.5,
+					colour = G.C.UI.TEXT_LIGHT
+				}
+			}
+		}
+	})
+
+	local custom_ui_func = mod.custom_ui
+	if custom_ui_func and type(custom_ui_func) == 'function' then
+		custom_ui_func(modNodes)
+	end
+
+	return {
+		label = mod.name,
+		chosen = SMODS.LAST_SELECTED_MOD_TAB == "mod_desc" or false,
+		tab_definition_function = function()
+			return {
+				n = G.UIT.ROOT,
+				config = {
+					emboss = 0.05,
+					minh = 6,
+					r = 0.1,
+					minw = 6,
+					align = "tm",
+					padding = 0.2,
+					colour = G.C.BLACK
+				},
+				nodes = modNodes
+			}
+		end
+	}
+end
+
+function buildAdditionsTab(mod)
+	local consumable_nodes = {}
+	for _, key in ipairs(SMODS.ConsumableType.obj_buffer) do
+		local id = 'your_collection_'..key:lower()..'s'
+		consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = modsCollectionTally(G.P_CENTER_POOLS[key]), minw = 4, id = id, colour = G.C.SECONDARY_SET[key], func = 'is_collection_empty'})
+	end
+
+	local t = {n=G.UIT.R, config={align = "cm",padding = 0.2, minw = 7}, nodes={
+		{n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes={
+		UIBox_button({button = 'your_collection_jokers', label = {localize('b_jokers')}, count = modsCollectionTally(G.P_CENTER_POOLS["Joker"]),  minw = 5, minh = 1.7, scale = 0.6, id = 'your_collection_jokers', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_decks', label = {localize('b_decks')}, count = modsCollectionTally(G.P_CENTER_POOLS["Back"]), minw = 5, id = 'your_collection_decks', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_vouchers', label = {localize('b_vouchers')}, count = modsCollectionTally(G.P_CENTER_POOLS["Voucher"]), minw = 5, id = 'your_collection_vouchers', func = 'is_collection_empty'}),
+		{n=G.UIT.R, config={align = "cm", padding = 0.1, r=0.2, colour = G.C.BLACK}, nodes={
+		  {n=G.UIT.C, config={align = "cm", maxh=2.9}, nodes={
+			{n=G.UIT.T, config={text = localize('k_cap_consumables'), scale = 0.45, colour = G.C.L_BLACK, vert = true, maxh=2.2}},
+		  }},
+		  {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes = consumable_nodes}
+		}},
+	  }},
+	  {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes={
+		UIBox_button({button = 'your_collection_enhancements', label = {localize('b_enhanced_cards')}, count = modsCollectionTally(G.P_CENTER_POOLS["Enhanced"]), minw = 5, id = 'your_collection_enhancements', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_seals', label = {localize('b_seals')}, count = modsCollectionTally(G.P_CENTER_POOLS["Seal"]), minw = 5, id = 'your_collection_seals', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_editions', label = {localize('b_editions')}, count = modsCollectionTally(G.P_CENTER_POOLS["Edition"]), minw = 5, id = 'your_collection_editions', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_boosters', label = {localize('b_booster_packs')}, count = modsCollectionTally(G.P_CENTER_POOLS["Booster"]), minw = 5, id = 'your_collection_boosters', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_tags', label = {localize('b_tags')}, count = modsCollectionTally(G.P_TAGS), minw = 5, id = 'your_collection_tags', func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_blinds', label = {localize('b_blinds')}, count = modsCollectionTally(G.P_BLINDS), minw = 5, minh = 2.0, id = 'your_collection_blinds', focus_args = {snap_to = true}, func = 'is_collection_empty'}),
+		UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}, func = 'is_other_gameobject_tabs'}),
+	  }}
+	}}
+
+	local modNodes = {}
+	table.insert(modNodes, t)
+	return {
+		label = localize("b_additions"),
+		chosen = SMODS.LAST_SELECTED_MOD_TAB == "additions" or false,
+		tab_definition_function = function()
+			SMODS.LAST_SELECTED_MOD_TAB = "additions"
+			return {
+				n = G.UIT.ROOT,
+				config = {
+					emboss = 0.05,
+					minh = 6,
+					r = 0.1,
+					minw = 6,
+					align = "tm",
+					padding = 0.2,
+					colour = G.C.BLACK
+				},
+				nodes = modNodes
+			}
+		end
+	}
+end
+
+-- Disable alerts when in Additions tab
+local set_alerts_ref = set_alerts
+function set_alerts()
+	if G.ACTIVE_MOD_UI then
+	else 
+		set_alerts_ref()
+	end
+end
+
+G.FUNCS.your_collection_other_gameobjects = function(e)
+	G.SETTINGS.paused = true
+	G.FUNCS.overlay_menu{
+	  definition = create_UIBox_Other_GameObjects(),
+	}
+end
+
+function create_UIBox_Other_GameObjects()
+	local custom_gameobject_tabs = {{}}
+	for _, mod in pairs(SMODS.Mods) do
+		local curr_height = 0
+		local curr_col = 1
+		if mod.custom_collection_tabs and type(mod.custom_collection_tabs) == "function" then
+			object_tabs = mod.custom_collection_tabs()
+			for _, tab in ipairs(object_tabs) do
+				table.insert(custom_gameobject_tabs[curr_col], tab)
+				curr_height = curr_height + tab.nodes[1].config.minh
+				if curr_height > 6 then --TODO: Verify that this is the ideal number to use
+					curr_height = 0
+					curr_col = curr_col + 1
+					custom_gameobject_tabs[curr_col] = {}
+				end
+			end
+		end
+	end
+
+	local custom_gameobject_rows = {}
+	for _, v in ipairs(custom_gameobject_tabs) do
+		table.insert(custom_gameobject_rows, {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes = v})
+	end
+	local t = {n=G.UIT.C, config={align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05, minw = 7}, nodes={
+		{n=G.UIT.R, config={align = "cm", padding = 0.15}, nodes = custom_gameobject_rows}
+	}}
+
+	return create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', contents = {t}})
+end
+
+-- TODO: Optimize this. 
+function modsCollectionTally(pool, set)
+	local set = set or nil
+	local obj_tally = {tally = 0, of = 0}
+
+	for _, v in pairs(pool) do
+		if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then
+			if set then
+				if v.set and v.set == set then
+					obj_tally.of = obj_tally.of+1
+					if v.discovered then 
+						obj_tally.tally = obj_tally.tally+1
+					end
+				end
+			else
+				obj_tally.of = obj_tally.of+1
+				if v.discovered then 
+					obj_tally.tally = obj_tally.tally+1
+				end
+			end
+		end
+	end
+
+	return obj_tally
+end
+
+-- TODO: Make better solution
+G.FUNCS.is_collection_empty = function(e)
+	if e.config.count and e.config.count.of <= 0 then
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    else
+        e.config.colour = G.C.RED
+        e.config.button = e.config.id
+    end
+end
+
+-- TODO: Make more efficient? 
+G.FUNCS.is_other_gameobject_tabs = function(e)
+	local is_other_gameobject_tab = nil
+	for _, mod in pairs(SMODS.Mods) do
+		if mod.custom_collection_tabs then is_other_gameobject_tab = true end
+	end
+	if is_other_gameobject_tab then
+		e.config.colour = G.C.RED
+        e.config.button = e.config.id
+    else
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    end
+end
+
+-- TODO: Make better solution
+local UIBox_button_ref = UIBox_button
+function UIBox_button(args)
+	local button = UIBox_button_ref(args)
+	button.nodes[1].config.count = args.count
+	return button
+end
 
 function buildModtag(mod)
     local tag_pos, tag_message, tag_atlas = { x = 0, y = 0 }, "load_success", mod.prefix and mod.prefix .. '_modicon' or 'modicon'
@@ -590,6 +795,7 @@ end
 
 function G.FUNCS.mods_button(e)
 	G.SETTINGS.paused = true
+	SMODS.LAST_SELECTED_MOD_TAB = nil
 
 	G.FUNCS.overlay_menu({
 		definition = create_UIBox_mods_button()

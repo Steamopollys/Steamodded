@@ -336,6 +336,10 @@ function loadMods(modsDirectory)
                         end
                     end)
                 else
+                    local config_path = mod.path..'config.lua'
+                    if NFS.getInfo(config_path) then
+                        mod.config = assert(load(NFS.read(config_path), '=[SMODS ' .. mod.id .. ' "config.lua"]'))()
+                    end
                     assert(load(mod.content, "=[SMODS " .. mod.id .. ' "' .. mod.main_file .. '"]'))()
                 end
                 SMODS.current_mod = nil
