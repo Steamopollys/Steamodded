@@ -17,7 +17,6 @@ target = "main.lua"
 position = "append"
 sources = [
 	"core/core.lua",
-	"core/StackTracePlus.lua",
 	"core/utils.lua",
 	"core/overrides.lua",
 	"core/game_object.lua",

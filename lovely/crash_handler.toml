@@ -1,0 +1,20 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "function love.errhand(msg)"
+position = "at"
+payload = "if false then"
+match_indent = true
+
+[[patches]]
+[patches.copy]
+target = "main.lua"
+position = "prepend"
+sources = [
+	"core/StackTracePlus.lua",
+]
