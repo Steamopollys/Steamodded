@@ -98,6 +98,16 @@ position = "at"
 payload = 'function number_format(num, e_switch_point)'
 match_indent = true
 
+# number_format - lower precision with higher numbers
+
+[[patches]] 
+[patches.regex]
+target = "functions/misc_functions.lua"
+pattern = 'string\.format\("%\.3f"'
+position = "at"
+payload = 'string.format(fac >= 100 and "%.1f" or fac >= 10 and "%.2f" or "%.3f"'
+
+
 # score_number_scale
 
 [[patches]] 
