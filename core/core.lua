@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0720a-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0720b-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -397,11 +397,12 @@ end
 
 -- TODO: Make better solution
 G.FUNCS.is_collection_empty = function(e)
+	e.config.original_colour = e.config.original_colour or e.config.colour
 	if e.config.count and e.config.count.of <= 0 then
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
-        e.config.colour = G.C.RED
+        e.config.colour = e.config.original_colour
         e.config.button = e.config.id
     end
 end
@@ -600,16 +601,32 @@ function G.FUNCS.mods_buttons_page(options)
     end
 end
 
+SMODS.id = 'Steamodded'
+
+function SMODS.load_mod_config(mod)
+	local config = load(NFS.read(('%sconfig/%s.lua'):format(SMODS.MODS_DIR, mod.id)) or 'return {}', ('=[SMODS %s "config"]'):format(mod.id))()
+	local default_config = load(NFS.read(('%sconfig.lua'):format(mod.path)) or 'return {}', ('=[SMODS %s "default_config"]'):format(mod.id))()
+	mod.config = {} 
+	for k, v in pairs(default_config) do mod.config[k] = v end
+	for k, v in pairs(config) do mod.config[k] = v end
+	return mod.config
+end
 function SMODS.save_mod_config(mod)
-	if not mod.config or not next(mod.config) then return end
+	if not mod.config or not next(mod.config) then return false end
 	local serialized = 'return '..serialize(mod.config)
-	NFS.write(mod.path..'config.lua', serialized)
+	assert(NFS.write(('%s/config/%s.lua'):format(SMODS.MODS_DIR, mod.id), serialized))
+	return true
+end
+function SMODS.save_all_config()
+	NFS.createDirectory(SMODS.MODS_DIR..'/config')
+	SMODS:save_mod_config()
+	for _, v in ipairs(SMODS.mod_list) do
+		if v.can_load then SMODS.save_mod_config(v) end
+	end
 end
 
 function G.FUNCS.exit_mods(e)
-	for _, v in pairs(SMODS.Mods) do
-		SMODS.save_mod_config(v)
-	end
+	SMODS.save_all_config()
     if SMODS.full_restart then
 		-- launch a new instance of the game and quit the current one
 		SMODS.restart_game()
@@ -650,7 +667,7 @@ function create_UIBox_mods_button()
 							},
 							{
 
-								label = localize('b_steamodded_credits'),
+								label = localize('b_credits'),
 								tab_definition_function = function()
 									return {
 										n = G.UIT.ROOT,
@@ -774,7 +791,7 @@ function create_UIBox_mods_button()
 								end
                             },
                             {
-                                label = localize('b_steamodded_settings'),
+                                label = localize('b_config'),
 								tab_definition_function = function()
                                     return {
                                         n = G.UIT.ROOT,
@@ -785,7 +802,9 @@ function create_UIBox_mods_button()
                                         },
                                         nodes = {
                                             create_toggle {
-												label = localize('b_disable_mod_badges')
+												label = localize('b_disable_mod_badges'),
+												ref_table = SMODS.config,
+												ref_value = 'no_mod_badges',
 											}
 										}
 									}
@@ -1191,12 +1210,6 @@ function SMODS.GUI.dynamicModListContent(page)
             padding = 0.2,
         },
         nodes = modNodes
-    }
-end
-
-function SMODS.init_settings()
-    SMODS.SETTINGS = {
-        no_mod_badges = false,
     }
 end
 

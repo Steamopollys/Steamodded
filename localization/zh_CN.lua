@@ -62,8 +62,7 @@ return {
 			b_mods_cap = '模组',
             b_modded_version = '模组环境！',
             b_steamodded = 'Steamodded',
-            b_steamodded_credits = ' Steamodded鸣谢 ',
-            b_steamodded_settings = ' Steamodded设置 ',
+            b_credits = '鸣谢',
             b_open_mods_dir = '打开模组目录',
             b_no_mods = '未检测到任何模组……',
             b_mod_list = '已启用模组列表',
@@ -78,9 +77,8 @@ return {
 			b_authors = '作者',
             b_unknown = '未知',
             b_by = ' 作者：',
-			--Temp addition here until translated
-			b_config = "Config",
-			b_additions = 'Additions',
+       		b_config = "配置",
+            b_additions = '新增项目',
             b_applies_stakes_1 = '',
 			b_applies_stakes_2 = '的限制也将起效',
 		}

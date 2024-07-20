@@ -220,16 +220,6 @@ if AUT.card_type ~= 'Locked' and AUT.card_type ~= 'Undiscovered' then
 	badges.mod_set = nil
 end'''
 
-# G.UIDEF.settings_tab()
-[[patches]]
-[patches.regex]
-target = 'functions/UI_definitions.lua'
-pattern = "(?<indent>[\t ]*)G.F_CRASH_REPORTS.*"
-line_prepend = '$indent'
-position = 'after'
-payload = '''
-create_toggle { label = 'Disable Mod Badges', ref_table = G.SETTINGS, ref_value = 'no_mod_badges' },'''
-
 # set_discover_tallies()
 [[patches]]
 [patches.regex]

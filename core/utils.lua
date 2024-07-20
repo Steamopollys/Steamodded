@@ -329,7 +329,7 @@ function SMODS.restart_game()
 end
 
 function SMODS.create_mod_badges(obj, badges)
-    if not G.SETTINGS.no_mod_badges and obj and obj.mod and obj.mod.display_name and not obj.no_mod_badges then
+    if not SMODS.config.no_mod_badges and obj and obj.mod and obj.mod.display_name and not obj.no_mod_badges then
         local mods = {}
         badges.mod_set = badges.mod_set or {}
         if not badges.mod_set[obj.mod.id] and not obj.no_main_mod_badge then table.insert(mods, obj.mod) end

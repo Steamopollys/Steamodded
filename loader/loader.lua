@@ -336,12 +336,7 @@ function loadMods(modsDirectory)
                         end
                     end)
                 else
-                    local config_path = mod.path..'config.lua'
-                    if NFS.getInfo(config_path) then
-                        mod.config = assert(load(NFS.read(config_path), ('=[SMODS %s "config.lua"]'):format(mod.id)))()
-                    else
-                        mod.config = {}
-                    end
+                    SMODS.load_mod_config(mod)
                     assert(load(NFS.read(mod.path..mod.main_file), ('=[SMODS %s "%s"]'):format(mod.id, mod.main_file)))()
                 end
                 SMODS.current_mod = nil
@@ -413,6 +408,8 @@ end
 
 function initSteamodded()
     initGlobals()
+    boot_print_stage("Loading Steamodded config")
+    SMODS:load_mod_config()
     boot_print_stage("Loading APIs")
     loadAPIs()
     boot_print_stage("Loading Mods")
