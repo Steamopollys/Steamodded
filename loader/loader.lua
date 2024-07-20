@@ -336,7 +336,8 @@ function loadMods(modsDirectory)
                         end
                     end)
                 else
-                    SMODS.load_mod_config(mod)
+                    local load_func = type(mod.load_mod_config) == 'function' and mod.load_mod_config or SMODS.load_mod_config
+                    load_func(mod)
                     assert(load(NFS.read(mod.path..mod.main_file), ('=[SMODS %s "%s"]'):format(mod.id, mod.main_file)))()
                 end
                 SMODS.current_mod = nil
