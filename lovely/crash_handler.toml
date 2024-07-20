@@ -5,7 +5,7 @@ priority = 0
 
 [[patches]]
 [patches.pattern]
-target = "game.lua"
+target = "main.lua"
 pattern = "function love.errhand(msg)"
 position = "at"
 payload = "if false then"
