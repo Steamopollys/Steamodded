@@ -95,7 +95,7 @@ end
 [[patches]]
 [patches.regex]
 target = "card.lua"
-pattern = "(?<indent>[\t ]*)if (?<cond>self.seal == 'Gold' then)"
+pattern = '''(?<indent>[\t ]*)if (?<cond>self\.seal == 'Gold' then\n)'''
 position = 'at'
 line_prepend = '$indent'
 payload = '''
