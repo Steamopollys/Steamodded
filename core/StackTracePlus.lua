@@ -487,7 +487,7 @@ function getDebugInfoForCrash()
             end
         end
         for k, v in ipairs(enabled_mods) do
-            info = info .. "\n    " .. k .. ": " .. v.name .. " by " .. concatAuthors(v.author) .. " [ID: " .. v.id ..
+            info = info .. "\n    " .. k .. ": " .. v.name .. " by " .. table.concat(v.author, ", ") .. " [ID: " .. v.id ..
                        (v.priority ~= 0 and (", Priority: " .. v.priority) or "") ..
                        (v.version and v.version ~= '0.0.0' and (", Version: " .. v.version) or "") .. "]"
             local debugInfo = v.debug_info
