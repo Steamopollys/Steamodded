@@ -297,28 +297,6 @@ function SMODS.recalc_debuff(card)
     G.GAME.blind:debuff_card(card)
 end
 
-function SMODS.reload()
-    local lfs = love.filesystem
-    local function recurse(dir)
-        local files = lfs.getDirectoryItems(dir)
-        for i, v in ipairs(files) do
-            local file = (dir == '') and v or (dir .. '/' .. v)
-            sendTraceMessage(file)
-            if v == 'Mods' or v:len() == 1 then
-                -- exclude save files
-            elseif lfs.isFile(file) then
-                lua_reload.ReloadFile(file)
-            elseif lfs.isDirectory(file) then
-                recurse(file)
-            end
-        end
-    end
-    recurse('')
-    SMODS.booted = false
-    G:init_item_prototypes()
-    initSteamodded()
-end
-
 function SMODS.restart_game()
 	if love.system.getOS() ~= 'OS X' then
 		love.system.openURL('steam://rungameid/2379780')
