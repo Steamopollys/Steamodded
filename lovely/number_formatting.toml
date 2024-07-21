@@ -1,7 +1,7 @@
 [manifest]
 version = "1.0.0"
 dump_lua = true
-priority = 69
+priority = 0
 
 #
 # Use number_format for...
@@ -83,34 +83,6 @@ pattern = 'scale_number\(saved_game\.GAME\.round_scores\.hand\.amt\, 0\.8\*scale
 position = "at"
 payload = "score_number_scale(scale*1.1, saved_game.GAME.round_scores.hand.amt)"
 
-#
-# Money scaling fix
-#
-
-# Add scale function to money
-
-[[patches]] 
-[patches.regex]
-target = "functions/UI_definitions.lua"
-pattern = '''
-string = \{\{ref_table = G\.GAME\, ref_value = 'dollars'\, prefix = localize\('\$'\)\}\}\,'''
-position = "after"
-payload = '''
-
-                            scale_function = function ()
-                                return score_number_scale(2.2 * scale, G.GAME.dollars, 1000000)
-                            end,'''
-
-# Re-set self.scale if scale function is present
-
-[[patches]] 
-[patches.pattern]
-target = "engine/text.lua"
-pattern = 'self.config.H = 0'
-position = "after"
-payload = "self.scale = self.config.scale_function and self.config.scale_function() or self.scale"
-match_indent = true
-
 
 #
 # Custom sci notation switch point
@@ -125,26 +97,6 @@ pattern = 'function number_format(num)'
 position = "at"
 payload = 'function number_format(num, e_switch_point)'
 match_indent = true
-
-# number_format 
-# - fix floating point error (1.000e92 instead of 10.000e91)
-# - lower precision with higher numbers
-
-[[patches]] 
-[patches.pattern]
-target = "functions/misc_functions.lua"
-pattern = '''
-return string.format("%.3f",x/(10^fac))..'e'..fac'''
-position = "at"
-payload = '''
-local mantissa = math.round(x/(10^fac), 3)
-if mantissa >= 10 then
-  mantissa = mantissa / 10
-  fac = fac + 1
-end
-return string.format(fac >= 100 and "%.1fe%i" or fac >= 10 and "%.2fe%i" or "%.3fe%i", mantissa, fac)'''
-match_indent = true
-
 
 # score_number_scale
 
