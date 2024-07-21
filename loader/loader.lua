@@ -66,8 +66,8 @@ function loadMods(modsDirectory)
 
     -- Function to process each directory (including subdirectories) with depth tracking
     local function processDirectory(directory, depth)
-        if depth > 3 then
-            return -- Stop processing if the depth is greater than 3
+        if depth > 3 or directory..'/' == SMODS.path then
+            return
         end
 
         for _, filename in ipairs(NFS.getDirectoryItems(directory)) do
@@ -158,9 +158,6 @@ function loadMods(modsDirectory)
                         SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
                         table.insert(SMODS.mod_priorities[mod.priority], mod)
                     end
-                elseif headerLine == '--- STEAMODDED CORE' then
-                    -- save top-level directory of Steamodded installation
-                    SMODS.path = SMODS.path or directory:match('^(.+/)')
                 else
                     sendTraceMessage("Skipping non-Lua file or invalid header: " .. filename, 'Loader')
                 end
