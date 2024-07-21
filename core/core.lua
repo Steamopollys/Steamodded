@@ -395,6 +395,12 @@ function modsCollectionTally(pool, set)
 	return obj_tally
 end
 
+function math.round(num, precision)
+	precision = 10^(precision or 0)
+	
+	return math.floor(num * precision + 0.49999999999999994) / precision
+end
+
 -- Formatting util for UI elements (look number_formatting.toml)
 function format_ui_value(value)
     if type(value) ~= "number" then
