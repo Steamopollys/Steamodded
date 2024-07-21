@@ -561,18 +561,10 @@ local function createClickableModBox(modInfo, scale)
 					function(_set_toggle)
 						if not modInfo.should_enable then
 							NFS.write(modInfo.path .. '.lovelyignore', '')
-							if NFS.getInfo(modInfo.path .. 'lovely') or NFS.getInfo(modInfo.path .. 'lovely.toml') then
-								SMODS.full_restart = true
-							else
-								SMODS.partial_reload = true
-							end
+							SMODS.full_restart = true
 						else
 							NFS.remove(modInfo.path .. '.lovelyignore')
-							if NFS.getInfo(modInfo.path .. 'lovely') or NFS.getInfo(modInfo.path .. 'lovely.toml') then
-								SMODS.full_restart = true
-							else
-								SMODS.partial_reload = true
-							end
+							SMODS.full_restart = true
 						end
 					end
 				)
@@ -627,9 +619,6 @@ function G.FUNCS.exit_mods(e)
     if SMODS.full_restart then
 		-- launch a new instance of the game and quit the current one
 		SMODS.restart_game()
-    elseif SMODS.partial_reload then
-		-- re-initialize steamodded
-        SMODS.reload()
     end
 	G.FUNCS.exit_overlay_menu(e)
 end
