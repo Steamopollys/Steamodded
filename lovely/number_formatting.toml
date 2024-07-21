@@ -88,8 +88,7 @@ payload = "scale_number(saved_game.GAME.round_scores.hand.amt, 0.8*scale, 100000
 # Custom sci notation switch point
 #
 
-# number_format
-
+## number_format
 [[patches]] 
 [patches.pattern]
 target = "functions/misc_functions.lua"
@@ -98,12 +97,26 @@ position = "at"
 payload = 'function number_format(num, e_switch_point)'
 match_indent = true
 
-# Check if custom switch point is specified
-
 [[patches]] 
 [patches.regex]
 target = "functions/misc_functions.lua"
 pattern = 'num >= G\.E_SWITCH_POINT'
 position = "at"
 payload = "num >= (e_switch_point or G.E_SWITCH_POINT)"
+
+## scale_number
+[[patches]] 
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = 'function scale_number(number, scale, max)'
+position = "at"
+payload = 'function scale_number(number, scale, max, e_switch_point)'
+match_indent = true
+
+[[patches]] 
+[patches.regex]
+target = "functions/misc_functions.lua"
+pattern = 'number >= G\.E_SWITCH_POINT'
+position = "at"
+payload = "number >= (e_switch_point or G.E_SWITCH_POINT)"
 
