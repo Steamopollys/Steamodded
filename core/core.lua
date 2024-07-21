@@ -5,7 +5,7 @@ SMODS = {}
 SMODS.GUI = {}
 SMODS.GUI.DynamicUIManager = {}
 
-MODDED_VERSION = "1.0.0-ALPHA-0720b-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0720c-STEAMODDED"
 
 function STR_UNPACK(str)
 	local chunk, err = loadstring(str)
@@ -619,7 +619,7 @@ end
 SMODS.id = 'Steamodded'
 
 function SMODS.load_mod_config(mod)
-	local config = load(NFS.read(('%sconfig/%s.lua'):format(SMODS.MODS_DIR, mod.id)) or 'return {}', ('=[SMODS %s "config"]'):format(mod.id))()
+	local config = load(NFS.read(('config/%s.jkr'):format(SMODS.MODS_DIR, mod.id)) or 'return {}', ('=[SMODS %s "config"]'):format(mod.id))()
 	local default_config = load(NFS.read(('%sconfig.lua'):format(mod.path)) or 'return {}', ('=[SMODS %s "default_config"]'):format(mod.id))()
 	mod.config = {} 
 	for k, v in pairs(default_config) do mod.config[k] = v end
@@ -629,14 +629,17 @@ end
 function SMODS.save_mod_config(mod)
 	if not mod.config or not next(mod.config) then return false end
 	local serialized = 'return '..serialize(mod.config)
-	assert(NFS.write(('%s/config/%s.lua'):format(SMODS.MODS_DIR, mod.id), serialized))
+	assert(NFS.write(('config/%s.jkr'):format(mod.id), serialized))
 	return true
 end
 function SMODS.save_all_config()
-	NFS.createDirectory(SMODS.MODS_DIR..'/config')
+	NFS.createDirectory('config')
 	SMODS:save_mod_config()
 	for _, v in ipairs(SMODS.mod_list) do
-		if v.can_load then SMODS.save_mod_config(v) end
+		if v.can_load then 
+			local save_func = type(v.save_mod_config) == 'function' and v.save_mod_config or SMODS.save_mod_config
+			save_func(v)
+		end
 	end
 end
 
