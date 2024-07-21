@@ -46,7 +46,7 @@ local function find_self(directory, target_filename, target_line, depth)
 		local file_path = directory .. "/" .. filename
 		local file_type = NFS.getInfo(file_path).type
 		if file_type == 'directory' or file_type == 'symlink' then
-			local f = find_self(file_path, target_filename, line, depth)
+			local f = find_self(file_path, target_filename, target_line, depth+1)
 			if f then return f end
 		elseif filename == target_filename then
 			local first_line = NFS.read(file_path):match('^(.-)\n')
@@ -60,7 +60,7 @@ end
 
 SMODS.path = find_self(SMODS.MODS_DIR, 'core.lua', '--- STEAMODDED CORE')
 
-for _, v in ipairs {
+for _, path in ipairs {
 	"core/ui.lua",
 	"core/utils.lua",
 	"core/overrides.lua",
@@ -69,5 +69,5 @@ for _, v in ipairs {
 	"core/compat_0_9_8.lua",
 	"loader/loader.lua",
 } do
-	
+	assert(load(NFS.read(SMODS.path..path), ('=[SMODS _ "%s"]'):format(path)))()
 end
