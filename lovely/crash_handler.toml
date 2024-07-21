@@ -5,16 +5,16 @@ priority = 0
 
 [[patches]]
 [patches.pattern]
-target = "game.lua"
-pattern = "self.SPEEDFACTOR = 1"
-position = "after"
-payload = "initSteamodded()"
+target = "main.lua"
+pattern = "function love.errhand(msg)"
+position = "at"
+payload = "if false then"
 match_indent = true
 
 [[patches]]
 [patches.copy]
 target = "main.lua"
-position = "append"
+position = "prepend"
 sources = [
-	"core/core.lua",
+	"core/StackTracePlus.lua",
 ]
