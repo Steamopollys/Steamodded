@@ -395,7 +395,7 @@ pattern = '''
 return string.format("%.3f",x/(10^fac))..'e'..fac'''
 position = "at"
 payload = '''
-local mantissa = math.round(x/(10^fac), 3)
+local mantissa = round_number(x/(10^fac), 3)
 if mantissa >= 10 then
   mantissa = mantissa / 10
   fac = fac + 1

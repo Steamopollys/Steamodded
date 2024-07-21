@@ -14,12 +14,10 @@ priority = 0
 [patches.pattern]
 target = "functions/common_events.lua"
 pattern = "if config.name ~= 'bottom' then"
-position = "at"
+position = "after"
 payload = '''
-if config.name ~= 'bottom' then
-
-    G.GAME.round_eval_rows = G.GAME.round_eval_rows + 1
-    if G.GAME.round_eval_rows > 7 then
+    total_cashout_rows = (total_cashout_rows or 0) + 1
+    if total_cashout_rows > 7 then
         return
     end
 '''
@@ -31,10 +29,10 @@ match_indent = true
 [patches.regex]
 target = "functions/state_events.lua"
 pattern = 'G\.FUNCS\.evaluate_round = function\(\)'
-position = "at"
+position = "after"
 payload = '''
-G.FUNCS.evaluate_round = function()
-G.GAME.round_eval_rows = 0'''
+
+    total_cashout_rows = 0'''
 
 # Add UI row with total rows hidden
 
@@ -44,8 +42,8 @@ target = "functions/state_events.lua"
 pattern = "add_round_eval_row({name = 'bottom', dollars = dollars})"
 position = "before"
 payload = '''
-if G.GAME.round_eval_rows > 7 then
-    local total_hidden = G.GAME.round_eval_rows - 7
+if total_cashout_rows > 7 then
+    local total_hidden = total_cashout_rows - 7
 
     G.E_MANAGER:add_event(Event({
         trigger = 'before',delay = 0.38,

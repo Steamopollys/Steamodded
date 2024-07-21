@@ -395,21 +395,6 @@ function modsCollectionTally(pool, set)
 	return obj_tally
 end
 
-function math.round(num, precision)
-	precision = 10^(precision or 0)
-	
-	return math.floor(num * precision + 0.49999999999999994) / precision
-end
-
--- Formatting util for UI elements (look number_formatting.toml)
-function format_ui_value(value)
-    if type(value) ~= "number" then
-        return tostring(value)
-    end
-
-    return number_format(value, 1000000)
-end
-
 -- TODO: Make better solution
 G.FUNCS.is_collection_empty = function(e)
 	e.config.original_colour = e.config.original_colour or e.config.colour
