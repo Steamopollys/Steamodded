@@ -370,7 +370,7 @@ position = "after"
 payload = '''
 
                             scale_function = function ()
-                                return score_number_scale(2.2 * scale, G.GAME.dollars, 1000000)
+                                return scale_number(G.GAME.dollars, 2.2 * scale, 999999)
                             end,'''
 
 ## DynaText:update_text

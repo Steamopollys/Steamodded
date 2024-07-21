@@ -81,7 +81,7 @@ payload = "format_ui_value(saved_game.GAME.dollars)"
 target = "functions/UI_definitions.lua"
 pattern = 'scale_number\(saved_game\.GAME\.round_scores\.hand\.amt\, 0\.8\*scale\)'
 position = "at"
-payload = "score_number_scale(scale*1.1, saved_game.GAME.round_scores.hand.amt)"
+payload = "scale_number(saved_game.GAME.round_scores.hand.amt, 0.8*scale, 100000000000)"
 
 
 #
@@ -98,22 +98,12 @@ position = "at"
 payload = 'function number_format(num, e_switch_point)'
 match_indent = true
 
-# score_number_scale
-
-[[patches]] 
-[patches.pattern]
-target = "functions/misc_functions.lua"
-pattern = 'function score_number_scale(scale, amt)'
-position = "at"
-payload = 'function score_number_scale(scale, amt, e_switch_point)'
-match_indent = true
-
 # Check if custom switch point is specified
 
 [[patches]] 
 [patches.regex]
 target = "functions/misc_functions.lua"
-pattern = '>= G\.E_SWITCH_POINT'
+pattern = 'num >= G\.E_SWITCH_POINT'
 position = "at"
-payload = ">= (e_switch_point or G.E_SWITCH_POINT)"
+payload = "num >= (e_switch_point or G.E_SWITCH_POINT)"
 
