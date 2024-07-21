@@ -367,8 +367,12 @@ Stack Traceback
                     elseif source == "SMODS" then
                         local modID = table.remove(props, 1)
                         local fileName = table.concat(props, " ")
-                        dumper:add_f("(%d) main chunk of file '%s' at line %d (from mod with id %s)\r\n", level_to_show,
+                        if modID == '_' then
+                            dumper:add_f("(%d) main chunk of Steamodded file '%s' at line %d\r\n", level_to_show, fileName:sub(2, -2), info.currentline)
+                        else
+                            dumper:add_f("(%d) main chunk of file '%s' at line %d (from mod with id %s)\r\n", level_to_show,
                             fileName:sub(2, -2), info.currentline, modID)
+                        end
                     else
                         dumper:add_f("(%d) main chunk of %s at line %d\r\n", level_to_show, info.source, info.currentline)
                     end
@@ -421,9 +425,15 @@ Stack Traceback
                     elseif source == "SMODS" then
                         local modID = table.remove(props, 1)
                         local fileName = table.concat(props, " ")
+                        if modID == '_' then
+                            dumper:add_f("(%d) Lua %s '%s' at Steamodded file '%s:%d' %s\r\n", level_to_show,
+                            function_type, function_name, fileName:sub(2, -2), info.currentline,
+                            was_guessed and " (best guess)" or "")
+                        else
                         dumper:add_f("(%d) Lua %s '%s' at file '%s:%d' (from mod with id %s)%s\r\n", level_to_show,
                             function_type, function_name, fileName:sub(2, -2), info.currentline, modID,
                             was_guessed and " (best guess)" or "")
+                        end
                     else
                         dumper:add_f("(%d) Lua %s '%s' at line %d of chunk '%s'\r\n", level_to_show, function_type,
                             function_name, info.currentline, source)
