@@ -590,7 +590,7 @@ end
 SMODS.id = 'Steamodded'
 
 function SMODS.load_mod_config(mod)
-	local config = load(NFS.read(('config/%s.jkr'):format(SMODS.MODS_DIR, mod.id)) or 'return {}', ('=[SMODS %s "config"]'):format(mod.id))()
+	local config = load(NFS.read(('config/%s.jkr'):format(mod.id)) or 'return {}', ('=[SMODS %s "config"]'):format(mod.id))()
 	local default_config = load(NFS.read(('%sconfig.lua'):format(mod.path)) or 'return {}', ('=[SMODS %s "default_config"]'):format(mod.id))()
 	mod.config = {} 
 	for k, v in pairs(default_config) do mod.config[k] = v end
