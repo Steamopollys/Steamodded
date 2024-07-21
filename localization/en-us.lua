@@ -82,7 +82,9 @@ return {
 			b_additions = 'Additions',
             b_applies_stakes_1 = 'Applies ',
 			b_applies_stakes_2 = '',
-            b_cashout_hidden = '...and %s more',
-		}
+		},
+		v_dictionary = {
+			cashout_hidden = '...and #1# more',
+		},
 	}
 }

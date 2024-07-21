@@ -52,7 +52,7 @@ if G.GAME.round_eval_rows > 7 then
         func = function()
             local hidden = {n=G.UIT.R, config={align = "cm"}, nodes={
                 {n=G.UIT.O, config={object = DynaText({
-                    string = {string.format(localize('b_cashout_hidden'), total_hidden)}, 
+                    string = {localize{type = 'variable', key = 'cashout_hidden', vars = {total_hidden}}}, 
                     colours = {G.C.WHITE}, shadow = true, float = false, 
                     scale = 0.45,
                     font = G.LANGUAGES['en-us'].font, pop_in = 0
