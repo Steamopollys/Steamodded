@@ -482,11 +482,14 @@ function getDebugInfoForCrash()
         info = info .. "\nSteamodded Mods:"
         local enabled_mods = {}
         for _, v in ipairs(SMODS.mod_list) do
-            if v.can_load then table.insert(enabled_mods, v) end
+            if v.can_load then
+                table.insert(enabled_mods, v)
+            end
         end
         for k, v in ipairs(enabled_mods) do
-            info = info .. "\n    " .. k .. ": " .. v.name .. " by " .. concatAuthors(v.author) .. " [ID: " .. v.id ..
-                       (v.priority ~= 0 and (", Priority: " .. v.priority) or "") .. (v.version and v.version ~= '0.0.0' and (", Version: " .. v.version) or "") .. "]"
+            info = info .. "\n    " .. k .. ": " .. v.name .. " by " .. table.concat(v.author, ", ") .. " [ID: " .. v.id ..
+                       (v.priority ~= 0 and (", Priority: " .. v.priority) or "") ..
+                       (v.version and v.version ~= '0.0.0' and (", Version: " .. v.version) or "") .. "]"
             local debugInfo = v.debug_info
             if debugInfo then
                 if type(debugInfo) == "string" then
@@ -520,6 +523,17 @@ function injectStackTrace()
     -- Modifed from https://love2d.org/wiki/love.errorhandler
     function love.errorhandler(msg)
         msg = tostring(msg)
+
+        if not sendErrorMessage then
+            function sendErrorMessage(msg)
+                print(msg)
+            end
+        end
+        if not sendInfoMessage then
+            function sendInfoMessage(msg)
+                print(msg)
+            end
+        end
 
         sendErrorMessage("Oops! The game crashed\n" .. STP.stacktrace(msg), 'StackTrace')
 
@@ -556,7 +570,11 @@ function injectStackTrace()
         love.graphics.reset()
         local font = love.graphics.setNewFont("resources/fonts/m6x11plus.ttf", 20)
 
-        love.graphics.clear(G.C.BLACK)
+        local background = {0, 0, 1}
+        if G and G.C and G.C.BLACK then
+            background = G.C.BLACK
+        end
+        love.graphics.clear(background)
         love.graphics.origin()
 
         local trace = STP.stacktrace("", 3)
@@ -639,18 +657,19 @@ function injectStackTrace()
             if not love.graphics.isActive() then
                 return
             end
-            love.graphics.clear(G.C.BLACK)
+            love.graphics.clear(background)
             calcEndHeight()
             love.graphics.printf(p, pos, pos - scrollOffset, love.graphics.getWidth() - pos * 2)
             if scrollOffset ~= endHeight then
-            love.graphics.polygon("fill", love.graphics.getWidth() - (pos / 2), love.graphics.getHeight() - arrowSize,
-                love.graphics.getWidth() - (pos / 2) + arrowSize, love.graphics.getHeight() - (arrowSize * 2),
-                love.graphics.getWidth() - (pos / 2) - arrowSize, love.graphics.getHeight() - (arrowSize * 2))
+                love.graphics.polygon("fill", love.graphics.getWidth() - (pos / 2),
+                    love.graphics.getHeight() - arrowSize, love.graphics.getWidth() - (pos / 2) + arrowSize,
+                    love.graphics.getHeight() - (arrowSize * 2), love.graphics.getWidth() - (pos / 2) - arrowSize,
+                    love.graphics.getHeight() - (arrowSize * 2))
             end
             if scrollOffset ~= 0 then
-            love.graphics.polygon("fill", love.graphics.getWidth() - (pos / 2), arrowSize,
-                love.graphics.getWidth() - (pos / 2) + arrowSize, arrowSize * 2,
-                love.graphics.getWidth() - (pos / 2) - arrowSize, arrowSize * 2)
+                love.graphics.polygon("fill", love.graphics.getWidth() - (pos / 2), arrowSize,
+                    love.graphics.getWidth() - (pos / 2) + arrowSize, arrowSize * 2,
+                    love.graphics.getWidth() - (pos / 2) - arrowSize, arrowSize * 2)
             end
             love.graphics.present()
         end
@@ -664,26 +683,28 @@ function injectStackTrace()
             p = p .. "\nCopied to clipboard!"
         end
 
-        p = p .. "\n\nPress R to restart the game"
+        p = p .. "\n\nPress ESC to exit\nPress R to restart the game (currently breaks lovely)"
         if love.system then
             p = p .. "\nPress Ctrl+C or tap to copy this error"
         end
 
-        -- Kill threads (makes restarting possible)
-        if G.SOUND_MANAGER and G.SOUND_MANAGER.channel then
-            G.SOUND_MANAGER.channel:push({
-                type = 'kill'
-            })
-        end
-        if G.SAVE_MANAGER and G.SAVE_MANAGER.channel then
-            G.SAVE_MANAGER.channel:push({
-                type = 'kill'
-            })
-        end
-        if G.HTTP_MANAGER and G.HTTP_MANAGER.channel then
-            G.HTTP_MANAGER.channel:push({
-                type = 'kill'
-            })
+        if G then
+            -- Kill threads (makes restarting possible)
+            if G.SOUND_MANAGER and G.SOUND_MANAGER.channel then
+                G.SOUND_MANAGER.channel:push({
+                    type = 'kill'
+                })
+            end
+            if G.SAVE_MANAGER and G.SAVE_MANAGER.channel then
+                G.SAVE_MANAGER.channel:push({
+                    type = 'kill'
+                })
+            end
+            if G.HTTP_MANAGER and G.HTTP_MANAGER.channel then
+                G.HTTP_MANAGER.channel:push({
+                    type = 'kill'
+                })
+            end
         end
 
         return function()
