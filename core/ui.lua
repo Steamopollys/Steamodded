@@ -272,6 +272,9 @@ function buildAdditionsTab(mod)
 			consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = tally, minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
 		end
 	end
+	if #consumable_nodes > 3 then
+		consumable_nodes = { UIBox_button({ button = 'your_collection_consumables', label = {localize('b_stat_consumables'), localize{ type = 'variable', key = 'c_types', vars = {#consumable_nodes} } }, count = modsCollectionTally(G.P_CENTER_POOLS.Consumeables), minw = 4, minh = 4, id = 'your_collection_consumables', colour = G.C.FILTER }) }
+	end
 
 	local leftside_nodes = {}
 	for _, v in ipairs { { k = 'Joker', minh = 1.7, scale = 0.6 }, { k = 'Back', b = 'decks' }, { k = 'Voucher' } } do
@@ -386,6 +389,94 @@ function create_UIBox_Other_GameObjects()
 	}}
 
 	return create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', contents = {t}})
+end
+
+G.FUNCS.your_collection_consumables = function(e)
+	G.SETTINGS.paused = true
+	G.FUNCS.overlay_menu{
+	  definition = create_UIBox_your_collection_consumables(),
+	}
+end
+
+function create_UIBox_your_collection_consumables()
+	local t = create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', contents = {
+		{ n = G.UIT.C, config = { align = 'cm', minw = 11.5, minh = 6 }, nodes = {
+			{ n = G.UIT.O, config = { id = 'consumable_collection', object = Moveable() },}
+		}},
+	}})
+	G.E_MANAGER:add_event(Event({func = function()
+		G.FUNCS.your_collection_consumables_page({ cycle_config = { current_option = 1 }})
+		return true
+	end}))
+	return t
+end
+
+G.FUNCS.your_collection_consumables_page = function(args)
+	if not args or not args.cycle_config then return end
+  if G.OVERLAY_MENU then
+    local uie = G.OVERLAY_MENU:get_UIE_by_ID('consumable_collection')
+    if uie then 
+      if uie.config.object then 
+        uie.config.object:remove() 
+      end
+      uie.config.object = UIBox{
+        definition =  G.UIDEF.consumable_collection_page(args.cycle_config.current_option),
+        config = { align = 'cm', parent = uie}
+      }
+    end
+  end
+end
+
+G.UIDEF.consumable_collection_page = function(page)
+	local nodes_per_page = 10
+	local page_offset = nodes_per_page * ((page or 1) - 1)
+	local type_buf = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+			if modsCollectionTally(G.P_CENTER_POOLS[v]).of > 0 then type_buf[#type_buf + 1] = v end
+		end
+	else
+		type_buf = SMODS.ConsumableType.obj_buffer
+	end
+	local center_options = {}
+	for i = 1, math.ceil(#type_buf / nodes_per_page) do
+		table.insert(center_options,
+			localize('k_page') ..
+			' ' .. tostring(i) .. '/' .. tostring(math.ceil(#type_buf / nodes_per_page)))
+	end
+	local option_nodes = { create_option_cycle({
+		options = center_options,
+		w = 4.5,
+		cycle_shoulders = true,
+		opt_callback = 'your_collection_consumables_page',
+		focus_args = { snap_to = true, nav = 'wide' },
+		current_option = page or 1,
+		colour = G.C.RED,
+		no_pips = true
+	}) }
+	local function create_consumable_nodes(_start, _end)
+		local t = {}
+		for i = _start, _end do
+			local key = type_buf[i]
+			if not key then
+				if i == _start then break end
+				t[#t+1] = { n = G.UIT.R, config = { align ='cm', minh = 0.81 }, nodes = {}}
+			else 
+				local id = 'your_collection_'..key:lower()..'s'
+				t[#t+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.ACTIVE_MOD_UI and modsCollectionTally(G.P_CENTER_POOLS[key]) or G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
+			end
+		end
+		return t
+	end 
+
+	local t = { n = G.UIT.C, config = { align = 'cm' }, nodes = {
+		{n=G.UIT.R, config = {align="cm"}, nodes = {
+			{n=G.UIT.C, config={align = "tm", padding = 0.15}, nodes= create_consumable_nodes(page_offset + 1, page_offset + math.ceil(nodes_per_page/2))},
+			{n=G.UIT.C, config={align = "tm", padding = 0.15}, nodes= create_consumable_nodes(page_offset+1+math.ceil(nodes_per_page/2), page_offset + nodes_per_page)},
+		}},
+		{n=G.UIT.R, config = {align="cm"}, nodes = option_nodes},
+	}}
+	return t
 end
 
 -- TODO: Optimize this. 

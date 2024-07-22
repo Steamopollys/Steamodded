@@ -82,6 +82,9 @@ return {
 			b_additions = 'Additions',
             b_applies_stakes_1 = 'Applies ',
 			b_applies_stakes_2 = '',
+		},
+		v_dictionary = {
+			c_types = '#1# Types',
 		}
 	}
 }
