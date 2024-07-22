@@ -82,6 +82,9 @@ return {
 			b_additions = 'Additions',
             b_applies_stakes_1 = 'Applies ',
 			b_applies_stakes_2 = '',
+			b_card_colours = 'Card Colours',
+			b_card_colours_def = 'Default',
+			b_card_colours_hi = 'High Contrast',
 		}
 	}
 }
