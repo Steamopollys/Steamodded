@@ -45,6 +45,19 @@ if obj.calculate and type(obj.calculate) == 'function' then
 	if o then return o end
 end'''
 
+# Card:update()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = 'if G.STAGE == G.STAGES.RUN then'
+position = 'before'
+match_indent = true
+payload = '''
+local obj = G.P_SEALS[self.seal] or {}
+if obj.update and type(obj.update) == 'function' then
+    obj:update(self, dt)
+end'''
+
 # G.FUNCS.evaluate_play()
 # Allow seals to return mult, chips and xmult like jokers.
 [[patches]]
@@ -86,6 +99,10 @@ if effects[ii].seals then
         mult = mod_mult(mult*effects[ii].seals.x_mult)
         update_hand_text({delay = 0}, {mult = mult})
         card_eval_status_text(scoring_hand[i], 'x_mult', effects[ii].seals.x_mult, percent)
+    end
+
+    if effects[ii].seals.func then
+        effects[ii].seals.func()
     end
 end
 

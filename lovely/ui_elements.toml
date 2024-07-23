@@ -1,0 +1,112 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+## colour argument fix
+# create_tabs()
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''tab_buttons[#tab_buttons+1] = UIBox_button({id = 'tab_but_'..(v.label or ''), ref_table = v, button = 'change_tab', label = {v.label}, minh = 0.8*args.scale, minw = 2.5*args.scale, col = true, choice = true, scale = args.text_scale, chosen = v.chosen, func = v.func, focus_args = {type = 'none'}})'''
+position = 'at'
+payload = '''tab_buttons[#tab_buttons+1] = UIBox_button({id = 'tab_but_'..(v.label or ''), ref_table = v, button = 'change_tab', label = {v.label}, minh = 0.8*args.scale, minw = 2.5*args.scale, col = true, choice = true, scale = args.text_scale, chosen = v.chosen, func = v.func, colour = args.colour, focus_args = {type = 'none'}})'''
+match_indent = true
+
+# UIElement:draw_self()
+[[patches]]
+[patches.pattern]
+target = 'engine/ui.lua'
+pattern = '''love.graphics.polygon("fill", get_chosen_triangle_from_rect(self.layered_parallax.x, self.layered_parallax.y, self.VT.w*G.TILESIZE, self.VT.h*G.TILESIZE, self.config.chosen == 'vert'))'''
+position = 'before'
+payload = '''love.graphics.setColor(self.config.colour)'''
+match_indent = true
+
+
+## multiple text input fix
+# create_text_input()
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''args.current_prompt_text = '''''
+position = 'after'
+payload = '''args.id = args.id or "text_input"'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''ui_letters[#ui_letters+1] = {n=G.UIT.T, config={ref_table = args, ref_value = 'current_prompt_text', scale = args.text_scale, colour = lighten(copy_table(args.colour), 0.4), id = 'prompt'}}'''
+position = 'at'
+payload = '''ui_letters[#ui_letters+1] = {n=G.UIT.T, config={ref_table = args, ref_value = 'current_prompt_text', scale = args.text_scale, colour = lighten(copy_table(args.colour), 0.4), id = args.id..'_prompt'}}'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''ui_letters[i] = {n=G.UIT.T, config={ref_table = text.letters, ref_value = i, scale = args.text_scale, colour = G.C.UI.TEXT_LIGHT, id = 'letter_'..i}}'''
+position = 'at'
+payload = '''ui_letters[i] = {n=G.UIT.T, config={ref_table = text.letters, ref_value = i, scale = args.text_scale, colour = G.C.UI.TEXT_LIGHT, id = args.id..'_letter_'..i}}'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''ui_letters[#ui_letters+1] = {n=G.UIT.B, config={r = 0.03,w=0.1, h=0.4, colour = position_text_colour, id = 'position', func = 'flash'}}'''
+position = 'at'
+payload = '''ui_letters[#ui_letters+1] = {n=G.UIT.B, config={r = 0.03,w=0.1, h=0.4, colour = position_text_colour, id = args.id..'_position', func = 'flash'}}'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''{n=G.UIT.C, config={align = "cm", draw_layer = 1, colour = G.C.CLEAR}, nodes = {'''
+position = 'at'
+payload = '''{n=G.UIT.C, config={align = "cm", colour = G.C.CLEAR}, nodes = {'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''{n=G.UIT.C, config={id = 'text_input', align = "cm", padding = 0.05, r = 0.1, draw_layer = 2, hover = true, colour = args.colour,minw = args.w, min_h = args.h, button = 'select_text_input', shadow = true}, nodes={'''
+position = 'at'
+payload = '''{n=G.UIT.C, config={id = args.id, align = "cm", padding = 0.05, r = 0.1, hover = true, colour = args.colour,minw = args.w, min_h = args.h, button = 'select_text_input', shadow = true}, nodes={'''
+match_indent = true
+
+# G.FUNCS.select_text_input
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.CONTROLLER.text_input_hook = e.children[1].children[1]'''
+position = 'after'
+payload = '''G.CONTROLLER.text_input_id = e.config.id'''
+match_indent = true
+
+# G.FUNCS.flash
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''if G.CONTROLLER.text_input_hook then'''
+position = 'at'
+payload = '''if G.CONTROLLER.text_input_hook and G.CONTROLLER.text_input_id == e.config.id:sub(1,string.len(G.CONTROLLER.text_input_id)) then'''
+match_indent = true
+
+# TRANSPOSE_TEXT_INPUT()
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''if hook.children[i].config.id == 'position' then'''
+position = 'at'
+payload = '''if hook.children[i].config.id == G.CONTROLLER.text_input_id..'_position' then'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''local real_letter = hook.children[position_child+dir].config.id:sub(1, 7) == 'letter_' and hook.children[position_child+dir].config.text ~= '''''
+position = 'at'
+payload = '''local real_letter = hook.children[position_child+dir].config.id:sub(1, 8+string.len(G.CONTROLLER.text_input_id)) == G.CONTROLLER.text_input_id..'_letter_' and hook.children[position_child+dir].config.text ~= '''''
+match_indent = true
+
+# GET_TEXT_FROM_INPUT()
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''if hook.children[i].config and hook.children[i].config.id:sub(1, 7) == 'letter_' and hook.children[i].config.text ~= '' then'''
+position = 'at'
+payload = '''if hook.children[i].config and hook.children[i].config.id:sub(1, 8+string.len(G.CONTROLLER.text_input_id)) == G.CONTROLLER.text_input_id..'_letter_' and hook.children[i].config.text ~= '' then'''
+match_indent = true

@@ -72,3 +72,17 @@ payload = '''
 	if _smods_atlas then
 		_atlas = G.ASSET_ATLAS[_smods_atlas] or _atlas
 	end'''
+
+## Hide floating ? from undiscovered types
+# Card:draw()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''shared_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)'''
+position = 'at'
+match_indent = true
+payload = '''
+if not SMODS.UndiscoveredSprites[self.ability.set].no_overlay then 
+    shared_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
+else
+end'''
