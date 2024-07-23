@@ -2,7 +2,7 @@
 --- MODULE CORE
 
 SMODS = {}
-MODDED_VERSION = "1.0.0-ALPHA-0722a-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0723a-STEAMODDED"
 
 -- Include lovely and nativefs modules
 local nativefs = require "nativefs"
