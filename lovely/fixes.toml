@@ -355,3 +355,50 @@ pattern = 'G\.hand:change_size\(1\)(\s+G\.FUNCS\.draw_from_deck_to_hand\(1\))'
 root_capture = '$1'
 position = 'at'
 payload = ""
+
+#
+# Money scaling fix
+#
+
+## create_UIBox_HUD
+[[patches]] 
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''
+string = \{\{ref_table = G\.GAME\, ref_value = 'dollars'\, prefix = localize\('\$'\)\}\}\,'''
+position = "after"
+payload = '''
+
+                            scale_function = function ()
+                                return scale_number(G.GAME.dollars, 2.2 * scale, 99999, 1000000)
+                            end,'''
+
+## DynaText:update_text
+[[patches]] 
+[patches.pattern]
+target = "engine/text.lua"
+pattern = 'self.config.H = 0'
+position = "after"
+payload = "self.scale = self.config.scale_function and self.config.scale_function() or self.scale"
+match_indent = true
+
+#
+# Fix floating point error (1.000e92 instead of 10.000e91)
+# Lower precision with higher numbers
+#
+
+## number_format
+[[patches]] 
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = '''
+return string.format("%.3f",x/(10^fac))..'e'..fac'''
+position = "at"
+payload = '''
+local mantissa = round_number(x/(10^fac), 3)
+if mantissa >= 10 then
+  mantissa = mantissa / 10
+  fac = fac + 1
+end
+return string.format(fac >= 100 and "%.1fe%i" or fac >= 10 and "%.2fe%i" or "%.3fe%i", mantissa, fac)'''
+match_indent = true

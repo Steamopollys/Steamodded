@@ -85,6 +85,7 @@ return {
 		},
 		v_dictionary = {
 			c_types = '#1# Types',
-		}
+			cashout_hidden = '...and #1# more',
+		},
 	}
 }
