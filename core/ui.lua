@@ -324,7 +324,7 @@ function buildAdditionsTab(mod)
 
 	local modNodes = {}
 	table.insert(modNodes, t)
-	return (#leftside_nodes > 0 and #rightside_nodes > 0 ) and {
+	return (#leftside_nodes > 0 or #rightside_nodes > 0 ) and {
 		label = localize("b_additions"),
 		chosen = SMODS.LAST_SELECTED_MOD_TAB == "additions" or false,
 		tab_definition_function = function()
