@@ -2141,7 +2141,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         rate = 0.3,
         atlas = 'stickers',
         pos = { x = 0, y = 0 },
-        colour = HEX 'FFFFFF',
+        badge_colour = HEX 'FFFFFF',
         default_compat = true,
         compat_exceptions = {},
         sets = { Joker = true },
@@ -2150,7 +2150,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt, 'description')
             SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'label')
         end,
-        inject = function() end,
+        inject = function(self)
+            G.shared_stickers[self.key] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)
+        end,
         set_sticker = function(self, card, val)
             card.ability[self.key] = val
         end

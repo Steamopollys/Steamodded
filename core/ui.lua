@@ -529,7 +529,7 @@ function create_UIBox_your_collection_stickers(exit)
 		)
 	end
 
-	table.sort(sticker_pool, function(a, b) return a.order < b.order end)
+	table.sort(sticker_pool, function(a, b) return (a.order or 100) < (b.order or 100) end)
 
 	local count = math.min(cols * rows, #sticker_pool)
 	local index = 1 + (rows * cols * page)

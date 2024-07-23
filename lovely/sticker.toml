@@ -28,15 +28,17 @@ match_indent = true
 position = "before"
 payload = '''
 local sticker = SMODS.Stickers[v]
-if sticker and sticker.generate_ui ~= 0 then
+if sticker then
     local t = { key = v, set = 'Other' }
     info_queue[#info_queue+1] = t
+    local res = {}
     if sticker.loc_vars and type(sticker.loc_vars) == 'function' then
-        local res = sticker:loc_vars(info_queue, card) or {}
-        t.vars = res.vars
+        res = sticker:loc_vars(info_queue, card) or {}
+        t.vars = res.vars or {}
         t.key = res.key or t.key
     end
 else'''
+
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
@@ -70,40 +72,26 @@ for k, v in ipairs(SMODS.Sticker.obj_buffer) do
     end
 end'''
 
-# Game:start_up()
-[[patches]]
-[patches.regex]
-target = "game.lua"
-pattern = '''(?<indent>[\t ]*)boot_timer\('splash prep', 'end',1\)'''
-position = "after"
-line_prepend = "$indent"
-payload = '''
-for _, key in ipairs(SMODS.Sticker.obj_buffer) do
-    local atlas = SMODS.Stickers[key].atlas
-    local pos = SMODS.Stickers[key].pos
-    self.shared_stickers[key] = Sprite(0, 0, self.CARD_W, self.CARD_H, self.ASSET_ATLAS[atlas] or self.ASSET_ATLAS['stickers'], pos)
-end'''
-
 # Card:draw()
 [[patches]]
-[patches.regex]
+[patches.pattern]
 target = "card.lua"
-pattern = '''(?<indent>[\t ]*)self:draw_boundingrect\(\)'''
-position = "after"
-line_prepend = "$indent"
+pattern = '''elseif self.sprite_facing == 'back' then'''
+match_indent = true
+position = "before"
 payload = '''
---asdf
 for k, v in pairs(SMODS.Stickers) do
     if self.ability[v.key] then
+        G.shared_stickers[v.key].role.draw_major = self
+        G.shared_stickers[v.key]:draw_shader('dissolve', nil, nil, nil, self.children.center)
         if v and v.set_shader and type(v.set_shader) == 'function' then
             v:set_shader(self)
         else
-            G.shared_stickers[v.key].role.draw_major = self
-            G.shared_stickers[v.key]:draw_shader('dissolve', nil, nil, nil, self.children.center)
             G.shared_stickers[v.key]:draw_shader('voucher', nil, self.ARGS.send_to_shader, nil, self.children.center)
         end
     end
-end'''
+end
+'''
 
 # Card:calculate_joker()
 [[patches]]
@@ -120,3 +108,15 @@ for k, v in pairs(SMODS.Stickers) do
     end
 end'''
 match_indent = true
+
+# get_badge_colour()
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = 'return G.BADGE_COL[key] or {1, 0, 0, 1}'
+position = 'before'
+match_indent = true
+payload = '''
+for k, v in pairs(SMODS.Stickers) do
+    G.BADGE_COL[k] = v.badge_colour
+end'''
