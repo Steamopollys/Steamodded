@@ -439,6 +439,14 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 replace, times = self.replace, -1
             end
             self.replace_sounds[replace] = { key = self.key, times = times, args = args }
+        end,
+        get_current_music = function(self)
+            for _, v in ipairs(self.obj_buffer) do
+                local s = self.obj_table[v]
+                if type(s.select_music_track) == 'function' and s:select_music_track() then
+                    return v
+                end
+            end
         end
     }
 

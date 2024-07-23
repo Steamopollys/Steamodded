@@ -11,6 +11,9 @@ match_indent = true
 position = 'after'
 payload = '''
 local music_codes = { 'music1', 'music2', 'music3', 'music4', 'music5' }
+for _, v in ipairs(SMODS.Sound.obj_buffer) do
+	if SMODS.Sounds[v].select_music_track then music_codes[#music_codes+1] = v end
+end
 for _, sound_code in ipairs(music_codes) do
 	if not (sound_code == desired_track) then
 		local replace_sound = SMODS.Sound.replace_sounds[sound_code]
@@ -42,3 +45,11 @@ if replace_sound then
     end
 end
 if SMODS.Sound.stop_sounds[desired_track] then return end'''
+
+[[patches]]
+[patches.pattern] 
+target = 'functions/misc_functions.lua'
+pattern = "(G.STATE == G.STATES.SPLASH and '') or"
+match_indent = true
+position = 'after'
+payload = 'SMODS.Sound:get_current_music() or'
