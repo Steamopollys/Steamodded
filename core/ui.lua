@@ -114,7 +114,8 @@ function create_UIBox_mods(args)
 
 	local mod_tabs = {}
 	table.insert(mod_tabs, buildModDescTab(mod))
-	if mod.added_obj then table.insert(mod_tabs, buildAdditionsTab(mod)) end
+	local additions_tab = buildAdditionsTab(mod)
+	if additions_tab then table.insert(mod_tabs, additions_tab) end
 	local credits_func = mod.credits_tab
 	if credits_func and type(credits_func) == 'function' then 
 		table.insert(mod_tabs, {
@@ -323,7 +324,7 @@ function buildAdditionsTab(mod)
 
 	local modNodes = {}
 	table.insert(modNodes, t)
-	return {
+	return (#leftside_nodes > 0 and #rightside_nodes > 0 ) and {
 		label = localize("b_additions"),
 		chosen = SMODS.LAST_SELECTED_MOD_TAB == "additions" or false,
 		tab_definition_function = function()
@@ -342,7 +343,7 @@ function buildAdditionsTab(mod)
 				nodes = modNodes
 			}
 		end
-	}
+	} or nil
 end
 
 -- Disable alerts when in Additions tab
@@ -363,20 +364,27 @@ end
 
 function create_UIBox_Other_GameObjects()
 	local custom_gameobject_tabs = {{}}
+	local curr_height = 0
+	local curr_col = 1
+	local other_collections_tabs = {
+		UIBox_button({button = 'your_collection_stickers', label = {localize('b_stickers')}, minw = 5})
+	}
+
 	for _, mod in pairs(SMODS.Mods) do
-		local curr_height = 0
-		local curr_col = 1
 		if mod.custom_collection_tabs and type(mod.custom_collection_tabs) == "function" then
 			object_tabs = mod.custom_collection_tabs()
 			for _, tab in ipairs(object_tabs) do
-				table.insert(custom_gameobject_tabs[curr_col], tab)
-				curr_height = curr_height + tab.nodes[1].config.minh
-				if curr_height > 6 then --TODO: Verify that this is the ideal number to use
-					curr_height = 0
-					curr_col = curr_col + 1
-					custom_gameobject_tabs[curr_col] = {}
-				end
+				other_collections_tabs[#other_collections_tabs+1] = tab
 			end
+		end
+	end
+	for _, gameobject_tabs in ipairs(other_collections_tabs) do
+		table.insert(custom_gameobject_tabs[curr_col], gameobject_tabs)
+		curr_height = curr_height + gameobject_tabs.nodes[1].config.minh
+		if curr_height > 6 then --TODO: Verify that this is the ideal number
+			curr_height = 0
+			curr_col = curr_col + 1
+			custom_gameobject_tabs[curr_col] = {}
 		end
 	end
 
@@ -477,6 +485,168 @@ G.UIDEF.consumable_collection_page = function(page)
 		{n=G.UIT.R, config = {align="cm"}, nodes = option_nodes},
 	}}
 	return t
+end
+
+G.FUNCS.your_collection_stickers = function(e)
+	G.SETTINGS.paused = true
+	G.FUNCS.overlay_menu{
+	  definition = create_UIBox_your_collection_stickers(),
+	}
+end
+
+function create_UIBox_your_collection_stickers(exit)
+	local deck_tables = {}
+	local sticker_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in pairs(SMODS.Stickers) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then sticker_pool[#sticker_pool+1] = v end
+		end
+	else
+		sticker_pool[#sticker_pool+1] = {key = "eternal", order = 1}
+		sticker_pool[#sticker_pool+1] = {key = "perishable", order = 2}
+		sticker_pool[#sticker_pool+1] = {key = "rental", order = 3}
+		sticker_pool[#sticker_pool+1] = {key = "pinned", order = 4}
+		for _, v in pairs(SMODS.Stickers) do
+			sticker_pool[#sticker_pool+1] = v
+		end
+	end
+	local rows, cols = (#sticker_pool > 5 and 2 or 1), 5
+	local page = 0
+
+	sendInfoMessage("Creating collections")
+	G.your_collection = {}
+	for j = 1, rows do
+		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
+			{
+				card_limit = cols,
+				type = 'title',
+				highlight_limit = 0,
+				collection = true
+			})
+		table.insert(deck_tables,
+			{n = G.UIT.R, config = {align = "cm", padding = 0, no_fill = true}, nodes = {
+				{n = G.UIT.O, config = {object = G.your_collection[j]}}}}
+		)
+	end
+
+	table.sort(sticker_pool, function(a, b) return a.order < b.order end)
+
+	local count = math.min(cols * rows, #sticker_pool)
+	local index = 1 + (rows * cols * page)
+	for j = 1, rows do
+		for i = 1, cols do
+			local center = sticker_pool[index]
+
+			if not center then
+				break
+			end
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
+			if SMODS.Stickers[center.key] then SMODS.Stickers[center.key]:set_sticker(card, true)
+			elseif center.key == "pinned" then card.pinned = true
+			else card.ability[center.key] = true end
+			G.your_collection[j]:emplace(card)
+			index = index + 1
+		end
+		if index > count then
+			break
+		end
+	end
+
+	local edition_options = {}
+
+	local t = create_UIBox_generic_options({
+		back_func = "your_collection_other_gameobjects",
+		snap_back = true,
+		contents = { 
+			{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+				deck_tables}}
+	})
+
+	if #sticker_pool > rows * cols then
+		for i = 1, math.ceil(#sticker_pool / (rows * cols)) do
+			table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+				tostring(math.ceil(#sticker_pool / (rows * cols))))
+		end
+		t = create_UIBox_generic_options({
+			back_func = "your_collection_other_gameobjects",
+			snap_back = true,
+			contents = {
+				{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+					deck_tables},
+				{n = G.UIT.R, config = {align = "cm"}, nodes = { 
+					create_option_cycle({
+						options = edition_options,
+						w = 4.5,
+						cycle_shoulders = true,
+						opt_callback = 'your_collection_stickers_page',
+						focus_args = { snap_to = true, nav = 'wide' },
+						current_option = 1,
+						r = rows,
+						c = cols,
+						colour = G.C.RED,
+						no_pips = true
+					})}}
+			}
+		})
+	end
+	return t
+end
+
+G.FUNCS.your_collection_stickers_page = function(args)
+	if not args or not args.cycle_config then
+		return
+	end
+	local sticker_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in pairs(SMODS.Stickers) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then sticker_pool[#sticker_pool+1] = v end
+		end
+	else
+		sticker_pool[#sticker_pool+1] = {key = "eternal", order = 1}
+		sticker_pool[#sticker_pool+1] = {key = "perishable", order = 2}
+		sticker_pool[#sticker_pool+1] = {key = "rental", order = 3}
+		sticker_pool[#sticker_pool+1] = {key = "pinned", order = 4}
+		for _, v in pairs(SMODS.Stickers) do
+			sticker_pool[#sticker_pool+1] = v
+		end
+	end
+	local rows = (#sticker_pool > 5 and 2 or 1)
+	local cols = 5
+	local page = args.cycle_config.current_option
+	if page > math.ceil(#sticker_pool / (rows * cols)) then
+		page = page - math.ceil(#sticker_pool / (rows * cols))
+	end
+	local count = rows * cols
+	local offset = (rows * cols) * (page - 1)
+
+	for j = 1, #G.your_collection do
+		for i = #G.your_collection[j].cards, 1, -1 do
+			if G.your_collection[j] ~= nil then
+				local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+				c:remove()
+				c = nil
+			end
+		end
+	end
+
+	for j = 1, rows do
+		for i = 1, cols do
+			if count % rows > 0 and i <= count % rows and j == cols then
+				offset = offset - 1
+				break
+			end
+			local idx = i + (j - 1) * cols + offset
+			if idx > #sticker_pool then return end
+			local center = sticker_pool[idx]
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["j_joker"])
+			if SMODS.Stickers[center.key] then SMODS.Stickers[center.key]:set_sticker(card, true)
+			elseif center.key == "pinned" then card.pinned = true
+			else card.ability[center.key] = true end
+			G.your_collection[j]:emplace(card)
+		end
+	end
 end
 
 -- TODO: Optimize this. 

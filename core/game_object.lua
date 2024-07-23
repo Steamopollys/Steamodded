@@ -32,8 +32,6 @@ function loadAPIs()
         SMODS.add_prefixes(self, o)
         if o:check_duplicate_key() then return end
         o:register()
-        --TODO: Use better check to enable "Additions" tab
-        if SMODS.current_mod then SMODS.current_mod.added_obj = true end
         return o
     end
 
