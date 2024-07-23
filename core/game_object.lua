@@ -2224,34 +2224,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if specific_vars and specific_vars.nominal_chips and not self.replace_base_card then
                 localize { type = 'other', key = 'card_chips', nodes = desc_nodes, vars = { specific_vars.nominal_chips } }
             end
-            local target = {
-                type = 'descriptions',
-                key = self.key,
-                set = self.set,
-                nodes = desc_nodes,
-                vars =
-                    specific_vars or {}
-            }
-            local res = {}
-            if self.loc_vars and type(self.loc_vars) == 'function' then
-                res = self:loc_vars(info_queue, card) or {}
-                target.vars = res.vars or target.vars
-                target.key = res.key or target.key
-            end
-            -- TODO: Make changes to SMODS.Center to fix Enhancement collections bug
-            -- Removing the full_UI_table.name part fixes it
-            -- but excluding Enhanced cards seems to cause all centers to have name text appear in the top right
-            if specific_vars and specific_vars.debuffed and not res.replace_debuff then
-                target = { type = 'other', key = 'debuffed_' ..
-                (specific_vars.playing_card and 'playing_card' or 'default'), nodes = desc_nodes }
-            end
-            if res.main_start then
-                desc_nodes[#desc_nodes + 1] = res.main_start
-            end
-            localize(target)
-            if res.main_end then
-                desc_nodes[#desc_nodes + 1] = res.main_end
-            end
+            SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars and specific_vars.bonus_chips then
                 local remaining_bonus_chips = specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)
                 if remaining_bonus_chips > 0 then
