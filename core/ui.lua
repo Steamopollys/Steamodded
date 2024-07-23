@@ -889,6 +889,7 @@ function SMODS.save_all_config()
 end
 
 function G.FUNCS.exit_mods(e)
+	G.ACTIVE_MOD_UI = nil
 	SMODS.save_all_config()
     if SMODS.full_restart then
 		-- launch a new instance of the game and quit the current one

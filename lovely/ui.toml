@@ -4,15 +4,6 @@ dump_lua = true
 priority = 0
 
 ### Addition Tab
-## TODO: Find better solution (if possible)
-# G.FUNCS.your_collection
-[[patches]]
-[patches.pattern]
-target = "functions/button_callbacks.lua"
-pattern = '''G.FUNCS.your_collection = function(e)'''
-position = "after"
-payload = '''G.ACTIVE_MOD_UI = nil'''
-match_indent = true
 
 ## Jokers tab
 # create_UIBox_your_collection_jokers()
