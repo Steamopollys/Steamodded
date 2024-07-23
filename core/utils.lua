@@ -186,14 +186,21 @@ end
 function SMODS.handle_loc_file(path)
     local dir = path .. 'localization/'
 	local file_name
-    for k, v in ipairs({ dir .. G.SETTINGS.language .. '.lua', dir .. 'default.lua', dir .. 'en-us.lua' }) do
+    for k, v in ipairs({ dir .. G.SETTINGS.language .. '.lua', dir .. 'default.lua', dir .. 'en-us.lua', dir .. G.SETTINGS.language .. '.json', dir .. 'default.json', dir .. 'en-us.json' }) do
         if NFS.getInfo(v) then
             file_name = v
             break
         end
     end
     if not file_name then return end
-    local loc_table = assert(loadstring(NFS.read(file_name)))()
+
+    -- check if file name ends in .json
+    local loc_table = nil
+    if file_name:lower():match("%.json$") then
+        loc_table = assert(JSON.decode(NFS.read(file_name)))
+    else
+        loc_table = assert(loadstring(NFS.read(file_name)))()
+    end
     local function recurse(target, ref_table)
         if type(target) ~= 'table' then return end --this shouldn't happen unless there's a bad return value
         for k, v in pairs(target) do
