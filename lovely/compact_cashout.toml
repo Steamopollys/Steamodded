@@ -19,8 +19,7 @@ payload = '''
     total_cashout_rows = (total_cashout_rows or 0) + 1
     if total_cashout_rows > 7 then
         return
-    end
-'''
+    end'''
 match_indent = true
 
 # Reset rows amount
@@ -61,8 +60,6 @@ if total_cashout_rows > 7 then
             return true
         end
     }))
-end
-
-'''
+end'''
 match_indent = true
 
