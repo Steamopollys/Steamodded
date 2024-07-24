@@ -115,7 +115,7 @@ match_indent = true
 
 [[patches]] 
 [patches.regex]
-target = "functions/misc_functions.lua"
+target = "functions/button_callbacks.lua"
 pattern = 'number >= G\.E_SWITCH_POINT'
 position = "at"
 payload = "number >= (e_switch_point or G.E_SWITCH_POINT)"
