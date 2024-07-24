@@ -389,18 +389,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
             )
             love.filesystem.remove("steamodded-temp-" .. file_path)
-            SOURCES[self.sound_code] = {}
-            table.insert(SOURCES[self.key], self)
-            self.sound:setVolume(0)
-            love.audio.play(self.sound)
-            self.sound:stop()
-        end,
-        inject_class = function(self)
-            SMODS.Sound.super.inject_class(self)
-            if G.SOUND_MANAGER and G.SOUND_MANAGER.channel then
-                --! doesn't work, push does not accept Object
-                G.SOUND_MANAGER.channel:push({ type = 'SMODS', cls = self.obj_table })
-            end
+            G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, sound = self.sound})
         end,
         register_global = function(self)
             local mod = SMODS.current_mod

@@ -64,10 +64,27 @@ payload = "if v[1] and v[1].sound and v[1].sound:isPlaying() and not v[1].no_syn
 [[patches]]
 [patches.pattern]
 target = 'engine/sound_manager.lua'
+pattern = "DISABLE_SFX = false"
+match_indent = true
+position = 'after'
+payload = '''
+SMODS_Sounds = {}
+'''
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
 pattern = "elseif request.type == 'stop' then"
 match_indent = true
 position = 'at'
 payload = '''
-elseif request.type == 'SMODS' then
-	SMODS_Sounds = request.cls
+elseif request.type == 'sound_source' then
+	SMODS_Sounds[request.sound_code] = {
+		sound = request.sound
+	}
+	SOURCES[request.sound_code] = {}
+	table.insert(SOURCES[request.sound_code], SMODS_Sounds[request.sound_code])
+    request.sound:setVolume(0)
+    love.audio.play(request.sound)
+	request.sound:stop()
 '''
+
