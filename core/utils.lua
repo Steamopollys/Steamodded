@@ -584,3 +584,43 @@ function format_ui_value(value)
 end
 
 --#endregion
+
+
+function poll_seal(_key, _mod, _guaranteed, _options, _type_key)
+    _mod = _mod or 1
+    local seal_poll = pseudorandom(pseudoseed(_key or 'stdseal'..G.GAME.round_resets.ante))
+    -- If no _options provided, get all seal keys
+    if not _options then
+        _options = get_current_pool("Seal")
+	end
+
+    local available_seals = {}
+    local total_weight = 0
+    for _, v in ipairs(_options) do
+        if v ~= "UNAVAILABLE" then
+            local seal_option = {}
+            if type(v) == 'string' then
+                assert(G.P_SEALS[v])
+                seal_option = { name = v, weight = G.P_SEALS[v].weight or 25 }
+            elseif type(v) == 'table' then
+                assert(G.P_SEALS[v.name])
+                seal_option = { name = v.name, weight = v.weight }
+            end
+            if seal_option.weight > 0 then
+                table.insert(available_seals, seal_option)
+                total_weight = total_weight + seal_option.weight
+            end
+        end
+	end
+
+    if _guaranteed or seal_poll > 1 - (0.02*_mod) then
+        local seal_type_poll = pseudorandom(pseudoseed(_type_key and _type_key or _key and _key.."type" or 'stdsealtype'..G.GAME.round_resets.ante))
+        local weight_i = 0
+        for k, v in ipairs(available_seals) do
+            weight_i = weight_i + v.weight
+            if seal_type_poll > 1 - (weight_i / total_weight) then
+                return v.name
+            end
+        end
+    end
+end
