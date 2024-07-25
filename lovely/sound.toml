@@ -7,6 +7,22 @@ priority = 0
 [[patches]]
 [patches.pattern] 
 target = 'functions/misc_functions.lua'
+pattern = 'G.SOUND_MANAGER.channel:push(G.ARGS.push)'
+match_indent = true
+position = 'after'
+payload = '''
+if 
+	SMODS.previous_track and SMODS.previous_track ~= desired_track and
+	((SMODS.Sounds[desired_track] or {}).no_sync or (SMODS.Sounds[SMODS.previous_track] or {}).no_sync)
+then
+	G.ARGS.push.type = 'restart_music'
+	G.SOUND_MANAGER.channel:push(G.ARGS.push)
+end
+SMODS.previous_track = desired_track'''
+
+[[patches]]
+[patches.pattern] 
+target = 'functions/misc_functions.lua'
 pattern = 'G.ARGS.push.ambient_control = G.SETTINGS.ambient_control'
 match_indent = true
 position = 'after'
@@ -40,7 +56,7 @@ match_indent = true
 position = 'after'
 payload = 'SMODS.Sound:get_current_music() or'
 
-# PLAY_SOUND (this is the function that's actually used, not the one in misc_functions.lua)
+# PLAY_SOUND 
 [[patches]]
 [patches.pattern]
 target = 'engine/sound_manager.lua'
@@ -50,15 +66,6 @@ position = 'at'
 payload = '''
 local s = SMODS_Sounds[args.sound_code] or
 {sound = love.audio.newSource("resources/sounds/"..args.sound_code..'.ogg', should_stream and "stream" or 'static')}''' 
- 
-# MODULATE
-[[patches]]
-[patches.pattern]
-target = 'engine/sound_manager.lua'
-pattern = "if v[1] and v[1].sound and v[1].sound:isPlaying() then"
-match_indent = true
-position = 'at'
-payload = "if v[1] and v[1].sound and v[1].sound:isPlaying() and not v[1].no_sync then" # TODO this repeatedly resets running music
 
 # pass in custom sounds
 [[patches]]
@@ -83,7 +90,6 @@ elseif request.type == 'sound_source' then
 		modded_source = true,
 		per = request.per,
 		vol = request.vol,
-		no_sync = request.no_sync,
 	}
 	SOURCES[request.sound_code] = {}
 	table.insert(SOURCES[request.sound_code], SMODS_Sounds[request.sound_code])
@@ -132,3 +138,13 @@ pattern = "s.original_volume = args.vol or 1"
 match_indent = true
 position = 'at'
 payload = 's.original_volume = s.vol or args.vol or 1'
+
+# don't crash RESTART_MUSIC
+
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = "RESTART_MUSIC()"
+match_indent = true
+position = 'at'
+payload = 'RESTART_MUSIC(request)'
