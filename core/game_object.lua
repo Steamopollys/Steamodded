@@ -389,7 +389,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
             )
             love.filesystem.remove("steamodded-temp-" .. file_path)
-            G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, sound = self.sound})
+            G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, sound = self.sound, per = self.pitch, vol = self.volume, no_sync = self.no_sync })
         end,
         register_global = function(self)
             local mod = SMODS.current_mod
