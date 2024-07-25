@@ -412,6 +412,7 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = "functions/misc_functions.lua"
-pattern = '''if win_ante and (win_ante >= 8) then '''
+pattern = '''if win_ante and (win_ante >= 8) then'''
+match_indent = true
 position = "at"
 payload = '''if win_ante and (win_ante >= 8) or (v.in_pool and type(v.in_pool) == 'function' and not v:in_pool()) then'''
