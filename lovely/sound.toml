@@ -13,7 +13,7 @@ position = 'after'
 payload = '''
 if 
 	SMODS.previous_track and SMODS.previous_track ~= desired_track and
-	((SMODS.Sounds[desired_track] or {}).no_sync or (SMODS.Sounds[SMODS.previous_track] or {}).no_sync)
+	(SMODS.Sounds[desired_track] or {}).no_sync
 then
 	G.ARGS.push.type = 'restart_music'
 	G.SOUND_MANAGER.channel:push(G.ARGS.push)
