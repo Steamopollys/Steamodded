@@ -354,10 +354,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
                 return
             end
-            if self.language then
-                -- TODO localized sounds are wonky
-                self.key = ('%s_%s'):format(self.key, self.language)
-            end
             self.sound_code = self.key
             if self.replace then
                 local replace, times, args
@@ -376,9 +372,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             local file_path = type(self.path) == 'table' and
                 (self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
             if file_path == 'DEFAULT' then return end
-            -- language specific sounds override fully defined sounds only if that language is set
-            if self.language and not (G.SETTINGS.language == self.language) then return end
-            if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/sounds/' .. file_path
             --load with a temp file path in case LOVE doesn't like the mod directory
