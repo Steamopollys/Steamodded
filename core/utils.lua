@@ -305,12 +305,13 @@ function SMODS.recalc_debuff(card)
 end
 
 function SMODS.restart_game()
-	if love.system.getOS() ~= 'OS X' then
-		love.system.openURL('steam://rungameid/2379780')
-	else
-		os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
-	end
-	love.event.quit()
+    if love.system.getOS() ~= 'OS X' then
+        love.thread.newThread("os.execute(...)\n"):start(arg[-2] .. " " .. table.concat(arg, " "))
+    else
+        os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
+    end
+
+    love.event.quit()
 end
 
 function SMODS.create_mod_badges(obj, badges)
