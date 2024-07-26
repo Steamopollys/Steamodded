@@ -86,6 +86,7 @@ position = 'before'
 payload = '''
 elseif request.type == 'sound_source' then
 	SMODS_Sounds[request.sound_code] = {
+		sound_code = request.sound_code,
 		sound = request.sound,
 		modded_source = true,
 		per = request.per,
