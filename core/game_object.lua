@@ -1202,10 +1202,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
             localize(target)
         end,
+        --[[
         create_card = function(self, card)
             -- Example
             -- return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
         end,
+        --]]
         update_pack = function(self, dt)
             if G.buttons then self.buttons:remove(); G.buttons = nil end
             if G.shop then G.shop.alignment.offset.y = G.ROOM.T.y+11 end
