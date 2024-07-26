@@ -9,6 +9,19 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
+
+------------------------------Basic Table of Contents------------------------------
+-- Line X, Atlas --------------- Explains the parts of the atlas.
+-- Line X, Joker 2 ------------- Explains the basic structure of a joker
+-- Line X, Runner 2 ------------ Uses a bit more complex contexts, and shows how to scale a value.
+-- Line X, Golden Joker 2 ------ Shows off a specific function that's used to add money at the end of a round.
+-- Line X, Merry Andy 2 -------- Shows how to use add_to_deck and remove_from_deck.
+-- Line X, Sock and Buskin 2 --- Shows how you can retrigger cards and check for faces
+-- Line X, Perkeo 2 ------------ Shows how to use the event manager, eval_status_text, randomness, and soul_pos.
+-- Line X, Walkie Talkie 2 ----- Shows how to look for multiple specific ranks, and explains returning multiple values
+-- Line X, Gros Michel 2 ------- Shows the no_pool_flag, sets a pool flag, another way to use randomness, and end of round stuff.
+-- Line X, Cavendish 2 --------- Shows yes_pool_flag, has X Mult, mainly to go with Gros Michel 2.
+
 --Creates an atlas for cards to use
 SMODS.Atlas{
   -- Key for code to find it with
@@ -35,7 +48,7 @@ SMODS.Joker{
       -- There's {X:}, which sets the background, usually used for XMult.
       -- There's {s:}, which is scale, and multiplies the text size by the value, like 0.8
       -- There's one more, {V:1}, but is more advanced, and is used in Castle and Ancient Jokers. It allows for a variable to dynamically change the color, but is very rarely used.
-      -- Multiple variables can be used in one space, as long as you separate them with a common. {C:attention, X:chips, s:1.3} would be the yellow attention color, with a blue chips-colored background,, and 1.3 times the scale of other text.
+      -- Multiple variables can be used in one space, as long as you separate them with a comma. {C:attention, X:chips, s:1.3} would be the yellow attention color, with a blue chips-colored background,, and 1.3 times the scale of other text.
       -- You can find the vanilla joker descriptions and names as well as several other things in the localization files.
       "{C:mult}+#1# {} Mult"
     }
@@ -53,7 +66,7 @@ SMODS.Joker{
   end,
   -- Sets rarity. 1 common, 2 uncommon, 3 rare, 4 legendary.
   rarity = 1,
-  -- Which atlas key to look pull from.
+  -- Which atlas key to pull from.
   atlas = 'ModdedVanilla',
   -- This card's position on the atlas, starting at {x=0,y=0} for the very top left.
   pos = {x = 0 , y = 0},
@@ -179,7 +192,7 @@ SMODS.Joker{
   -- Debuffs usually call both of these functions, essentially, when a joker is debuffed, it's simply removed from your jokers, except for the fact that it takes up a slot.
   add_to_deck = function(self, card, from_debuff)
     -- Changes a G.GAME variable, which is usually a global value that's specific to the current run.
-    -- These are initialized at (add here later) and you can look through them to get an idea of the things you can change.
+    -- These are initialized in game.lua under the Game:init_game_object() function, and you can look through them to get an idea of the things you can change.
     G.GAME.round_resets.discards = G.GAME.round_resets.discards + card.ability.extra.d_size
     G.hand:change_size(card.ability.extra.h_size)
   end,
@@ -244,7 +257,7 @@ SMODS.Joker{
   rarity = 4,
   atlas = 'ModdedVanilla',
   pos = {x = 0, y = 1},
-  -- soul_pos sets the soul sprite, only for legenedaries.
+  -- soul_pos sets the soul sprite, only used in vanilla for legenedaries and Hologram.
   soul_pos = {x = 4, y = 1},
   cost = 20,
   calculate = function(self, card, context)
@@ -256,10 +269,10 @@ SMODS.Joker{
               -- pseudoseed('perkeo2') could be replaced with any text string at all - It's simply a way to make sure that it's affected by the game seed, because if you use math.random(), a base Lua function, then it'll generate things truly randomly, and can't be reproduced with the same Balatro seed. LocalThunk likes to have the joker names in the pseudoseed string, so you'll often find people do the same.
               local card = copy_card(pseudorandom_element(G.consumeables.cards, pseudoseed('perkeo2')), nil)
               
-              -- Vanilla function, it's (edition, immediate, silent), so this is ({edition = negative}, immediate = true, silent = nil)
+              -- Vanilla function, it's (edition, immediate, silent), so this is ({edition = 'e_negative'}, immediate = true, silent = nil)
               card:set_edition('e_negative',true)
               card:add_to_deck()
-              -- :emplace puts a card in a cardarea, this one is G.consumeables, but G.jokers works, and custom card areas could also work. 
+              -- card:emplace puts a card in a cardarea, this one is G.consumeables, but G.jokers works, and custom card areas could also work. 
               -- I think playing cards use "create_playing_card()" and are separate.
               G.consumeables:emplace(card) 
               return true
@@ -292,7 +305,7 @@ SMODS.Joker{
   end,
   calculate = function(self, card, context)
     if context.individual and context.cardarea == G.play then
-      -- Get_id tests for the rank of the card. Other than 2-10, Jack is 11, Queen is 12, King is 14, and Ace is 14.
+      -- :get_id tests for the rank of the card. Other than 2-10, Jack is 11, Queen is 12, King is 14, and Ace is 14.
       if context.other_card:get_id() == 10 or context.other_card:get_id() == 4 then
         -- Specifically returning to context.other_card is fine with multiple values in a single return value, chips/mult are different from chip_mod and mult_mod, and automatically come with a message which plays in order of return.
         return {
