@@ -2153,6 +2153,22 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(self)
             G.shared_stickers[self.key] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)
         end,
+        -- relocating sticker checks to here, so if the sticker has different checks than default
+        -- they can be handled without hooking/injecting into create_card
+        -- or handling it in set_sticker
+        -- TODO: rename
+        sticker_check = function(self, card, center, area)
+            if (
+                center[self.key..'_compat'] or -- explicit marker
+                (self.default_compat and not self.compat_exceptions[center.key]) or -- default yes with no exception
+                (not self.default_compat and self.compat_exceptions[center.key]) -- default no with exception
+            ) and 
+            (not self.needs_enable_flag or G.GAME.modifiers['enable_'..self.key]) and
+            pseudorandom((area == G.pack_cards and 'packssj' or 'shopssj')..self.key..G.GAME.round_resets.ante) > (1-self.rate)
+            then
+                return true
+            end
+        end,
         set_sticker = function(self, card, val)
             card.ability[self.key] = val
         end

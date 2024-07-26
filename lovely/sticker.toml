@@ -30,13 +30,13 @@ payload = '''
 local sticker = SMODS.Stickers[v]
 if sticker then
     local t = { key = v, set = 'Other' }
-    info_queue[#info_queue+1] = t
     local res = {}
     if sticker.loc_vars and type(sticker.loc_vars) == 'function' then
         res = sticker:loc_vars(info_queue, card) or {}
         t.vars = res.vars or {}
         t.key = res.key or t.key
     end
+    info_queue[#info_queue+1] = t
 else'''
 
 [[patches]]
@@ -57,17 +57,8 @@ match_indent = true
 payload = '''
 for k, v in ipairs(SMODS.Sticker.obj_buffer) do
     local sticker = SMODS.Stickers[v]
-    if
-        sticker.sets[_type] and
-        (
-            -- is center compatible
-            center[v..'_compat'] or -- explicit marker
-            (sticker.default_compat and not sticker.compat_exceptions[center.key]) or -- default yes with no exception
-            (not sticker.default_compat and sticker.compat_exceptions[center.key]) -- default no with exception
-        ) and
-        (not sticker.needs_enable_flag or G.GAME.modifiers['enable_'..v]) and
-        pseudorandom((area == G.pack_cards and 'packssj' or 'shopssj')..v..G.GAME.round_resets.ante) > (1-sticker.rate)
-    then
+    -- Temp name, change later
+    if sticker.sets[_type] and sticker:sticker_check(card, center, area) then
         sticker:set_sticker(card, true)
     end
 end'''
@@ -82,11 +73,11 @@ position = "before"
 payload = '''
 for k, v in pairs(SMODS.Stickers) do
     if self.ability[v.key] then
-        G.shared_stickers[v.key].role.draw_major = self
-        G.shared_stickers[v.key]:draw_shader('dissolve', nil, nil, nil, self.children.center)
-        if v and v.set_shader and type(v.set_shader) == 'function' then
-            v:set_shader(self)
+        if v and v.draw and type(v.draw) == 'function' then
+            v:draw(self)
         else
+            G.shared_stickers[v.key].role.draw_major = self
+            G.shared_stickers[v.key]:draw_shader('dissolve', nil, nil, nil, self.children.center)
             G.shared_stickers[v.key]:draw_shader('voucher', nil, self.ARGS.send_to_shader, nil, self.children.center)
         end
     end
@@ -103,7 +94,8 @@ payload = '''
 for k, v in pairs(SMODS.Stickers) do
     if self.ability[v.key] then
         if v.calculate and type(v.calculate) == 'function' then
-            v:calculate(self, context)
+            local override_card = v:calculate(self, context)
+            if override_card then return override_card end
         end
     end
 end'''
