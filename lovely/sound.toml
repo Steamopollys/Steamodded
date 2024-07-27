@@ -27,23 +27,10 @@ pattern = 'G.ARGS.push.ambient_control = G.SETTINGS.ambient_control'
 match_indent = true
 position = 'after'
 payload = '''
-local music_codes = { 'music1', 'music2', 'music3', 'music4', 'music5' }
-for _, v in ipairs(SMODS.Sound.obj_buffer) do
-	if SMODS.Sounds[v].select_music_track then music_codes[#music_codes+1] = v end
-end
-for _, sound_code in ipairs(music_codes) do
-	if not (sound_code == desired_track) then
-		local replace_sound = SMODS.Sound.replace_sounds[sound_code]
-        if replace_sound then
-			SMODS.Sounds[replace_sound.key]:play(1, 0, true);
-			SMODS.Sounds[replace_sound.key].sound:setVolume(0)
-        end
-	end
-end
-
 local replace_sound = SMODS.Sound.replace_sounds[desired_track]
 if replace_sound then
 	desired_track = replace_sound.key
+	G.ARGS.push.desired_track = desired_track
 end
 if SMODS.Sound.stop_sounds[desired_track] then return end
 '''
