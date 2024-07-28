@@ -234,6 +234,9 @@ function loadMods(modsDirectory)
         return true
     end
 
+    -- check dependencies first (for object dependencies)
+    for _, mod in pairs(SMODS.Mods) do mod.can_load = check_dependencies(mod) end
+
     -- load the mod files
     for _, priority in ipairs(keyset) do
         table.sort(SMODS.mod_priorities[priority],
@@ -241,7 +244,6 @@ function loadMods(modsDirectory)
                 return mod_a.id < mod_b.id
             end)
         for _, mod in ipairs(SMODS.mod_priorities[priority]) do
-            mod.can_load = check_dependencies(mod)
             SMODS.mod_list[#SMODS.mod_list + 1] = mod -- keep mod list in prioritized load order
             if mod.can_load then
                 boot_print_stage('Loading Mod: ' .. mod.id)
