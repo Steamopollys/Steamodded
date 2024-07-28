@@ -374,14 +374,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if file_path == 'DEFAULT' then return end
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/sounds/' .. file_path
-            --load with a temp file path in case LOVE doesn't like the mod directory
-            local file = NFS.read(self.full_path)
-            love.filesystem.write("steamodded-temp-" .. file_path, file)
+            local data = NFS.read('data', self.full_path)
+            local decoder = love.sound.newDecoder(data)
             self.sound = love.audio.newSource(
-                "steamodded-temp-" .. file_path,
+                decoder,
                 ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
             )
-            love.filesystem.remove("steamodded-temp-" .. file_path)
             G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, sound = self.sound, per = self.pitch, vol = self.volume, no_sync = self.no_sync })
         end,
         register_global = function(self)
