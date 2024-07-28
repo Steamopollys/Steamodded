@@ -1,0 +1,65 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+
+#
+# End of round money
+#
+
+# Hide off screen rows
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if config.name ~= 'bottom' then"
+position = "after"
+payload = '''
+    total_cashout_rows = (total_cashout_rows or 0) + 1
+    if total_cashout_rows > 7 then
+        return
+    end'''
+match_indent = true
+
+# Reset rows amount
+
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = 'G\.FUNCS\.evaluate_round = function\(\)'
+position = "after"
+payload = '''
+
+    total_cashout_rows = 0'''
+
+# Add UI row with total rows hidden
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "add_round_eval_row({name = 'bottom', dollars = dollars})"
+position = "before"
+payload = '''
+if total_cashout_rows > 7 then
+    local total_hidden = total_cashout_rows - 7
+
+    G.E_MANAGER:add_event(Event({
+        trigger = 'before',delay = 0.38,
+        func = function()
+            local hidden = {n=G.UIT.R, config={align = "cm"}, nodes={
+                {n=G.UIT.O, config={object = DynaText({
+                    string = {localize{type = 'variable', key = 'cashout_hidden', vars = {total_hidden}}}, 
+                    colours = {G.C.WHITE}, shadow = true, float = false, 
+                    scale = 0.45,
+                    font = G.LANGUAGES['en-us'].font, pop_in = 0
+                })}}
+            }}
+
+            G.round_eval:add_child(hidden, G.round_eval:get_UIE_by_ID('bonus_round_eval'))
+            return true
+        end
+    }))
+end'''
+match_indent = true
+

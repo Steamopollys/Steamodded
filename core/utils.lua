@@ -305,12 +305,13 @@ function SMODS.recalc_debuff(card)
 end
 
 function SMODS.restart_game()
-	if love.system.getOS() ~= 'OS X' then
-		love.system.openURL('steam://rungameid/2379780')
-	else
-		os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
-	end
-	love.event.quit()
+    if love.system.getOS() ~= 'OS X' then
+        love.thread.newThread("os.execute(...)\n"):start(arg[-2] .. " " .. table.concat(arg, " "))
+    else
+        os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
+    end
+
+    love.event.quit()
 end
 
 function SMODS.create_mod_badges(obj, badges)
@@ -566,6 +567,21 @@ function HUE(s, t, h)
 	if hs < 3 then return t end
 	if hs < 4 then return (t-s) * (4-hs) + s end
 	return s
+end
+
+function round_number(num, precision)
+	precision = 10^(precision or 0)
+	
+	return math.floor(num * precision + 0.4999999999999994) / precision
+end
+
+-- Formatting util for UI elements (look number_formatting.toml)
+function format_ui_value(value)
+    if type(value) ~= "number" then
+        return tostring(value)
+    end
+
+    return number_format(value, 1000000)
 end
 
 --#endregion
