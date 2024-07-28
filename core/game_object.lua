@@ -354,9 +354,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
                 return
             end
-            if self.language then
-                self.key = ('%s_%s'):format(self.key, self.language)
-            end
             self.sound_code = self.key
             if self.replace then
                 local replace, times, args
@@ -366,26 +363,24 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                     replace, times = self.replace, -1
                 end
                 self.replace_sounds[replace] = { key = self.key, times = times, args = args }
-            end
+            end 
+            -- TODO detect music state based on if select_music_track exists
+            assert(not self.select_music_track or self.key:find('music'))
             SMODS.Sound.super.register(self)
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
                 (self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
             if file_path == 'DEFAULT' then return end
-            -- language specific sounds override fully defined sounds only if that language is set
-            if self.language and not (G.SETTINGS.language == self.language) then return end
-            if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/sounds/' .. file_path
-            --load with a temp file path in case LOVE doesn't like the mod directory
-            local file = NFS.read(self.full_path)
-            love.filesystem.write("steamodded-temp-" .. file_path, file)
+            local data = NFS.read('data', self.full_path)
+            local decoder = love.sound.newDecoder(data)
             self.sound = love.audio.newSource(
-                "steamodded-temp-" .. file_path,
+                decoder,
                 ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
             )
-            love.filesystem.remove("steamodded-temp-" .. file_path)
+            G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, sound = self.sound, per = self.pitch, vol = self.volume, no_sync = self.no_sync })
         end,
         register_global = function(self)
             local mod = SMODS.current_mod
@@ -401,30 +396,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 end
             end
         end,
+        -- retaining this function for mod compat
         play = function(self, pitch, volume, stop_previous_instance, key)
-            local sound = self or SMODS.Sounds[key]
-            if not sound then return false end
-
-            stop_previous_instance = stop_previous_instance and true
-            volume = volume or 1
-            sound.sound:setPitch(pitch or 1)
-
-            local sound_vol = volume * (G.SETTINGS.SOUND.volume / 100.0)
-            if string.find(sound.sound_code, 'music') then
-                sound_vol = sound_vol * (G.SETTINGS.SOUND.music_volume / 100.0)
-            else
-                sound_vol = sound_vol * (G.SETTINGS.SOUND.game_sounds_volume / 100.0)
-            end
-            if sound_vol <= 0 then
-                sound.sound:setVolume(0)
-            else
-                sound.sound:setVolume(sound_vol)
-            end
-
-            if stop_previous_instance and sound.sound:isPlaying() then
-                sound.sound:stop()
-            end
-            love.audio.play(sound.sound)
+            return play_sound(key or self.sound_code, pitch, volume)
         end,
         create_stop_sound = function(self, key, times)
             times = times or -1
@@ -441,32 +415,35 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             self.replace_sounds[replace] = { key = self.key, times = times, args = args }
         end,
         get_current_music = function(self)
+            local track
+            local maxp = -math.huge
             for _, v in ipairs(self.obj_buffer) do
                 local s = self.obj_table[v]
-                if type(s.select_music_track) == 'function' and s:select_music_track() then
-                    return v
+                if type(s.select_music_track) == 'function' then
+                    local res = s:select_music_track()
+                    if res then
+                        if type(res) ~= 'number' then res = 0 end
+                        if res > maxp then track, maxp = v, res end
+                    end
                 end
             end
+            return track
         end
     }
 
     local play_sound_ref = play_sound
     function play_sound(sound_code, per, vol)
-        local sound = SMODS.Sounds[sound_code]
-        if sound then
-            sound:play(per, vol, true)
-            return
-        end
         local replace_sound = SMODS.Sound.replace_sounds[sound_code]
         if replace_sound then
             local sound = SMODS.Sounds[replace_sound.key]
             local rt
             if replace_sound.args then
                 local args = replace_sound.args
-                sound:play(args.pitch, args.volume, args.stop_previous_instance)
+                if type(args) == 'function' then args = args(sound, { pitch = per, volume = vol }) end
+                play_sound(sound.sound_code, args.pitch, args.volume)
                 if not args.continue_base_sound then rt = true end
             else
-                sound:play(per, vol)
+                play_sound(sound.sound_code, per, vol)
                 rt = true
             end
             if replace_sound.times > 0 then replace_sound.times = replace_sound.times - 1 end
