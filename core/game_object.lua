@@ -2621,7 +2621,45 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(_) end
     }
 
-    
+    -------------------------------------------------------------------------------------------------
+    ------- API CODE GameObject.Achievements
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Achievements = {}
+    SMODS.Achievement = SMODS.GameObject:extend{
+        obj_table = SMODS.Achievements,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'unlock_condition',
+        },
+        set = 'Achievement',
+        class_prefix = "ach",
+        atlas = "icons",
+        pos = {x=3, y=0},
+        hidden_pos = {x=0, y=0},
+        bypass_all_unlocked = false,
+        hidden_name = true,
+        inject_class = function(self)
+            fetch_achievements()
+            SMODS.GameObject.inject_class(self)
+            fetch_achievements()
+            -- TODO: Add a built-in achievement reset (for debuffing purposes)
+            -- This is what it would roughly look like (minus the check)
+            --[[for k, v in pairs(SMODS.Achievements) do
+                G.SETTINGS.ACHIEVEMENTS_EARNED[k] = nil
+                G.ACHIEVEMENTS[k].earned = nil
+            end]]
+        end,
+        inject = function(self)
+            G.ACHIEVEMENTS[self.key] = self
+        end,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.misc.achievement_names, self.key, self.loc_txt, "name")
+            SMODS.process_loc_text(G.localization.misc.achievement_descriptions, self.key, self.loc_txt, "description")
+        end,
+    }
+
     -------------------------------------------------------------------------------------------------
     ----- INTERNAL API CODE GameObject._Loc_Post
     -------------------------------------------------------------------------------------------------

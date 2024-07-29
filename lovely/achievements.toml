@@ -1,0 +1,112 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+## Achievement API
+
+# fetch_achievements()
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '''(?<indent>[\t ]*)if G\.F_NO_ACHIEVEMENTS then return end\n\n[\s\S]{4}--\|FROM LOCAL SETTINGS FILE'''
+position = 'before'
+# match_indent = true
+line_prepend = '$indent'
+payload = '''
+G.SETTINGS.ACHIEVEMENTS_EARNED = G.SETTINGS.ACHIEVEMENTS_EARNED or {}
+for k, v in pairs(G.ACHIEVEMENTS) do
+    if not v.key then v.key = k end
+    for kk, vv in pairs(G.SETTINGS.ACHIEVEMENTS_EARNED) do 
+        if G.ACHIEVEMENTS[kk] and G.ACHIEVEMENTS[kk].mod then
+            G.ACHIEVEMENTS[kk].earned = true
+        end
+    end
+end'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''if not G.STEAM then --|set this to false if you get this information from elsewhere'''
+position = "at"
+payload = '''if not G.STEAM or G.ACHIEVEMENTS[achievement_name].mod then --|set this to false if you get this information from elsewhere'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''if G.STEAM and not G.STEAM.initial_fetch then'''
+position = "at"
+payload = '''if G.STEAM and not G.STEAM.initial_fetch and not G.ACHIEVEMENTS[achievement_name].mod then '''
+match_indent = true
+
+# check_for_unlock
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''if G.GAME.challenge then return end'''
+position = "after"
+payload = '''
+fetch_achievements() -- Refreshes achievements
+for k, v in pairs(G.ACHIEVEMENTS) do
+    if (not v.earned) and (v.unlock_condition and type(v.unlock_condition) == 'function') and v:unlock_condition(args) then
+        unlock_achievement(k)
+    end
+end'''
+match_indent = true
+
+# unlock_achievement()
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''if G.PROFILES[G.SETTINGS.profile].all_unlocked then return end'''
+position = "at"
+payload = '''if G.PROFILES[G.SETTINGS.profile].all_unlocked and (G.ACHIEVEMENTS and G.ACHIEVEMENTS[achievement_name] and not G.ACHIEVEMENTS[achievement_name].bypass_all_unlocked) then return end'''
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '''(?<indent>[\t ]*)if G\.F_NO_ACHIEVEMENTS then return end\n[\s\S][\s\S]{16}--\|LOCAL SETTINGS FILE'''
+position = 'before'
+# match_indent = true
+line_prepend = '$indent'
+payload = '''
+if not G.ACHIEVEMENTS then fetch_achievements() end
+
+G.SETTINGS.ACHIEVEMENTS_EARNED[achievement_name] = true
+G:save_progress()
+
+if G.ACHIEVEMENTS[achievement_name] and G.ACHIEVEMENTS[achievement_name].mod then 
+    if not G.ACHIEVEMENTS[achievement_name].earned then
+        --|THIS IS THE FIRST TIME THIS ACHIEVEMENT HAS BEEN EARNED
+        achievement_set = true
+        G.FILE_HANDLER.force = true
+    end
+    G.ACHIEVEMENTS[achievement_name].earned = true
+end
+
+if achievement_set then 
+    notify_alert(achievement_name)
+    return true
+end'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''if G.STEAM then '''
+position = "at"
+payload = '''
+-- TOD: Verify if it is safe to let achievements interact with G.STEAM functions
+-- As long as it has a steamid and the ID doesn't match one already existing in Balatro would it should be fine?
+if G.STEAM  and not G.ACHIEVEMENTS[achievement_name].mod then'''
+match_indent = true
+
+# create_UIBox_notify_alert
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '''local t_s = Sprite(0,0,1.5*(_atlas.px/_atlas.py),1.5,_atlas, _c and _c.pos or {x=3, y=0})'''
+position = "before"
+payload = '''if SMODS.Achievements[_achievement] then _c = SMODS.Achievements[_achievement]; _atlas = G.ASSET_ATLAS[_c.atlas] end'''
+match_indent = true
