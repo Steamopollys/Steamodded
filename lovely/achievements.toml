@@ -24,14 +24,6 @@ for k, v in pairs(G.ACHIEVEMENTS) do
     end
 end'''
 
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = '''if not G.STEAM then --|set this to false if you get this information from elsewhere'''
-position = "at"
-payload = '''if not G.STEAM or G.ACHIEVEMENTS[achievement_name].mod then --|set this to false if you get this information from elsewhere'''
-match_indent = true
-
 # check_for_unlock
 [[patches]]
 [patches.pattern]
