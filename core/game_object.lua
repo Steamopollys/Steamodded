@@ -1700,22 +1700,19 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                     delay = 0.1,
                     func = function()
                         local _card = G.hand.highlighted[i]
-                        local suit_data = SMODS.Suits[_card.base.suit]
-                        local suit_prefix = suit_data.card_key
                         local rank_data = SMODS.Ranks[_card.base.value]
                         local behavior = rank_data.strength_effect or { fixed = 1, ignore = false, random = false }
-                        local rank_suffix = ''
+                        local new_rank
                         if behavior.ignore or not next(rank_data.next) then
                             return true
                         elseif behavior.random then
                             -- TODO doesn't respect in_pool
-                            local r = pseudorandom_element(rank_data.next, pseudoseed('strength'))
-                            rank_suffix = SMODS.Ranks[r].card_key
+                            new_rank = pseudorandom_element(rank_data.next, pseudoseed('strength'))
                         else
                             local ii = (behavior.fixed and rank_data.next[behavior.fixed]) and behavior.fixed or 1
-                            rank_suffix = SMODS.Ranks[rank_data.next[ii]].card_key
+                            new_rank = rank_data.next[ii]
                         end
-                        _card:set_base(G.P_CARDS[suit_prefix .. '_' .. rank_suffix])
+                        assert(SMODS.change_base(_card, nil, new_rank))
                         return true
                     end
                 }))
@@ -1746,13 +1743,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _suit = pseudorandom_element(SMODS.Suits, pseudoseed('sigil'))
+            local _suit = pseudorandom_element(SMODS.Suit.obj_buffer, pseudoseed('sigil'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
                         local _card = G.hand.cards[i]
-                        local _rank = SMODS.Ranks[_card.base.value]
-                        _card:set_base(G.P_CARDS[_suit.card_key .. '_' .. _rank.card_key])
+                        assert(SMODS.change_base(_card, _suit))
                         return true
                     end
                 }))
@@ -1774,13 +1770,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _rank = pseudorandom_element(SMODS.Ranks, pseudoseed('ouija'))
+            local _rank = pseudorandom_element(SMODS.Rank.obj_buffer, pseudoseed('ouija'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
                         local _card = G.hand.cards[i]
-                        local _suit = SMODS.Suits[_card.base.suit]
-                        _card:set_base(G.P_CARDS[_suit.card_key .. '_' .. _rank.card_key])
+                        assert(SMODS.change_base(_card, nil, _rank))
                         return true
                     end
                 }))
