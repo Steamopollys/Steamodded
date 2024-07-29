@@ -57,6 +57,12 @@ return {
 		}
     },
     misc = {
+		achievement_names = {
+			hidden_achievement = "???",
+		},
+		achievement_descriptions = {
+			hidden_achievement = "Play more to find out!", -- To be translated
+		},
         dictionary = {
 			b_mods = '模组',
 			b_mods_cap = '模组',

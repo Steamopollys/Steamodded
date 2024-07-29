@@ -333,6 +333,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         px = 34,
         py = 34,
     }
+    SMODS.Atlas {
+        key = 'achievements',
+        path = 'default_achievements.png',
+        px = 66,
+        py = 66,
+    }
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Sound
@@ -2635,8 +2641,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         },
         set = 'Achievement',
         class_prefix = "ach",
-        atlas = "icons",
-        pos = {x=3, y=0},
+        atlas = "achievements",
+        pos = {x=1, y=0},
         hidden_pos = {x=0, y=0},
         bypass_all_unlocked = false,
         hidden_name = true,
