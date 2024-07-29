@@ -81,10 +81,11 @@ return {
             b_additions = '新增项目',
             b_applies_stakes_1 = '',
 			b_applies_stakes_2 = '的限制也将起效',
-		}
+		},
+		v_dictionary = {
+			c_types = '共有#1#种',
+			cashout_hidden = '……还有#1#',
+		},
 	},
-	v_dictionary = {
-		c_types = '共有#1#种',
-		cashout_hidden = '……还有#1#',
-	},
+	
 }
