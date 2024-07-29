@@ -1939,20 +1939,33 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     ----- API CODE GameObject.PokerHand
     -------------------------------------------------------------------------------------------------
 
+    SMODS.PokerHandParts = {}
+    SMODS.PokerHandPart = SMODS.GameObject:extend {
+        obj_table = SMODS.PokerHandParts,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'func',
+        },
+        inject_class = function() end,
+    }
+    local handlist = G.handlist
+    G.handlist = {}
     SMODS.PokerHands = {}
     SMODS.PokerHand = SMODS.GameObject:extend {
         obj_table = SMODS.PokerHands,
         obj_buffer = {},
         required_params = {
             'key',
-            'above_hand',
             'mult',
             'chips',
             'l_mult',
             'l_chips',
             'example',
+            'evaluate'
         },
         order_lookup = {},
+        max_order = { value = 0 },
         visible = true,
         played = 0,
         played_this_round = 0,
@@ -1965,14 +1978,19 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         register = function(self)
             if self:check_dependencies() and not self.obj_table[self.key] then
-                local j
-                for i, v in ipairs(G.handlist) do
-                    if v == self.above_hand then j = i end
+                if self.above_hand and self.obj_table[self.above_hand] then
+                    local j
+                    for i, v in ipairs(G.handlist) do
+                        if v == self.above_hand then j = i end
+                    end
+                    table.insert(G.handlist, j, self.key)
+                    self.order_lookup[self.above_hand] = (self.order_lookup[self.above_hand] or 0) - 0.001
+                    self.order = self.obj_table[self.above_hand].order + self.order_lookup[j]
+                else
+                    self.max_order.value = self.max_order.value + 1
+                    self.order = self.max_order.value
+                    G.handlist[#G.handlist+1] = self.key
                 end
-                -- insertion must not happen more than once, so do it on registration
-                table.insert(G.handlist, j, self.key)
-                self.order_lookup[j] = (self.order_lookup[j] or 0) - 0.001
-                self.order = j + self.order_lookup[j]
                 self.s_mult = self.mult
                 self.s_chips = self.chips
                 self.visible = self.visible
@@ -1986,6 +2004,65 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(self) end
     }
 
+    SMODS.PokerHandPart {
+        key = '_highest',
+        func = function(hand) return get_highest(hand) end
+    }
+    SMODS.PokerHandPart {
+        key = '_straight',
+        func = function(hand) return get_straight(hand) end
+    }
+    SMODS.PokerHandPart {
+        key = '_flush',
+        func = function(hand) return get_flush(hand) end,
+    }
+    for i = 2, 5 do
+        SMODS.PokerHandPart {
+            key = '_'..i,
+            func = function(hand) return get_X_same(hand, i, true) end
+        }
+    end
+
+    local hands = G:init_game_object().hands
+    local eval_functions = {
+        ['Flush Five'] = function(hand, parts) end,
+        ['Flush House'] = function(hand, parts) end, 
+        ['Five of a Kind'] = function(hand, parts) return parts._5 end,
+        ['Straight Flush'] = function(hand, parts) end, 
+        ['Four of a Kind'] = function(hand, parts) return parts._4 end, 
+        ['Full House'] = function(hand, parts)
+            if #parts._3 < 1 or #parts._2 < 2 then return {} end
+            local ret = {}
+            for _, v in ipairs(parts._2) do
+                for _, vv in ipairs(v) do
+                    table.insert(ret, vv)
+                end
+            end
+            return {ret}
+        end,
+        ['Flush'] = function(hand, parts) return parts._flush end,
+        ['Straight'] = function(hand, parts) return parts._straight end,
+        ['Three of a Kind'] = function(hand, parts) return parts._3 end, 
+        ['Two Pair'] = function(hand, parts)
+            if #parts._2 < 2 then return {} end
+            local ret = {}
+            for _, v in ipairs(parts._2) do
+                for _, vv in ipairs(v) do
+                    table.insert(ret, vv)
+                end
+            end
+            return {ret}
+        end, 
+        ['Pair'] = function(hand, parts) return parts._2 end, 
+        ['High Card'] = function(hand, parts) return parts._highest end, 
+        
+    }
+    for _, v in ipairs(handlist) do
+        local hand = copy_table(hands[v])
+        hand.key = v
+        hand.evaluate = eval_functions[v]
+        SMODS.PokerHand(hand)
+    end
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Challenge
     -------------------------------------------------------------------------------------------------
