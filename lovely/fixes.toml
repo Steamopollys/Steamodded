@@ -416,3 +416,32 @@ pattern = '''if win_ante and (win_ante >= 8) then'''
 match_indent = true
 position = "at"
 payload = '''if win_ante and (win_ante >= 8) or (v.in_pool and type(v.in_pool) == 'function' and not v:in_pool()) then'''
+
+# Move seed generation to be before Back:apply so that method can use random numbers
+# both are Game:start_run
+[[patches]]
+[patches.regex]
+target = "game.lua"
+pattern = '''\n?[\t ]if not saveTable then
+[\t ]*if args\.seed then self\.GAME\.seeded = true end
+[\t ]*self\.GAME\.pseudorandom\.seed = args\.seed or \(not \(G\.SETTINGS\.tutorial_complete or G\.SETTINGS\.tutorial_progress\.completed_parts\['big_blind'\]\) and "TUTORIAL"\) or generate_starting_seed\(\)
+[\t ]*end
+\s*for k, v in pairs\(self\.GAME\.pseudorandom\) do if v == 0 then self\.GAME\.pseudorandom\[k\] = pseudohash\(k\.\.self\.GAME\.pseudorandom\.seed\) end end
+[\t ]*self\.GAME\.pseudorandom\.hashed_seed = pseudohash\(self\.GAME\.pseudorandom\.seed\)\n?'''
+position = "at"
+payload = ''
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = '''self.GAME.selected_back_key = selected_back'''
+match_indent = true
+position = "after"
+payload = '''
+
+if not saveTable then
+    if args.seed then self.GAME.seeded = true end
+    self.GAME.pseudorandom.seed = args.seed or (not (G.SETTINGS.tutorial_complete or G.SETTINGS.tutorial_progress.completed_parts["big_blind"]) and "TUTORIAL") or generate_starting_seed()
+end
+for k, v in pairs(self.GAME.pseudorandom) do if v == 0 then self.GAME.pseudorandom[k] = pseudohash(k..self.GAME.pseudorandom.seed) end end
+self.GAME.pseudorandom.hashed_seed = pseudohash(self.GAME.pseudorandom.seed)
+'''
