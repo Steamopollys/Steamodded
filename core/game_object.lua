@@ -2646,6 +2646,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         hidden_pos = {x=0, y=0},
         bypass_all_unlocked = false,
         hidden_name = true,
+        steamid = "STEAMODDED",
         inject_class = function(self)
             fetch_achievements()
             SMODS.GameObject.inject_class(self)

@@ -32,14 +32,6 @@ position = "at"
 payload = '''if not G.STEAM or G.ACHIEVEMENTS[achievement_name].mod then --|set this to false if you get this information from elsewhere'''
 match_indent = true
 
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = '''if G.STEAM and not G.STEAM.initial_fetch then'''
-position = "at"
-payload = '''if G.STEAM and not G.STEAM.initial_fetch and not G.ACHIEVEMENTS[achievement_name].mod then '''
-match_indent = true
-
 # check_for_unlock
 [[patches]]
 [patches.pattern]
@@ -90,17 +82,6 @@ if achievement_set then
     notify_alert(achievement_name)
     return true
 end'''
-
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = '''if G.STEAM then '''
-position = "at"
-payload = '''
--- TOD: Verify if it is safe to let achievements interact with G.STEAM functions
--- As long as it has a steamid and the ID doesn't match one already existing in Balatro would it should be fine?
-if G.STEAM  and not G.ACHIEVEMENTS[achievement_name].mod then'''
-match_indent = true
 
 # create_UIBox_notify_alert
 [[patches]]
