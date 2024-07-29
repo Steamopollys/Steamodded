@@ -863,6 +863,8 @@ function Card:set_edition(edition, immediate, silent)
 			G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit
 		elseif self.area == G.hand then
 			G.hand.config.card_limit = G.hand.config.card_limit - self.edition.card_limit
+		elseif self.area and self.area.config and self.area.config.card_limit then
+			self.area.config.card_limit = self.area.config.card_limit - self.edition.card_limit
 		end
 	end
 
@@ -916,7 +918,7 @@ function Card:set_edition(edition, immediate, silent)
 			self.edition[k] = v
 		end
 		if k == 'card_limit' and (self.added_to_deck or self.joker_added_to_deck_but_debuffed or (self.area == G.hand and not self.debuff)) and G.jokers and G.consumeables then
-			if self.ability.consumeable then
+			if self.ability.consumeable and self.area == G.consumeables then
 				G.consumeables.config.card_limit = G.consumeables.config.card_limit + v
 			elseif self.ability.set == 'Joker' then
 				G.jokers.config.card_limit = G.jokers.config.card_limit + v
@@ -929,6 +931,8 @@ function Card:set_edition(edition, immediate, silent)
 						return true
 					end
 				}))
+			elseif self.area and self.area.config and self.area.config.card_limit then
+				self.area.config.card_limit = self.area.config.card_limit + self.edition.card_limit
 			end
 		end
 	end

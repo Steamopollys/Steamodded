@@ -162,7 +162,9 @@ if true then
         self.ability.joker_added_to_deck_but_debuffed = nil
     else
         if self.edition and self.edition.card_limit then
-            if self.ability.consumeable then
+            if self.ability.cardarea and type(self.ability.cardarea) == 'string' and G[self.ability.cardarea] and G[self.ability.cardarea].config and G[self.ability.cardarea].config.card_limit then
+                G[self.ability.cardarea].config.card_limit = G[self.ability.cardarea].config.card_limit + self.edition.card_limit
+            elseif self.ability.consumeable then
                 G.consumeables.config.card_limit = G.consumeables.config.card_limit + self.edition.card_limit
             else
                 G.jokers.config.card_limit = G.jokers.config.card_limit + self.edition.card_limit
@@ -179,9 +181,12 @@ if G.jokers then
     if from_debuff then
         self.ability.joker_added_to_deck_but_debuffed = true
     else
+        print(self.area==nil)
         if self.edition and self.edition.card_limit then
-            if self.ability.consumeable then
+            if self.ability.consumeable and self.area == G.consumeables then
                 G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
+            elseif self.ability.cardarea and type(self.ability.cardarea) == 'string' and G[self.ability.cardarea] and G[self.ability.cardarea].config and G[self.ability.cardarea].config.card_limit then
+                G[self.ability.cardarea].config.card_limit = G[self.ability.cardarea].config.card_limit - self.edition.card_limit
             else
                 G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit
             end'''
@@ -195,8 +200,10 @@ position = "at"
 payload = '''
 if self.ability.joker_added_to_deck_but_debuffed then
     if self.edition and self.edition.card_limit then
-        if self.ability.consumeable then
+        if self.ability.consumeable and self.area == G.consumeables then
             G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
+        elseif self.ability.cardarea and type(self.ability.cardarea) == 'string' and G[self.ability.cardarea] and G[self.ability.cardarea].config and G[self.ability.cardarea].config.card_limit then
+            G[self.ability.cardarea].config.card_limit = G[self.ability.cardarea].config.card_limit - self.edition.card_limit
         else
             G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit
         end'''
