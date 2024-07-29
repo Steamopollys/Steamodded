@@ -2649,16 +2649,13 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject_class = function(self)
             fetch_achievements()
             SMODS.GameObject.inject_class(self)
-            fetch_achievements()
-            -- TODO: Add a built-in achievement reset (for debuffing purposes)
-            -- This is what it would roughly look like (minus the check)
-            --[[for k, v in pairs(SMODS.Achievements) do
-                G.SETTINGS.ACHIEVEMENTS_EARNED[k] = nil
-                G.ACHIEVEMENTS[k].earned = nil
-            end]]
         end,
         inject = function(self)
             G.ACHIEVEMENTS[self.key] = self
+            if self.reset_on_startup then
+                if G.SETTINGS.ACHIEVEMENTS_EARNED[self.key] then G.SETTINGS.ACHIEVEMENTS_EARNED[self.key] = nil end
+                if G.ACHIEVEMENTS[self.key].earned then G.ACHIEVEMENTS[self.key].earned = nil end
+            end
         end,
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.achievement_names, self.key, self.loc_txt, "name")
