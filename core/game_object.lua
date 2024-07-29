@@ -2016,42 +2016,45 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         key = '_flush',
         func = function(hand) return get_flush(hand) end,
     }
+    -- all sets of 2 or more cards of same rank
+    SMODS.PokerHandPart {
+        key = '_fh',
+        func = function(hand)
+            local _2 = get_X_same(2, hand, true)
+            if not next(_2) then return {} end
+            return {SMODS.merge_lists(_2)}
+        end
+    }
     for i = 2, 5 do
         SMODS.PokerHandPart {
             key = '_'..i,
-            func = function(hand) return get_X_same(hand, i, true) end
+            func = function(hand) return get_X_same(i, hand, true) end
         }
     end
 
     local hands = G:init_game_object().hands
     local eval_functions = {
         ['Flush Five'] = function(hand, parts) end,
-        ['Flush House'] = function(hand, parts) end, 
+        ['Flush House'] = function(hand, parts)
+            if #parts._3 < 1 or #parts._2 < 2 or not next(parts._flush) then return {} end
+            return { SMODS.merge_lists { parts._fh[1], parts._flush[1] }}
+        end, 
         ['Five of a Kind'] = function(hand, parts) return parts._5 end,
-        ['Straight Flush'] = function(hand, parts) end, 
+        ['Straight Flush'] = function(hand, parts)
+            if not next(parts._straight) or not next(parts._flush) then return end
+            return { SMODS.merge_lists{ parts._straight[1], parts._flush[1] }}
+        end, 
         ['Four of a Kind'] = function(hand, parts) return parts._4 end, 
         ['Full House'] = function(hand, parts)
             if #parts._3 < 1 or #parts._2 < 2 then return {} end
-            local ret = {}
-            for _, v in ipairs(parts._2) do
-                for _, vv in ipairs(v) do
-                    table.insert(ret, vv)
-                end
-            end
-            return {ret}
+            return parts._fh
         end,
         ['Flush'] = function(hand, parts) return parts._flush end,
         ['Straight'] = function(hand, parts) return parts._straight end,
         ['Three of a Kind'] = function(hand, parts) return parts._3 end, 
         ['Two Pair'] = function(hand, parts)
             if #parts._2 < 2 then return {} end
-            local ret = {}
-            for _, v in ipairs(parts._2) do
-                for _, vv in ipairs(v) do
-                    table.insert(ret, vv)
-                end
-            end
-            return {ret}
+            return parts._fh
         end, 
         ['Pair'] = function(hand, parts) return parts._2 end, 
         ['High Card'] = function(hand, parts) return parts._highest end, 

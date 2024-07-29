@@ -473,6 +473,24 @@ function SMODS.merge_defaults(t, defaults)
     return t
 end
 
+-- Given a list `t` of numerically indexed table,
+-- add elements of each table to a new table in order,
+-- skipping any duplicates.
+function SMODS.merge_lists(t)
+    local ret = {}
+    local seen = {}
+    for _, li in ipairs(t) do
+        assert(type(li) == 'table')
+        for _, v in ipairs(li) do
+            if not seen[v] then
+                ret[#ret+1] = v
+                seen[v] = true
+            end
+        end
+    end
+    return ret
+end
+
 --#region palettes
 G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
 G.PALETTE = {}
