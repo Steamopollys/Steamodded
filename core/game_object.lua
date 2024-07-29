@@ -1970,7 +1970,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         played = 0,
         played_this_round = 0,
         level = 1,
-        class_prefix = 'h',
         set = 'PokerHand',
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.poker_hands, self.key, self.loc_txt, 'name')
@@ -1985,7 +1984,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                     end
                     table.insert(G.handlist, j, self.key)
                     self.order_lookup[self.above_hand] = (self.order_lookup[self.above_hand] or 0) - 0.001
-                    self.order = self.obj_table[self.above_hand].order + self.order_lookup[j]
+                    self.order = self.obj_table[self.above_hand].order + self.order_lookup[self.above_hand]
                 else
                     self.max_order.value = self.max_order.value + 1
                     self.order = self.max_order.value
@@ -2034,31 +2033,33 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
 
     local hands = G:init_game_object().hands
     local eval_functions = {
-        ['Flush Five'] = function(hand, parts) end,
-        ['Flush House'] = function(hand, parts)
+        ['Flush Five'] = function(parts)
+            if not next(parts._5) or not next(parts._flush) then return {} end
+            return { SMODS.merge_lists { parts._5[1], parts._flush[1] }}
+        end,
+        ['Flush House'] = function(parts)
             if #parts._3 < 1 or #parts._2 < 2 or not next(parts._flush) then return {} end
             return { SMODS.merge_lists { parts._fh[1], parts._flush[1] }}
         end, 
-        ['Five of a Kind'] = function(hand, parts) return parts._5 end,
-        ['Straight Flush'] = function(hand, parts)
+        ['Five of a Kind'] = function(parts) return parts._5 end,
+        ['Straight Flush'] = function(parts)
             if not next(parts._straight) or not next(parts._flush) then return end
             return { SMODS.merge_lists{ parts._straight[1], parts._flush[1] }}
         end, 
-        ['Four of a Kind'] = function(hand, parts) return parts._4 end, 
-        ['Full House'] = function(hand, parts)
+        ['Four of a Kind'] = function(parts) return parts._4 end, 
+        ['Full House'] = function(parts)
             if #parts._3 < 1 or #parts._2 < 2 then return {} end
             return parts._fh
         end,
-        ['Flush'] = function(hand, parts) return parts._flush end,
-        ['Straight'] = function(hand, parts) return parts._straight end,
-        ['Three of a Kind'] = function(hand, parts) return parts._3 end, 
-        ['Two Pair'] = function(hand, parts)
+        ['Flush'] = function(parts) return parts._flush end,
+        ['Straight'] = function(parts) return parts._straight end,
+        ['Three of a Kind'] = function(parts) return parts._3 end, 
+        ['Two Pair'] = function(parts)
             if #parts._2 < 2 then return {} end
             return parts._fh
         end, 
-        ['Pair'] = function(hand, parts) return parts._2 end, 
-        ['High Card'] = function(hand, parts) return parts._highest end, 
-        
+        ['Pair'] = function(parts) return parts._2 end, 
+        ['High Card'] = function(parts) return parts._highest end, 
     }
     for _, v in ipairs(handlist) do
         local hand = copy_table(hands[v])
