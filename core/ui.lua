@@ -144,7 +144,7 @@ function create_UIBox_mods(args)
 	end
 	if mod_has_achievement then table.insert(mod_tabs, 
 		{
-			label = "Achievements",
+			label = localize("b_achievements"),
 			chosen = SMODS.LAST_SELECTED_MOD_TAB == "achievements" or false,
 			tab_definition_function = function()
 				SMODS.LAST_SELECTED_MOD_TAB = "achievements"

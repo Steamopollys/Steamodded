@@ -86,6 +86,7 @@ return {
             b_by = ' By: ',
 			b_config = "Config",
 			b_additions = 'Additions',
+			b_achievements = "Achievements",
             b_applies_stakes_1 = 'Applies ',
 			b_applies_stakes_2 = '',
 		},

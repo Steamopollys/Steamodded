@@ -85,6 +85,7 @@ return {
             b_by = ' 作者：',
        		b_config = "配置",
             b_additions = '新增项目',
+			b_achievements = "Achievements", -- To be translated
             b_applies_stakes_1 = '',
 			b_applies_stakes_2 = '的限制也将起效',
 		},
