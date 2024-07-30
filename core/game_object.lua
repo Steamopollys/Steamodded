@@ -2156,6 +2156,64 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end
     }
 
+    -- Create base game 
+    -- sticker_check is set to nil on all since they'd use base game checks for application
+    SMODS.Sticker{
+        key = "eternal",
+        badge_colour = HEX 'c75985',
+        prefix_config = {key = false},
+        pos = { x = 0, y = 0 },
+        sticker_check = nil, 
+        hide_badge = true,
+        order = 1,
+    }
+
+    SMODS.Sticker{
+        key = "perishable",
+        badge_colour = HEX '4f5da1',
+        prefix_config = {key = false},
+        pos = { x = 0, y = 2 },
+        sticker_check = nil,
+        hide_badge = true,
+        order = 2,
+        set_sticker = function(self, card, val)
+            card.ability[self.key] = val
+            if val == true then card.ability.perish_tally = G.GAME.perishable_rounds end
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card.ability.perishable_rounds or 5, card.ability.perish_tally or G.GAME.perishable_rounds}}
+        end,
+    }
+
+    SMODS.Sticker{
+        key = "rental",
+        badge_colour = HEX 'b18f43',
+        prefix_config = {key = false},
+        pos = { x = 1, y = 2 },
+        sticker_check = nil,
+        hide_badge = true,
+        order = 3,
+        set_sticker = function(self, card, val)
+            card.ability[self.key] = val
+            if val == true then card:set_cost() end
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {G.GAME.rental_rate or 1}}
+        end,
+    }
+
+    SMODS.Sticker{
+        key = "pinned",
+        badge_colour = HEX 'fda200',
+        prefix_config = {key = false},
+        pos = { x = 10, y = 10 }, -- Base game has no art, and I haven't made any yet to represent Pinned with
+        sticker_check = nil, 
+        order = 4,
+        set_sticker = function(self, card, val)
+            card[self.key] = val
+        end
+    }
+
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.DollarRow
     -------------------------------------------------------------------------------------------------

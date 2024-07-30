@@ -314,7 +314,7 @@ function buildAdditionsTab(mod)
 		end
 	end
 	if mod.custom_collection_tabs then
-		rightside_nodes[#rightside_nodes+1] = UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}, func = 'is_other_gameobject_tabs'}) 
+		rightside_nodes[#rightside_nodes+1] = UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}})
 	end
 
 	local t = {n=G.UIT.R, config={align = "cm",padding = 0.2, minw = 7}, nodes={
@@ -502,10 +502,6 @@ function create_UIBox_your_collection_stickers(exit)
 			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then sticker_pool[#sticker_pool+1] = v end
 		end
 	else
-		sticker_pool[#sticker_pool+1] = {key = "eternal", order = 1}
-		sticker_pool[#sticker_pool+1] = {key = "perishable", order = 2}
-		sticker_pool[#sticker_pool+1] = {key = "rental", order = 3}
-		sticker_pool[#sticker_pool+1] = {key = "pinned", order = 4}
 		for _, v in pairs(SMODS.Stickers) do
 			sticker_pool[#sticker_pool+1] = v
 		end
@@ -542,9 +538,8 @@ function create_UIBox_your_collection_stickers(exit)
 			end
 			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
 				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
-			if SMODS.Stickers[center.key] then SMODS.Stickers[center.key]:set_sticker(card, true)
-			elseif center.key == "pinned" then card.pinned = true
-			else card.ability[center.key] = true end
+			card.ignore_pinned = true -- Scuffed solution to ignoring the effect of pinned, I'll figure out something better later
+			SMODS.Stickers[center.key]:set_sticker(card, true)
 			G.your_collection[j]:emplace(card)
 			index = index + 1
 		end
@@ -673,21 +668,6 @@ function modsCollectionTally(pool, set)
 	end
 
 	return obj_tally
-end
-
--- TODO: Make more efficient? 
-G.FUNCS.is_other_gameobject_tabs = function(e)
-	local is_other_gameobject_tab = nil
-	for _, mod in pairs(SMODS.Mods) do
-		if mod.custom_collection_tabs then is_other_gameobject_tab = true end
-	end
-	if is_other_gameobject_tab then
-		e.config.colour = G.C.RED
-        e.config.button = e.config.id
-    else
-        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
-        e.config.button = nil
-    end
 end
 
 -- TODO: Make better solution

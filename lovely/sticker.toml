@@ -13,8 +13,8 @@ pattern = "(?<indent>[\t ]*)if self.sticker then loc_vars = loc_vars or \\{\\}; 
 position = "before"
 line_prepend = "$indent"
 payload = '''
-for k, v in ipairs(SMODS.Sticker.obj_buffer) do
-	if self.ability[v] then
+for k, v in ipairs(SMODS.Sticker) do
+	if self.ability[v.key] and not v.hide_badge then
         badges[#badges+1] = v
     end
 end'''
@@ -62,6 +62,31 @@ for k, v in ipairs(SMODS.Sticker.obj_buffer) do
         sticker:set_sticker(card, true)
     end
 end'''
+
+## Remove base game sticker rolls if one is added
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if G.GAME.modifiers.enable_eternals_in_shop and eternal_perishable_poll > 0.7 then"
+position = "at"
+match_indent = true
+payload = '''if G.GAME.modifiers.enable_eternals_in_shop and eternal_perishable_poll > 0.7 and not SMODS.Stickers["eternal"].sticker_check then'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "elseif G.GAME.modifiers.enable_perishables_in_shop and ((eternal_perishable_poll > 0.4) and (eternal_perishable_poll <= 0.7)) then"
+position = "at"
+match_indent = true
+payload = '''elseif G.GAME.modifiers.enable_perishables_in_shop and ((eternal_perishable_poll > 0.4) and (eternal_perishable_poll <= 0.7)) and not SMODS.Stickers["perishable"].sticker_check then'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if G.GAME.modifiers.enable_rentals_in_shop and pseudorandom((area == G.pack_cards and 'packssjr' or 'ssjr')..G.GAME.round_resets.ante) > 0.7 then"
+position = "at"
+match_indent = true
+payload = '''if G.GAME.modifiers.enable_rentals_in_shop and pseudorandom((area == G.pack_cards and 'packssjr' or 'ssjr')..G.GAME.round_resets.ante) > 0.7 and not SMODS.Stickers["rental"].sticker_check then'''
 
 # Card:draw()
 [[patches]]
@@ -112,3 +137,13 @@ payload = '''
 for k, v in pairs(SMODS.Stickers) do
     G.BADGE_COL[k] = v.badge_colour
 end'''
+
+## Remove Pinned effect when in Sticker collections
+# CardArea:aling_cards
+[[patches]]
+[patches.pattern]
+target = 'cardarea.lua'
+pattern = '''table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*(a.pinned and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*(b.pinned and b.sort_id or 0) end)'''
+position = 'at'
+match_indent = true
+payload = '''table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*((a.pinned and not a.ignore_pinned) and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*((b.pinned and not b.ignore_pinned) and b.sort_id or 0) end)'''
