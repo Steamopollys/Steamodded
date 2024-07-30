@@ -7,14 +7,8 @@
 // YOU MUST USE THIS VARIABLE IN THE vec4 effect AT LEAST ONCE
 
 // Values of this variable:
-// self.ARGS.send_to_shader[1] = math.min(self.VT.r*3, 1) + G.TIMERS.REAL/(28) + (self.juice and self.juice.r*20 or 0) + self.tilt_var.amt
+// self.ARGS.send_to_shader[1] = math.min(self.VT.r*3, 1) + (math.sin(G.TIMERS.REAL/28) + 1) + (self.juice and self.juice.r*20 or 0) + self.tilt_var.amt
 // self.ARGS.send_to_shader[2] = G.TIMERS.REAL
-// these default values suck and time makes no sense as we already get it below.
-
-// If you add `send_raw_tilt = true,` in your EDITION declaration, 
-// shader will receive these instead:
-// self.VT.r          -- Visible transform rotation
-// self.tilt_var.amt  -- Amount of tilt
 extern PRECISION vec2 ionized;
 
 extern PRECISION number dissolve;

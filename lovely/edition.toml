@@ -92,10 +92,6 @@ payload = '''
 if self.edition then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if self.edition[v.key:sub(3)] then
-            if v.send_raw_tilt then
-                self.ARGS.send_to_shader[1] = self.VT.r
-                self.ARGS.send_to_shader[2] = self.tilt_var.amt
-            end
             self.children.center:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
             if self.children.front and self.ability.effect ~= 'Stone Card' and not self.config.center.replace_base_card then
                 self.children.front:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
@@ -104,6 +100,17 @@ if self.edition then
     end
 end'''
 line_prepend = "$indent"
+
+# Limit ARGS.send_to_shader[1] to wiggle between 0 and 2 instead of growing infinitely
+# this makes shaders responsiveness on tilt reliable over time
+# Card:draw()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+G\.TIMERS\.REAL/\(28\)'''
+position = "at"
+payload = '''math.sin(G.TIMERS.REAL/28) + 1'''
 
 # Inject shaders applying to floating sprites
 [[patches]]
