@@ -4,6 +4,7 @@
     #define PRECISION mediump
 #endif
 
+// !! change this variable name to your Shader's name
 // YOU MUST USE THIS VARIABLE IN THE vec4 effect AT LEAST ONCE
 
 // Values of this variable:
