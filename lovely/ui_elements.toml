@@ -77,6 +77,15 @@ position = 'after'
 payload = '''G.CONTROLLER.text_input_id = e.config.id'''
 match_indent = true
 
+# G.FUNCS.paste_seed
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.CONTROLLER.text_input_hook = e.UIBox:get_UIE_by_ID('text_input').children[1].children[1]'''
+position = 'after'
+payload = """G.CONTROLLER.text_input_id = 'text_input'"""
+match_indent = true
+
 # G.FUNCS.flash
 [[patches]]
 [patches.pattern]
