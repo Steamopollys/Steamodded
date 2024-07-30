@@ -598,10 +598,6 @@ G.FUNCS.your_collection_stickers_page = function(args)
 			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then sticker_pool[#sticker_pool+1] = v end
 		end
 	else
-		sticker_pool[#sticker_pool+1] = {key = "eternal", order = 1}
-		sticker_pool[#sticker_pool+1] = {key = "perishable", order = 2}
-		sticker_pool[#sticker_pool+1] = {key = "rental", order = 3}
-		sticker_pool[#sticker_pool+1] = {key = "pinned", order = 4}
 		for _, v in pairs(SMODS.Stickers) do
 			sticker_pool[#sticker_pool+1] = v
 		end
@@ -635,10 +631,9 @@ G.FUNCS.your_collection_stickers_page = function(args)
 			if idx > #sticker_pool then return end
 			local center = sticker_pool[idx]
 			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["j_joker"])
-			if SMODS.Stickers[center.key] then SMODS.Stickers[center.key]:set_sticker(card, true)
-			elseif center.key == "pinned" then card.pinned = true
-			else card.ability[center.key] = true end
+				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
+			card.ignore_pinned = true -- Scuffed solution to ignoring the effect of pinned, I'll figure out something better later
+			SMODS.Stickers[center.key]:set_sticker(card, true)
 			G.your_collection[j]:emplace(card)
 		end
 	end
