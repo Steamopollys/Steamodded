@@ -5,7 +5,7 @@
 #endif
 
 
-// Card rotation
+// Look ionized.fs for explanation
 extern MY_HIGHP_OR_MEDIUMP vec2 foil;
 extern MY_HIGHP_OR_MEDIUMP number dissolve;
 extern MY_HIGHP_OR_MEDIUMP number time;

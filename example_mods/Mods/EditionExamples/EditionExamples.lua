@@ -336,6 +336,10 @@ SMODS.Edition({
             "and {X:mult,C:white}X#3#{} Mult"
         }
     },
+    -- Use this to send raw tilt amount and visual transform rotation.
+    -- This will (probably) not work well with existing shaders
+    -- send_raw_tilt = true,
+
     shader = "greyscale",
     discovered = true,
     unlocked = true,
