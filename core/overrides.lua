@@ -909,7 +909,15 @@ function Card:set_edition(edition, immediate, silent)
 	self.edition.type = edition_type
 	self.edition.key = 'e_' .. edition_type
 
-	for k, v in pairs(G.P_CENTERS['e_' .. edition_type].config) do
+	local p_edition = G.P_CENTERS['e_' .. edition_type]
+	if p_edition.override_shape then
+		self.edition.override_shape = p_edition.shader
+	end
+	if p_edition.no_shadow then
+		self.edition.no_shadow = true
+	end
+
+	for k, v in pairs(p_edition.config) do
 		if type(v) == 'table' then
 			self.edition[k] = copy_table(v)
 		else

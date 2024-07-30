@@ -2,7 +2,7 @@
 --- MOD_NAME: Edition Examples
 --- MOD_ID: EditionExamples
 --- PREFIX: edex
---- MOD_AUTHOR: [Eremel_]
+--- MOD_AUTHOR: [Eremel_, stupxd]
 --- MOD_DESCRIPTION: Adds editions that demonstrate Edition API.
 --- BADGE_COLOUR: 3FC7EB
 
@@ -316,7 +316,7 @@ SMODS.Back({
 })
 
 SMODS.Shader({key = 'anaglyphic', path = 'anaglyphic.fs'})
--- SMODS.Shader({key = 'flipped', path = 'flipped.fs'})
+SMODS.Shader({key = 'flipped', path = 'flipped.fs'})
 SMODS.Shader({key = 'fluorescent', path = 'fluorescent.fs'})
 -- SMODS.Shader({key = 'gilded', path = 'gilded.fs'})
 SMODS.Shader({key = 'greyscale', path = 'greyscale.fs'})
@@ -325,6 +325,30 @@ SMODS.Shader({key = 'greyscale', path = 'greyscale.fs'})
 -- SMODS.Shader({key = 'monochrome', path = 'monochrome.fs'})
 SMODS.Shader({key = 'overexposed', path = 'overexposed.fs'})
 -- SMODS.Shader({key = 'sepia', path = 'sepia.fs'})
+
+SMODS.Edition({
+    key = "flipped",
+    loc_txt = {
+        name = "Flipped",
+        label = "Flipped",
+        text = {
+            "nothin"
+        }
+    },
+    no_shadow = true, -- This will stop shadow from being rendered under the card
+    override_shape = true, -- This will stop extra layer being rendered below the shader. Necessary for edition that modify shape of a card.
+    shader = "flipped",
+    discovered = true,
+    unlocked = true,
+    config = { },
+    in_shop = true,
+    weight = 8,
+    extra_cost = 6,
+    apply_to_float = true,
+    loc_vars = function(self)
+        return { vars = {  } }
+    end
+})
 
 SMODS.Edition({
     key = "greyscale",
