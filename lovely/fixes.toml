@@ -426,7 +426,7 @@ if num ~= math.floor(num) then
 else 
   formatted = string.format("%.0f", num)
 end
-return formatted:reverse():gsub("(%d%d%d)", "%1,"):gsub(",$", ""):reverse()'''
+return formatted:reverse():gsub("(%d%d%d)", "%1,"):gsub(",$", ""):gsub(",%-$", "-"):reverse()'''
 match_indent = true
 
 #
