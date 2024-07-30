@@ -124,7 +124,7 @@ match_indent = true
 target = "card.lua"
 pattern = '''
 if self.ability.set == 'Booster' or self.ability.set == 'Spectral' then'''
-position = "before"
+position = "at"
 payload = '''
 if (self.ability.set == 'Booster' or self.ability.set == 'Spectral') and not (self.edition and self.edition.override_shape) then'''
 match_indent = true
@@ -140,7 +140,7 @@ pattern = '''
 [\t ]*end'''
 position = "at"
 payload = '''
-if self.edition and not self.edition.dissolve_override then
+if self.edition and not self.edition.override_shape then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if self.edition[v.key:sub(3)] then
             self.children.center:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
