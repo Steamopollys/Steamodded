@@ -57,7 +57,9 @@ pattern = '''local s = {sound = love.audio.newSource("resources/sounds/"..args.s
 match_indent = true
 position = 'at'
 payload = '''
-local s = SMODS_Sounds[args.sound_code] or
+local c = SMODS_Sounds[args.sound_code]
+local s = c and
+{sound = love.audio.newSource(c.decoder, c.should_stream and 'stream' or 'static'), per = c.per, vol = c.vol } or
 {sound = love.audio.newSource("resources/sounds/"..args.sound_code..'.ogg', should_stream and "stream" or 'static')}''' 
 
 # pass in custom sounds
@@ -78,28 +80,22 @@ match_indent = true
 position = 'before'
 payload = '''
 elseif request.type == 'sound_source' then
+	--local sound = love.audio.newSource(request.decoder, request.should_stream and 'stream' or 'static')
 	SMODS_Sounds[request.sound_code] = {
 		sound_code = request.sound_code,
-		sound = request.sound,
-		modded_source = true,
+		decoder = request.decoder,
+		sound = sound,
 		per = request.per,
 		vol = request.vol,
 	}
 	SOURCES[request.sound_code] = {}
+	--[[
 	table.insert(SOURCES[request.sound_code], SMODS_Sounds[request.sound_code])
-    request.sound:setVolume(0)
-    love.audio.play(request.sound)
-	request.sound:stop()
+    sound:setVolume(0)
+    love.audio.play(sound)
+	sound:stop()
+	--]]
 '''
-
-[[patches]]
-[patches.pattern]
-target = 'engine/sound_manager.lua'
-pattern = "if not v[i].sound:isPlaying() then"
-match_indent = true
-position = 'at'
-payload = 'if not v[i].sound:isPlaying() and not v[i].modded_source then'
-
 
 [[patches]]
 [patches.pattern]
