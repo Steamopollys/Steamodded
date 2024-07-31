@@ -396,7 +396,7 @@ return string.format("%.3f",x/(10^fac))..'e'..fac'''
 position = "at"
 payload = '''
 if num == math.huge then
-    return "infinity"
+    return "naneinf"
 end
 
 local mantissa = round_number(x/(10^fac), 3)
