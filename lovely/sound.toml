@@ -33,12 +33,27 @@ pattern = 'G.ARGS.push.ambient_control = G.SETTINGS.ambient_control'
 match_indent = true
 position = 'after'
 payload = '''
+if SMODS.remove_replace_sound and SMODS.remove_replace_sound ~= desired_track then
+	SMODS.Sound.replace_sounds[SMODS.remove_replace_sound] = nil
+	SMODS.remove_replace_sound = nil
+end
 local replace_sound = SMODS.Sound.replace_sounds[desired_track]
 if replace_sound then
+	local replaced_track = desired_track
 	desired_track = replace_sound.key
 	G.ARGS.push.desired_track = desired_track
+	if SMODS.previous_track ~= desired_track then
+		if replace_sound.times > 0 then replace_sound.times = replace_sound.times - 1 end
+		if replace_sound.times == 0 then SMODS.remove_replace_sound = replaced_track end
+	end
 end
-if SMODS.Sound.stop_sounds[desired_track] then return end
+local stop_sound = SMODS.Sound.stop_sounds[desired_track]
+if SMODS.Sound.stop_sounds[desired_track] then
+	if SMODS.previous_track ~= '' and stop_sound > 0 then stop_sound = stop_sound - 1 end
+	SMODS.Sound.stop_sounds[desired_track] = stop_sound ~= 0 and stop_sound or nil
+	SMODS.previous_track = ''
+	return
+end
 '''
 
 [[patches]]
@@ -80,7 +95,6 @@ match_indent = true
 position = 'before'
 payload = '''
 elseif request.type == 'sound_source' then
-	--local sound = love.audio.newSource(request.decoder, request.should_stream and 'stream' or 'static')
 	SMODS_Sounds[request.sound_code] = {
 		sound_code = request.sound_code,
 		data = request.data,
@@ -89,12 +103,6 @@ elseif request.type == 'sound_source' then
 		vol = request.vol,
 	}
 	SOURCES[request.sound_code] = {}
-	--[[
-	table.insert(SOURCES[request.sound_code], SMODS_Sounds[request.sound_code])
-    sound:setVolume(0)
-    love.audio.play(sound)
-	sound:stop()
-	--]]
 '''
 
 [[patches]]
