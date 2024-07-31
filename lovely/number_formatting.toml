@@ -94,7 +94,10 @@ payload = "scale_number(saved_game.GAME.round_scores.hand.amt, 0.8*scale, 100000
 target = "functions/misc_functions.lua"
 pattern = 'function number_format(num)'
 position = "at"
-payload = 'function number_format(num, e_switch_point)'
+payload = '''
+function number_format(num, e_switch_point)
+    local sign = (num >= 0 and "") or "-"
+    num = math.abs(num)'''
 match_indent = true
 
 [[patches]] 
@@ -103,6 +106,48 @@ target = "functions/misc_functions.lua"
 pattern = 'num >= G\.E_SWITCH_POINT'
 position = "at"
 payload = "num >= (e_switch_point or G.E_SWITCH_POINT)"
+
+# 1. Fix floating point error (1.000e92 instead of 10.000e91)
+# 2. Lower precision with higher numbers
+[[patches]] 
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = '''
+return string.format("%.3f",x/(10^fac))..'e'..fac'''
+position = "at"
+payload = '''
+if num == math.huge then
+    return sign.."naneinf"
+end
+
+local mantissa = round_number(x/(10^fac), 3)
+if mantissa >= 10 then
+  mantissa = mantissa / 10
+  fac = fac + 1
+end
+return sign..(string.format(fac >= 100 and "%.1fe%i" or fac >= 10 and "%.2fe%i" or "%.3fe%i", mantissa, fac))'''
+match_indent = true
+
+# Remove trailing zeroes
+# E.g. X1.5 being displayed as X1.50
+[[patches]] 
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = '''
+return string.format(num ~= math.floor(num) and (num >= 100 and "%.0f" or num >= 10 and "%.1f" or "%.2f") or "%.0f", num):reverse():gsub("(%d%d%d)", "%1,"):gsub(",$", ""):reverse()'''
+position = "at"
+payload = '''
+local formatted
+if num ~= math.floor(num) and num < 100 then
+  formatted = string.format(num >= 10 and "%.1f" or "%.2f", num)
+  if formatted:sub(-1) == "0" then
+    formatted = formatted:gsub("%.?0+$", "")
+  end
+else 
+  formatted = string.format("%.0f", num)
+end
+return sign..(formatted:reverse():gsub("(%d%d%d)", "%1,"):gsub(",$", ""):reverse())'''
+match_indent = true
 
 ## scale_number
 [[patches]] 
@@ -118,5 +163,5 @@ match_indent = true
 target = "functions/button_callbacks.lua"
 pattern = 'number >= G\.E_SWITCH_POINT'
 position = "at"
-payload = "number >= (e_switch_point or G.E_SWITCH_POINT)"
+payload = "math.abs(number) >= (e_switch_point or G.E_SWITCH_POINT)"
 
