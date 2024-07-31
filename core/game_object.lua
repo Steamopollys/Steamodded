@@ -378,7 +378,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 decoder,
                 ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
             )
-            G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, sound = self.sound, per = self.pitch, vol = self.volume, no_sync = self.no_sync })
+            G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, sound = self.sound, per = self.pitch, vol = self.volume })
         end,
         register_global = function(self)
             local mod = SMODS.current_mod
