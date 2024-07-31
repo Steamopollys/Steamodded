@@ -11,9 +11,15 @@ pattern = 'G.SOUND_MANAGER.channel:push(G.ARGS.push)'
 match_indent = true
 position = 'after'
 payload = '''
+SMODS.previous_track = SMODS.previous_track or ''
+local in_sync = (SMODS.Sounds[desired_track] or {}).sync
+local out_sync = (SMODS.Sounds[SMODS.previous_track] or {}).sync
+local should_sync = true
+if (type(in_sync) == 'table' and not in_sync[SMODS.previous_track]) or in_sync == false then should_sync = false end
+if (type(out_sync) == 'table' and not out_sync[desired_track]) or out_sync == false then should_sync = false end
 if 
 	SMODS.previous_track and SMODS.previous_track ~= desired_track and
-	(SMODS.Sounds[desired_track] or {}).no_sync
+	not should_sync
 then
 	G.ARGS.push.type = 'restart_music'
 	G.SOUND_MANAGER.channel:push(G.ARGS.push)
@@ -136,3 +142,28 @@ pattern = "RESTART_MUSIC()"
 match_indent = true
 position = 'at'
 payload = 'RESTART_MUSIC(request)'
+
+# fix looping for music of different length
+
+[[patches]]
+[patches.regex]
+target = 'engine/sound_manager.lua'
+pattern = """(?<indent>[\t ]*)function MODULATE\\(args\\)(\n.*){9}"""
+line_prepend = '$indent'
+position = 'at'
+payload = """function MODULATE(args)
+	if args.desired_track ~= '' then
+		local sound = ((SOURCES[current_track or {}] or {})[1] or {}).sound
+		if not sound or not sound:isPlaying() then
+			RESTART_MUSIC(args)
+		end
+	end
+"""
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = "for _, s in pairs(v) do"
+match_indent = true
+position = 'at'
+payload = """current_track = args.desired_track
+for _, s in pairs(v) do""" 
