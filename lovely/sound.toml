@@ -59,7 +59,7 @@ position = 'at'
 payload = '''
 local c = SMODS_Sounds[args.sound_code]
 local s = c and
-{sound = love.audio.newSource(c.decoder, c.should_stream and 'stream' or 'static'), per = c.per, vol = c.vol } or
+{sound = love.audio.newSource(love.sound.newDecoder(c.data), c.should_stream and 'stream' or 'static'), per = c.per, vol = c.vol } or
 {sound = love.audio.newSource("resources/sounds/"..args.sound_code..'.ogg', should_stream and "stream" or 'static')}''' 
 
 # pass in custom sounds
@@ -83,7 +83,7 @@ elseif request.type == 'sound_source' then
 	--local sound = love.audio.newSource(request.decoder, request.should_stream and 'stream' or 'static')
 	SMODS_Sounds[request.sound_code] = {
 		sound_code = request.sound_code,
-		decoder = request.decoder,
+		data = request.data,
 		sound = sound,
 		per = request.per,
 		vol = request.vol,
@@ -163,3 +163,13 @@ match_indent = true
 position = 'at'
 payload = """current_track = args.desired_track
 for _, s in pairs(v) do""" 
+
+# [[patches]]
+# [patches.pattern]
+# target = 'engine/sound_manager.lua'
+# pattern = 'if s.sound and not s.sound:isPlaying() then'
+# match_indent = true
+# position = 'at'
+# payload = '''if s.sound and s.sound:isPlaying() then
+# 	s.sound:stop()
+# elseif s.sound and not s.sound:isPlaying() then'''
