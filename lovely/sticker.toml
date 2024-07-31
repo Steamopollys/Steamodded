@@ -13,9 +13,9 @@ pattern = "(?<indent>[\t ]*)if self.sticker then loc_vars = loc_vars or \\{\\}; 
 position = "before"
 line_prepend = "$indent"
 payload = '''
-for k, v in ipairs(SMODS.Sticker) do
-	if self.ability[v.key] and not v.hide_badge then
-        badges[#badges+1] = v
+for k, v in pairs(SMODS.Stickers) do
+	if self.ability[k] and not v.hide_badge then
+        badges[#badges+1] = k
     end
 end'''
 

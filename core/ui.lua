@@ -313,7 +313,8 @@ function buildAdditionsTab(mod)
 			rightside_nodes[#rightside_nodes+1] = UIBox_button({button = 'your_collection_'..v.b, label = {localize('b_'..v.l)}, count = modsCollectionTally(v.p),  minw = 5, minh = v.minh, id = 'your_collection_'..v.b})
 		end
 	end
-	if mod.custom_collection_tabs then
+	local has_other_gameobjects = create_UIBox_Other_GameObjects()
+	if has_other_gameobjects then
 		rightside_nodes[#rightside_nodes+1] = UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}})
 	end
 
@@ -366,37 +367,61 @@ function create_UIBox_Other_GameObjects()
 	local custom_gameobject_tabs = {{}}
 	local curr_height = 0
 	local curr_col = 1
-	local other_collections_tabs = {
-		UIBox_button({button = 'your_collection_stickers', label = {localize('b_stickers')}, minw = 5})
+	local other_collections_tabs = {}
+	local smods_uibox_buttons = {
+		{
+			count = G.ACTIVE_MOD_UI and modsCollectionTally(SMODS.Stickers), --Returns nil outside of G.ACTIVE_MOD_UI but we don't use it anyways
+			button = UIBox_button({button = 'your_collection_stickers', label = {localize('b_stickers')}, count = G.ACTIVE_MOD_UI and modsCollectionTally(SMODS.Stickers), minw = 5, id = 'your_collection_stickers'})
+		}
 	}
 
-	for _, mod in pairs(SMODS.Mods) do
-		if mod.custom_collection_tabs and type(mod.custom_collection_tabs) == "function" then
-			object_tabs = mod.custom_collection_tabs()
+	if G.ACTIVE_MOD_UI then
+		for _, tab in pairs(smods_uibox_buttons) do
+			if tab.count.of > 0 then other_collections_tabs[#other_collections_tabs+1] = tab.button end
+		end
+		if G.ACTIVE_MOD_UI and G.ACTIVE_MOD_UI.custom_collection_tabs then
+			object_tabs = G.ACTIVE_MOD_UI.custom_collection_tabs()
 			for _, tab in ipairs(object_tabs) do
 				other_collections_tabs[#other_collections_tabs+1] = tab
 			end
 		end
-	end
-	for _, gameobject_tabs in ipairs(other_collections_tabs) do
-		table.insert(custom_gameobject_tabs[curr_col], gameobject_tabs)
-		curr_height = curr_height + gameobject_tabs.nodes[1].config.minh
-		if curr_height > 6 then --TODO: Verify that this is the ideal number
-			curr_height = 0
-			curr_col = curr_col + 1
-			custom_gameobject_tabs[curr_col] = {}
+	else
+		for _, tab in pairs(smods_uibox_buttons) do
+			other_collections_tabs[#other_collections_tabs+1] = tab.button
+		end
+		for _, mod in pairs(SMODS.Mods) do
+			if mod.custom_collection_tabs and type(mod.custom_collection_tabs) == "function" then
+				object_tabs = mod.custom_collection_tabs()
+				for _, tab in ipairs(object_tabs) do
+					other_collections_tabs[#other_collections_tabs+1] = tab
+				end
+			end
 		end
 	end
 
 	local custom_gameobject_rows = {}
-	for _, v in ipairs(custom_gameobject_tabs) do
-		table.insert(custom_gameobject_rows, {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes = v})
-	end
-	local t = {n=G.UIT.C, config={align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05, minw = 7}, nodes={
-		{n=G.UIT.R, config={align = "cm", padding = 0.15}, nodes = custom_gameobject_rows}
-	}}
+	if #other_collections_tabs > 0 then
+		for _, gameobject_tabs in ipairs(other_collections_tabs) do
+			table.insert(custom_gameobject_tabs[curr_col], gameobject_tabs)
+			curr_height = curr_height + gameobject_tabs.nodes[1].config.minh
+			if curr_height > 6 then --TODO: Verify that this is the ideal number
+				curr_height = 0
+				curr_col = curr_col + 1
+				custom_gameobject_tabs[curr_col] = {}
+			end
+		end
+		for _, v in ipairs(custom_gameobject_tabs) do
+			table.insert(custom_gameobject_rows, {n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes = v})
+		end
 
-	return create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', contents = {t}})
+		local t = {n=G.UIT.C, config={align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05, minw = 7}, nodes={
+			{n=G.UIT.R, config={align = "cm", padding = 0.15}, nodes = custom_gameobject_rows}
+		}}
+	
+		return create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', contents = {t}})
+	else
+		return nil
+	end
 end
 
 G.FUNCS.your_collection_consumables = function(e)
@@ -539,7 +564,7 @@ function create_UIBox_your_collection_stickers(exit)
 			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
 				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
 			card.ignore_pinned = true -- Scuffed solution to ignoring the effect of pinned, I'll figure out something better later
-			SMODS.Stickers[center.key]:set_sticker(card, true)
+			center:set_sticker(card, true)
 			G.your_collection[j]:emplace(card)
 			index = index + 1
 		end
@@ -633,7 +658,7 @@ G.FUNCS.your_collection_stickers_page = function(args)
 			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
 				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
 			card.ignore_pinned = true -- Scuffed solution to ignoring the effect of pinned, I'll figure out something better later
-			SMODS.Stickers[center.key]:set_sticker(card, true)
+			center:set_sticker(card, true)
 			G.your_collection[j]:emplace(card)
 		end
 	end
