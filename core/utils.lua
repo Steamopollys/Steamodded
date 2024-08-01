@@ -473,10 +473,16 @@ function SMODS.merge_defaults(t, defaults)
     return t
 end
 
--- Given a list `t` of numerically indexed table,
+-- Flatten the given arrays of arrays into one, then
 -- add elements of each table to a new table in order,
 -- skipping any duplicates.
-function SMODS.merge_lists(t)
+function SMODS.merge_lists(...)
+    local t = {}
+    for _, v in ipairs({...}) do
+        for _, vv in ipairs(v) do
+            table.insert(t, vv)
+        end
+    end
     local ret = {}
     local seen = {}
     for _, li in ipairs(t) do

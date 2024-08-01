@@ -1952,7 +1952,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.PokerHands = {}
     SMODS.PokerHand = SMODS.GameObject:extend {
         obj_table = SMODS.PokerHands,
-        obj_buffer = {},
+        obj_buffer = G.handlist,
         required_params = {
             'key',
             'mult',
@@ -1962,8 +1962,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             'example',
             'evaluate'
         },
-        order_lookup = {},
-        max_order = { value = 0 },
         visible = true,
         played = 0,
         played_this_round = 0,
@@ -1975,19 +1973,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         register = function(self)
             if self:check_dependencies() and not self.obj_table[self.key] then
-                if self.above_hand and self.obj_table[self.above_hand] then
-                    local j
-                    for i, v in ipairs(G.handlist) do
-                        if v == self.above_hand then j = i end
-                    end
-                    table.insert(G.handlist, j, self.key)
-                    self.order_lookup[self.above_hand] = (self.order_lookup[self.above_hand] or 0) - 0.001
-                    self.order = self.obj_table[self.above_hand].order + self.order_lookup[self.above_hand]
-                else
-                    self.max_order.value = self.max_order.value + 1
-                    self.order = self.max_order.value
-                    G.handlist[#G.handlist+1] = self.key
-                end
                 self.s_mult = self.mult
                 self.s_chips = self.chips
                 self.visible = self.visible
@@ -1998,7 +1983,19 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 self.obj_buffer[#self.obj_buffer + 1] = self.key
             end
         end,
-        inject = function(self) end
+        inject = function(self) end,
+        inject_class = function(self)
+            SMODS.PokerHand.super.inject_class(self)
+            table.sort(
+                self.obj_buffer,
+                function(a, b)
+                    local x, y = self.obj_table[a], self.obj_table[b]
+                    return (x.above_hand and 1e-6 * x.above_hand.mult * x.above_hand.chips or 0) + x.mult * x.chips >
+                        (y.above_hand and 1e-6 * y.above_hand.mult * y.above_hand.chips or 0) + y.mult * y.chips
+                end
+            )
+            for i, v in ipairs(self.obj_buffer) do self.obj_table[v].order = i end
+        end
     }
 
     SMODS.PokerHandPart {
@@ -2015,7 +2012,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     }
     -- all sets of 2 or more cards of same rank
     SMODS.PokerHandPart {
-        key = '_fh',
+        key = '_all_pairs',
         func = function(hand)
             local _2 = get_X_same(2, hand, true)
             if not next(_2) then return {} end
@@ -2033,28 +2030,28 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     local eval_functions = {
         ['Flush Five'] = function(parts)
             if not next(parts._5) or not next(parts._flush) then return {} end
-            return { SMODS.merge_lists { parts._5[1], parts._flush[1] }}
+            return { SMODS.merge_lists(parts._5, parts._flush) }
         end,
         ['Flush House'] = function(parts)
             if #parts._3 < 1 or #parts._2 < 2 or not next(parts._flush) then return {} end
-            return { SMODS.merge_lists { parts._fh[1], parts._flush[1] }}
+            return { SMODS.merge_lists(parts._all_pairs, parts._flush) }
         end, 
         ['Five of a Kind'] = function(parts) return parts._5 end,
         ['Straight Flush'] = function(parts)
             if not next(parts._straight) or not next(parts._flush) then return end
-            return { SMODS.merge_lists{ parts._straight[1], parts._flush[1] }}
+            return { SMODS.merge_lists(parts._straight, parts._flush) }
         end, 
         ['Four of a Kind'] = function(parts) return parts._4 end, 
         ['Full House'] = function(parts)
             if #parts._3 < 1 or #parts._2 < 2 then return {} end
-            return parts._fh
+            return parts._all_pairs
         end,
         ['Flush'] = function(parts) return parts._flush end,
         ['Straight'] = function(parts) return parts._straight end,
         ['Three of a Kind'] = function(parts) return parts._3 end, 
         ['Two Pair'] = function(parts)
             if #parts._2 < 2 then return {} end
-            return parts._fh
+            return parts._all_pairs
         end, 
         ['Pair'] = function(parts) return parts._2 end, 
         ['High Card'] = function(parts) return parts._highest end, 
