@@ -380,13 +380,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if file_path == 'DEFAULT' then return end
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/sounds/' .. file_path
-            local data = NFS.read('data', self.full_path)
-            local decoder = love.sound.newDecoder(data)
-            self.sound = love.audio.newSource(
-                decoder,
-                ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
-            )
-            G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, sound = self.sound, per = self.pitch, vol = self.volume })
+            self.data = NFS.read('data', self.full_path)
+            self.decoder = love.sound.newDecoder(self.data)
+            self.should_stream = string.find(self.key, 'music') or string.find(self.key, 'stream') or string.find(self.key, 'ambient')
+            self.sound = love.audio.newSource(self.decoder, self.should_stream and 'stream' or 'static')
+            G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, data = self.data, should_stream = self.should_stream, per = self.pitch, vol = self.volume })
         end,
         register_global = function(self)
             local mod = SMODS.current_mod
