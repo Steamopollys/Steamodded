@@ -1990,8 +1990,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 self.obj_buffer,
                 function(a, b)
                     local x, y = self.obj_table[a], self.obj_table[b]
-                    return (x.above_hand and 1e-6 * x.above_hand.mult * x.above_hand.chips or 0) + x.mult * x.chips >
-                        (y.above_hand and 1e-6 * y.above_hand.mult * y.above_hand.chips or 0) + y.mult * y.chips
+                    local x_above = self.obj_table[x.above_hand or {}]
+                    local y_above = self.obj_table[y.above_hand or {}]
+                    return (x_above and 1e-6 * x_above.mult * x_above.chips or 0) + x.mult * x.chips >
+                        (y_above and 1e-6 * y_above.mult * y_above.chips or 0) + y.mult * y.chips
                 end
             )
             for i, v in ipairs(self.obj_buffer) do self.obj_table[v].order = i end
