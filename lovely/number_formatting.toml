@@ -96,6 +96,8 @@ pattern = 'function number_format(num)'
 position = "at"
 payload = '''
 function number_format(num, e_switch_point)
+    if type(num) ~= 'number' then return num end
+
     local sign = (num >= 0 and "") or "-"
     num = math.abs(num)'''
 match_indent = true
