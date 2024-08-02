@@ -145,7 +145,8 @@ if num ~= math.floor(num) and num < 100 then
   if formatted:sub(-1) == "0" then
     formatted = formatted:gsub("%.?0+$", "")
   end
-  if num < 0.01 then formatted = tostring(num) end
+  -- Return already to avoid comas being added
+  if num < 0.01 then return tostring(num) end
 else 
   formatted = string.format("%.0f", num)
 end
