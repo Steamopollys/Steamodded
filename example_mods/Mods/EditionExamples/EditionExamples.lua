@@ -336,7 +336,7 @@ SMODS.Edition({
         }
     },
     no_shadow = true, -- This will stop shadow from being rendered under the card
-    override_shape = true, -- This will stop extra layer being rendered below the shader. Necessary for edition that modify shape of a card.
+    override_base_shader = true, -- This will stop extra layer being rendered below the shader. Necessary for edition that modify shape of a card.
     shader = "flipped",
     discovered = true,
     unlocked = true,

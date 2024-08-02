@@ -97,7 +97,7 @@ target = "card.lua"
 pattern = '''
 self\.ability\.effect ~= 'Glass Card' and not self\.greyed'''
 position = "after"
-payload = ''' and not (self.edition and self.edition.no_shadow)'''
+payload = ''' and self:should_draw_shadow() '''
 
 # If shader modifies shape of card, this will stop "back" layer of the card being rendered.
 # Card:draw()
@@ -108,11 +108,8 @@ pattern = '''
 elseif not self.greyed then'''
 position = "before"
 payload = '''
-elseif self.edition and self.edition.override_shape then
-    self.children.center:draw_shader(self.edition.override_shape, nil, self.ARGS.send_to_shader)
-    if self.children.front and self.ability.effect ~= 'Stone Card' then
-        self.children.front:draw_shader(self.edition.override_shape, nil, self.ARGS.send_to_shader)
-    end
+elseif not self:should_draw_base_shader() then
+    -- Don't render base dissolve shader.
 '''
 match_indent = true
 
@@ -126,7 +123,7 @@ pattern = '''
 if self.ability.set == 'Booster' or self.ability.set == 'Spectral' then'''
 position = "at"
 payload = '''
-if (self.ability.set == 'Booster' or self.ability.set == 'Spectral') and not (self.edition and self.edition.override_shape) then'''
+if (self.ability.set == 'Booster' or self.ability.set == 'Spectral') and self:should_draw_base_shader() then'''
 match_indent = true
 
 # Inject shaders applying to cards
@@ -140,7 +137,7 @@ pattern = '''
 [\t ]*end'''
 position = "at"
 payload = '''
-if self.edition and not self.edition.override_shape then
+if self.edition then
     for k, v in pairs(G.P_CENTER_POOLS.Edition) do
         if self.edition[v.key:sub(3)] then
             self.children.center:draw_shader(v.shader, nil, self.ARGS.send_to_shader)
