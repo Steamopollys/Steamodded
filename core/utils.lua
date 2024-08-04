@@ -586,22 +586,23 @@ end
 --#endregion
 
 
-function poll_seal(_key, _mod, _guaranteed, _options, _type_key)
-    _mod = _mod or 1
-    local seal_poll = pseudorandom(pseudoseed(_key or 'stdseal'..G.GAME.round_resets.ante))
-    -- If no _options provided, get all seal keys
-    if not _options then
-        _options = get_current_pool("Seal")
-	end
+function SMODS.poll_seal(args)
+    args = args or {}
+    local key = args.key or 'stdseal'
+    local mod = args.mod or 1
+    local guaranteed = args.guaranteed or false
+    local options = args.options or get_current_pool("Seal")
+    local type_key = args.type_key or key.."type"..G.GAME.round_resets.ante
+    key = key..G.GAME.round_resets.ante
 
     local available_seals = {}
     local total_weight = 0
-    for _, v in ipairs(_options) do
+    for _, v in ipairs(options) do
         if v ~= "UNAVAILABLE" then
             local seal_option = {}
             if type(v) == 'string' then
                 assert(G.P_SEALS[v])
-                seal_option = { name = v, weight = G.P_SEALS[v].weight or 25 }
+                seal_option = { name = v, weight = G.P_SEALS[v].weight or 5 } -- default weight set to 5 to replicate base game weighting
             elseif type(v) == 'table' then
                 assert(G.P_SEALS[v.name])
                 seal_option = { name = v.name, weight = v.weight }
@@ -612,13 +613,21 @@ function poll_seal(_key, _mod, _guaranteed, _options, _type_key)
             end
         end
 	end
+    total_weight = total_weight + (total_weight / 2 * 98) -- set base rate to 2%
 
-    if _guaranteed or seal_poll > 1 - (0.02*_mod) then
-        local seal_type_poll = pseudorandom(pseudoseed(_type_key and _type_key or _key and _key.."type" or 'stdsealtype'..G.GAME.round_resets.ante))
+    local type_weight = 0 -- modified weight total
+    for _,v in ipairs(available_seals) do
+        v.weight = G.P_SEALS[v.name].get_weight and G.P_SEALS[v.name]:get_weight() or v.weight
+        type_weight = type_weight + v.weight
+    end
+    
+    local seal_poll = pseudorandom(pseudoseed(key or 'stdseal'..G.GAME.round_resets.ante))
+    if seal_poll > 1 - (type_weight*mod / total_weight) or guaranteed then -- is a seal generated
+        local seal_type_poll = pseudorandom(pseudoseed(type_key)) -- which seal is generated
         local weight_i = 0
         for k, v in ipairs(available_seals) do
             weight_i = weight_i + v.weight
-            if seal_type_poll > 1 - (weight_i / total_weight) then
+            if seal_type_poll > 1 - (weight_i / type_weight) then
                 return v.name
             end
         end
