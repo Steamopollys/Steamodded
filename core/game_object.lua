@@ -210,7 +210,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             local end_time = love.timer.getTime()
             local n = #class.obj_buffer
             local alert = ('[%s] Injected %s in %.3f ms'):format(string.rep('0',4-#tostring(n))..n, class.set or 'nil', (end_time - start_time)*1000)
-            sendInfoMessage(alert)
+            sendInfoMessage(alert, 'TIMER')
             boot_print_stage(alert)
         else
             for _, subclass in ipairs(class.subclasses) do SMODS.injectObjects(subclass) end
