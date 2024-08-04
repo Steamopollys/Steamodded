@@ -22,7 +22,7 @@ pattern = '''
 position = 'at'
 line_prepend = '$indent'
 payload = '''
-card:set_seal(poll_seal(nil, 10))'''
+card:set_seal(SMODS.poll_seal({mod = 10}))'''
 
 # Card:calculate_joker()
 [[patches]]
@@ -37,7 +37,7 @@ pattern = '''
 [\n\t ]*end'''
 position = 'at'
 line_prepend = '$indent'
-payload = '''_card:set_seal(poll_seal(nil, nil, true, {'Red', 'Blue', 'Gold', 'Purple'}, 'certsl'))'''
+payload = '''_card:set_seal(SMODS.poll_seal({guaranteed = true, type_key = 'certsl'}))'''
 
 # get_badge_colour()
 [[patches]]
