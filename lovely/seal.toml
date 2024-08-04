@@ -203,14 +203,17 @@ payload = '''
 
 # Game:init_item_prototypes()
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = 'game.lua'
-pattern = '''table.sort(self.P_CENTER_POOLS["Seal"], function (a, b) return a.order < b.order end)'''
-position = 'after'
-match_indent = true
+pattern = '''(?<indent>[\t ]*)Gold =[ {A-z=1-4,"}\n]*},[\n\t ]*}'''
+position = 'at'
+line_prepend = '$indent'
 payload = '''
-table.insert(G.P_CENTER_POOLS.Seal, 4, G.P_CENTER_POOLS.Seal[1])
-table.remove(G.P_CENTER_POOLS.Seal, 1)
+Red = {order = 1,  discovered = false, set = "Seal"},
+Blue = {order = 2,  discovered = false, set = "Seal"},
+Gold = {order = 3,  discovered = false, set = "Seal"},
+Purple = {order = 4,  discovered = false, set = "Seal"},
+}
 '''
 
 # Card:set_seal()
