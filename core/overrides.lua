@@ -846,6 +846,29 @@ G.FUNCS.your_collection_editions_page = function(args)
 	end
 end
 
+-- Init custom card parameters.
+local card_init = Card.init
+function Card:init(X, Y, W, H, card, center, params)
+	card_init(self, X, Y, W, H, card, center, params)
+
+	-- This table contains object keys for layers (e.g. edition) 
+	-- that dont want base layer to be drawn.
+	-- When layer is removed, layer's value should be set to nil.
+	self.ignore_base_shader = self.ignore_base_shader or {}
+	-- This table contains object keys for layers (e.g. edition) 
+	-- that dont want shadow to be drawn.
+	-- When layer is removed, layer's value should be set to nil.
+	self.ignore_shadow = self.ignore_shadow or {}
+end
+
+function Card:should_draw_base_shader()
+	return not next(self.ignore_base_shader or {})
+end
+
+function Card:should_draw_shadow()
+	return not next(self.ignore_shadow or {})
+end
+
 -- self = pass the card
 -- edition =
 -- nil (removes edition)
@@ -864,6 +887,12 @@ function Card:set_edition(edition, immediate, silent)
 		elseif self.area == G.hand then
 			G.hand.config.card_limit = G.hand.config.card_limit - self.edition.card_limit
 		end
+	end
+
+	local old_edition = self.edition and self.edition.key
+	if old_edition then
+		self.ignore_base_shader[old_edition] = nil
+		self.ignore_shadow[old_edition] = nil
 	end
 
 	local edition_type = nil
@@ -909,7 +938,16 @@ function Card:set_edition(edition, immediate, silent)
 	self.edition.type = edition_type
 	self.edition.key = 'e_' .. edition_type
 
-	for k, v in pairs(G.P_CENTERS['e_' .. edition_type].config) do
+	local p_edition = G.P_CENTERS['e_' .. edition_type]
+
+	if p_edition.override_base_shader then
+		self.ignore_base_shader[self.edition.key] = true
+	end
+	if p_edition.no_shadow then
+		self.ignore_shadow[self.edition.key] = true
+	end
+
+	for k, v in pairs(p_edition.config) do
 		if type(v) == 'table' then
 			self.edition[k] = copy_table(v)
 		else

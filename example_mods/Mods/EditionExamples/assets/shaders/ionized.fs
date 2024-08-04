@@ -4,10 +4,12 @@
     #define PRECISION mediump
 #endif
 
-// change this variable name to your Edition's name
+// !! change this variable name to your Shader's name
 // YOU MUST USE THIS VARIABLE IN THE vec4 effect AT LEAST ONCE
-// ^^ CRITICALLY IMPORTANT (IDK WHY) <- because compiler optimization
-// Card rotation
+
+// Values of this variable:
+// self.ARGS.send_to_shader[1] = math.min(self.VT.r*3, 1) + (math.sin(G.TIMERS.REAL/28) + 1) + (self.juice and self.juice.r*20 or 0) + self.tilt_var.amt
+// self.ARGS.send_to_shader[2] = G.TIMERS.REAL
 extern PRECISION vec2 ionized;
 
 extern PRECISION number dissolve;
