@@ -3,7 +3,7 @@
 --- MOD_ID: LabyrinthDeck
 --- MOD_AUTHOR: [MathIsFun_]
 --- MOD_DESCRIPTION: Implements an unused deck hidden in the game's textures
---- LOADER_VERSION_GEQ: 1.0.0
+--- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA]
 
 ----------------------------------------------
 ------------MOD CODE -------------------------

@@ -1,8 +1,13 @@
 --- STEAMODDED CORE
 --- MODULE MODLOADER
 
+SMODS.id = 'Steamodded'
+SMODS.version = MODDED_VERSION:gsub('%-STEAMODDED', '')
+SMODS.can_load = true
+
 function loadMods(modsDirectory)
     SMODS.Mods = {}
+    SMODS.Mods[SMODS.id] = SMODS
     SMODS.mod_priorities = {}
     SMODS.mod_list = {}
     local header_components = {
@@ -15,7 +20,11 @@ function loadMods(modsDirectory)
         badge_text_colour   = { pattern = '%-%-%- BADGE_TEXT_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or 'FFFFFF') end },
         display_name  = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
         dependencies  = {
-            pattern = '%-%-%- DEPENDENCIES: %[(.-)%]\n',
+            pattern = {
+                '%-%-%- DEPENDENCIES: %[(.-)%]\n',
+                '%-%-%- DEPENDS: %[(.-)%]\n',
+                '%-%-%- DEPS: %[(.-)%]\n',
+            },
             parse_array = true,
             handle = function(x)
                 local t = {}
@@ -40,24 +49,15 @@ function loadMods(modsDirectory)
                         v_geq = v:match '>=([^<>]+)',
                         v_leq = v:match '<=([^<>]+)',
                     })
+                    if t.v_geq and not V(t[#t].v_geq):is_valid() then t[#t].v_geq = nil end
+                    if t.v_leq and not V(t[#t].v_leq):is_valid() then t[#t].v_leq = nil end
                 end
+                
                 return t
             end
         },
         prefix        = { pattern = '%-%-%- PREFIX: (.-)\n' },
-        version       = { pattern = '%-%-%- VERSION: (.-)\n', handle = function(x) return x or '0.0.0' end },
-        l_version_geq = {
-            pattern = '%-%-%- LOADER_VERSION_GEQ: (.-)\n',
-            handle = function(x)
-                return x and x:gsub('%-STEAMODDED', '')
-            end
-        },
-        l_version_leq = {
-            pattern = '%-%-%- LOADER_VERSION_LEQ: (.-)\n',
-            handle = function(x)
-                return x and x:gsub('%-STEAMODDED', '')
-            end
-        },
+        version       = { pattern = '%-%-%- VERSION: (.-)\n', handle = function(x) return x and V(x):is_valid() and x or '0.0.0' end },
         outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } },
         dump_loc      = { pattern = { '%-%-%- DUMP_LOCALIZATION\n'}}
     }
@@ -190,8 +190,8 @@ function loadMods(modsDirectory)
             -- block load even if the conflict is also blocked
             if
                 SMODS.Mods[v.id] and
-                (not v.v_leq or SMODS.Mods[v.id].version <= v.v_leq) and
-                (not v.v_geq or SMODS.Mods[v.id].version >= v.v_geq)
+                (not v.v_leq or V(SMODS.Mods[v.id].version) <= V(v.v_leq)) and
+                (not v.v_geq or V(SMODS.Mods[v.id].version) >= V(v.v_geq))
             then
                 can_load = false
                 table.insert(load_issues.conflicts, v.id..(v.v_leq and '<='..v.v_leq or '')..(v.v_geq and '>='..v.v_geq or ''))
@@ -202,12 +202,15 @@ function loadMods(modsDirectory)
             if
                 not SMODS.Mods[v.id] or
                 not check_dependencies(SMODS.Mods[v.id], seen) or
-                (v.v_leq and SMODS.Mods[v.id].version > v.v_leq) or
-                (v.v_geq and SMODS.Mods[v.id].version < v.v_geq)
+                (v.v_leq and V(SMODS.Mods[v.id].version) > V(v.v_leq)) or
+                (v.v_geq and V(SMODS.Mods[v.id].version) < V(v.v_geq))
             then
                 can_load = false
                 table.insert(load_issues.dependencies,
                     v.id .. (v.v_geq and '>=' .. v.v_geq or '') .. (v.v_leq and '<=' .. v.v_leq or ''))
+                if v.id == 'Steamodded' then
+                    load_issues.version_mismatch = ''..(v.v_geq and '>='..v.v_geq or '')..(v.v_leq and '<='..v.v_leq or '')
+                end
             end
         end
         if mod.outdated then
@@ -216,14 +219,6 @@ function loadMods(modsDirectory)
         if mod.disabled then
             can_load = false
             load_issues.disabled = true
-        end
-        local loader_version = MODDED_VERSION:gsub('%-STEAMODDED', '')
-        if
-            (mod.l_version_geq and loader_version < mod.l_version_geq) or
-            (mod.l_version_leq and loader_version > mod.l_version_geq)
-        then
-            can_load = false
-            load_issues.version_mismatch = ''..(mod.l_version_geq and '>='..mod.l_version_geq or '')..(mod.l_version_leq and '<='..mod.l_version_leq or '')
         end
         if not can_load then
             mod.load_issues = load_issues

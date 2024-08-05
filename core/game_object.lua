@@ -338,6 +338,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         px = 34,
         py = 34,
     }
+    SMODS.Atlas {
+        key = 'achievements',
+        path = 'default_achievements.png',
+        px = 66,
+        py = 66,
+    }
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Sound
@@ -1743,7 +1749,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _suit = pseudorandom_element(SMODS.Suit.obj_buffer, pseudoseed('sigil'))
+            local _suit = pseudorandom_element(SMODS.Suits, pseudoseed('sigil'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
@@ -1770,12 +1776,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _rank = pseudorandom_element(SMODS.Rank.obj_buffer, pseudoseed('ouija'))
+            local _rank = pseudorandom_element(SMODS.Ranks, pseudoseed('ouija'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
                         local _card = G.hand.cards[i]
-                        assert(SMODS.change_base(_card, nil, _rank))
+                        assert(SMODS.change_base(_card, nil, _rank.key))
                         return true
                     end
                 }))
@@ -2698,7 +2704,43 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(_) end
     }
 
-    
+    -------------------------------------------------------------------------------------------------
+    ------- API CODE GameObject.Achievements
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Achievements = {}
+    SMODS.Achievement = SMODS.GameObject:extend{
+        obj_table = SMODS.Achievements,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'unlock_condition',
+        },
+        set = 'Achievement',
+        class_prefix = "ach",
+        atlas = "achievements",
+        pos = {x=1, y=0},
+        hidden_pos = {x=0, y=0},
+        bypass_all_unlocked = false,
+        hidden_name = true,
+        steamid = "STEAMODDED",
+        inject_class = function(self)
+            fetch_achievements()
+            SMODS.GameObject.inject_class(self)
+        end,
+        inject = function(self)
+            G.ACHIEVEMENTS[self.key] = self
+            if self.reset_on_startup then
+                if G.SETTINGS.ACHIEVEMENTS_EARNED[self.key] then G.SETTINGS.ACHIEVEMENTS_EARNED[self.key] = nil end
+                if G.ACHIEVEMENTS[self.key].earned then G.ACHIEVEMENTS[self.key].earned = nil end
+            end
+        end,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.misc.achievement_names, self.key, self.loc_txt, "name")
+            SMODS.process_loc_text(G.localization.misc.achievement_descriptions, self.key, self.loc_txt, "description")
+        end,
+    }
+
     -------------------------------------------------------------------------------------------------
     ----- INTERNAL API CODE GameObject._Loc_Post
     -------------------------------------------------------------------------------------------------

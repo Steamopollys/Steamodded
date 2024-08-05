@@ -3,7 +3,7 @@
 --- MOD_ID: DeckOf4
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Create a special deck that only contains 4s!
---- LOADER_VERSION_GEQ: 1.0.0
+--- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA-0731a]
 
 ----------------------------------------------
 ------------MOD CODE -------------------------
