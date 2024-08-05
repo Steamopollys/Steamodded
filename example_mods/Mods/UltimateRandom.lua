@@ -3,7 +3,7 @@
 --- MOD_ID: UltimateRandomDeck
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Ultimate Random Deck!
---- LOADER_VERSION_GEQ: 1.0.0
+--- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA]
 
 ----------------------------------------------
 ------------MOD CODE -------------------------

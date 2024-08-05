@@ -1751,7 +1751,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _suit = pseudorandom_element(SMODS.Suit.obj_buffer, pseudoseed('sigil'))
+            local _suit = pseudorandom_element(SMODS.Suits, pseudoseed('sigil'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
@@ -1778,12 +1778,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _rank = pseudorandom_element(SMODS.Rank.obj_buffer, pseudoseed('ouija'))
+            local _rank = pseudorandom_element(SMODS.Ranks, pseudoseed('ouija'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
                         local _card = G.hand.cards[i]
-                        assert(SMODS.change_base(_card, nil, _rank))
+                        assert(SMODS.change_base(_card, nil, _rank.key))
                         return true
                     end
                 }))
