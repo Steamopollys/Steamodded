@@ -349,3 +349,21 @@ target = 'functions/UI_definitions.lua'
 pattern = '''(?<indent>[\t ]*)UIBox_button\(\{button = 'your_collection_blinds', label = \{localize\('b_blinds'\)\}, count = G\.DISCOVER_TALLIES\.blinds, minw = 5, minh = 2.0, id = 'your_collection_blinds', focus_args = \{snap_to = true\}\}\),'''
 position = 'after'
 payload = '''UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}, func = 'is_other_gameobject_tabs'}),'''
+
+# Fix UIElement.config.chosen being overriden if choice=true is set
+# UIElement:click()
+[[patches]]
+[patches.pattern]
+target = "engine/ui.lua"
+match_indent = true
+position = "after"
+pattern = "if self.config.choice then"
+payload = "    local chosen_temp = self.config.chosen"
+
+[[patches]]
+[patches.pattern]
+target = "engine/ui.lua"
+match_indent = true
+position = "at"
+pattern = "self.config.chosen = true"
+payload = "self.config.chosen = chosen_temp or true"

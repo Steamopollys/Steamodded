@@ -691,8 +691,6 @@ function G.FUNCS.mods_buttons_page(options)
     end
 end
 
-SMODS.id = 'Steamodded'
-
 function SMODS.load_mod_config(mod)
 	local config = load(NFS.read(('config/%s.jkr'):format(mod.id)) or 'return {}', ('=[SMODS %s "config"]'):format(mod.id))()
 	local default_config = load(NFS.read(('%sconfig.lua'):format(mod.path)) or 'return {}', ('=[SMODS %s "default_config"]'):format(mod.id))()
@@ -701,14 +699,15 @@ function SMODS.load_mod_config(mod)
 	for k, v in pairs(config) do mod.config[k] = v end
 	return mod.config
 end
+SMODS:load_mod_config()
 function SMODS.save_mod_config(mod)
+	NFS.createDirectory('config')
 	if not mod.config or not next(mod.config) then return false end
 	local serialized = 'return '..serialize(mod.config)
 	assert(NFS.write(('config/%s.jkr'):format(mod.id), serialized))
 	return true
 end
 function SMODS.save_all_config()
-	NFS.createDirectory('config')
 	SMODS:save_mod_config()
 	for _, v in ipairs(SMODS.mod_list) do
 		if v.can_load then 
@@ -895,7 +894,20 @@ function create_UIBox_mods_button()
 												label = localize('b_disable_mod_badges'),
 												ref_table = SMODS.config,
 												ref_value = 'no_mod_badges',
-											}
+											},
+											create_option_cycle {
+												options = {
+													"Trace",
+													"Debug",
+													"Info",
+													"Warning",
+													"Error",
+												},
+												current_option = SMODS.config.log_level or 3,
+												label = "Log Level",
+												scale = 0.8,
+												opt_callback = 'SMODS_log_level'
+											},
 										}
 									}
 								end
@@ -908,6 +920,9 @@ function create_UIBox_mods_button()
 	}))
 end
 
+G.FUNCS.SMODS_log_level = function(args)
+	SMODS.config.log_level = args.to_key
+end
 function G.FUNCS.steamodded_github(e)
 	love.system.openURL("https://github.com/Steamopollys/Steamodded")
 end

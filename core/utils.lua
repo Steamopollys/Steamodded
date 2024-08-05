@@ -313,6 +313,15 @@ function SMODS.create_card(t)
     return _card
 end
 
+function SMODS.debuff_card(card, debuff, source)
+    debuff = debuff or nil
+    source = source and tostring(source) or nil
+    if debuff == 'reset' then card.ability.debuff_sources = {}; return end
+    card.ability.debuff_sources = card.ability.debuff_sources or {}
+    card.ability.debuff_sources[source] = debuff
+    card:set_debuff()
+end
+
 -- Recalculate whether a card should be debuffed
 function SMODS.recalc_debuff(card)
     G.GAME.blind:debuff_card(card)
@@ -320,7 +329,7 @@ end
 
 function SMODS.restart_game()
     if love.system.getOS() ~= 'OS X' then
-        love.thread.newThread("os.execute(...)\n"):start(arg[-2] .. " " .. table.concat(arg, " "))
+        love.thread.newThread("os.execute(...)\n"):start('"' .. arg[-2] .. '" ' .. table.concat(arg, " "))
     else
         os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
     end
@@ -472,6 +481,40 @@ function SMODS.merge_defaults(t, defaults)
     end
     return t
 end
+V_MT = {
+    __eq = function(a, b)
+        return a.major == b.major and
+        a.minor == b.minor and
+        a.patch == b.patch and
+        a.rev == b.rev
+    end,
+    __le = function(a, b)
+        if a.major ~= b.major then return a.major < b.major end
+        if a.minor ~= b.minor then return a.minor < b.minor end
+        if a.patch ~= b.patch then return a.patch < b.patch end
+        return a.rev <= b.rev
+    end,
+    __lt = function(a, b)
+        return a <= b and not (a == b)
+    end,
+    __call = function(_, str)
+        str = str or '0.0.0'
+        local _, _, major, minor, patch, rev = string.find(str, '^(%d-)%.(%d+)%.?(%d*)(.*)$')
+        local t = {
+            major = tonumber(major),
+            minor = tonumber(minor),
+            patch = tonumber(patch) or 0,
+            rev = rev,
+        }
+        return setmetatable(t, V_MT)
+    end
+}
+V = setmetatable({}, V_MT)
+V_MT.__index = V
+function V.is_valid(v)
+    if getmetatable(v) ~= V_MT then return false end
+    return(pcall(function() return V() <= v end))
+end
 
 --#region palettes
 G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
@@ -599,3 +642,52 @@ function format_ui_value(value)
 end
 
 --#endregion
+
+
+function SMODS.poll_seal(args)
+    args = args or {}
+    local key = args.key or 'stdseal'
+    local mod = args.mod or 1
+    local guaranteed = args.guaranteed or false
+    local options = args.options or get_current_pool("Seal")
+    local type_key = args.type_key or key.."type"..G.GAME.round_resets.ante
+    key = key..G.GAME.round_resets.ante
+
+    local available_seals = {}
+    local total_weight = 0
+    for _, v in ipairs(options) do
+        if v ~= "UNAVAILABLE" then
+            local seal_option = {}
+            if type(v) == 'string' then
+                assert(G.P_SEALS[v])
+                seal_option = { name = v, weight = G.P_SEALS[v].weight or 5 } -- default weight set to 5 to replicate base game weighting
+            elseif type(v) == 'table' then
+                assert(G.P_SEALS[v.name])
+                seal_option = { name = v.name, weight = v.weight }
+            end
+            if seal_option.weight > 0 then
+                table.insert(available_seals, seal_option)
+                total_weight = total_weight + seal_option.weight
+            end
+        end
+	end
+    total_weight = total_weight + (total_weight / 2 * 98) -- set base rate to 2%
+
+    local type_weight = 0 -- modified weight total
+    for _,v in ipairs(available_seals) do
+        v.weight = G.P_SEALS[v.name].get_weight and G.P_SEALS[v.name]:get_weight() or v.weight
+        type_weight = type_weight + v.weight
+    end
+    
+    local seal_poll = pseudorandom(pseudoseed(key or 'stdseal'..G.GAME.round_resets.ante))
+    if seal_poll > 1 - (type_weight*mod / total_weight) or guaranteed then -- is a seal generated
+        local seal_type_poll = pseudorandom(pseudoseed(type_key)) -- which seal is generated
+        local weight_i = 0
+        for k, v in ipairs(available_seals) do
+            weight_i = weight_i + v.weight
+            if seal_type_poll > 1 - (weight_i / type_weight) then
+                return v.name
+            end
+        end
+    end
+end

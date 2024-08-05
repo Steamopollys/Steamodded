@@ -133,7 +133,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         local o = nil
         for i, key in ipairs(self.obj_buffer) do
             o = self.obj_table[key]
-            boot_print_stage(('Injecting %s: %s'):format(o.set, o.key))
             o.atlas = o.atlas or o.set
 
             if o._discovered_unlocked_overwritten then
@@ -150,7 +149,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             -- Setup Localize text
             o:process_loc_text()
 
-            sendInfoMessage(
+            sendTraceMessage(
                 ('Injected game object %s of type %s')
                 :format(o.key, o.set), o.set or 'GameObject'
             )
@@ -206,7 +205,13 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     -- Inject all SMODS Objects that are part of this class or a subclass.
     function SMODS.injectObjects(class)
         if class.obj_table and class.obj_buffer then
+            local start_time = love.timer.getTime()
             class:inject_class()
+            local end_time = love.timer.getTime()
+            local n = #class.obj_buffer
+            local alert = ('[%s] Injected %s in %.3f ms'):format(string.rep('0',4-#tostring(n))..n, class.set or 'nil', (end_time - start_time)*1000)
+            sendInfoMessage(alert, 'TIMER')
+            boot_print_stage(alert)
         else
             for _, subclass in ipairs(class.subclasses) do SMODS.injectObjects(subclass) end
         end
@@ -232,6 +237,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.Languages = {}
     SMODS.Language = SMODS.GameObject:extend {
         obj_table = SMODS.Languages,
+        set = 'Language',
         obj_buffer = {},
         required_params = {
             'key',
@@ -262,6 +268,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         obj_table = {},
         obj_buffer = {},
         silent = true,
+        set = '[INTERNAL]',
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         inject_class = function()
             SMODS.handle_loc_file(SMODS.path)
@@ -341,6 +348,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.Sounds = {}
     SMODS.Sound = SMODS.GameObject:extend {
         obj_buffer = {},
+        set = 'Sound',
         obj_table = SMODS.Sounds,
         stop_sounds = {},
         replace_sounds = {},
@@ -374,13 +382,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if file_path == 'DEFAULT' then return end
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/sounds/' .. file_path
-            local data = NFS.read('data', self.full_path)
-            local decoder = love.sound.newDecoder(data)
-            self.sound = love.audio.newSource(
-                decoder,
-                ((string.find(self.key, 'music') or string.find(self.key, 'stream')) and "stream" or 'static')
-            )
-            G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, sound = self.sound, per = self.pitch, vol = self.volume, no_sync = self.no_sync })
+            self.data = NFS.read('data', self.full_path)
+            self.decoder = love.sound.newDecoder(self.data)
+            self.should_stream = string.find(self.key, 'music') or string.find(self.key, 'stream') or string.find(self.key, 'ambient')
+            self.sound = love.audio.newSource(self.decoder, self.should_stream and 'stream' or 'static')
+            G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, data = self.data, should_stream = self.should_stream, per = self.pitch, vol = self.volume })
         end,
         register_global = function(self)
             local mod = SMODS.current_mod
@@ -937,6 +943,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.Center = SMODS.GameObject:extend {
         obj_table = SMODS.Centers,
         obj_buffer = {},
+        set = 'Center', -- For logging purposes | Subclasses should change this
         get_obj = function(self, key) return G.P_CENTERS[key] end,
         register = function(self)
             -- 0.9.8 defense
@@ -1281,6 +1288,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.UndiscoveredSprite = SMODS.GameObject:extend {
         obj_buffer = {},
         obj_table = SMODS.UndiscoveredSprites,
+        set = 'Undiscovered Sprite',
         inject_class = function() end,
         prefix_config = { key = false },
         required_params = {
@@ -1737,7 +1745,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _suit = pseudorandom_element(SMODS.Suit.obj_buffer, pseudoseed('sigil'))
+            local _suit = pseudorandom_element(SMODS.Suits, pseudoseed('sigil'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
@@ -1764,12 +1772,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         use = function(self, card, area, copier)
             local used_tarot = copier or card
             juice_flip(used_tarot)
-            local _rank = pseudorandom_element(SMODS.Rank.obj_buffer, pseudoseed('ouija'))
+            local _rank = pseudorandom_element(SMODS.Ranks, pseudoseed('ouija'))
             for i = 1, #G.hand.cards do
                 G.E_MANAGER:add_event(Event({
                     func = function()
                         local _card = G.hand.cards[i]
-                        assert(SMODS.change_base(_card, nil, _rank))
+                        assert(SMODS.change_base(_card, nil, _rank.key))
                         return true
                     end
                 }))
@@ -2624,6 +2632,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS._Loc_Post = SMODS.GameObject:extend {
         obj_table = {},
         obj_buffer = {},
+        set = '[INTERNAL]',
         silent = true,
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         inject_class = function()
