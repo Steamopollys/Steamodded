@@ -701,13 +701,13 @@ function SMODS.load_mod_config(mod)
 end
 SMODS:load_mod_config()
 function SMODS.save_mod_config(mod)
+	NFS.createDirectory('config')
 	if not mod.config or not next(mod.config) then return false end
 	local serialized = 'return '..serialize(mod.config)
 	assert(NFS.write(('config/%s.jkr'):format(mod.id), serialized))
 	return true
 end
 function SMODS.save_all_config()
-	NFS.createDirectory('config')
 	SMODS:save_mod_config()
 	for _, v in ipairs(SMODS.mod_list) do
 		if v.can_load then 
