@@ -701,6 +701,7 @@ function SMODS.load_mod_config(mod)
 	for k, v in pairs(config) do mod.config[k] = v end
 	return mod.config
 end
+SMODS:load_mod_config()
 function SMODS.save_mod_config(mod)
 	if not mod.config or not next(mod.config) then return false end
 	local serialized = 'return '..serialize(mod.config)
@@ -895,7 +896,20 @@ function create_UIBox_mods_button()
 												label = localize('b_disable_mod_badges'),
 												ref_table = SMODS.config,
 												ref_value = 'no_mod_badges',
-											}
+											},
+											create_option_cycle {
+												options = {
+													"Trace",
+													"Debug",
+													"Info",
+													"Warning",
+													"Error",
+												},
+												current_option = SMODS.config.log_level or 3,
+												label = "Log Level",
+												scale = 0.8,
+												opt_callback = 'SMODS_log_level'
+											},
 										}
 									}
 								end
@@ -908,6 +922,9 @@ function create_UIBox_mods_button()
 	}))
 end
 
+G.FUNCS.SMODS_log_level = function(args)
+	SMODS.config.log_level = args.to_key
+end
 function G.FUNCS.steamodded_github(e)
 	love.system.openURL("https://github.com/Steamopollys/Steamodded")
 end

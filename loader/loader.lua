@@ -90,7 +90,7 @@ function loadMods(modsDirectory)
                 -- Check the header lines using string.match
                 local headerLine = file_content:match("^(.-)\n")
                 if headerLine == "--- STEAMODDED HEADER" then
-                    boot_print_stage('Processing Mod File: ' .. filename)
+                    sendTraceMessage('Processing Mod File: ' .. filename)
                     local mod = {}
                     local sane = true
                     for k, v in pairs(header_components) do
@@ -141,7 +141,7 @@ function loadMods(modsDirectory)
                     end
 
                     if sane then
-                        boot_print_stage('Saving Mod Info: ' .. mod.id)
+                        sendTraceMessage('Saving Mod Info: ' .. mod.id)
                         mod.path = directory .. '/'
                         mod.main_file = filename
                         mod.display_name = mod.display_name or mod.name
@@ -165,6 +165,7 @@ function loadMods(modsDirectory)
         end
     end
 
+    boot_print_stage('Processing Mod Files')
     -- Start processing with the initial directory at depth 1
     processDirectory(modsDirectory, 1)
 
@@ -237,6 +238,7 @@ function loadMods(modsDirectory)
     -- check dependencies first (for object dependencies)
     for _, mod in pairs(SMODS.Mods) do mod.can_load = check_dependencies(mod) end
 
+    boot_print_stage('Loading Mods')
     -- load the mod files
     for _, priority in ipairs(keyset) do
         table.sort(SMODS.mod_priorities[priority],
@@ -246,7 +248,6 @@ function loadMods(modsDirectory)
         for _, mod in ipairs(SMODS.mod_priorities[priority]) do
             SMODS.mod_list[#SMODS.mod_list + 1] = mod -- keep mod list in prioritized load order
             if mod.can_load then
-                boot_print_stage('Loading Mod: ' .. mod.id)
                 SMODS.current_mod = mod
                 if mod.outdated then
                     SMODS.compat_0_9_8.with_compat(function()
@@ -264,8 +265,7 @@ function loadMods(modsDirectory)
                 end
                 SMODS.current_mod = nil
             else
-                boot_print_stage('Failed to load Mod: ' .. mod.id)
-                sendWarnMessage(string.format("Mod %s was unable to load: %s%s%s", mod.id,
+                sendTraceMessage(string.format("Mod %s was unable to load: %s%s%s", mod.id,
                     mod.load_issues.outdated and
                     'Outdated: Steamodded versions 0.9.8 and below are no longer supported!\n' or '',
                     next(mod.load_issues.dependencies) and
@@ -319,7 +319,6 @@ end
 
 local function initializeModUIFunctions()
     for id, modInfo in pairs(SMODS.mod_list) do
-        boot_print_stage("Initializing Mod UI: " .. modInfo.id)
         G.FUNCS["openModUI_" .. modInfo.id] = function(arg_736_0)
             G.ACTIVE_MOD_UI = modInfo
             G.FUNCS.overlay_menu({
@@ -331,11 +330,8 @@ end
 
 function initSteamodded()
     initGlobals()
-    boot_print_stage("Loading Steamodded config")
-    SMODS:load_mod_config()
     boot_print_stage("Loading APIs")
     loadAPIs()
-    boot_print_stage("Loading Mods")
     loadMods(SMODS.MODS_DIR)
     initializeModUIFunctions()
     boot_print_stage("Injecting Items")

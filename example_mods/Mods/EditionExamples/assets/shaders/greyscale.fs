@@ -4,7 +4,7 @@
 	#define PRECISION mediump
 #endif
 
-// Card rotation
+// Look ionized.fs for explanation
 extern PRECISION vec2 greyscale;
 
 extern PRECISION number dissolve;
