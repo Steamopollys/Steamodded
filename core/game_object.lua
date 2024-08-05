@@ -2170,16 +2170,16 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end
     }
 
-    -- Create base game 
-    -- sticker_check is set to nil on all since they'd use base game checks for application
+    -- Create base game stickers
+    -- eternal and perishable follow shared checks for sticker application, therefore omitted 
     SMODS.Sticker{
         key = "eternal",
         badge_colour = HEX 'c75985',
         prefix_config = {key = false},
         pos = { x = 0, y = 0 },
-        sticker_check = nil, 
         hide_badge = true,
         order = 1,
+        sticker_check = false,
     }
 
     SMODS.Sticker{
@@ -2187,12 +2187,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         badge_colour = HEX '4f5da1',
         prefix_config = {key = false},
         pos = { x = 0, y = 2 },
-        sticker_check = nil,
         hide_badge = true,
         order = 2,
+        sticker_check = false,
         set_sticker = function(self, card, val)
             card.ability[self.key] = val
-            if val == true then card.ability.perish_tally = G.GAME.perishable_rounds end
+            if card.ability[self.key] then card.ability.perish_tally = G.GAME.perishable_rounds end
         end,
         loc_vars = function(self, info_queue, card)
             return {vars = {card.ability.perishable_rounds or 5, card.ability.perish_tally or G.GAME.perishable_rounds}}
@@ -2204,12 +2204,23 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         badge_colour = HEX 'b18f43',
         prefix_config = {key = false},
         pos = { x = 1, y = 2 },
-        sticker_check = nil,
         hide_badge = true,
         order = 3,
+        sticker_check = function(self, card, center, area)
+            if (
+                center[self.key..'_compat'] or -- explicit marker
+                (self.default_compat and not self.compat_exceptions[center.key]) or -- default yes with no exception
+                (not self.default_compat and self.compat_exceptions[center.key]) -- default no with exception
+            ) and 
+            (not self.needs_enable_flag or G.GAME.modifiers['enable_'..self.key]) and
+            pseudorandom((area == G.pack_cards and 'packssjr' or 'ssjr')..G.GAME.round_resets.ante) > (1-self.rate)
+            then
+                return true
+            end
+        end,
         set_sticker = function(self, card, val)
             card.ability[self.key] = val
-            if val == true then card:set_cost() end
+            if card.ability[self.key] then card:set_cost() end
         end,
         loc_vars = function(self, info_queue, card)
             return {vars = {G.GAME.rental_rate or 1}}
@@ -2221,7 +2232,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         badge_colour = HEX 'fda200',
         prefix_config = {key = false},
         pos = { x = 10, y = 10 }, -- Base game has no art, and I haven't made any yet to represent Pinned with
-        sticker_check = nil, 
+        sticker_check = false, 
         order = 4,
         set_sticker = function(self, card, val)
             card[self.key] = val

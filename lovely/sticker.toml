@@ -58,7 +58,7 @@ payload = '''
 for k, v in ipairs(SMODS.Sticker.obj_buffer) do
     local sticker = SMODS.Stickers[v]
     -- Temp name, change later
-    if sticker.sets[_type] and sticker:sticker_check(card, center, area) then
+    if sticker.sets[_type] and (sticker.sticker_check and type(sticker.sticker_check) == 'function') and sticker:sticker_check(card, center, area) then
         sticker:set_sticker(card, true)
     end
 end'''
