@@ -556,7 +556,7 @@ function buildAchievementsTab(mod, current_page)
 
 		-- Description
 		local achievement_text = {}
-		local maxCharsPerLine = 20
+		local maxCharsPerLine = 25
 		local function wrapText(text, maxChars)
 			local wrappedText = {""}
 			local curr_line = 1
@@ -590,8 +590,8 @@ function buildAchievementsTab(mod, current_page)
 		end
 		max_lines = math.max(max_lines, #ability_text)
 		achievement_text[#achievement_text + 1] =
-		{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, minw = 3, maxw = 3, padding = 0.05, colour = G.C.WHITE, minh = 0.4*max_lines+0.1}, nodes={
-			ability_text[1] and {n=G.UIT.R, config={align = "cm", padding = 0.08, colour = G.C.GREY, r = 0.1, emboss = 0.05, minw = 2.9, maxw = 2.9, minh = 0.4*max_lines}, nodes=ability_text} or nil
+		{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, minw = 3.5, maxw = 3.5, padding = 0.05, colour = G.C.WHITE, minh = 0.4*max_lines+0.1}, nodes={
+			ability_text[1] and {n=G.UIT.R, config={align = "cm", padding = 0.08, colour = G.C.GREY, r = 0.1, emboss = 0.05, minw = 3.4, maxw = 3.4, minh = 0.4*max_lines}, nodes=ability_text} or nil
 		}}
 
 		table.insert(achievement_matrix[row], {
@@ -601,9 +601,9 @@ function buildAchievementsTab(mod, current_page)
 				{n=G.UIT.R, config = {align = "cm"}, nodes = {
 					{n=G.UIT.R, config = {align = "cm", padding = 0.1}, nodes = {{ n = G.UIT.O, config = { object = temp_achievement, focus_with_object = true }}}},
 					{
-						n=G.UIT.R, config = {align = "cm", minw = 3, maxw = 3, padding = 0.05}, nodes = {
+						n=G.UIT.R, config = {align = "cm", minw = 3.5, maxw = 3.5, padding = 0.05}, nodes = {
 							{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, padding = 0.1, minh = 0.6, colour = G.C.GREY}, nodes={
-								{n=G.UIT.O, config={align = "cm", maxw = 2.7, object = DynaText({string = loc_name, maxw = 2.7, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, spacing = 1, bump = true, scale = 0.4})}},
+								{n=G.UIT.O, config={align = "cm", maxw = 3.3, object = DynaText({string = loc_name, maxw = 3.3, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, spacing = 1, bump = true, scale = 0.4})}},
 							}},
 							{n=G.UIT.R, config={align = "cm"}, nodes=achievement_text},
 						},
