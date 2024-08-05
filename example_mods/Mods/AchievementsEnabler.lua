@@ -3,7 +3,7 @@
 --- MOD_ID: AchievementsEnabler
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Mod to activate Achievements
---- LOADER_VERSION_GEQ: 1.0.0
+--- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA]
 
 ----------------------------------------------
 ------------MOD CODE -------------------------

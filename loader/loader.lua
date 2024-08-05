@@ -1,8 +1,13 @@
 --- STEAMODDED CORE
 --- MODULE MODLOADER
 
+SMODS.id = 'Steamodded'
+SMODS.version = MODDED_VERSION:gsub('%-STEAMODDED', '')
+SMODS.can_load = true
+
 function loadMods(modsDirectory)
     SMODS.Mods = {}
+    SMODS.Mods[SMODS.id] = SMODS
     SMODS.mod_priorities = {}
     SMODS.mod_list = {}
     local header_components = {
@@ -15,7 +20,11 @@ function loadMods(modsDirectory)
         badge_text_colour   = { pattern = '%-%-%- BADGE_TEXT_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or 'FFFFFF') end },
         display_name  = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
         dependencies  = {
-            pattern = '%-%-%- DEPENDENCIES: %[(.-)%]\n',
+            pattern = {
+                '%-%-%- DEPENDENCIES: %[(.-)%]\n',
+                '%-%-%- DEPENDS: %[(.-)%]\n',
+                '%-%-%- DEPS: %[(.-)%]\n',
+            },
             parse_array = true,
             handle = function(x)
                 local t = {}
@@ -49,20 +58,6 @@ function loadMods(modsDirectory)
         },
         prefix        = { pattern = '%-%-%- PREFIX: (.-)\n' },
         version       = { pattern = '%-%-%- VERSION: (.-)\n', handle = function(x) return x and V(x):is_valid() and x or '0.0.0' end },
-        l_version_geq = {
-            pattern = '%-%-%- LOADER_VERSION_GEQ: (.-)\n',
-            handle = function(x)
-                x = x and x:gsub('%-STEAMODDED', '') or nil
-                if x and V(x):is_valid() then return x end
-            end
-        },
-        l_version_leq = {
-            pattern = '%-%-%- LOADER_VERSION_LEQ: (.-)\n',
-            handle = function(x)
-                x = x and x:gsub('%-STEAMODDED', '') or nil
-                if x and V(x):is_valid() then return x end
-            end
-        },
         outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } },
         dump_loc      = { pattern = { '%-%-%- DUMP_LOCALIZATION\n'}}
     }
@@ -213,6 +208,9 @@ function loadMods(modsDirectory)
                 can_load = false
                 table.insert(load_issues.dependencies,
                     v.id .. (v.v_geq and '>=' .. v.v_geq or '') .. (v.v_leq and '<=' .. v.v_leq or ''))
+                if v.id == 'Steamodded' then
+                    load_issues.version_mismatch = ''..(v.v_geq and '>='..v.v_geq or '')..(v.v_leq and '<='..v.v_leq or '')
+                end
             end
         end
         if mod.outdated then
@@ -221,14 +219,6 @@ function loadMods(modsDirectory)
         if mod.disabled then
             can_load = false
             load_issues.disabled = true
-        end
-        local loader_version = MODDED_VERSION:gsub('%-STEAMODDED', '')
-        if
-            (mod.l_version_geq and V(loader_version) < V(mod.l_version_geq)) or
-            (mod.l_version_leq and V(loader_version) > V(mod.l_version_geq))
-        then
-            can_load = false
-            load_issues.version_mismatch = ''..(mod.l_version_geq and '>='..mod.l_version_geq or '')..(mod.l_version_leq and '<='..mod.l_version_leq or '')
         end
         if not can_load then
             mod.load_issues = load_issues

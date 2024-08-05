@@ -4,6 +4,7 @@
 --- MOD_AUTHOR: [stupxd]
 --- PREFIX: seel
 --- MOD_DESCRIPTION: Modded seal example
+--- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA-0710a]
 
 ----------------------------------------------
 ------------MOD CODE -------------------------

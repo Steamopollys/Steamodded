@@ -3,7 +3,7 @@
 --- MOD_ID: JAPI
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Joker API Test Mod
---- LOADER_VERSION_GEQ: 1.0.0
+--- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA-0520a]
 
 ----------------------------------------------
 ------------MOD CODE -------------------------
