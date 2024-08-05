@@ -58,6 +58,12 @@ return {
 		}
     },
     misc = {
+		achievement_names = {
+			hidden_achievement = "???",
+		},
+		achievement_descriptions = {
+			hidden_achievement = "Play more to find out!",
+		},
         dictionary = {
 			b_mods = 'Mods',
 			b_mods_cap = 'MODS',
@@ -80,6 +86,7 @@ return {
             b_by = ' By: ',
 			b_config = "Config",
 			b_additions = 'Additions',
+			b_achievements = "Achievements",
             b_applies_stakes_1 = 'Applies ',
 			b_applies_stakes_2 = '',
 		},
