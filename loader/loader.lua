@@ -1,10 +1,6 @@
 --- STEAMODDED CORE
 --- MODULE MODLOADER
 
-SMODS.id = 'Steamodded'
-SMODS.version = MODDED_VERSION:gsub('%-STEAMODDED', '')
-SMODS.can_load = true
-
 function loadMods(modsDirectory)
     SMODS.Mods = {}
     SMODS.Mods[SMODS.id] = SMODS
