@@ -535,8 +535,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 G.P_STAKES[self.key] = self
             end
             self.injected = true
-        end,
-        post_inject_class = function(self)
             -- should only need to do this once per injection routine
             G.P_CENTER_POOLS[self.set] = {}
             for _, v in pairs(G.P_STAKES) do
