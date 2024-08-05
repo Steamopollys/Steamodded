@@ -313,6 +313,15 @@ function SMODS.create_card(t)
     return _card
 end
 
+function SMODS.debuff_card(card, debuff, source)
+    debuff = debuff or nil
+    source = source and tostring(source) or nil
+    if debuff == 'reset' then card.ability.debuff_sources = {}; return end
+    card.ability.debuff_sources = card.ability.debuff_sources or {}
+    card.ability.debuff_sources[source] = debuff
+    card:set_debuff()
+end
+
 -- Recalculate whether a card should be debuffed
 function SMODS.recalc_debuff(card)
     G.GAME.blind:debuff_card(card)
