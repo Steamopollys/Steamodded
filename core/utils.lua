@@ -472,6 +472,40 @@ function SMODS.merge_defaults(t, defaults)
     end
     return t
 end
+V_MT = {
+    __eq = function(a, b)
+        return a.major == b.major and
+        a.minor == b.minor and
+        a.patch == b.patch and
+        a.rev == b.rev
+    end,
+    __le = function(a, b)
+        if a.major ~= b.major then return a.major < b.major end
+        if a.minor ~= b.minor then return a.minor < b.minor end
+        if a.patch ~= b.patch then return a.patch < b.patch end
+        return a.rev <= b.rev
+    end,
+    __lt = function(a, b)
+        return a <= b and not (a == b)
+    end,
+    __call = function(_, str)
+        str = str or '0.0.0'
+        local _, _, major, minor, patch, rev = string.find(str, '^(%d-)%.(%d+)%.?(%d*)(.*)$')
+        local t = {
+            major = tonumber(major),
+            minor = tonumber(minor),
+            patch = tonumber(patch) or 0,
+            rev = rev,
+        }
+        return setmetatable(t, V_MT)
+    end
+}
+V = setmetatable({}, V_MT)
+V_MT.__index = V
+function V.is_valid(v)
+    if getmetatable(v) ~= V_MT then return false end
+    return(pcall(function() return V() <= v end))
+end
 
 --#region palettes
 G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}

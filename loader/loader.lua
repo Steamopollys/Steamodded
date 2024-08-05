@@ -40,22 +40,27 @@ function loadMods(modsDirectory)
                         v_geq = v:match '>=([^<>]+)',
                         v_leq = v:match '<=([^<>]+)',
                     })
+                    if t.v_geq and not V(t[#t].v_geq):is_valid() then t[#t].v_geq = nil end
+                    if t.v_leq and not V(t[#t].v_leq):is_valid() then t[#t].v_leq = nil end
                 end
+                
                 return t
             end
         },
         prefix        = { pattern = '%-%-%- PREFIX: (.-)\n' },
-        version       = { pattern = '%-%-%- VERSION: (.-)\n', handle = function(x) return x or '0.0.0' end },
+        version       = { pattern = '%-%-%- VERSION: (.-)\n', handle = function(x) return x and V(x):is_valid() and x or '0.0.0' end },
         l_version_geq = {
             pattern = '%-%-%- LOADER_VERSION_GEQ: (.-)\n',
             handle = function(x)
-                return x and x:gsub('%-STEAMODDED', '')
+                x = x and x:gsub('%-STEAMODDED', '') or nil
+                if x and V(x):is_valid() then return x end
             end
         },
         l_version_leq = {
             pattern = '%-%-%- LOADER_VERSION_LEQ: (.-)\n',
             handle = function(x)
-                return x and x:gsub('%-STEAMODDED', '')
+                x = x and x:gsub('%-STEAMODDED', '') or nil
+                if x and V(x):is_valid() then return x end
             end
         },
         outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } },
@@ -190,8 +195,8 @@ function loadMods(modsDirectory)
             -- block load even if the conflict is also blocked
             if
                 SMODS.Mods[v.id] and
-                (not v.v_leq or SMODS.Mods[v.id].version <= v.v_leq) and
-                (not v.v_geq or SMODS.Mods[v.id].version >= v.v_geq)
+                (not v.v_leq or V(SMODS.Mods[v.id].version) <= V(v.v_leq)) and
+                (not v.v_geq or V(SMODS.Mods[v.id].version) >= V(v.v_geq))
             then
                 can_load = false
                 table.insert(load_issues.conflicts, v.id..(v.v_leq and '<='..v.v_leq or '')..(v.v_geq and '>='..v.v_geq or ''))
@@ -202,8 +207,8 @@ function loadMods(modsDirectory)
             if
                 not SMODS.Mods[v.id] or
                 not check_dependencies(SMODS.Mods[v.id], seen) or
-                (v.v_leq and SMODS.Mods[v.id].version > v.v_leq) or
-                (v.v_geq and SMODS.Mods[v.id].version < v.v_geq)
+                (v.v_leq and V(SMODS.Mods[v.id].version) > V(v.v_leq)) or
+                (v.v_geq and V(SMODS.Mods[v.id].version) < V(v.v_geq))
             then
                 can_load = false
                 table.insert(load_issues.dependencies,
@@ -219,8 +224,8 @@ function loadMods(modsDirectory)
         end
         local loader_version = MODDED_VERSION:gsub('%-STEAMODDED', '')
         if
-            (mod.l_version_geq and loader_version < mod.l_version_geq) or
-            (mod.l_version_leq and loader_version > mod.l_version_geq)
+            (mod.l_version_geq and V(loader_version) < V(mod.l_version_geq)) or
+            (mod.l_version_leq and V(loader_version) > V(mod.l_version_geq))
         then
             can_load = false
             load_issues.version_mismatch = ''..(mod.l_version_geq and '>='..mod.l_version_geq or '')..(mod.l_version_leq and '<='..mod.l_version_leq or '')
