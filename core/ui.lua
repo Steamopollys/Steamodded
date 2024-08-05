@@ -677,6 +677,7 @@ G.FUNCS.your_collection_stickers_page = function(args)
 			G.your_collection[j]:emplace(card)
 		end
 	end
+end
 
 function buildAchievementsTab(mod, current_page)
 	current_page = current_page or 1
