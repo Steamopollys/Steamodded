@@ -382,26 +382,6 @@ position = "after"
 payload = "self.scale = self.config.scale_function and self.config.scale_function() or self.scale"
 match_indent = true
 
-#
-# Fix floating point error (1.000e92 instead of 10.000e91)
-# Lower precision with higher numbers
-#
-
-## number_format
-[[patches]] 
-[patches.pattern]
-target = "functions/misc_functions.lua"
-pattern = '''
-return string.format("%.3f",x/(10^fac))..'e'..fac'''
-position = "at"
-payload = '''
-local mantissa = round_number(x/(10^fac), 3)
-if mantissa >= 10 then
-  mantissa = mantissa / 10
-  fac = fac + 1
-end
-return string.format(fac >= 100 and "%.1fe%i" or fac >= 10 and "%.2fe%i" or "%.3fe%i", mantissa, fac)'''
-match_indent = true
 
 #
 # Fix gold stake legendary infloop
@@ -416,3 +396,61 @@ pattern = '''if win_ante and (win_ante >= 8) then'''
 match_indent = true
 position = "at"
 payload = '''if win_ante and (win_ante >= 8) or (v.in_pool and type(v.in_pool) == 'function' and not v:in_pool()) then'''
+
+#
+# Fix G.GAME.blind:set_blind(nil, true, nil)
+# being called when not in blind.
+#
+
+# Card:add_to_deck
+# Card:remove_from_deck
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = 'if G\.GAME\.blind then'
+position = "at"
+payload = "if G.GAME.blind and G.GAME.blind.in_blind then"
+
+# Blind:set_blind
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+match_indent = true
+pattern = "if not reset then"
+position = "after"
+payload = '''
+    if blind then
+        self.in_blind = true
+    end'''
+
+# end_round()
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local game_over = true"
+position = "before"
+payload = "G.GAME.blind.in_blind = false"
+match_indent = true
+
+
+
+# Make sure new param is loaded
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+match_indent = true
+pattern = "function Blind:load(blindTable)"
+position = "after"
+payload = '''
+    self.in_blind = blindTable.in_blind'''
+
+# Make sure new param is saved
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+match_indent = true
+pattern = "local blindTable = {"
+position = "after"
+payload = '''
+    in_blind = self.in_blind,'''
+
