@@ -512,6 +512,7 @@ function buildAchievementsTab(mod, current_page)
 	table.sort(achievement_tab, function(a, b) return (a.order or 1) < (b.order or 1) end)
 	
 	local row = 1
+	local max_lines = 2
 	for i = 1, achievements_per_row*2 do
 		local v = achievement_tab[i+((achievements_per_row*2)*(current_page-1))]
 		if not v then break end
@@ -555,7 +556,7 @@ function buildAchievementsTab(mod, current_page)
 
 		-- Description
 		local achievement_text = {}
-		local maxCharsPerLine = 30
+		local maxCharsPerLine = 20
 		local function wrapText(text, maxChars)
 			local wrappedText = {""}
 			local curr_line = 1
@@ -587,9 +588,10 @@ function buildAchievementsTab(mod, current_page)
 				ability_text[#ability_text + 1] = {n=G.UIT.R, config={align = "cm"}, nodes={{n=G.UIT.T, config={text = v, scale = 0.35, shadow = true, colour = G.C.WHITE}}}}
 			end
 		end
+		max_lines = math.max(max_lines, #ability_text)
 		achievement_text[#achievement_text + 1] =
-		{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, minw = 2.5, padding = 0.07, colour = G.C.WHITE}, nodes={
-			ability_text[1] and {n=G.UIT.R, config={align = "cm", padding = 0.08, colour = G.C.GREY, r = 0.1, emboss = 0.05, minw = 2.5, minh = 0.9}, nodes=ability_text} or nil
+		{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, minw = 3, maxw = 3, padding = 0.05, colour = G.C.WHITE, minh = 0.4*max_lines+0.1}, nodes={
+			ability_text[1] and {n=G.UIT.R, config={align = "cm", padding = 0.08, colour = G.C.GREY, r = 0.1, emboss = 0.05, minw = 2.9, maxw = 2.9, minh = 0.4*max_lines}, nodes=ability_text} or nil
 		}}
 
 		table.insert(achievement_matrix[row], {
@@ -599,9 +601,9 @@ function buildAchievementsTab(mod, current_page)
 				{n=G.UIT.R, config = {align = "cm"}, nodes = {
 					{n=G.UIT.R, config = {align = "cm", padding = 0.1}, nodes = {{ n = G.UIT.O, config = { object = temp_achievement, focus_with_object = true }}}},
 					{
-						n=G.UIT.R, config = {align = "cm"}, nodes = {
-							{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, minw = 2.5, padding = 0.1, colour = G.C.GREY}, nodes={
-								{n=G.UIT.O, config={align = "cm", object = DynaText({string = loc_name, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, spacing = 1, bump = true, scale = 0.4})}},
+						n=G.UIT.R, config = {align = "cm", minw = 3, maxw = 3, padding = 0.05}, nodes = {
+							{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, padding = 0.1, minh = 0.6, colour = G.C.GREY}, nodes={
+								{n=G.UIT.O, config={align = "cm", maxw = 2.7, object = DynaText({string = loc_name, maxw = 2.7, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, spacing = 1, bump = true, scale = 0.4})}},
 							}},
 							{n=G.UIT.R, config={align = "cm"}, nodes=achievement_text},
 						},
@@ -612,6 +614,7 @@ function buildAchievementsTab(mod, current_page)
 		if #achievement_matrix[row] == achievements_per_row then 
 			row = row + 1
 			achievement_matrix[row] = {}
+			max_lines = 2
 		end
 	end
 
