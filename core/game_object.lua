@@ -141,7 +141,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     -- Inject all direct instances `o` of the class by calling `o:inject()`.
     -- Also inject anything necessary for the class itself.
     function SMODS.GameObject:inject_class()
+        local inject_time = 0
+        local start_time = love.timer.getTime()
         self:send_to_subclasses('pre_inject_class')
+        local end_time = love.timer.getTime()
+        inject_time = end_time - start_time
+        start_time = end_time
         local o = nil
         for i, key in ipairs(self.obj_buffer) do
             o = self.obj_table[key]
@@ -160,13 +165,22 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
 
             -- Setup Localize text
             o:process_loc_text()
-
-            sendTraceMessage(
-                ('Injected game object %s of type %s')
-                :format(o.key, o.set), o.set or 'GameObject'
-            )
+            if SMODS.config.log_level == 1 and self.log_interval and i%(self.log_interval) == 0 then
+                end_time = love.timer.getTime()
+                inject_time = inject_time + end_time - start_time
+                start_time = end_time
+                local alert = ('[%s] Injecting %s: %.3f ms'):format(string.rep('0', 4-#tostring(i))..i, self.set, inject_time*1000)
+                sendTraceMessage(alert, 'TIMER')
+                boot_print_stage(alert)
+            end
         end
         self:send_to_subclasses('post_inject_class')
+        end_time = love.timer.getTime()
+        inject_time = inject_time + end_time - start_time
+        local n = #self.obj_buffer
+        local alert = ('[%s] Injected %s in %.3f ms'):format(string.rep('0',4-#tostring(n))..n, self.set, inject_time*1000)
+        sendInfoMessage(alert, 'TIMER')
+        boot_print_stage(alert)
     end
 
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
@@ -218,13 +232,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     -- Inject all SMODS Objects that are part of this class or a subclass.
     function SMODS.injectObjects(class)
         if class.obj_table and class.obj_buffer then
-            local start_time = love.timer.getTime()
             class:inject_class()
-            local end_time = love.timer.getTime()
-            local n = #class.obj_buffer
-            local alert = ('[%s] Injected %s in %.3f ms'):format(string.rep('0',4-#tostring(n))..n, class.set or 'nil', (end_time - start_time)*1000)
-            sendInfoMessage(alert, 'TIMER')
-            boot_print_stage(alert)
         else
             for _, subclass in ipairs(class.subclasses) do SMODS.injectObjects(subclass) end
         end
