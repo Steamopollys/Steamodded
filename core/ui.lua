@@ -114,7 +114,12 @@ function create_UIBox_mods(args)
 
 	local mod_tabs = {}
 	table.insert(mod_tabs, buildModDescTab(mod))
-	if mod.added_obj then table.insert(mod_tabs, buildAdditionsTab(mod)) end
+	if mod.added_obj then 
+		local tab = buildAdditionsTab(mod)
+		if tab then
+			table.insert(mod_tabs, tab)
+		end
+	end
 	local credits_func = mod.credits_tab
 	if credits_func and type(credits_func) == 'function' then 
 		table.insert(mod_tabs, {
@@ -330,6 +335,7 @@ function buildAdditionsTab(mod)
 	if mod.custom_collection_tabs then
 		rightside_nodes[#rightside_nodes+1] = UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}, func = 'is_other_gameobject_tabs'}) 
 	end
+	if #rightside_nodes == 0 and #leftside_nodes == 0 then return false end
 
 	local t = {n=G.UIT.R, config={align = "cm",padding = 0.2, minw = 7}, nodes={
 		{n=G.UIT.C, config={align = "cm", padding = 0.15}, nodes = leftside_nodes },
