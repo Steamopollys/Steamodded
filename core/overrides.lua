@@ -1230,7 +1230,7 @@ end
 --#region joker retrigger API
 local cj = Card.calculate_joker
 function Card:calculate_joker(context, callback, retrigger, no_retrigger_anim)
-    local ret, triggered = cj(self, context)
+    local ret, triggered = cj(self, context, callback, retrigger, no_retrigger_anim)
     --Check for retrggering jokers
     if (ret or triggered) and context and not context.retrigger_joker and not context.retrigger_joker_check then
         if type(ret) ~= 'table' then ret = {joker_repetitions = {0}} end
@@ -1266,6 +1266,7 @@ function Card:calculate_joker(context, callback, retrigger, no_retrigger_anim)
     if callback and type(callback) == 'function' then callback(ret, retrigger) end
     return ret, triggered
 end    
+local calc_jkr = Card.calculate_joker --for some reason the normal way isn't working
 function Card:calculate_joker_retriggers()
     return
 end
@@ -1302,7 +1303,7 @@ function eval_card(card, context, callback)
             ret.p_dollars = p_dollars
         end
 
-        local jokers = card:calculate_joker(context, callback)
+        local jokers = calc_jkr(card, context, callback)
         if jokers then 
             ret.jokers = jokers
         end
@@ -1324,7 +1325,7 @@ function eval_card(card, context, callback)
             ret.x_mult = h_x_mult
         end
 
-        local jokers = card:calculate_joker(context, callback)
+        local jokers = calc_jkr(card, context, callback)
         if jokers then 
             ret.jokers = jokers
         end
@@ -1335,9 +1336,10 @@ function eval_card(card, context, callback)
         if context.edition then
             jokers = card:get_edition(context)
         elseif context.other_joker then
-            jokers = context.other_joker:calculate_joker(context, callback)
+            jokers = calc_jkr(context.other_joker, context, callback)
         else
-            jokers = card:calculate_joker(context, callback)
+			print(type(callback))
+            jokers = calc_jkr(card, context, callback)
         end
         if jokers then 
             ret.jokers = jokers
