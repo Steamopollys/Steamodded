@@ -2133,7 +2133,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         required_params = {
             'key',
         },
-        class_prefix = 'st',
+        class_prefix = 'st', --? remove this?
         rate = 0.3,
         atlas = 'stickers',
         pos = { x = 0, y = 0 },
@@ -2143,7 +2143,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         sets = { Joker = true },
         needs_enable_flag = true,
         process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt, 'description')
+            SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
             SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'label')
         end,
         inject = function(self)
@@ -2206,18 +2206,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 1, y = 2 },
         hide_badge = true,
         order = 3,
-        sticker_check = function(self, card, center, area)
-            if (
-                center[self.key..'_compat'] or -- explicit marker
-                (self.default_compat and not self.compat_exceptions[center.key]) or -- default yes with no exception
-                (not self.default_compat and self.compat_exceptions[center.key]) -- default no with exception
-            ) and 
-            (not self.needs_enable_flag or G.GAME.modifiers['enable_'..self.key]) and
-            pseudorandom((area == G.pack_cards and 'packssjr' or 'ssjr')..G.GAME.round_resets.ante) > (1-self.rate)
-            then
-                return true
-            end
-        end,
         set_sticker = function(self, card, val)
             card.ability[self.key] = val
             if card.ability[self.key] then card:set_cost() end
@@ -2232,6 +2220,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         badge_colour = HEX 'fda200',
         prefix_config = {key = false},
         pos = { x = 10, y = 10 }, -- Base game has no art, and I haven't made any yet to represent Pinned with
+        rate = 0,
         sticker_check = false, 
         order = 4,
         set_sticker = function(self, card, val)
