@@ -2021,8 +2021,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
         end,
         inject = function(self) end,
-        inject_class = function(self)
-            SMODS.PokerHand.super.inject_class(self)
+        post_inject_class = function(self)
             table.sort(
                 self.obj_buffer,
                 function(a, b)
