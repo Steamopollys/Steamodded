@@ -1263,6 +1263,7 @@ function Card:calculate_joker(context)
                 end
             end
         end
+		context.retrigger_joker = nil
     end
     if context.callback and type(context.callback) == 'function' then context.callback(ret, context.retrigger_joker) end
     return ret, triggered
