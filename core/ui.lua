@@ -138,6 +138,21 @@ function create_UIBox_mods(args)
 		})
 	end
 
+	local mod_has_achievement
+	for _, v in pairs(SMODS.Achievements) do
+		if v.mod.id == mod.id then mod_has_achievement = true end
+	end
+	if mod_has_achievement then table.insert(mod_tabs, 
+		{
+			label = localize("b_achievements"),
+			chosen = SMODS.LAST_SELECTED_MOD_TAB == "achievements" or false,
+			tab_definition_function = function()
+				SMODS.LAST_SELECTED_MOD_TAB = "achievements"
+				return buildAchievementsTab(mod)
+			end
+		})
+	end
+
 	local custom_ui_func = mod.extra_tabs
 	if custom_ui_func and type(custom_ui_func) == 'function' then
 		local custom_tabs = custom_ui_func()
@@ -479,6 +494,173 @@ G.UIDEF.consumable_collection_page = function(page)
 	return t
 end
 
+function buildAchievementsTab(mod, current_page)
+	current_page = current_page or 1
+	fetch_achievements()
+	local achievement_matrix = {{},{}}
+	local achievements_per_row = 3
+	local achievements_pool = {}
+	for k, v in pairs(G.ACHIEVEMENTS) do
+		if v.mod and v.mod.id == mod.id then achievements_pool[#achievements_pool+1] = v end
+	end
+
+	local achievement_tab = {}
+	for k, v in pairs(achievements_pool) do
+		achievement_tab[#achievement_tab+1] = v
+	end
+	
+	table.sort(achievement_tab, function(a, b) return (a.order or 1) < (b.order or 1) end)
+	
+	local row = 1
+	local max_lines = 2
+	for i = 1, achievements_per_row*2 do
+		local v = achievement_tab[i+((achievements_per_row*2)*(current_page-1))]
+		if not v then break end
+		local temp_achievement = Sprite(0,0,1.1,1.1,G.ASSET_ATLAS[v.atlas or "achievements"], v.earned and v.pos or {x=0, y=0})
+		temp_achievement:define_draw_steps({
+			{shader = 'dissolve', shadow_height = 0.05},
+			{shader = 'dissolve'}
+		})
+		if i == 1 then 
+			G.E_MANAGER:add_event(Event({
+			trigger = 'immediate',
+			func = (function()
+				G.CONTROLLER:snap_to{node = temp_achievement}
+				return true
+			end)
+			}))
+		end
+		temp_achievement.float = true
+		temp_achievement.states.hover.can = true
+		temp_achievement.states.drag.can = false
+		temp_achievement.states.collide.can = true
+		--temp_achievement.config = {blind = v, force_focus = true}
+		temp_achievement.hover = function()
+			if not G.CONTROLLER.dragging.target or G.CONTROLLER.using_touch then 
+				if not temp_achievement.hovering and temp_achievement.states.visible then
+					temp_achievement.hovering = true
+					temp_achievement.hover_tilt = 3
+					temp_achievement:juice_up(0.05, 0.02)
+					play_sound('chips1', math.random()*0.1 + 0.55, 0.12)
+					Node.hover(temp_achievement)
+					if temp_achievement.children.alert then 
+						temp_achievement.children.alert:remove()
+						temp_achievement.children.alert = nil
+						v.alerted = true
+						G:save_progress()
+					end
+				end
+			end
+			temp_achievement.stop_hover = function() temp_achievement.hovering = false; Node.stop_hover(temp_achievement); temp_achievement.hover_tilt = 0 end
+		end
+
+		-- Description
+		local achievement_text = {}
+		local maxCharsPerLine = 30
+		local function wrapText(text, maxChars)
+			local wrappedText = {""}
+			local curr_line = 1
+			local currentLineLength = 0
+		
+			for word in text:gmatch("%S+") do
+				if currentLineLength + #word <= maxChars then
+					wrappedText[curr_line] = wrappedText[curr_line] .. word .. ' '
+					currentLineLength = currentLineLength + #word + 1
+				else
+					wrappedText[curr_line] = string.sub(wrappedText[curr_line], 0, -2)
+					curr_line = curr_line + 1
+					wrappedText[curr_line] = ""
+					wrappedText[curr_line] = wrappedText[curr_line] .. word .. ' '
+					currentLineLength = #word + 1
+				end
+			end
+		
+			wrappedText[curr_line] = string.sub(wrappedText[curr_line], 0, -2)
+			return wrappedText
+		end
+	
+		local loc_target = (v.hidden_text and not v.earned) and {localize("hidden_achievement", 'achievement_descriptions')} or wrapText(localize(v.key, 'achievement_descriptions'), maxCharsPerLine)
+		local loc_name = (v.hidden_name and not v.earned) and localize("hidden_achievement", 'achievement_names') or localize(v.key, 'achievement_names')
+
+		local ability_text = {}
+		if loc_target then 
+			for k, v in ipairs(loc_target) do
+				ability_text[#ability_text + 1] = {n=G.UIT.R, config={align = "cm"}, nodes={{n=G.UIT.T, config={text = v, scale = 0.35, shadow = true, colour = G.C.WHITE}}}}
+			end
+		end
+		max_lines = math.max(max_lines, #ability_text)
+		achievement_text[#achievement_text + 1] =
+		{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, minw = 4, maxw = 4, padding = 0.05, colour = G.C.WHITE, minh = 0.4*max_lines+0.1}, nodes={
+			ability_text[1] and {n=G.UIT.R, config={align = "cm", padding = 0.08, colour = G.C.GREY, r = 0.1, emboss = 0.05, minw = 3.9, maxw = 3.9, minh = 0.4*max_lines}, nodes=ability_text} or nil
+		}}
+
+		table.insert(achievement_matrix[row], {
+			n = G.UIT.C,
+			config = { align = "cm", padding = 0.1 },
+			nodes = {
+				{n=G.UIT.R, config = {align = "cm"}, nodes = {
+					{n=G.UIT.R, config = {align = "cm", padding = 0.1}, nodes = {{ n = G.UIT.O, config = { object = temp_achievement, focus_with_object = true }}}},
+					{
+						n=G.UIT.R, config = {align = "cm", minw = 4, maxw = 4, padding = 0.05}, nodes = {
+							{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, padding = 0.1, minh = 0.6, colour = G.C.GREY}, nodes={
+								{n=G.UIT.O, config={align = "cm", maxw = 3.8, object = DynaText({string = loc_name, maxw = 3.8, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, spacing = 1, bump = true, scale = 0.4})}},
+							}},
+							{n=G.UIT.R, config={align = "cm"}, nodes=achievement_text},
+						},
+					},
+				}},
+			},
+		})
+		if #achievement_matrix[row] == achievements_per_row then 
+			row = row + 1
+			achievement_matrix[row] = {}
+			max_lines = 2
+		end
+	end
+
+	local achievements_options = {}
+	for i = 1, math.ceil(#achievements_pool/(2*achievements_per_row)) do
+		table.insert(achievements_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#achievements_pool/(2*achievements_per_row))))
+	end
+
+	local t = {
+		{n=G.UIT.C, config={}, nodes={ 
+		{n=G.UIT.C, config={align = "cm"}, nodes={
+		{n=G.UIT.R, config={align = "cm"}, nodes={
+			{n=G.UIT.R, config={align = "cm", padding = 0.1 }, nodes=achievement_matrix[1]},
+			{n=G.UIT.R, config={align = "cm", padding = 0.1 }, nodes=achievement_matrix[2]},
+			create_option_cycle({options = achievements_options, w = 4.5, cycle_shoulders = true, opt_callback = 'achievments_tab_page', focus_args = {snap_to = true, nav = 'wide'},current_option = current_page, colour = G.C.RED, no_pips = true})
+		}}
+		}}
+	}}}
+	return {
+		n = G.UIT.ROOT,
+		config = {
+			emboss = 0.05,
+			minh = 6,
+			r = 0.1,
+			minw = 6,
+			align = "tm",
+			padding = 0.2,
+			colour = G.C.BLACK
+		},
+		nodes = t
+	}
+end
+
+G.FUNCS.achievments_tab_page = function(args)
+	if not args or not args.cycle_config then return end
+	achievement_matrix = {{},{}}
+
+	local tab_contents = G.OVERLAY_MENU:get_UIE_by_ID('tab_contents')
+	tab_contents.config.object:remove()
+	tab_contents.config.object = UIBox{
+		definition = buildAchievementsTab(G.ACTIVE_MOD_UI, args.cycle_config.current_option),
+		config = {offset = {x=0,y=0}, parent = tab_contents, type = 'cm'}
+	}
+	tab_contents.UIBox:recalculate()
+end
+
 -- TODO: Optimize this. 
 function modsCollectionTally(pool, set)
 	local set = set or nil
@@ -691,8 +873,6 @@ function G.FUNCS.mods_buttons_page(options)
     end
 end
 
-SMODS.id = 'Steamodded'
-
 function SMODS.load_mod_config(mod)
 	local config = load(NFS.read(('config/%s.jkr'):format(mod.id)) or 'return {}', ('=[SMODS %s "config"]'):format(mod.id))()
 	local default_config = load(NFS.read(('%sconfig.lua'):format(mod.path)) or 'return {}', ('=[SMODS %s "default_config"]'):format(mod.id))()
@@ -703,13 +883,13 @@ function SMODS.load_mod_config(mod)
 end
 SMODS:load_mod_config()
 function SMODS.save_mod_config(mod)
+	NFS.createDirectory('config')
 	if not mod.config or not next(mod.config) then return false end
 	local serialized = 'return '..serialize(mod.config)
 	assert(NFS.write(('config/%s.jkr'):format(mod.id), serialized))
 	return true
 end
 function SMODS.save_all_config()
-	NFS.createDirectory('config')
 	SMODS:save_mod_config()
 	for _, v in ipairs(SMODS.mod_list) do
 		if v.can_load then 
