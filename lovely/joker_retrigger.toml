@@ -1,0 +1,544 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# main joker retriggering
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true})"
+position = "at"
+payload = "local effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true}, function(ret) effects = {jokers = ret}"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "--Joker on Joker effects"
+position = "before"
+payload = "end)"
+match_indent = true
+
+# End of round retriggering from jokers
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, end_of_round = true, card_effects = effects})"
+position = "at"
+payload = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, end_of_round = true, card_effects = effects}, function(ret) eval = {jokers = ret}"
+match_indent = true
+
+# Played hand retriggering from jokers
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true})"
+position = "at"
+payload = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true}, function(ret) eval = {jokers = ret}"
+match_indent = true
+
+# Held in hand retriggering from jokers
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects})"
+position = "at"
+payload = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects}, function(ret) eval = {jokers = ret}"
+match_indent = true
+
+# I learned how to do regex patches for this (fixes syntax for last 3 patches)
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''for h[ ]*\= 1, eval\.jokers\.repetitions do
+[ \t]*reps\[#reps\+1\] \= eval
+[ \t]*end
+[ \t]*end'''
+position = "after"
+payload = " end)"
+
+# Before hand effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})"
+position = "at"
+payload = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true}, function(ret) effects = {jokers = ret}"
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''level_up_hand\(G\.jokers\.cards\[i\], text\)
+[ \t]*end
+[ \t]*end'''
+position = "after"
+payload = " end)"
+
+# Joker debuff effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, debuffed_hand = true})"
+position = "at"
+payload = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, debuffed_hand = true}, function(ret) effects = {jokers = ret}"
+match_indent = true
+
+# After hand effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true})"
+position = "at"
+payload = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true}, function(ret) effects = {jokers = ret}"
+match_indent = true
+
+# Fixes syntax of last two patches
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''card_eval_status_text\(G\.jokers\.cards\[i\], 'jokers', nil, percent, nil, effects\.jokers\)
+[ \t]*percent \= percent[ ]*\+[ ]*percent_delta
+[ \t]*end'''
+position = "after"
+payload = " end)"
+
+# End of round effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "eval = G.jokers.cards[i]:calculate_joker({end_of_round = true, game_over = game_over})"
+position = "at"
+payload = "eval = G.jokers.cards[i]:calculate_joker({end_of_round = true, game_over = game_over}, function(eval)"
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''card_eval_status_text\(G\.jokers\.cards\[i\], 'jokers', nil, nil, nil, eval\)
+[ \t]*end'''
+position = "after"
+payload = " end)"
+
+# End of round held in hand effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, other_card = G.hand.cards[i], individual = true, end_of_round = true})"
+position = "at"
+payload = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, other_card = G.hand.cards[i], individual = true, end_of_round = true}, function(eval, retrigger)"
+match_indent = true
+
+# Played hand effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true})"
+position = "at"
+payload = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true}, function(eval, retrigger)"
+match_indent = true
+
+# Held in hand effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})"
+position = "at"
+payload = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true}, function(eval, retrigger)"
+match_indent = true
+
+# Fix syntax of last 3 patches
+# Add retrigger info
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''table\.insert\(effects, eval\)
+[ \t]*end'''
+position = "at"
+payload = '''
+table.insert(effects, eval)
+effects[#effects].from_retrigger = retrigger
+end end, nil, true)
+'''
+
+# Use retrigger info when computing repetitions
+
+# End of round held in hand effects
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''card_eval_status_text\(G\.hand\.cards\[i\], 'extra', nil, percent, nil, effects\[ii\]\.extra\)
+[ \t]*end'''
+position = "after"
+payload = '''
+ if effects[ii].from_retrigger then
+    card_eval_status_text(effects[ii].from_retrigger.card, 'jokers', nil, nil, nil, effects[ii].from_retrigger)
+end
+'''
+
+# Played hand effects
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''end
+[ \t]*end
+[ \t]*end
+[ \t]*end
+[ \t]*
+[ \t]*delay\(0\.3\)'''
+position = "before"
+payload = '''
+ if effects[ii].from_retrigger then
+    card_eval_status_text(effects[ii].from_retrigger.card, 'jokers', nil, nil, nil, effects[ii].from_retrigger)
+end
+'''
+
+# Held in hand effects
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''end
+[ \t]*j[ \t]*=[ \t]*j[ \t]\+1'''
+position = "before"
+payload = '''
+ if effects[ii].from_retrigger then
+    card_eval_status_text(effects[ii].from_retrigger.card, 'jokers', nil, nil, nil, effects[ii].from_retrigger)
+end
+'''
+
+# Discard effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "eval = G.jokers.cards[j]:calculate_joker({discard = true, other_card =  G.hand.highlighted[i], full_hand = G.hand.highlighted})"
+position = "at"
+payload = "eval = G.jokers.cards[j]:calculate_joker({discard = true, other_card =  G.hand.highlighted[i], full_hand = G.hand.highlighted}, function(eval)"
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''card_eval_status_text\(G\.jokers\.cards\[j\], 'jokers', nil, 1, nil, eval\)
+[ \t]*end'''
+position = "after"
+payload = " end)"
+
+# Joker on Joker effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effect = v:calculate_joker{full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card}"
+position = "at"
+payload = "local effect = v:calculate_joker({full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card}, function(effect)"
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''end
+[ \t]*end
+[ \t]*
+[ \t]*if edition_effects\.jokers'''
+position = "at"
+payload = "end end) end if edition_effects.jokers"
+
+# Destroyed card effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "destroyed = G.jokers.cards[j]:calculate_joker({destroying_card = scoring_hand[i], full_hand = G.play.cards})"
+position = "at"
+payload = '''destroyed = G.jokers.cards[j]:calculate_joker({destroying_card = scoring_hand[i], full_hand = G.play.cards}, function(ret) if ret then destroyed=true end end)'''
+match_indent = true
+
+# Luchador
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''[ \t]*G\.GAME\.blind:disable\(\)
+(?<indent>[ \t]*)end'''
+position = "at"
+line_prepend = '$indent'
+payload = '''   G.GAME.blind:disable()
+    return nil, true
+end'''
+
+# Diet Cola
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*return true
+[ \t]*end\)
+[ \t]*\}\)\)
+(?<indent>[ \t]*)end
+'''
+position = "at"
+line_prepend = '$indent'
+payload = '''           return true
+       end)
+    }))
+    return nil, true
+end
+'''
+
+# Invisible Joker
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''[ \t]*if card\.ability\.invis_rounds then card\.ability\.invis_rounds = 0 end
+[ \t]*card:add_to_deck\(\)
+(?<indent>[ \t]*)G\.jokers:emplace\(card\)'''
+position = "after"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Campfire
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''localize\('k_upgrade_ex'\)\}\); return true
+[ \t]*end\}\)\)
+[ \t]*end
+(?<indent>[ \t]*)return'''
+position = "at"
+line_prepend = '$indent'
+payload = '''localize('k_upgrade_ex')}); return true
+   end}))
+end
+return nil, true'''
+
+# Flash Card
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''[ \t]*G\.C\.MULT\}\)
+[ \t]*return true
+[ \t]*end\)\}\)\)
+(?<indent>[ \t]*)end'''
+position = "at"
+line_prepend = '$indent'
+payload = '''G.C.MULT})
+       return true
+   end)}))
+end
+return nil, true'''
+
+# Perkeo
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''[ \t]*card_eval_status_text\(context\.blueprint_card or self, 'extra', nil, nil, nil, \{message = localize\('k_duplicated_ex'\)\}\)
+(?<indent>[ \t]*)end'''
+position = "at"
+line_prepend = '$indent'
+payload = '''    card_eval_status_text(context.blueprint_card or self, 'extra', nil, nil, nil, {message = localize('k_duplicated_ex')})
+    return nil, true
+end'''
+
+# Throwback
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*return
+(?<indent>[ \t]*)elseif context\.skipping_booster'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Red Card
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*return
+(?<indent>[ \t]*)elseif context\.playing_card_added'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Hologram
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)elseif context\.first_hand_drawn'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Certificate
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'DNA' and not context\.blueprint'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Chicot
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Madness' '''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Madness
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Burglar' '''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Burglar
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Riff-raff' '''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Riff-raff
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Cartomancer' '''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Cartomancer
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Ceremonial Dagger' and not context.blueprint'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Ceremonial Dagger
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Marble Joker' '''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Marble Joker
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*return
+(?<indent>[ \t]*)elseif context.destroying_card'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Caino
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''[ \t]*func = function\(\) card_eval_status_text\(self, 'extra', nil, nil, nil, \{message = localize\{type = 'variable', key = 'a_xmult', vars = \{self\.ability\.caino_xmult\}\}\}\); return true
+(?<indent>[ \t]*)end\}\)\)'''
+position = "after"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Glass Joker
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''glass_cards\}\}\}\)
+[ \t]*return true
+[ \t]*end
+(?<indent>[ \t]*)\}\)\)'''
+position = "after"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*return
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Fortune Teller' and not context\.blueprint'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Fortune Teller
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Constellation' and not context\.blueprint'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Constellation
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*return
+(?<indent>[ \t]*)elseif context.debuffed_hand'''
+position = "before"
+line_prepend = '$indent'
+payload = "nil, true"
+
+# Burnt Joker
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)elseif context.discard'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Faceless Joker
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*end
+[ \t]*return
+(?<indent>[ \t]*)elseif context.end_of_round'''
+position = "before"
+line_prepend = '$indent'
+payload = "nil, true"
