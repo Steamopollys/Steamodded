@@ -42,7 +42,8 @@ function loadAPIs()
         -- condition == nil counts as true
         if condition ~= false and obj[key] and prefix then
             if string.sub(obj[key], 1, #prefix + 1) == prefix..'_' then
-                sendWarnMessage(("Attempted to prefix field %s=%s on object %s, already prefixed"):format(key, obj[key], obj.key), obj.set)
+                -- this happens within steamodded itself and I don't want to spam the logs with warnings, leaving this disabled for now
+                -- sendWarnMessage(("Attempted to prefix field %s=%s on object %s, already prefixed"):format(key, obj[key], obj.key), obj.set)
                 return
             end
             obj[key] = prefix .. '_' .. obj[key]
