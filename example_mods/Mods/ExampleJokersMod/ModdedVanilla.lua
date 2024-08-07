@@ -9,18 +9,19 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
-
+--[[
 ------------------------------Basic Table of Contents------------------------------
--- Line X, Atlas --------------- Explains the parts of the atlas.
--- Line X, Joker 2 ------------- Explains the basic structure of a joker
--- Line X, Runner 2 ------------ Uses a bit more complex contexts, and shows how to scale a value.
--- Line X, Golden Joker 2 ------ Shows off a specific function that's used to add money at the end of a round.
--- Line X, Merry Andy 2 -------- Shows how to use add_to_deck and remove_from_deck.
--- Line X, Sock and Buskin 2 --- Shows how you can retrigger cards and check for faces
--- Line X, Perkeo 2 ------------ Shows how to use the event manager, eval_status_text, randomness, and soul_pos.
--- Line X, Walkie Talkie 2 ----- Shows how to look for multiple specific ranks, and explains returning multiple values
--- Line X, Gros Michel 2 ------- Shows the no_pool_flag, sets a pool flag, another way to use randomness, and end of round stuff.
--- Line X, Cavendish 2 --------- Shows yes_pool_flag, has X Mult, mainly to go with Gros Michel 2.
+Line 26, Atlas ---------------- Explains the parts of the atlas.
+Line 40, Joker 2 -------------- Explains the basic structure of a joker
+Line 103, Runner 2 ------------ Uses a bit more complex contexts, and shows how to scale a value.
+Line 151, Golden Joker 2 ------ Shows off a specific function that's used to add money at the end of a round.
+Line 178, Merry Andy 2 -------- Shows how to use add_to_deck and remove_from_deck.
+Line 221, Sock and Buskin 2 --- Shows how you can retrigger cards and check for faces
+Line 255, Perkeo 2 ------------ Shows how to use the event manager, eval_status_text, randomness, and soul_pos.
+Line 299, Walkie Talkie 2 ----- Shows how to look for multiple specific ranks, and explains returning multiple values
+Line 334, Gros Michel 2 ------- Shows the no_pool_flag, sets a pool flag, another way to use randomness, and end of round stuff.
+Line 404, Cavendish 2 --------- Shows yes_pool_flag, has X Mult, mainly to go with Gros Michel 2.
+]]
 
 --Creates an atlas for cards to use
 SMODS.Atlas{
@@ -43,20 +44,24 @@ SMODS.Joker{
   loc_txt = {
     name = 'Joker 2',
     text = {
-      -- The #1# is a variable that's stored in config, and is put into loc_vars.
-      -- The {C:} is a color modifier, and uses the color "mult" for the "+#1# " part, and then the empty {} is to close the modifier, so that Mult remains uncolored.
-      -- There's {X:}, which sets the background, usually used for XMult.
-      -- There's {s:}, which is scale, and multiplies the text size by the value, like 0.8
-      -- There's one more, {V:1}, but is more advanced, and is used in Castle and Ancient Jokers. It allows for a variable to dynamically change the color, but is very rarely used.
-      -- Multiple variables can be used in one space, as long as you separate them with a comma. {C:attention, X:chips, s:1.3} would be the yellow attention color, with a blue chips-colored background,, and 1.3 times the scale of other text.
-      -- You can find the vanilla joker descriptions and names as well as several other things in the localization files.
+      --[[
+      The #1# is a variable that's stored in config, and is put into loc_vars.
+      The {C:} is a color modifier, and uses the color "mult" for the "+#1# " part, and then the empty {} is to close the modifier, so that Mult remains uncolored.
+      There's {X:}, which sets the background, usually used for XMult.
+      There's {s:}, which is scale, and multiplies the text size by the value, like 0.8
+      There's one more, {V:1}, but is more advanced, and is used in Castle and Ancient Jokers. It allows for a variable to dynamically change the color, but is very rarely used.
+      Multiple variables can be used in one space, as long as you separate them with a comma. {C:attention, X:chips, s:1.3} would be the yellow attention color, with a blue chips-colored background,, and 1.3 times the scale of other text.
+      You can find the vanilla joker descriptions and names as well as several other things in the localization files.
+      ]]
       "{C:mult}+#1# {} Mult"
     }
   },
-  -- Config sets all the variables for your card, you want to put all numbers here.
-  -- This is really useful for scaling numbers, but should be done with static numbers - 
-  --     If you want to change the static value, you'd only change this number, instead
-  --     of going through all your code to change each instance individually.
+  --[[
+  Config sets all the variables for your card, you want to put all numbers here.
+  This is really useful for scaling numbers, but should be done with static numbers - 
+      If you want to change the static value, you'd only change this number, instead
+      of going through all your code to change each instance individually.
+  ]]
   config = {extra = {mult = 4}},
   -- loc_vars gives your loc_text variables to work with, in the format of #n#, n being the variable in order.
   -- #1# is the first variable in vars, #2# the second, #3# the third, and so on.
@@ -180,29 +185,37 @@ SMODS.Joker{
       "{C:red}#2#{} hand size"
     }
   },
-  config = {extra = {d_size = 3, h_size = -1}},
+  config = {extra = {discard_size = 3, hand_size = -1}},
   rarity = 2,
   atlas = 'ModdedVanilla',
   pos = {x = 3, y = 0},
   cost = 7,
   loc_vars = function(self, info_queue, card)
-    return {vars = {card.ability.extra.d_size, card.ability.extra.h_size}}
+    return {vars = {card.ability.extra.discard_size, card.ability.extra.hand_size}}
   end,
   -- This function is called when the card is added to deck. from_debuff is true whenever a card gets debuffed and then undebuffed.
   -- Debuffs usually call both of these functions, essentially, when a joker is debuffed, it's simply removed from your jokers, except for the fact that it takes up a slot.
   add_to_deck = function(self, card, from_debuff)
     -- Changes a G.GAME variable, which is usually a global value that's specific to the current run.
     -- These are initialized in game.lua under the Game:init_game_object() function, and you can look through them to get an idea of the things you can change.
-    G.GAME.round_resets.discards = G.GAME.round_resets.discards + card.ability.extra.d_size
-    G.hand:change_size(card.ability.extra.h_size)
+    G.GAME.round_resets.discards = G.GAME.round_resets.discards + card.ability.extra.discard_size
+    G.hand:change_size(card.ability.extra.hand_size)
   end,
   -- Inverse of above function.
   remove_from_deck = function(self, card, from_debuff)
     -- Adds - instead of +, so they get subtracted when this card is removed.
-    G.GAME.round_resets.discards = G.GAME.round_resets.discards - card.ability.extra.d_size
-    G.hand:change_size(-card.ability.extra.h_size)
+    G.GAME.round_resets.discards = G.GAME.round_resets.discards - card.ability.extra.discard_size
+    G.hand:change_size(-card.ability.extra.hand_size)
   end
   -- Because all the functionality is in remove_from_deck and add_to deck, calculate is unnecessary.
+  
+  --[[ 
+  Extra note, having the config as something like 
+    config = {d_size = 3, h_size = -1, extra = {whatever variables you put}}
+  automatically applies these changes.
+  However, these values outside of the extra table are constants, so they aren't good for jokers with values that change.
+  You can find a fuller list of them at card.lua:275.
+  ]]
 }
 
 
