@@ -542,3 +542,12 @@ pattern = '''
 position = "before"
 line_prepend = '$indent'
 payload = "nil, true"
+
+# Yorick
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "self.ability.yorick_discards = self.ability.yorick_discards - 1"
+position = "after"
+match_indent = true
+payload = "return nil, true"
