@@ -76,7 +76,7 @@ function loadMods(modsDirectory)
                 processDirectory(file_path, depth + 1)
             elseif filename:lower():match("%.lua$") then -- Check if the file is a .lua file
                 if depth == 1 then
-                    sendWarnMessage(('Found lone Lua file %s in Mods directory :: Please place the files for each mod in its own subdirectory.'):format(filename))
+                    sendWarnMessage(('Found lone Lua file %s in Mods directory :: Please place the files for each mod in its own subdirectory.'):format(filename), 'Loader')
                 end
                 local file_content = NFS.read(file_path)
 
@@ -102,7 +102,7 @@ function loadMods(modsDirectory)
                         if v.required and not component then
                             sane = false
                             sendWarnMessage(string.format('Mod file %s is missing required header component: %s',
-                                filename, k))
+                                filename, k), 'Loader')
                             break
                         end
                         if v.parse_array then
@@ -133,7 +133,7 @@ function loadMods(modsDirectory)
                     end
                     if mod.prefix and used_prefixes[mod.prefix] then
                         sane = false
-                        sendWarnMessage(('Duplicate Mod prefix %s used by %s, %s'):format(mod.prefix, mod.id, used_prefixes[mod.prefix]))
+                        sendWarnMessage(('Duplicate Mod prefix %s used by %s, %s'):format(mod.prefix, mod.id, used_prefixes[mod.prefix]), 'Loader')
                     end
 
                     if sane then

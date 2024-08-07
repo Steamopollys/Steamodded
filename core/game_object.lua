@@ -42,7 +42,8 @@ function loadAPIs()
         -- condition == nil counts as true
         if condition ~= false and obj[key] and prefix then
             if string.sub(obj[key], 1, #prefix + 1) == prefix..'_' then
-                sendWarnMessage(("Attempted to prefix field %s=%s on object %s, already prefixed"):format(key, obj[key], obj.key), obj.set)
+                -- this happens within steamodded itself and I don't want to spam the logs with warnings, leaving this disabled for now
+                -- sendWarnMessage(("Attempted to prefix field %s=%s on object %s, already prefixed"):format(key, obj[key], obj.key), obj.set)
                 return
             end
             obj[key] = prefix .. '_' .. obj[key]
@@ -1777,7 +1778,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 G.E_MANAGER:add_event(Event({
                     func = function()
                         local _card = G.hand.cards[i]
-                        assert(SMODS.change_base(_card, _suit))
+                        assert(SMODS.change_base(_card, _suit.key))
                         return true
                     end
                 }))
@@ -1974,25 +1975,35 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     ----- API CODE GameObject.PokerHand
     -------------------------------------------------------------------------------------------------
 
-    SMODS.PokerHands = {}
-    SMODS.PokerHand = SMODS.GameObject:extend {
-        obj_table = SMODS.PokerHands,
+    SMODS.PokerHandParts = {}
+    SMODS.PokerHandPart = SMODS.GameObject:extend {
+        obj_table = SMODS.PokerHandParts,
         obj_buffer = {},
         required_params = {
             'key',
-            'above_hand',
+            'func',
+        },
+        inject_class = function() end,
+    }
+    local handlist = G.handlist
+    G.handlist = {}
+    SMODS.PokerHands = {}
+    SMODS.PokerHand = SMODS.GameObject:extend {
+        obj_table = SMODS.PokerHands,
+        obj_buffer = G.handlist,
+        required_params = {
+            'key',
             'mult',
             'chips',
             'l_mult',
             'l_chips',
             'example',
+            'evaluate'
         },
-        order_lookup = {},
         visible = true,
         played = 0,
         played_this_round = 0,
         level = 1,
-        class_prefix = 'h',
         set = 'PokerHand',
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.poker_hands, self.key, self.loc_txt, 'name')
@@ -2000,14 +2011,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         register = function(self)
             if self:check_dependencies() and not self.obj_table[self.key] then
-                local j
-                for i, v in ipairs(G.handlist) do
-                    if v == self.above_hand then j = i end
-                end
-                -- insertion must not happen more than once, so do it on registration
-                table.insert(G.handlist, j, self.key)
-                self.order_lookup[j] = (self.order_lookup[j] or 0) - 0.001
-                self.order = j + self.order_lookup[j]
                 self.s_mult = self.mult
                 self.s_chips = self.chips
                 self.visible = self.visible
@@ -2018,9 +2021,86 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 self.obj_buffer[#self.obj_buffer + 1] = self.key
             end
         end,
-        inject = function(self) end
+        inject = function(self) end,
+        post_inject_class = function(self)
+            table.sort(
+                self.obj_buffer,
+                function(a, b)
+                    local x, y = self.obj_table[a], self.obj_table[b]
+                    local x_above = self.obj_table[x.above_hand or {}]
+                    local y_above = self.obj_table[y.above_hand or {}]
+                    local function eval(h) return h.mult*h.chips + (h.order_offset or 0) end
+                    return (x_above and (1e-6*eval(x) + eval(x_above)) or eval(x)) > (y_above and (1e-6*eval(y) + eval(y_above)) or eval(y))
+                end
+            )
+            for i, v in ipairs(self.obj_buffer) do self.obj_table[v].order = i end
+        end
     }
 
+    SMODS.PokerHandPart {
+        key = '_highest',
+        func = function(hand) return get_highest(hand) end
+    }
+    SMODS.PokerHandPart {
+        key = '_straight',
+        func = function(hand) return get_straight(hand) end
+    }
+    SMODS.PokerHandPart {
+        key = '_flush',
+        func = function(hand) return get_flush(hand) end,
+    }
+    -- all sets of 2 or more cards of same rank
+    SMODS.PokerHandPart {
+        key = '_all_pairs',
+        func = function(hand)
+            local _2 = get_X_same(2, hand, true)
+            if not next(_2) then return {} end
+            return {SMODS.merge_lists(_2)}
+        end
+    }
+    for i = 2, 5 do
+        SMODS.PokerHandPart {
+            key = '_'..i,
+            func = function(hand) return get_X_same(i, hand, true) end
+        }
+    end
+
+    local hands = G:init_game_object().hands
+    local eval_functions = {
+        ['Flush Five'] = function(parts)
+            if not next(parts._5) or not next(parts._flush) then return {} end
+            return { SMODS.merge_lists(parts._5, parts._flush) }
+        end,
+        ['Flush House'] = function(parts)
+            if #parts._3 < 1 or #parts._2 < 2 or not next(parts._flush) then return {} end
+            return { SMODS.merge_lists(parts._all_pairs, parts._flush) }
+        end, 
+        ['Five of a Kind'] = function(parts) return parts._5 end,
+        ['Straight Flush'] = function(parts)
+            if not next(parts._straight) or not next(parts._flush) then return end
+            return { SMODS.merge_lists(parts._straight, parts._flush) }
+        end, 
+        ['Four of a Kind'] = function(parts) return parts._4 end, 
+        ['Full House'] = function(parts)
+            if #parts._3 < 1 or #parts._2 < 2 then return {} end
+            return parts._all_pairs
+        end,
+        ['Flush'] = function(parts) return parts._flush end,
+        ['Straight'] = function(parts) return parts._straight end,
+        ['Three of a Kind'] = function(parts) return parts._3 end, 
+        ['Two Pair'] = function(parts)
+            if #parts._2 < 2 then return {} end
+            return parts._all_pairs
+        end, 
+        ['Pair'] = function(parts) return parts._2 end, 
+        ['High Card'] = function(parts) return parts._highest end, 
+    }
+    for _, v in ipairs(handlist) do
+        local hand = copy_table(hands[v])
+        hand.key = v
+        hand.evaluate = eval_functions[v]
+        SMODS.PokerHand(hand)
+    end
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Challenge
     -------------------------------------------------------------------------------------------------

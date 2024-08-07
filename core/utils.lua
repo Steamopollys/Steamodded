@@ -516,6 +516,30 @@ function V.is_valid(v)
     return(pcall(function() return V() <= v end))
 end
 
+-- Flatten the given arrays of arrays into one, then
+-- add elements of each table to a new table in order,
+-- skipping any duplicates.
+function SMODS.merge_lists(...)
+    local t = {}
+    for _, v in ipairs({...}) do
+        for _, vv in ipairs(v) do
+            table.insert(t, vv)
+        end
+    end
+    local ret = {}
+    local seen = {}
+    for _, li in ipairs(t) do
+        assert(type(li) == 'table')
+        for _, v in ipairs(li) do
+            if not seen[v] then
+                ret[#ret+1] = v
+                seen[v] = true
+            end
+        end
+    end
+    return ret
+end
+
 --#region palettes
 G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
 G.PALETTE = {}

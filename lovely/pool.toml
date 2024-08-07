@@ -119,7 +119,7 @@ payload = '''
 if v.in_pool and type(v.in_pool) == 'function' then
 	-- TODO currently this overrides all base game checks
 	if (_type == 'Enhanced' or _type == 'Tag' or v.set == 'Voucher' or v.set == 'Planet') then
-		sendWarnMessage(("get_current_pool(): in_pool() may not work correctly on a card of _type=%s"):format(_type))
+		sendWarnMessage(("get_current_pool(): in_pool() may not work correctly on a card of _type=%s"):format(_type), 'Pool')
 	end
 	local res, pool_opts = v:in_pool()
 	if res and (not G.GAME.used_jokers[v.key] or (pool_opts and pool_opts.allow_duplicates) or next(find_joker("Showman"))) then

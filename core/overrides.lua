@@ -697,6 +697,24 @@ G.FUNCS.your_hands_page = function(args)
 		}
 	end
 end
+
+function evaluate_poker_hand(hand)
+	local results = {}
+	local parts = {}
+	for _, v in ipairs(SMODS.PokerHandPart.obj_buffer) do
+		parts[v] = SMODS.PokerHandParts[v].func(hand) or {}
+	end
+	for k, _hand in pairs(SMODS.PokerHands) do
+		results[k] = _hand.evaluate(parts, hand) or {}
+	end
+	for _, v in ipairs(G.handlist) do
+		if not results.top and results[v] then
+			results.top = results[v]
+			break
+		end
+	end
+	return results
+end
 --#endregion
 --#region editions
 function create_UIBox_your_collection_editions(exit)
