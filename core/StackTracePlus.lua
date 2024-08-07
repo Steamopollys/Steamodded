@@ -693,7 +693,7 @@ function injectStackTrace()
             p = p .. "\nCopied to clipboard!"
         end
 
-        p = p .. "\n\nPress ESC to exit\nPress R to restart the game (currently breaks lovely)"
+        p = p .. "\n\nPress ESC to exit\nPress R to restart the game"
         if love.system then
             p = p .. "\nPress Ctrl+C or tap to copy this error"
         end
@@ -728,7 +728,7 @@ function injectStackTrace()
                 elseif e == "keypressed" and a == "c" and love.keyboard.isDown("lctrl", "rctrl") then
                     copyToClipboard()
                 elseif e == "keypressed" and a == "r" then
-                    SMODS.full_restart()
+                    SMODS.restart_game()
                 elseif e == "keypressed" and a == "down" then
                     scrollDown()
                 elseif e == "keypressed" and a == "up" then

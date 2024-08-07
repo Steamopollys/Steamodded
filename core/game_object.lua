@@ -1778,7 +1778,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 G.E_MANAGER:add_event(Event({
                     func = function()
                         local _card = G.hand.cards[i]
-                        assert(SMODS.change_base(_card, _suit))
+                        assert(SMODS.change_base(_card, _suit.key))
                         return true
                     end
                 }))
