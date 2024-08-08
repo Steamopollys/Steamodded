@@ -435,3 +435,18 @@ local obj = self.config.center
 if obj.calc_dollar_bonus and type(obj.calc_dollar_bonus) == 'function' then
     return obj:calc_dollar_bonus(self)
 end'''
+
+# G.FUNCS.buy_from_shop()
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "G.consumeables:emplace(c1)"
+position = "at"
+match_indent = true
+payload = '''
+    if c1.ability and c1.ability.cardarea and type(c1.ability.cardarea) == 'string' and G[c1.ability.cardarea] and G[c1.ability.cardarea].emplace then
+        G[c1.ability.cardarea]:emplace(c1)
+    else
+        G.consumeables:emplace(c1)
+    end
+'''
