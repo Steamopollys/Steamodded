@@ -14,13 +14,13 @@
 Line 26, Atlas ---------------- Explains the parts of the atlas.
 Line 40, Joker 2 -------------- Explains the basic structure of a joker
 Line 103, Runner 2 ------------ Uses a bit more complex contexts, and shows how to scale a value.
-Line 151, Golden Joker 2 ------ Shows off a specific function that's used to add money at the end of a round.
-Line 178, Merry Andy 2 -------- Shows how to use add_to_deck and remove_from_deck.
-Line 221, Sock and Buskin 2 --- Shows how you can retrigger cards and check for faces
-Line 255, Perkeo 2 ------------ Shows how to use the event manager, eval_status_text, randomness, and soul_pos.
-Line 299, Walkie Talkie 2 ----- Shows how to look for multiple specific ranks, and explains returning multiple values
-Line 334, Gros Michel 2 ------- Shows the no_pool_flag, sets a pool flag, another way to use randomness, and end of round stuff.
-Line 404, Cavendish 2 --------- Shows yes_pool_flag, has X Mult, mainly to go with Gros Michel 2.
+Line 153, Golden Joker 2 ------ Shows off a specific function that's used to add money at the end of a round.
+Line 180, Merry Andy 2 -------- Shows how to use add_to_deck and remove_from_deck.
+Line 223, Sock and Buskin 2 --- Shows how you can retrigger cards and check for faces
+Line 257, Perkeo 2 ------------ Shows how to use the event manager, eval_status_text, randomness, and soul_pos.
+Line 301, Walkie Talkie 2 ----- Shows how to look for multiple specific ranks, and explains returning multiple values
+Line 336, Gros Michel 2 ------- Shows the no_pool_flag, sets a pool flag, another way to use randomness, and end of round stuff.
+Line 406, Cavendish 2 --------- Shows yes_pool_flag, has X Mult, mainly to go with Gros Michel 2.
 ]]
 
 --Creates an atlas for cards to use
@@ -128,9 +128,11 @@ SMODS.Joker{
     end
     
     -- context.before checks if context.before == true, and context.before is true when it's before the current hand is scored.
-    -- context.scoring_name == 'Straight' checks if the current hand is a 'Straight'.
+    -- (context.poker_hands == 'Straight') checks if the current hand is a 'Straight'.
+    -- The 'next()' part makes sure it goes over every option in the table, which the table is context.poker_hands.
+    -- context.poker_hands contains every valid hand type in a played hand.
     -- not context.blueprint ensures that Blueprint or Brainstorm don't copy this upgrading part of the joker, but that it'll still copy the added chips.
-    if context.before and context.scoring_name == 'Straight' and not context.blueprint then
+    if context.before and next(context.poker_hands == 'Straight') and not context.blueprint then
       -- Updated variable is equal to current variable, plus the amount of chips in chip gain.
       -- 15 = 0+15, 30 = 15+15, 75 = 60+15.
       card.ability.extra.chips = card.ability.extra.chips + card.ability.extra.chip_gain
@@ -318,7 +320,7 @@ SMODS.Joker{
   end,
   calculate = function(self, card, context)
     if context.individual and context.cardarea == G.play then
-      -- :get_id tests for the rank of the card. Other than 2-10, Jack is 11, Queen is 12, King is 14, and Ace is 14.
+      -- :get_id tests for the rank of the card. Other than 2-10, Jack is 11, Queen is 12, King is 13, and Ace is 14.
       if context.other_card:get_id() == 10 or context.other_card:get_id() == 4 then
         -- Specifically returning to context.other_card is fine with multiple values in a single return value, chips/mult are different from chip_mod and mult_mod, and automatically come with a message which plays in order of return.
         return {
