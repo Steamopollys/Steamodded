@@ -549,7 +549,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         post_inject_class = function(self)
             table.sort(G.P_CENTER_POOLS[self.set], function(a, b) return a.order < b.order end)
             for _,stake in pairs(G.P_CENTER_POOLS.Stake) do
-                stake.stake_level = SMODS.calculate_stake_level(stake)
+                local applied = SMODS.build_stake_chain(stake)
+                self.stake_level = 0
+                for i,_ in ipairs(G.P_CENTER_POOLS.Stake) do
+                    if applied[i] then self.stake_level = self.stake_level+1 end
+                end
             end
             G.C.STAKES = {}
             for i = 1, #G.P_CENTER_POOLS[self.set] do
@@ -583,32 +587,25 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         get_obj = function(self, key) return G.P_STAKES[key] end
     }
 
-    function SMODS.calculate_stake_level(stake, applied)
+    function SMODS.build_stake_chain(stake, applied)
         if not applied then applied = {} end
+        if applied[stake.order] then return end
         applied[stake.order] = stake.order
-        if not stake.applied_stakes then
-            return
-        end
+        -- if not stake.applied_stakes then
+        --     return
+        -- end
         for _, s in pairs(stake.applied_stakes) do
-            SMODS.calculate_stake_level(G.P_STAKES['stake_'..s], applied)
+            SMODS.build_stake_chain(G.P_STAKES['stake_'..s], applied)
         end
-        local applied_count = 0
-        for i,_ in ipairs(G.P_CENTER_POOLS.Stake) do
-            if applied[i] then applied_count = applied_count+1 end
-        end
-        if stake.order == 19 then
-            sendDebugMessage(tprint(applied))
-        end
-        return applied_count
+        return applied
     end 
 
     function SMODS.setup_stake(i)
-        if G.P_CENTER_POOLS['Stake'][i].modifiers then
-            G.P_CENTER_POOLS['Stake'][i].modifiers()
-        end
-        if G.P_CENTER_POOLS['Stake'][i].applied_stakes then
-            for _, v in pairs(G.P_CENTER_POOLS['Stake'][i].applied_stakes) do
-                SMODS.setup_stake(G.P_STAKES["stake_" .. v].stake_level)
+        local applied_stakes = SMODS.build_stake_chain(G.P_CENTER_POOLS.Stake[i])
+        for stake, _ in pairs(applied_stakes) do
+            if G.P_CENTER_POOLS['Stake'][stake].modifiers then
+                sendDebugMessage("Applying "..G.P_CENTER_POOLS['Stake'][stake].key)
+                G.P_CENTER_POOLS['Stake'][stake].modifiers()
             end
         end
     end
