@@ -1241,6 +1241,18 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                                 fill = true
                             })
                         end
+                        if self.meteors then
+                            G.booster_pack_meteors = Particles(1, 1, 0, 0, {
+                                timer = self.meteors.timer or 2,
+                                scale = self.meteors.scale or 0.05,
+                                lifespan = self.meteors.lifespan or 1.5,
+                                speed = self.meteors.speed or 4,
+                                padding = self.meteors.padding or 0,
+                                attach = G.ROOM_ATTACH,
+                                colours = self.meteors.colours or {G.C.WHITE},
+                                fill = true
+                            })
+                        end
                         G.booster_pack = UIBox{
                             definition = self:pack_uibox(),
                             config = {align="tmi", offset = {x=0,y=G.ROOM.T.y + 9}, major = G.hand, bond = 'Weak'}
