@@ -132,7 +132,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     --- functions with the given key on all subordinate classes
     --- and run all found functions with the given arguments
     function SMODS.GameObject:send_to_subclasses(func, ...)
-        if self[func] and type(self[func]) == 'function' then self[func](self, ...) end
+        if rawget(self, func) and type(self[func]) == 'function' then self[func](self, ...) end
         for _, cls in ipairs(self.subclasses) do
             cls:send_to_subclasses(func, ...)
         end

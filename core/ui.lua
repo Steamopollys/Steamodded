@@ -905,6 +905,7 @@ function G.FUNCS.exit_mods(e)
 		-- launch a new instance of the game and quit the current one
 		SMODS.restart_game()
     end
+	SMODS.IN_MODS_TAB = nil
 	G.FUNCS.exit_overlay_menu(e)
 end
 
@@ -1112,6 +1113,7 @@ end
 function G.FUNCS.mods_button(e)
 	G.SETTINGS.paused = true
 	SMODS.LAST_SELECTED_MOD_TAB = nil
+	SMODS.IN_MODS_TAB = true
 
 	G.FUNCS.overlay_menu({
 		definition = create_UIBox_mods_button()
@@ -1283,7 +1285,7 @@ function SMODS.GUI.DynamicUIManager.initTab(args)
 
 	for _, updateFunction in pairs(updateFunctions) do
 		G.E_MANAGER:add_event(Event({func = function()
-			updateFunction{cycle_config = {current_option = 1}}
+			updateFunction{cycle_config = {}}
 			return true
 		end}))
 	end
@@ -1305,6 +1307,8 @@ function SMODS.GUI.DynamicUIManager.updateDynamicAreas(uiDefinitions)
 end
 
 local function recalculateModsList(page)
+	page = page or SMODS.LAST_VIEWED_MODS_PAGE or 1
+	SMODS.LAST_VIEWED_MODS_PAGE = page
 	local modsPerPage = 4
 	local startIndex = (page - 1) * modsPerPage + 1
 	local endIndex = startIndex + modsPerPage - 1
@@ -1324,7 +1328,7 @@ end
 -- EX: in this pane the 'modsList' node will contain the dynamic content which is defined in the function below
 function SMODS.GUI.staticModListContent()
 	local scale = 0.75
-	local currentPage, pageOptions, showingList = recalculateModsList(1)
+	local currentPage, pageOptions, showingList = recalculateModsList()
 	return {
 		n = G.UIT.ROOT,
 		config = {

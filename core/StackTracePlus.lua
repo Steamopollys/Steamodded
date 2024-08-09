@@ -598,8 +598,11 @@ function injectStackTrace()
         local err = {}
 
         table.insert(err, "Oops! The game crashed:")
-        table.insert(err, sanitizedmsg)
-
+        if sanitizedmsg:find("Syntax error: game.lua:4: '=' expected near 'Game'") then
+            table.insert(err, 'Duplicate installation of Steamodded detected! Please clean your installation: Steam Library > Balatro > Properties > Installed Files > Verify integrity of game files.')
+        else
+            table.insert(err,sanitizedmsg)
+        end
         if #sanitizedmsg ~= #msg then
             table.insert(err, "Invalid UTF-8 string in error message.")
         end
