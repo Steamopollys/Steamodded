@@ -958,10 +958,10 @@ function Card:set_edition(edition, immediate, silent)
 
 	local p_edition = G.P_CENTERS['e_' .. edition_type]
 
-	if p_edition.override_base_shader then
+	if p_edition.override_base_shader or p_edition.disable_base_shader then
 		self.ignore_base_shader[self.edition.key] = true
 	end
-	if p_edition.no_shadow then
+	if p_edition.no_shadow or p_edition.disable_shadow then
 		self.ignore_shadow[self.edition.key] = true
 	end
 
