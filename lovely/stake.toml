@@ -116,3 +116,11 @@ pattern = 'if highest_win >= 8 then'
 position = "at"
 payload = 'if highest_win >= G.P_STAKES["stake_gold"].stake_level then'
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'function get_blind_amount(ante)'
+position = "after"
+payload = '''if G.GAME.modifiers.scaling and G.GAME.modifiers.scaling > 3 then return SMODS.get_blind_amount(ante) end'''
+match_indent = true
