@@ -550,9 +550,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             table.sort(G.P_CENTER_POOLS[self.set], function(a, b) return a.order < b.order end)
             for _,stake in pairs(G.P_CENTER_POOLS.Stake) do
                 local applied = SMODS.build_stake_chain(stake)
-                self.stake_level = 0
+                stake.stake_level = 0
                 for i,_ in ipairs(G.P_CENTER_POOLS.Stake) do
-                    if applied[i] then self.stake_level = self.stake_level+1 end
+                    if applied[i] then stake.stake_level = stake.stake_level+1 end
                 end
             end
             G.C.STAKES = {}
@@ -591,9 +591,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         if not applied then applied = {} end
         if applied[stake.order] then return end
         applied[stake.order] = stake.order
-        -- if not stake.applied_stakes then
-        --     return
-        -- end
+        if not stake.applied_stakes then
+            return
+        end
         for _, s in pairs(stake.applied_stakes) do
             SMODS.build_stake_chain(G.P_STAKES['stake_'..s], applied)
         end
