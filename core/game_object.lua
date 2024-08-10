@@ -2264,21 +2264,23 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         -- relocating sticker checks to here, so if the sticker has different checks than default
         -- they can be handled without hooking/injecting into create_card
-        -- or handling it in set_sticker
+        -- or handling it in apply
         -- TODO: rename
-        sticker_check = function(self, card, center, area)
-            if (
-                center[self.key..'_compat'] or -- explicit marker
-                (self.default_compat and not self.compat_exceptions[center.key]) or -- default yes with no exception
-                (not self.default_compat and self.compat_exceptions[center.key]) -- default no with exception
-            ) and 
-            (not self.needs_enable_flag or G.GAME.modifiers['enable_'..self.key]) and
-            pseudorandom((area == G.pack_cards and 'packssj' or 'shopssj')..self.key..G.GAME.round_resets.ante) > (1-self.rate)
+        should_apply = function(self, card, center, area)
+            if 
+                ( not self.sets or self.sets[center.set or {}]) and
+                (
+                    center[self.key..'_compat'] or -- explicit marker
+                    (self.default_compat and not self.compat_exceptions[center.key]) or -- default yes with no exception
+                    (not self.default_compat and self.compat_exceptions[center.key]) -- default no with exception
+                ) and 
+                (not self.needs_enable_flag or G.GAME.modifiers['enable_'..self.key]) and
+                pseudorandom((area == G.pack_cards and 'packssj' or 'shopssj')..self.key..G.GAME.round_resets.ante) > (1-self.rate)
             then
                 return true
             end
         end,
-        set_sticker = function(self, card, val)
+        apply = function(self, card, val)
             card.ability[self.key] = val
         end
     }
@@ -2292,7 +2294,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 0, y = 0 },
         hide_badge = true,
         order = 1,
-        sticker_check = false,
+        should_apply = false,
     }
 
     SMODS.Sticker{
@@ -2302,8 +2304,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 0, y = 2 },
         hide_badge = true,
         order = 2,
-        sticker_check = false,
-        set_sticker = function(self, card, val)
+        should_apply = false,
+        apply = function(self, card, val)
             card.ability[self.key] = val
             if card.ability[self.key] then card.ability.perish_tally = G.GAME.perishable_rounds end
         end,
@@ -2319,7 +2321,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 1, y = 2 },
         hide_badge = true,
         order = 3,
-        set_sticker = function(self, card, val)
+        apply = function(self, card, val)
             card.ability[self.key] = val
             if card.ability[self.key] then card:set_cost() end
         end,
@@ -2334,9 +2336,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         prefix_config = {key = false},
         pos = { x = 10, y = 10 }, -- Base game has no art, and I haven't made any yet to represent Pinned with
         rate = 0,
-        sticker_check = false, 
+        should_apply = false, 
         order = 4,
-        set_sticker = function(self, card, val)
+        apply = function(self, card, val)
             card[self.key] = val
         end
     }

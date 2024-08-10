@@ -579,7 +579,7 @@ function create_UIBox_your_collection_stickers(exit)
 			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
 				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
 			card.ignore_pinned = true -- Scuffed solution to ignoring the effect of pinned, I'll figure out something better later
-			center:set_sticker(card, true)
+			center:apply(card, true)
 			G.your_collection[j]:emplace(card)
 			index = index + 1
 		end
@@ -673,7 +673,7 @@ G.FUNCS.your_collection_stickers_page = function(args)
 			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
 				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
 			card.ignore_pinned = true -- Scuffed solution to ignoring the effect of pinned, I'll figure out something better later
-			center:set_sticker(card, true)
+			center:apply(card, true)
 			G.your_collection[j]:emplace(card)
 		end
 	end

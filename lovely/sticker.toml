@@ -58,8 +58,8 @@ payload = '''
 for k, v in ipairs(SMODS.Sticker.obj_buffer) do
     local sticker = SMODS.Stickers[v]
     -- Temp name, change later
-    if sticker.sets[_type] and (sticker.sticker_check and type(sticker.sticker_check) == 'function') and sticker:sticker_check(card, center, area) then
-        sticker:set_sticker(card, true)
+    if sticker.should_apply and type(sticker.should_apply) == 'function' and sticker:should_apply(card, center, area) then
+        sticker:apply(card, true)
     end
 end'''
 
@@ -70,7 +70,7 @@ target = "functions/common_events.lua"
 pattern = "if G.GAME.modifiers.enable_eternals_in_shop and eternal_perishable_poll > 0.7 then"
 position = "at"
 match_indent = true
-payload = '''if G.GAME.modifiers.enable_eternals_in_shop and eternal_perishable_poll > 0.7 and not SMODS.Stickers["eternal"].sticker_check then'''
+payload = '''if G.GAME.modifiers.enable_eternals_in_shop and eternal_perishable_poll > 0.7 and not SMODS.Stickers["eternal"].should_apply then'''
 
 [[patches]]
 [patches.pattern]
@@ -78,7 +78,7 @@ target = "functions/common_events.lua"
 pattern = "elseif G.GAME.modifiers.enable_perishables_in_shop and ((eternal_perishable_poll > 0.4) and (eternal_perishable_poll <= 0.7)) then"
 position = "at"
 match_indent = true
-payload = '''elseif G.GAME.modifiers.enable_perishables_in_shop and ((eternal_perishable_poll > 0.4) and (eternal_perishable_poll <= 0.7)) and not SMODS.Stickers["perishable"].sticker_check then'''
+payload = '''elseif G.GAME.modifiers.enable_perishables_in_shop and ((eternal_perishable_poll > 0.4) and (eternal_perishable_poll <= 0.7)) and not SMODS.Stickers["perishable"].should_apply then'''
 
 [[patches]]
 [patches.pattern]
@@ -86,7 +86,7 @@ target = "functions/common_events.lua"
 pattern = "if G.GAME.modifiers.enable_rentals_in_shop and pseudorandom((area == G.pack_cards and 'packssjr' or 'ssjr')..G.GAME.round_resets.ante) > 0.7 then"
 position = "at"
 match_indent = true
-payload = '''if G.GAME.modifiers.enable_rentals_in_shop and pseudorandom((area == G.pack_cards and 'packssjr' or 'ssjr')..G.GAME.round_resets.ante) > 0.7 and not SMODS.Stickers["rental"].sticker_check then'''
+payload = '''if G.GAME.modifiers.enable_rentals_in_shop and pseudorandom((area == G.pack_cards and 'packssjr' or 'ssjr')..G.GAME.round_resets.ante) > 0.7 and not SMODS.Stickers["rental"].should_apply then'''
 
 # Card:draw()
 [[patches]]
