@@ -32,8 +32,6 @@ function loadAPIs()
         SMODS.add_prefixes(self, o)
         if o:check_duplicate_key() then return end
         o:register()
-        --TODO: Use better check to enable "Additions" tab
-        if SMODS.current_mod then SMODS.current_mod.added_obj = true end
         return o
     end
 
@@ -2248,22 +2246,100 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         required_params = {
             'key',
         },
-        class_prefix = 'st',
+        class_prefix = 'st', --? remove this?
         rate = 0.3,
         atlas = 'stickers',
         pos = { x = 0, y = 0 },
-        colour = HEX 'FFFFFF',
+        badge_colour = HEX 'FFFFFF',
         default_compat = true,
         compat_exceptions = {},
         sets = { Joker = true },
         needs_enable_flag = true,
         process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt, 'description')
+            SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
             SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'label')
         end,
-        inject = function() end,
-        set_sticker = function(self, card, val)
+        inject = function(self)
+            G.shared_stickers[self.key] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)
+        end,
+        -- relocating sticker checks to here, so if the sticker has different checks than default
+        -- they can be handled without hooking/injecting into create_card
+        -- or handling it in apply
+        -- TODO: rename
+        should_apply = function(self, card, center, area)
+            if 
+                ( not self.sets or self.sets[center.set or {}]) and
+                (
+                    center[self.key..'_compat'] or -- explicit marker
+                    (self.default_compat and not self.compat_exceptions[center.key]) or -- default yes with no exception
+                    (not self.default_compat and self.compat_exceptions[center.key]) -- default no with exception
+                ) and 
+                (not self.needs_enable_flag or G.GAME.modifiers['enable_'..self.key])
+            then
+                self.last_roll = pseudorandom((area == G.pack_cards and 'packssj' or 'shopssj')..self.key..G.GAME.round_resets.ante)
+                return self.last_roll > (1-self.rate)
+            end
+        end,
+        apply = function(self, card, val)
             card.ability[self.key] = val
+        end
+    }
+
+    -- Create base game stickers
+    -- eternal and perishable follow shared checks for sticker application, therefore omitted 
+    SMODS.Sticker{
+        key = "eternal",
+        badge_colour = HEX 'c75985',
+        prefix_config = {key = false},
+        pos = { x = 0, y = 0 },
+        hide_badge = true,
+        order = 1,
+        should_apply = false,
+    }
+
+    SMODS.Sticker{
+        key = "perishable",
+        badge_colour = HEX '4f5da1',
+        prefix_config = {key = false},
+        pos = { x = 0, y = 2 },
+        hide_badge = true,
+        order = 2,
+        should_apply = false,
+        apply = function(self, card, val)
+            card.ability[self.key] = val
+            if card.ability[self.key] then card.ability.perish_tally = G.GAME.perishable_rounds end
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card.ability.perishable_rounds or 5, card.ability.perish_tally or G.GAME.perishable_rounds}}
+        end,
+    }
+
+    SMODS.Sticker{
+        key = "rental",
+        badge_colour = HEX 'b18f43',
+        prefix_config = {key = false},
+        pos = { x = 1, y = 2 },
+        hide_badge = true,
+        order = 3,
+        apply = function(self, card, val)
+            card.ability[self.key] = val
+            if card.ability[self.key] then card:set_cost() end
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {G.GAME.rental_rate or 1}}
+        end,
+    }
+
+    SMODS.Sticker{
+        key = "pinned",
+        badge_colour = HEX 'fda200',
+        prefix_config = {key = false},
+        pos = { x = 10, y = 10 }, -- Base game has no art, and I haven't made any yet to represent Pinned with
+        rate = 0,
+        should_apply = false, 
+        order = 4,
+        apply = function(self, card, val)
+            card[self.key] = val
         end
     }
 

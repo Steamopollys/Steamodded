@@ -4,15 +4,6 @@ dump_lua = true
 priority = 0
 
 ### Addition Tab
-## TODO: Find better solution (if possible)
-# G.FUNCS.your_collection
-[[patches]]
-[patches.pattern]
-target = "functions/button_callbacks.lua"
-pattern = '''G.FUNCS.your_collection = function(e)'''
-position = "after"
-payload = '''G.ACTIVE_MOD_UI = nil'''
-match_indent = true
 
 ## Jokers tab
 # create_UIBox_your_collection_jokers()
@@ -348,7 +339,7 @@ match_indent = true
 target = 'functions/UI_definitions.lua'
 pattern = '''(?<indent>[\t ]*)UIBox_button\(\{button = 'your_collection_blinds', label = \{localize\('b_blinds'\)\}, count = G\.DISCOVER_TALLIES\.blinds, minw = 5, minh = 2.0, id = 'your_collection_blinds', focus_args = \{snap_to = true\}\}\),'''
 position = 'after'
-payload = '''UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}, func = 'is_other_gameobject_tabs'}),'''
+payload = '''UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}}),'''
 
 # Fix UIElement.config.chosen being overriden if choice=true is set
 # UIElement:click()
