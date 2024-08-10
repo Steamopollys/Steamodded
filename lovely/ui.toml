@@ -358,3 +358,18 @@ match_indent = true
 position = "at"
 pattern = "self.config.chosen = true"
 payload = "self.config.chosen = chosen_temp or true"
+
+# Escape from mod menu saves config
+[[patches]]
+[patches.pattern]
+target = 'engine/controller.lua'
+match_indent = true
+position = 'at'
+pattern = 'G.FUNCS:exit_overlay_menu()'
+payload = '''
+if SMODS.IN_MODS_TAB then
+    G.FUNCS.exit_mods()
+else
+    G.FUNCS.exit_overlay_menu() 
+end
+'''

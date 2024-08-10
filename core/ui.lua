@@ -683,7 +683,7 @@ function buildAchievementsTab(mod, current_page)
 	current_page = current_page or 1
 	fetch_achievements()
 	local achievement_matrix = {{},{}}
-	local achievements_per_row = 4
+	local achievements_per_row = 3
 	local achievements_pool = {}
 	for k, v in pairs(G.ACHIEVEMENTS) do
 		if v.mod and v.mod.id == mod.id then achievements_pool[#achievements_pool+1] = v end
@@ -701,7 +701,7 @@ function buildAchievementsTab(mod, current_page)
 	for i = 1, achievements_per_row*2 do
 		local v = achievement_tab[i+((achievements_per_row*2)*(current_page-1))]
 		if not v then break end
-		local temp_achievement = Sprite(0,0,1.25,1.25,G.ASSET_ATLAS[v.atlas or "achievements"], v.earned and v.pos or {x=0, y=0})
+		local temp_achievement = Sprite(0,0,1.1,1.1,G.ASSET_ATLAS[v.atlas or "achievements"], v.earned and v.pos or {x=0, y=0})
 		temp_achievement:define_draw_steps({
 			{shader = 'dissolve', shadow_height = 0.05},
 			{shader = 'dissolve'}
@@ -741,7 +741,7 @@ function buildAchievementsTab(mod, current_page)
 
 		-- Description
 		local achievement_text = {}
-		local maxCharsPerLine = 25
+		local maxCharsPerLine = 30
 		local function wrapText(text, maxChars)
 			local wrappedText = {""}
 			local curr_line = 1
@@ -775,8 +775,8 @@ function buildAchievementsTab(mod, current_page)
 		end
 		max_lines = math.max(max_lines, #ability_text)
 		achievement_text[#achievement_text + 1] =
-		{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, minw = 3.5, maxw = 3.5, padding = 0.05, colour = G.C.WHITE, minh = 0.4*max_lines+0.1}, nodes={
-			ability_text[1] and {n=G.UIT.R, config={align = "cm", padding = 0.08, colour = G.C.GREY, r = 0.1, emboss = 0.05, minw = 3.4, maxw = 3.4, minh = 0.4*max_lines}, nodes=ability_text} or nil
+		{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, minw = 4, maxw = 4, padding = 0.05, colour = G.C.WHITE, minh = 0.4*max_lines+0.1}, nodes={
+			ability_text[1] and {n=G.UIT.R, config={align = "cm", padding = 0.08, colour = G.C.GREY, r = 0.1, emboss = 0.05, minw = 3.9, maxw = 3.9, minh = 0.4*max_lines}, nodes=ability_text} or nil
 		}}
 
 		table.insert(achievement_matrix[row], {
@@ -786,9 +786,9 @@ function buildAchievementsTab(mod, current_page)
 				{n=G.UIT.R, config = {align = "cm"}, nodes = {
 					{n=G.UIT.R, config = {align = "cm", padding = 0.1}, nodes = {{ n = G.UIT.O, config = { object = temp_achievement, focus_with_object = true }}}},
 					{
-						n=G.UIT.R, config = {align = "cm", minw = 3.5, maxw = 3.5, padding = 0.05}, nodes = {
+						n=G.UIT.R, config = {align = "cm", minw = 4, maxw = 4, padding = 0.05}, nodes = {
 							{n=G.UIT.R, config={align = "cm", emboss = 0.05, r = 0.1, padding = 0.1, minh = 0.6, colour = G.C.GREY}, nodes={
-								{n=G.UIT.O, config={align = "cm", maxw = 3.3, object = DynaText({string = loc_name, maxw = 3.3, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, spacing = 1, bump = true, scale = 0.4})}},
+								{n=G.UIT.O, config={align = "cm", maxw = 3.8, object = DynaText({string = loc_name, maxw = 3.8, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, spacing = 1, bump = true, scale = 0.4})}},
 							}},
 							{n=G.UIT.R, config={align = "cm"}, nodes=achievement_text},
 						},
@@ -812,8 +812,8 @@ function buildAchievementsTab(mod, current_page)
 		{n=G.UIT.C, config={}, nodes={ 
 		{n=G.UIT.C, config={align = "cm"}, nodes={
 		{n=G.UIT.R, config={align = "cm"}, nodes={
-			{n=G.UIT.R, config={align = "cm"}, nodes=achievement_matrix[1]},
-			{n=G.UIT.R, config={align = "cm"}, nodes=achievement_matrix[2]},
+			{n=G.UIT.R, config={align = "cm", padding = 0.1 }, nodes=achievement_matrix[1]},
+			{n=G.UIT.R, config={align = "cm", padding = 0.1 }, nodes=achievement_matrix[2]},
 			create_option_cycle({options = achievements_options, w = 4.5, cycle_shoulders = true, opt_callback = 'achievments_tab_page', focus_args = {snap_to = true, nav = 'wide'},current_option = current_page, colour = G.C.RED, no_pips = true})
 		}}
 		}}
@@ -1076,6 +1076,7 @@ function G.FUNCS.exit_mods(e)
 		-- launch a new instance of the game and quit the current one
 		SMODS.restart_game()
     end
+	SMODS.IN_MODS_TAB = nil
 	G.FUNCS.exit_overlay_menu(e)
 end
 
@@ -1283,6 +1284,7 @@ end
 function G.FUNCS.mods_button(e)
 	G.SETTINGS.paused = true
 	SMODS.LAST_SELECTED_MOD_TAB = nil
+	SMODS.IN_MODS_TAB = true
 
 	G.FUNCS.overlay_menu({
 		definition = create_UIBox_mods_button()
@@ -1454,7 +1456,7 @@ function SMODS.GUI.DynamicUIManager.initTab(args)
 
 	for _, updateFunction in pairs(updateFunctions) do
 		G.E_MANAGER:add_event(Event({func = function()
-			updateFunction{cycle_config = {current_option = 1}}
+			updateFunction{cycle_config = {}}
 			return true
 		end}))
 	end
@@ -1476,6 +1478,8 @@ function SMODS.GUI.DynamicUIManager.updateDynamicAreas(uiDefinitions)
 end
 
 local function recalculateModsList(page)
+	page = page or SMODS.LAST_VIEWED_MODS_PAGE or 1
+	SMODS.LAST_VIEWED_MODS_PAGE = page
 	local modsPerPage = 4
 	local startIndex = (page - 1) * modsPerPage + 1
 	local endIndex = startIndex + modsPerPage - 1
@@ -1495,7 +1499,7 @@ end
 -- EX: in this pane the 'modsList' node will contain the dynamic content which is defined in the function below
 function SMODS.GUI.staticModListContent()
 	local scale = 0.75
-	local currentPage, pageOptions, showingList = recalculateModsList(1)
+	local currentPage, pageOptions, showingList = recalculateModsList()
 	return {
 		n = G.UIT.ROOT,
 		config = {

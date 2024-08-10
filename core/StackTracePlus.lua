@@ -598,8 +598,11 @@ function injectStackTrace()
         local err = {}
 
         table.insert(err, "Oops! The game crashed:")
-        table.insert(err, sanitizedmsg)
-
+        if sanitizedmsg:find("Syntax error: game.lua:4: '=' expected near 'Game'") then
+            table.insert(err, 'Duplicate installation of Steamodded detected! Please clean your installation: Steam Library > Balatro > Properties > Installed Files > Verify integrity of game files.')
+        else
+            table.insert(err,sanitizedmsg)
+        end
         if #sanitizedmsg ~= #msg then
             table.insert(err, "Invalid UTF-8 string in error message.")
         end
@@ -693,7 +696,7 @@ function injectStackTrace()
             p = p .. "\nCopied to clipboard!"
         end
 
-        p = p .. "\n\nPress ESC to exit\nPress R to restart the game (currently breaks lovely)"
+        p = p .. "\n\nPress ESC to exit\nPress R to restart the game"
         if love.system then
             p = p .. "\nPress Ctrl+C or tap to copy this error"
         end
@@ -728,7 +731,7 @@ function injectStackTrace()
                 elseif e == "keypressed" and a == "c" and love.keyboard.isDown("lctrl", "rctrl") then
                     copyToClipboard()
                 elseif e == "keypressed" and a == "r" then
-                    SMODS.full_restart()
+                    SMODS.restart_game()
                 elseif e == "keypressed" and a == "down" then
                     scrollDown()
                 elseif e == "keypressed" and a == "up" then

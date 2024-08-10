@@ -697,6 +697,24 @@ G.FUNCS.your_hands_page = function(args)
 		}
 	end
 end
+
+function evaluate_poker_hand(hand)
+	local results = {}
+	local parts = {}
+	for _, v in ipairs(SMODS.PokerHandPart.obj_buffer) do
+		parts[v] = SMODS.PokerHandParts[v].func(hand) or {}
+	end
+	for k, _hand in pairs(SMODS.PokerHands) do
+		results[k] = _hand.evaluate(parts, hand) or {}
+	end
+	for _, v in ipairs(G.handlist) do
+		if not results.top and results[v] then
+			results.top = results[v]
+			break
+		end
+	end
+	return results
+end
 --#endregion
 --#region editions
 function create_UIBox_your_collection_editions(exit)
@@ -940,10 +958,10 @@ function Card:set_edition(edition, immediate, silent)
 
 	local p_edition = G.P_CENTERS['e_' .. edition_type]
 
-	if p_edition.override_base_shader then
+	if p_edition.override_base_shader or p_edition.disable_base_shader then
 		self.ignore_base_shader[self.edition.key] = true
 	end
-	if p_edition.no_shadow then
+	if p_edition.no_shadow or p_edition.disable_shadow then
 		self.ignore_shadow[self.edition.key] = true
 	end
 

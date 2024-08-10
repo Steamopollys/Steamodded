@@ -40,7 +40,8 @@ function loadAPIs()
         -- condition == nil counts as true
         if condition ~= false and obj[key] and prefix then
             if string.sub(obj[key], 1, #prefix + 1) == prefix..'_' then
-                sendWarnMessage(("Attempted to prefix field %s=%s on object %s, already prefixed"):format(key, obj[key], obj.key), obj.set)
+                -- this happens within steamodded itself and I don't want to spam the logs with warnings, leaving this disabled for now
+                -- sendWarnMessage(("Attempted to prefix field %s=%s on object %s, already prefixed"):format(key, obj[key], obj.key), obj.set)
                 return
             end
             obj[key] = prefix .. '_' .. obj[key]
@@ -124,10 +125,27 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     function SMODS.GameObject:process_loc_text()
         SMODS.process_loc_text(G.localization.descriptions[self.set], self.key, self.loc_txt)
     end
+    
+    --- Starting from this class, recursively searches for 
+    --- functions with the given key on all subordinate classes
+    --- and run all found functions with the given arguments
+    function SMODS.GameObject:send_to_subclasses(func, ...)
+        if rawget(self, func) and type(self[func]) == 'function' then self[func](self, ...) end
+        for _, cls in ipairs(self.subclasses) do
+            cls:send_to_subclasses(func, ...)
+        end
+    end
+
 
     -- Inject all direct instances `o` of the class by calling `o:inject()`.
     -- Also inject anything necessary for the class itself.
     function SMODS.GameObject:inject_class()
+        local inject_time = 0
+        local start_time = love.timer.getTime()
+        self:send_to_subclasses('pre_inject_class')
+        local end_time = love.timer.getTime()
+        inject_time = end_time - start_time
+        start_time = end_time
         local o = nil
         for i, key in ipairs(self.obj_buffer) do
             o = self.obj_table[key]
@@ -146,12 +164,22 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
 
             -- Setup Localize text
             o:process_loc_text()
-
-            sendTraceMessage(
-                ('Injected game object %s of type %s')
-                :format(o.key, o.set), o.set or 'GameObject'
-            )
+            if SMODS.config.log_level == 1 and self.log_interval and i%(self.log_interval) == 0 then
+                end_time = love.timer.getTime()
+                inject_time = inject_time + end_time - start_time
+                start_time = end_time
+                local alert = ('[%s] Injecting %s: %.3f ms'):format(string.rep('0', 4-#tostring(i))..i, self.set, inject_time*1000)
+                sendTraceMessage(alert, 'TIMER')
+                boot_print_stage(alert)
+            end
         end
+        self:send_to_subclasses('post_inject_class')
+        end_time = love.timer.getTime()
+        inject_time = inject_time + end_time - start_time
+        local n = #self.obj_buffer
+        local alert = ('[%s] Injected %s in %.3f ms'):format(string.rep('0',4-#tostring(n))..n, self.set, inject_time*1000)
+        sendInfoMessage(alert, 'TIMER')
+        boot_print_stage(alert)
     end
 
     --- Takes control of vanilla objects. Child class must implement get_obj for this to function.
@@ -203,13 +231,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     -- Inject all SMODS Objects that are part of this class or a subclass.
     function SMODS.injectObjects(class)
         if class.obj_table and class.obj_buffer then
-            local start_time = love.timer.getTime()
             class:inject_class()
-            local end_time = love.timer.getTime()
-            local n = #class.obj_buffer
-            local alert = ('[%s] Injected %s in %.3f ms'):format(string.rep('0',4-#tostring(n))..n, class.set or 'nil', (end_time - start_time)*1000)
-            sendInfoMessage(alert, 'TIMER')
-            boot_print_stage(alert)
         else
             for _, subclass in ipairs(class.subclasses) do SMODS.injectObjects(subclass) end
         end
@@ -252,8 +274,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
             G.LANGUAGES[self.key] = self
         end,
-        inject_class = function(self)
-            SMODS.Language.super.inject_class(self)
+        post_inject_class = function(self)
             G:set_language()
         end
     }
@@ -268,7 +289,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         silent = true,
         set = '[INTERNAL]',
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
-        inject_class = function()
+        pre_inject_class = function()
             SMODS.handle_loc_file(SMODS.path)
             if SMODS.dump_loc then SMODS.dump_loc.pre_inject = copy_table(G.localization) end
             for _, mod in ipairs(SMODS.mod_list) do
@@ -326,9 +347,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G[self.atlas_table][self.key_noloc or self.key] = self
         end,
         process_loc_text = function() end,
-        inject_class = function(self) 
+        pre_inject_class = function(self) 
             G:set_render_settings() -- restore originals first in case a texture pack was disabled
-            SMODS.Atlas.super.inject_class(self)
         end
     }
 
@@ -490,10 +510,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             'pos',
             'applied_stakes'
         },
-        inject_class = function(self)
+        pre_inject_class = function(self)
             G.P_CENTER_POOLS[self.set] = {}
             G.P_STAKES = {}
-            SMODS.Stake.super.inject_class(self)
         end,
         inject = function(self)
             if not self.injected then
@@ -522,6 +541,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             else
                 G.P_STAKES[self.key] = self
             end
+            self.injected = true
+            -- should only need to do this once per injection routine
             G.P_CENTER_POOLS[self.set] = {}
             for _, v in pairs(G.P_STAKES) do
                 SMODS.insert_pool(G.P_CENTER_POOLS[self.set], v)
@@ -531,7 +552,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             for i = 1, #G.P_CENTER_POOLS[self.set] do
                 G.C.STAKES[i] = G.P_CENTER_POOLS[self.set][i].colour or G.C.WHITE
             end
-            self.injected = true
         end,
         process_loc_text = function(self)
             -- empty loc_txt indicates there are existing values that shouldn't be changed or it isn't necessary
@@ -1219,6 +1239,18 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                                 fill = true
                             })
                         end
+                        if self.meteors then
+                            G.booster_pack_meteors = Particles(1, 1, 0, 0, {
+                                timer = self.meteors.timer or 2,
+                                scale = self.meteors.scale or 0.05,
+                                lifespan = self.meteors.lifespan or 1.5,
+                                speed = self.meteors.speed or 4,
+                                padding = self.meteors.padding or 0,
+                                attach = G.ROOM_ATTACH,
+                                colours = self.meteors.colours or {G.C.WHITE},
+                                fill = true
+                            })
+                        end
                         G.booster_pack = UIBox{
                             definition = self:pack_uibox(),
                             config = {align="tmi", offset = {x=0,y=G.ROOM.T.y + 9}, major = G.hand, bond = 'Weak'}
@@ -1293,7 +1325,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         obj_buffer = {},
         obj_table = SMODS.UndiscoveredSprites,
         set = 'Undiscovered Sprite',
-        inject_class = function() end,
+        -- this is more consistent and allows for extension
+        process_loc_text = function() end,
+        inject = function() end,
         prefix_config = { key = false },
         required_params = {
             'key',
@@ -1754,7 +1788,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 G.E_MANAGER:add_event(Event({
                     func = function()
                         local _card = G.hand.cards[i]
-                        assert(SMODS.change_base(_card, _suit))
+                        assert(SMODS.change_base(_card, _suit.key))
                         return true
                     end
                 }))
@@ -1951,25 +1985,35 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     ----- API CODE GameObject.PokerHand
     -------------------------------------------------------------------------------------------------
 
-    SMODS.PokerHands = {}
-    SMODS.PokerHand = SMODS.GameObject:extend {
-        obj_table = SMODS.PokerHands,
+    SMODS.PokerHandParts = {}
+    SMODS.PokerHandPart = SMODS.GameObject:extend {
+        obj_table = SMODS.PokerHandParts,
         obj_buffer = {},
         required_params = {
             'key',
-            'above_hand',
+            'func',
+        },
+        inject_class = function() end,
+    }
+    local handlist = G.handlist
+    G.handlist = {}
+    SMODS.PokerHands = {}
+    SMODS.PokerHand = SMODS.GameObject:extend {
+        obj_table = SMODS.PokerHands,
+        obj_buffer = G.handlist,
+        required_params = {
+            'key',
             'mult',
             'chips',
             'l_mult',
             'l_chips',
             'example',
+            'evaluate'
         },
-        order_lookup = {},
         visible = true,
         played = 0,
         played_this_round = 0,
         level = 1,
-        class_prefix = 'h',
         set = 'PokerHand',
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.poker_hands, self.key, self.loc_txt, 'name')
@@ -1977,14 +2021,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         register = function(self)
             if self:check_dependencies() and not self.obj_table[self.key] then
-                local j
-                for i, v in ipairs(G.handlist) do
-                    if v == self.above_hand then j = i end
-                end
-                -- insertion must not happen more than once, so do it on registration
-                table.insert(G.handlist, j, self.key)
-                self.order_lookup[j] = (self.order_lookup[j] or 0) - 0.001
-                self.order = j + self.order_lookup[j]
                 self.s_mult = self.mult
                 self.s_chips = self.chips
                 self.visible = self.visible
@@ -1995,9 +2031,86 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 self.obj_buffer[#self.obj_buffer + 1] = self.key
             end
         end,
-        inject = function(self) end
+        inject = function(self) end,
+        post_inject_class = function(self)
+            table.sort(
+                self.obj_buffer,
+                function(a, b)
+                    local x, y = self.obj_table[a], self.obj_table[b]
+                    local x_above = self.obj_table[x.above_hand or {}]
+                    local y_above = self.obj_table[y.above_hand or {}]
+                    local function eval(h) return h.mult*h.chips + (h.order_offset or 0) end
+                    return (x_above and (1e-6*eval(x) + eval(x_above)) or eval(x)) > (y_above and (1e-6*eval(y) + eval(y_above)) or eval(y))
+                end
+            )
+            for i, v in ipairs(self.obj_buffer) do self.obj_table[v].order = i end
+        end
     }
 
+    SMODS.PokerHandPart {
+        key = '_highest',
+        func = function(hand) return get_highest(hand) end
+    }
+    SMODS.PokerHandPart {
+        key = '_straight',
+        func = function(hand) return get_straight(hand) end
+    }
+    SMODS.PokerHandPart {
+        key = '_flush',
+        func = function(hand) return get_flush(hand) end,
+    }
+    -- all sets of 2 or more cards of same rank
+    SMODS.PokerHandPart {
+        key = '_all_pairs',
+        func = function(hand)
+            local _2 = get_X_same(2, hand, true)
+            if not next(_2) then return {} end
+            return {SMODS.merge_lists(_2)}
+        end
+    }
+    for i = 2, 5 do
+        SMODS.PokerHandPart {
+            key = '_'..i,
+            func = function(hand) return get_X_same(i, hand, true) end
+        }
+    end
+
+    local hands = G:init_game_object().hands
+    local eval_functions = {
+        ['Flush Five'] = function(parts)
+            if not next(parts._5) or not next(parts._flush) then return {} end
+            return { SMODS.merge_lists(parts._5, parts._flush) }
+        end,
+        ['Flush House'] = function(parts)
+            if #parts._3 < 1 or #parts._2 < 2 or not next(parts._flush) then return {} end
+            return { SMODS.merge_lists(parts._all_pairs, parts._flush) }
+        end, 
+        ['Five of a Kind'] = function(parts) return parts._5 end,
+        ['Straight Flush'] = function(parts)
+            if not next(parts._straight) or not next(parts._flush) then return end
+            return { SMODS.merge_lists(parts._straight, parts._flush) }
+        end, 
+        ['Four of a Kind'] = function(parts) return parts._4 end, 
+        ['Full House'] = function(parts)
+            if #parts._3 < 1 or #parts._2 < 2 then return {} end
+            return parts._all_pairs
+        end,
+        ['Flush'] = function(parts) return parts._flush end,
+        ['Straight'] = function(parts) return parts._straight end,
+        ['Three of a Kind'] = function(parts) return parts._3 end, 
+        ['Two Pair'] = function(parts)
+            if #parts._2 < 2 then return {} end
+            return parts._all_pairs
+        end, 
+        ['Pair'] = function(parts) return parts._2 end, 
+        ['High Card'] = function(parts) return parts._highest end, 
+    }
+    for _, v in ipairs(handlist) do
+        local hand = copy_table(hands[v])
+        hand.key = v
+        hand.evaluate = eval_functions[v]
+        SMODS.PokerHand(hand)
+    end
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Challenge
     -------------------------------------------------------------------------------------------------
@@ -2724,10 +2837,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         bypass_all_unlocked = false,
         hidden_name = true,
         steamid = "STEAMODDED",
-        inject_class = function(self)
-            fetch_achievements()
-            SMODS.GameObject.inject_class(self)
-        end,
+        pre_inject_class = fetch_achievements,
         inject = function(self)
             G.ACHIEVEMENTS[self.key] = self
             if self.reset_on_startup then
@@ -2751,7 +2861,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         set = '[INTERNAL]',
         silent = true,
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
-        inject_class = function()
+        pre_inject_class = function()
             for _, mod in ipairs(SMODS.mod_list) do
                 SMODS.handle_loc_file(mod.path)
             end
