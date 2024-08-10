@@ -2246,7 +2246,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         required_params = {
             'key',
         },
-        class_prefix = 'st', --? remove this?
         rate = 0.3,
         atlas = 'stickers',
         pos = { x = 0, y = 0 },

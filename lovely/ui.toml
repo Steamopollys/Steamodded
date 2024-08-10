@@ -361,15 +361,43 @@ payload = "self.config.chosen = chosen_temp or true"
 
 # Escape from mod menu saves config
 [[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+position = 'before'
+line_prepend = '$indent'
+pattern = '''
+(?<indent>[\t ]*)return \{n=G\.UIT\.ROOT, config = \{align = 'cm', colour = G\.C\.CLEAR\}, nodes=\{
+[\t ]*\{n=G\.UIT\.C,'''
+payload = '''
+local cols
+if #info_boxes <= 3 then
+    cols = 1
+elseif #info_boxes <= 10 then
+    cols = 2
+elseif #info_boxes <= 24 then
+    cols = 3
+else
+    cols = 4
+end
+local nodes_per_col = math.ceil(#info_boxes/cols)
+local info_cols = {}
+for i = 0, cols-1 do
+    local col = {}
+    for j = 1, nodes_per_col do
+        local info_box = info_boxes[i*nodes_per_col+j]
+        if info_box then
+            table.insert(col, info_box)
+        else break end
+    end
+    table.insert(info_cols, {n=G.UIT.C, config = {align="cm"}, nodes = col})
+end
+info_boxes = {{n=G.UIT.R, config = {align="cm", padding = 0.05, card_pos = card.T.x }, nodes = info_cols}}
+'''
+
+[[patches]]
 [patches.pattern]
-target = 'engine/controller.lua'
+target = 'functions/button_callbacks.lua'
 match_indent = true
 position = 'at'
-pattern = 'G.FUNCS:exit_overlay_menu()'
-payload = '''
-if SMODS.IN_MODS_TAB then
-    G.FUNCS.exit_mods()
-else
-    G.FUNCS.exit_overlay_menu() 
-end
-'''
+pattern = "config = {offset = {x=-0.03,y=0}, align = 'cl', parent = e}"
+payload = """config = (e.config.ref_table and e.config.ref_table[1].config.card_pos > G.ROOM.T.w*0.4) and {offset = {x=-0.03,y=0}, align = 'cl', parent = e} or {offset = {x=0.03,y=0}, align = 'cr', parent = e}"""
