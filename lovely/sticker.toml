@@ -13,9 +13,9 @@ pattern = "(?<indent>[\t ]*)if self.sticker then loc_vars = loc_vars or \\{\\}; 
 position = "before"
 line_prepend = "$indent"
 payload = '''
-for k, v in pairs(SMODS.Stickers) do
-	if self.ability[k] and not v.hide_badge then
-        badges[#badges+1] = k
+for k, v in ipairs(SMODS.Sticker.obj_buffer) do
+	if self.ability[v] and not SMODS.Stickers[v].hide_badge then
+        badges[#badges+1] = v
     end
 end'''
 
@@ -57,7 +57,6 @@ match_indent = true
 payload = '''
 for k, v in ipairs(SMODS.Sticker.obj_buffer) do
     local sticker = SMODS.Stickers[v]
-    -- Temp name, change later
     if sticker.should_apply and type(sticker.should_apply) == 'function' and sticker:should_apply(card, center, area) then
         sticker:apply(card, true)
     end
