@@ -1503,3 +1503,8 @@ function SMODS.GUI.dynamicModListContent(page)
         nodes = modNodes
     }
 end
+
+G.FUNCS.SMODS_change_mipmap = function(args)
+	SMODS.config.graphics_mipmap_level = args.to_key
+	G:set_render_settings()
+end
