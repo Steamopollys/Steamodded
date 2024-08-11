@@ -587,6 +587,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         get_obj = function(self, key) return G.P_STAKES[key] end
     }
 
+    function SMODS.stake_from_index(index)
+        local stake = G.P_CENTER_POOLS.Stake[index] or nil
+        if not stake then return "error" end
+        return stake.key
+    end
+
     function SMODS.build_stake_chain(stake, applied)
         if not applied then applied = {} end
         if applied[stake.order] then return end
@@ -618,15 +624,15 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             1400 + 600*scale,
             2100 + 2900*scale,
             15000 + 5000*scale*math.log(scale),
-            12000 + 8000*(scale+1)*(scale/2),
-            10000 + 25000*(scale+1)*((scale/3)^2),
-            50000 * (2 ^ (scale-1))
+            12000 + 8000*(scale+1)*(0.4*scale),
+            10000 + 25000*(scale+1)*((scale/4)^2),
+            50000 * (scale+1)^2 * (scale/7)^2
         }
         
         if ante < 1 then return 100 end
         if ante <= 8 then return math.floor(string.sub(amounts[ante], 1, 3)/10)*10^(string.len(math.floor(amounts[ante]))-2) end
-        local a, c, d = amounts[8], ante-8, 1 + 0.2*(ante-8)
-        local amount = math.floor(a*(1.6+(0.75*c)^d)^c)
+        local a, b, c, d = amounts[8], amounts[8]/amounts[7], ante-8, 1 + 0.2*(ante-8)
+        local amount = math.floor(a*(b + (b*0.75*c)^d)^c)
         amount = amount - amount%(10^math.floor(math.log10(amount)-1))
         return amount
     end
@@ -666,7 +672,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 2, y = 0 },
         sticker_pos = { x = 3, y = 0 },
         modifiers = function()
-            G.GAME.modifiers.scaling = G.GAME.modifiers.scaling + 1
+            G.GAME.modifiers.scaling = (G.GAME.modifiers.scaling or 0) + 1
         end,
         colour = G.C.GREEN,
         loc_txt = {}
@@ -705,7 +711,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 0, y = 1 },
         sticker_pos = { x = 1, y = 1 },
         modifiers = function()
-            G.GAME.modifiers.scaling = G.GAME.modifiers.scaling + 1
+            G.GAME.modifiers.scaling = (G.GAME.modifiers.scaling or 0) + 1
         end,
         colour = G.C.PURPLE,
         loc_txt = {}

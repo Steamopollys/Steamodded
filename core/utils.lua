@@ -715,3 +715,38 @@ function SMODS.poll_seal(args)
         end
     end
 end
+
+function convert_save_data()
+    spit("Creating new save data")
+    delay(0.4)
+    for k, v in pairs(G.PROFILES[G.SETTINGS.profile].deck_usage) do
+        if not v.wins_by_key and not v.losses_by_key then
+            v.wins_by_key = {}
+            for index, number in pairs(v.wins) do
+                v.wins_by_key[SMODS.stake_from_index(index)] = number
+            end
+            v.losses_by_key = {}
+            for index, number in pairs(v.losses) do
+                v.losses_by_key[SMODS.stake_from_index(index)] = number
+            end
+            spit("Fixed "..k)
+            spit(tprint(v))
+        end
+    end
+    for k, v in pairs(G.PROFILES[G.SETTINGS.profile].joker_usage) do
+        if not v.wins_by_key and not v.losses_by_key then
+            v.wins_by_key = {}
+            for index, number in pairs(v.wins) do
+                v.wins_by_key[SMODS.stake_from_index(index)] = number
+            end
+            v.losses_by_key = {}
+            for index, number in pairs(v.losses) do
+                v.losses_by_key[SMODS.stake_from_index(index)] = number
+            end
+            spit("Fixed "..k)
+            spit(tprint(v))
+        end
+    end
+    spit("Done!")
+    G:save_settings()
+end
