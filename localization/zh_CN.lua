@@ -40,6 +40,14 @@ return {
 					'但当前为#2#'
 				}
 			},
+			load_failure_p = { -- To be translated
+				text = {
+					'{C:attention}Prefix Conflict!{}',
+					'This mod\'s prefix is',
+					'the same as another mods.',
+					'({C:attention}#1#{})'
+				}
+			},
 			load_disabled = {
                 text = {
                     '该模组',

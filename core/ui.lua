@@ -901,6 +901,16 @@ function buildModtag(mod)
             tag_message = 'load_failure_i'
 			specific_vars = {mod.load_issues.version_mismatch, MODDED_VERSION:gsub('-STEAMODDED', '')}
 		end
+		if mod.load_issues.prefix_conflict then
+			tag_message = 'load_failure_p'
+			local name = mod.load_issues.prefix_conflict
+			for _, m in ipairs(SMODS.mod_list) do
+				if m.id == mod.load_issues.prefix_conflict then
+					name = m.name or name
+				end
+			end
+			specific_vars = {name}
+		end
 		if mod.disabled then
 			tag_pos = {x = 1, y = 0}
 			tag_message = 'load_disabled'
