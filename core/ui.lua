@@ -1029,10 +1029,7 @@ local function createClickableModBox(modInfo, scale)
 						if modInfo.should_enable == not modInfo.disabled then
 							toChange = -1
 						end
-						print(not modInfo.should_enable)
-						print(modInfo.disabled)
 						SMODS.full_restart = SMODS.full_restart + toChange
-						print(SMODS.full_restart)
 					end
 				)
 			}),
