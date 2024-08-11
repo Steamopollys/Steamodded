@@ -666,7 +666,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 2, y = 0 },
         sticker_pos = { x = 3, y = 0 },
         modifiers = function()
-            G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 2)
+            G.GAME.modifiers.scaling = G.GAME.modifiers.scaling + 1
         end,
         colour = G.C.GREEN,
         loc_txt = {}
@@ -705,7 +705,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 0, y = 1 },
         sticker_pos = { x = 1, y = 1 },
         modifiers = function()
-            G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 3)
+            G.GAME.modifiers.scaling = G.GAME.modifiers.scaling + 1
         end,
         colour = G.C.PURPLE,
         loc_txt = {}
