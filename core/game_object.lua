@@ -863,6 +863,15 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 end
             end
         end,
+        register = function(self)
+            SMODS.ConsumableType.register(self)
+            -- Note: Ideally it is not required to check for check_dependencies() fail when going through object injection. 
+            -- But due to structure this is required for this and other objects. 
+            -- Consider edits to SMODS.GameObject:register() returning from the function if this check (and others also important in the injection process) fail
+            if self:check_dependencies() then 
+                SMODS[self.key:gsub("%s+", "_")] = SMODS.Consumable:extend(self.default_consumable_config)
+            end
+        end,
         inject_card = function(self, center)
             if self.rarities and self.rarity_pools[center.rarity] then
                 SMODS.insert_pool(self.rarity_pools[center.rarity], center)
@@ -920,6 +929,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
+        default_consumable_config = {
+            set = 'Tarot',
+        },
         colour_shifter = { { 0, -0.06, -0.60, 0 }, { 0, 0.30, -0.35, 0 }, { 0, 0.20, -0.15, 0 }, { 0, 0, 0, 0 }, { 0, -0.50, 0.20, 0 } }
     }
     SMODS.ConsumableType {
@@ -936,6 +948,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
+        default_consumable_config = {
+            set = 'Planet',
+        },
         colour_shifter = { { 0, -0.23, -0.26, 0 }, { 0, 0, 0, 0 }, { 0, -0.10, 0.16, 0 }, { 0.04, -0.35, 0.42, 0 }, { -1, -1, 1, 0 } }
     }
     SMODS.ConsumableType {
@@ -944,6 +959,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         primary_colour = G.C.SET.Spectral,
         secondary_colour = G.C.SECONDARY_SET.Spectral,
         loc_txt = {},
+        default_consumable_config = {
+            set = 'Spectral',
+            cost = 4,
+        },
         colour_shifter = { { -0.3, -0.48, -0.61, 0 }, { -0.3, -0.49, -0.48, 0 }, { 0, -0.46, -0.05, 0 }, { -0.02, -0.3, -0.085, 0 }, { 0.08, -0.21, -0.4, 0 }, { 0, -0.03, -0.24, 0 }, { 0, -0.22, -0.31, 0 }, { 0, -0.19, -0.29, 0 }, { 0, -0.21, -0.28, 0 }, { 0, -0.04, -0.125, 0 }, { 0, 0, 0, 0 }, { 0, -0.07, 0.07, 0 }, { 0, -0.1, 0.05, 0 }, { 0, -0.28, 0.12, 0 }, { 0, -0.4, 0, 0 }, { -0.03, -0.47, 0.1, 0 } },
         colour_shifter_alt = { { -0.015, -0.32, -0.24, 0 }, { 0, -0.22, -0.22, 0 }, { 0, -0.24, -0.13, 0 }, { 0, -0.17, 0.13, 0 }, { 0, -0.03, 0.08, 0 }, { 0, 0, 0, 0 } }
     }
@@ -1094,19 +1113,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_vars = function(self, info_queue)
             return {}
         end
-    }
-    -- TODO make this set of functions extendable by ConsumableTypes
-    SMODS.Tarot = SMODS.Consumable:extend {
-        set = 'Tarot',
-    }
-    SMODS.Planet = SMODS.Consumable:extend {
-        set = 'Planet',
-        atlas = 'Planet',
-    }
-    SMODS.Spectral = SMODS.Consumable:extend {
-        set = 'Spectral',
-        atlas = 'Spectral',
-        cost = 4,
     }
 
 
