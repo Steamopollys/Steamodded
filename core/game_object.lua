@@ -714,6 +714,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         },
         prefix_config = { key = false }, -- TODO? should consumable types have a mod prefix?
         collection_rows = { 6, 6 },
+        default_consumable_config = {},
         create_UIBox_your_collection = function(self)
             local deck_tables = {}
 
