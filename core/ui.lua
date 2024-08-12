@@ -959,7 +959,12 @@ local function createClickableModBox(modInfo, scale)
 			return {1-c[1], 1-c[2], 1-c[3], c[4]}
 		end
 	local col, text_col
-	modInfo.should_enable = not modInfo.disabled
+	if modInfo.should_enable == nil then
+		modInfo.should_enable = not modInfo.disabled
+	end
+	if SMODS.full_restart == nil then
+		SMODS.full_restart = 0
+	end
     if modInfo.can_load then
         col = G.C.BOOSTER
     elseif modInfo.disabled then
@@ -1028,11 +1033,14 @@ local function createClickableModBox(modInfo, scale)
 					function(_set_toggle)
 						if not modInfo.should_enable then
 							NFS.write(modInfo.path .. '.lovelyignore', '')
-							SMODS.full_restart = true
 						else
 							NFS.remove(modInfo.path .. '.lovelyignore')
-							SMODS.full_restart = true
 						end
+						local toChange = 1
+						if modInfo.should_enable == not modInfo.disabled then
+							toChange = -1
+						end
+						SMODS.full_restart = SMODS.full_restart + toChange
 					end
 				)
 			}),
@@ -1083,7 +1091,7 @@ end
 function G.FUNCS.exit_mods(e)
 	G.ACTIVE_MOD_UI = nil
 	SMODS.save_all_config()
-    if SMODS.full_restart then
+    if SMODS.full_restart ~= 0 then
 		-- launch a new instance of the game and quit the current one
 		SMODS.restart_game()
     end
