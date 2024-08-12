@@ -59,6 +59,7 @@ function loadMods(modsDirectory)
     }
     
     local used_prefixes = {}
+    local lovely_directories = {}
 
     -- Function to process each directory (including subdirectories) with depth tracking
     local function processDirectory(directory, depth)
@@ -66,14 +67,24 @@ function loadMods(modsDirectory)
             return
         end
 
+        local isDirLovely = false
+
         for _, filename in ipairs(NFS.getDirectoryItems(directory)) do
             local file_path = directory .. "/" .. filename
 
             -- Check if the current file is a directory
             local file_type = NFS.getInfo(file_path).type
             if file_type == 'directory' or file_type == 'symlink' then
+                -- Lovely patches 
+                if depth == 2 and filename == "lovely" and not isDirLovely then
+                    isDirLovely = true
+                    table.insert(lovely_directories, directory .. "/")
+                end
                 -- If it's a directory and depth is within limit, recursively process it
                 processDirectory(file_path, depth + 1)
+            elseif depth == 2 and filename == "lovely.toml" and not isDirLovely then
+                isDirLovely = true
+                table.insert(lovely_directories, directory .. "/")
             elseif filename:lower():match("%.lua$") then -- Check if the file is a .lua file
                 if depth == 1 then
                     sendWarnMessage(('Found lone Lua file %s in Mods directory :: Please place the files for each mod in its own subdirectory.'):format(filename), 'Loader')
@@ -132,7 +143,12 @@ function loadMods(modsDirectory)
                         mod.prefix = mod.prefix or (mod.id or ''):lower():sub(1, 4)
                     end
                     if mod.prefix and used_prefixes[mod.prefix] then
-                        sane = false
+                        mod.can_load = false
+                        mod.load_issues = { 
+                            prefix_conflict = used_prefixes[mod.prefix],
+                            dependencies = {},
+                            conflicts = {},
+                        }
                         sendWarnMessage(('Duplicate Mod prefix %s used by %s, %s'):format(mod.prefix, mod.id, used_prefixes[mod.prefix]), 'Loader')
                     end
 
@@ -161,9 +177,56 @@ function loadMods(modsDirectory)
         end
     end
 
+    
     boot_print_stage('Processing Mod Files')
     -- Start processing with the initial directory at depth 1
     processDirectory(modsDirectory, 1)
+    for _, path in ipairs(lovely_directories) do
+        local hasSMOD = false
+        for _, mod in pairs(SMODS.Mods) do
+            if mod.path == path then
+                mod.lovely = true
+                hasSMOD = true
+            end
+        end
+        if not hasSMOD then 
+            local name = string.match(path, "[/\\]([^/\\]+)[/\\]?$")
+            local disabled = not not NFS.getInfo(path .. '/.lovelyignore')
+            local mod = {
+                name = name,
+                id = "lovely-compat-" .. name,
+                author = {"???"},
+                description = "A lovely mod.",
+                prefix_config = { key = { mod = false }, atlas = false },
+                priority = 0,
+                badge_colour = HEX("666666FF"),
+                badge_text_colour = HEX('FFFFFF'),
+                path = path,
+                main_file = "",
+                display_name = name,
+                dependencies = {},
+                optional_dependencies = {},
+                conflicts = {},
+                version = "0.0.0",
+                can_load = not disabled,
+                lovely = true,
+                lovely_only = true,
+                disabled = disabled,
+                load_issues = {
+                    dependencies = {},
+                    conflicts = {},
+                    disabled = disabled
+                }
+
+            }
+
+            
+
+            SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
+            table.insert(SMODS.mod_priorities[mod.priority], mod)
+            SMODS.Mods[mod.id] = mod
+        end
+    end
 
     -- sort by priority
     local keyset = {}
@@ -238,7 +301,7 @@ function loadMods(modsDirectory)
             end)
         for _, mod in ipairs(SMODS.mod_priorities[priority]) do
             SMODS.mod_list[#SMODS.mod_list + 1] = mod -- keep mod list in prioritized load order
-            if mod.can_load then
+            if mod.can_load and not mod.lovely_only then
                 SMODS.current_mod = mod
                 if mod.outdated then
                     SMODS.compat_0_9_8.with_compat(function()
@@ -250,12 +313,11 @@ function loadMods(modsDirectory)
                         end
                     end)
                 else
-                    local load_func = type(mod.load_mod_config) == 'function' and mod.load_mod_config or SMODS.load_mod_config
-                    load_func(mod)
+                    SMODS.load_mod_config(mod)
                     assert(load(NFS.read(mod.path..mod.main_file), ('=[SMODS %s "%s"]'):format(mod.id, mod.main_file)))()
                 end
                 SMODS.current_mod = nil
-            else
+            elseif not mod.lovely_only then
                 sendTraceMessage(string.format("Mod %s was unable to load: %s%s%s", mod.id,
                     mod.load_issues.outdated and
                     'Outdated: Steamodded versions 0.9.8 and below are no longer supported!\n' or '',
