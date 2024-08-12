@@ -492,6 +492,7 @@ V_MT = {
         if a.major ~= b.major then return a.major < b.major end
         if a.minor ~= b.minor then return a.minor < b.minor end
         if a.patch ~= b.patch then return a.patch < b.patch end
+        if a.beta ~= b.beta then return a.beta < b.beta end
         return a.rev <= b.rev
     end,
     __lt = function(a, b)
@@ -504,7 +505,8 @@ V_MT = {
             major = tonumber(major),
             minor = tonumber(minor),
             patch = tonumber(patch) or 0,
-            rev = rev,
+            rev = rev or '',
+            beta = rev and rev:sub(1,1) == '~' and -1 or 0
         }
         return setmetatable(t, V_MT)
     end

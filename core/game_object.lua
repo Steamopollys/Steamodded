@@ -601,7 +601,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         local applied_stakes = SMODS.build_stake_chain(G.P_CENTER_POOLS.Stake[i])
         for stake, _ in pairs(applied_stakes) do
             if G.P_CENTER_POOLS['Stake'][stake].modifiers then
-                sendDebugMessage("Applying "..G.P_CENTER_POOLS['Stake'][stake].key)
                 G.P_CENTER_POOLS['Stake'][stake].modifiers()
             end
         end
