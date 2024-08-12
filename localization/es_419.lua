@@ -83,6 +83,7 @@ return {
             b_author = 'Autor/a',
 			b_authors = 'Autores',
             b_unknown = 'Desconocido',
+			b_lovely_mod = '(Lovely Mod) ', -- TODO
             b_by = ' Por: ',
 			b_config = "Configuración",
 			b_additions = 'Adiciones',
