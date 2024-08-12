@@ -45,7 +45,7 @@ return {
 				text = {
 					'{C:attention}Prefix Conflict!{}',
 					'This mod\'s prefix is',
-					'the same as another mods.',
+					'the same as another mod\'s.',
 					'({C:attention}#1#{})'
 				}
 			},
