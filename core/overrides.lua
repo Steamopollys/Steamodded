@@ -1245,3 +1245,17 @@ G.FUNCS.your_collection_enhancements_page = function(args)
 	end
 end
 --#endregion
+
+function get_joker_win_sticker(_center, index)
+	if G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key] and G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key].wins_by_key then 
+		local _stake = nil
+		for key, _ in pairs(G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key].wins_by_key) do
+			if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) > (_stake and G.P_STAKES[_stake].stake_level or 0) then
+				_stake = key
+			end
+		end
+		if index then return _stake and G.P_STAKES[_stake].order or 0 end
+		return G.sticker_map[_stake]
+	end
+  	if index then return 0 end
+end
