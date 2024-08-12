@@ -207,3 +207,11 @@ pattern = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses[G.GAME.sta
 position = "after"
 payload = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses_by_key[SMODS.stake_by_index(G.GAME.stake)] = (G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses_by_key[SMODS.stake_by_index(G.GAME.stake)] or 0) + 1'
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = 'G.viewed_stake = math.min(max_stake+1, G.viewed_stake)'
+position = "at"
+payload = '''G.viewed_stake = math.min(max_stake, G.viewed_stake)'''
+match_indent = true

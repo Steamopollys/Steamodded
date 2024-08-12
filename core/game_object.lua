@@ -595,7 +595,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
 
     function SMODS.build_stake_chain(stake, applied)
         if not applied then applied = {} end
-        if applied[stake.order] then return end
+        if not stake or applied[stake.order] then return end
         applied[stake.order] = stake.order
         if not stake.applied_stakes then
             return

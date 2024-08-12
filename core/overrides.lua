@@ -1252,7 +1252,7 @@ function get_joker_win_sticker(_center, index)
 		local _count = 0
 		for key, _ in pairs(G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key].wins_by_key) do
 			_count = _count + 1
-			if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) >= (_stake and G.P_STAKES[_stake].stake_level or 0) then
+			if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) > (_stake and G.P_STAKES[_stake].stake_level or 0) then
 				_stake = key
 			end
 		end
@@ -1270,7 +1270,7 @@ function get_deck_win_stake(_deck_key)
 			local deck_won_with = false
 			for key, _ in pairs(deck.wins_by_key) do
 				deck_won_with = true
-				if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) >= (_stake and G.P_STAKES[_stake].stake_level or 0) then
+				if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) > (_stake and G.P_STAKES[_stake].stake_level or 0) then
 					_stake = key
 				end
 			end
@@ -1285,7 +1285,7 @@ function get_deck_win_stake(_deck_key)
 	if G.PROFILES[G.SETTINGS.profile].deck_usage[_deck_key] and G.PROFILES[G.SETTINGS.profile].deck_usage[_deck_key].wins_by_key then
 		local _stake = nil
 		for key, _ in pairs(G.PROFILES[G.SETTINGS.profile].deck_usage[_deck_key].wins_by_key) do
-			if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) >= (_stake and G.P_STAKES[_stake].stake_level or 0) then
+			if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) > (_stake and G.P_STAKES[_stake].stake_level or 0) then
 				_stake = key
 			end
 		end
@@ -1299,7 +1299,7 @@ function get_deck_win_sticker(_center)
 	G.PROFILES[G.SETTINGS.profile].deck_usage[_center.key].wins_by_key then 
 		local _stake = nil
 		for key, _ in pairs(G.PROFILES[G.SETTINGS.profile].deck_usage[_center.key].wins_by_key) do
-			if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) >= (_stake and G.P_STAKES[_stake].stake_level or 0) then
+			if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) > (_stake and G.P_STAKES[_stake].stake_level or 0) then
 				_stake = key
 			end
 		end
