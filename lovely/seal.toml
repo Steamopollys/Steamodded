@@ -9,15 +9,35 @@ priority = 0
 [patches.regex]
 target = 'card.lua'
 pattern = '''
-(?<indent>[\t ]*)if seal_type > 0.75 then card:set_seal\('Red'\)
-[\t ]*elseif seal_type > 0.5 then card:set_seal\('Blue'\)
-[\t ]*elseif seal_type > 0.25 then card:set_seal\('Gold'\)
-[\t ]*else card:set_seal\('Purple'\)
-[\t ]*end'''
+(?<indent>[\t ]*)local seal_rate = 10
+[\n\t ]*local seal_poll = pseudorandom\(pseudoseed\('stdseal'..G.GAME.round_resets.ante\)\)
+[\n\t ]*if seal_poll > 1 - 0.02\*seal_rate then
+[\n\t ]*local seal_type = pseudorandom\(pseudoseed\('stdsealtype'..G.GAME.round_resets.ante\)\)
+[\n\t ]*if seal_type > 0.75 then card:set_seal\('Red'\)
+[\n\t ]*elseif seal_type > 0.5 then card:set_seal\('Blue'\)
+[\n\t ]*elseif seal_type > 0.25 then card:set_seal\('Gold'\)
+[\n\t ]*else card:set_seal\('Purple'\)
+[\n\t ]*end
+[\n\t ]*end'''
 position = 'at'
 line_prepend = '$indent'
 payload = '''
-card:set_seal(SMODS.Seal.rng_buffer[math.ceil(seal_type*#SMODS.Seal.rng_buffer) or 1])'''
+card:set_seal(SMODS.poll_seal({mod = 10}))'''
+
+# Card:calculate_joker()
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = '''
+(?<indent>[\t ]*)local seal_type = pseudorandom\(pseudoseed\('certsl'\)\)
+[\n\t ]*if seal_type > 0.75 then _card:set_seal\('Red', true\)
+[\n\t ]*elseif seal_type > 0.5 then _card:set_seal\('Blue', true\)
+[\n\t ]*elseif seal_type > 0.25 then _card:set_seal\('Gold', true\)
+[\n\t ]*else _card:set_seal\('Purple', true\)
+[\n\t ]*end'''
+position = 'at'
+line_prepend = '$indent'
+payload = '''_card:set_seal(SMODS.poll_seal({guaranteed = true, type_key = 'certsl'}))'''
 
 # get_badge_colour()
 [[patches]]
@@ -43,6 +63,19 @@ local obj = G.P_SEALS[self.seal] or {}
 if obj.calculate and type(obj.calculate) == 'function' then
 	local o = obj:calculate(self, context)
 	if o then return o end
+end'''
+
+# Card:update()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = 'if G.STAGE == G.STAGES.RUN then'
+position = 'before'
+match_indent = true
+payload = '''
+local obj = G.P_SEALS[self.seal] or {}
+if obj.update and type(obj.update) == 'function' then
+    obj:update(self, dt)
 end'''
 
 # G.FUNCS.evaluate_play()
@@ -86,6 +119,10 @@ if effects[ii].seals then
         mult = mod_mult(mult*effects[ii].seals.x_mult)
         update_hand_text({delay = 0}, {mult = mult})
         card_eval_status_text(scoring_hand[i], 'x_mult', effects[ii].seals.x_mult, percent)
+    end
+
+    if effects[ii].seals.func then
+        effects[ii].seals.func()
     end
 end
 
@@ -163,3 +200,34 @@ payload = '''
         elseif self.children.alert and self.seal and not G.P_SEALS[self.seal].alerted then
             G.P_SEALS[self.seal].alerted = true
             G:save_progress()'''
+
+# Game:init_item_prototypes()
+[[patches]]
+[patches.regex]
+target = 'game.lua'
+pattern = '''(?<indent>[\t ]*)Gold =[ {A-z=1-4,"}\n]*},[\n\t ]*}'''
+position = 'at'
+line_prepend = '$indent'
+payload = '''
+Red = {order = 1,  discovered = false, set = "Seal"},
+Blue = {order = 2,  discovered = false, set = "Seal"},
+Gold = {order = 3,  discovered = false, set = "Seal"},
+Purple = {order = 4,  discovered = false, set = "Seal"},
+}
+'''
+
+# Card:set_seal()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''G.CONTROLLER.locks.seal = true'''
+position = 'after'
+match_indent = true
+payload = '''local sound = G.P_SEALS[_seal].sound or {sound = 'gold_seal', per = 1.2, vol = 0.4}'''
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''play_sound('gold_seal', 1.2, 0.4)'''
+position = 'at'
+match_indent = true
+payload = '''play_sound(sound.sound, sound.per, sound.vol)'''

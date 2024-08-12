@@ -54,4 +54,17 @@ payload = '''
             end
 			should_debuff = should_debuff or res
 		end
-	end'''
+	end
+	for k, v in pairs(self.ability.debuff_sources or {}) do
+		if v == 'prevent_debuff' then
+			if self.debuff then
+				self.debuff = false
+				if self.area == G.jokers then self:add_to_deck(true) end
+			end
+			self.debuffed_by_blind = false
+			return
+		end
+		should_debuff = should_debuff or v
+	end
+	
+'''

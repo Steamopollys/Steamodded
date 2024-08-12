@@ -368,13 +368,15 @@ Stack Traceback
                         local modID = table.remove(props, 1)
                         local fileName = table.concat(props, " ")
                         if modID == '_' then
-                            dumper:add_f("(%d) main chunk of Steamodded file '%s' at line %d\r\n", level_to_show, fileName:sub(2, -2), info.currentline)
+                            dumper:add_f("(%d) main chunk of Steamodded file '%s' at line %d\r\n", level_to_show,
+                                fileName:sub(2, -2), info.currentline)
                         else
-                            dumper:add_f("(%d) main chunk of file '%s' at line %d (from mod with id %s)\r\n", level_to_show,
-                            fileName:sub(2, -2), info.currentline, modID)
+                            dumper:add_f("(%d) main chunk of file '%s' at line %d (from mod with id %s)\r\n",
+                                level_to_show, fileName:sub(2, -2), info.currentline, modID)
                         end
                     else
-                        dumper:add_f("(%d) main chunk of %s at line %d\r\n", level_to_show, info.source, info.currentline)
+                        dumper:add_f("(%d) main chunk of %s at line %d\r\n", level_to_show, info.source,
+                            info.currentline)
                     end
                 else
                     dumper:add_f("(%d) main chunk of %s at line %d\r\n", level_to_show, info.source, info.currentline)
@@ -427,12 +429,12 @@ Stack Traceback
                         local fileName = table.concat(props, " ")
                         if modID == '_' then
                             dumper:add_f("(%d) Lua %s '%s' at Steamodded file '%s:%d' %s\r\n", level_to_show,
-                            function_type, function_name, fileName:sub(2, -2), info.currentline,
-                            was_guessed and " (best guess)" or "")
+                                function_type, function_name, fileName:sub(2, -2), info.currentline,
+                                was_guessed and " (best guess)" or "")
                         else
-                        dumper:add_f("(%d) Lua %s '%s' at file '%s:%d' (from mod with id %s)%s\r\n", level_to_show,
-                            function_type, function_name, fileName:sub(2, -2), info.currentline, modID,
-                            was_guessed and " (best guess)" or "")
+                            dumper:add_f("(%d) Lua %s '%s' at file '%s:%d' (from mod with id %s)%s\r\n", level_to_show,
+                                function_type, function_name, fileName:sub(2, -2), info.currentline, modID,
+                                was_guessed and " (best guess)" or "")
                         end
                     else
                         dumper:add_f("(%d) Lua %s '%s' at line %d of chunk '%s'\r\n", level_to_show, function_type,
@@ -480,7 +482,8 @@ end
 local stackTraceAlreadyInjected = false
 
 function getDebugInfoForCrash()
-    local info = "Additional Context:\nBalatro Version: " .. VERSION .. "\nModded Version: " .. MODDED_VERSION
+    local info = "Additional Context:\nBalatro Version: " .. (VERSION or "???") .. "\nModded Version: " ..
+                     (MODDED_VERSION or "???")
     local major, minor, revision, codename = love.getVersion()
     info = info .. string.format("\nLove2D Version: %d.%d.%d", major, minor, revision)
 
@@ -488,36 +491,44 @@ function getDebugInfoForCrash()
     if lovely_success then
         info = info .. "\nLovely Version: " .. lovely.version
     end
-    if SMODS.mod_list then
-        info = info .. "\nSteamodded Mods:"
-        local enabled_mods = {}
+    if SMODS and SMODS.mod_list then
+        local mod_strings = ""
+        local lovely_strings = ""
+        local i = 1
+        local lovely_i = 1
         for _, v in ipairs(SMODS.mod_list) do
             if v.can_load then
-                table.insert(enabled_mods, v)
-            end
-        end
-        for k, v in ipairs(enabled_mods) do
-            info = info .. "\n    " .. k .. ": " .. v.name .. " by " .. table.concat(v.author, ", ") .. " [ID: " .. v.id ..
-                       (v.priority ~= 0 and (", Priority: " .. v.priority) or "") ..
-                       (v.version and v.version ~= '0.0.0' and (", Version: " .. v.version) or "") .. "]"
-            local debugInfo = v.debug_info
-            if debugInfo then
-                if type(debugInfo) == "string" then
-                    if #debugInfo ~= 0 then
-                        info = info .. "\n        " .. debugInfo
-                    end
-                elseif type(debugInfo) == "table" then
-                    for kk, vv in pairs(debugInfo) do
-                        if type(vv) ~= 'nil' then
-                            vv = tostring(vv)
-                        end
-                        if #vv ~= 0 then
-                            info = info .. "\n        " .. kk .. ": " .. vv
+                if v.lovely_only then
+                    lovely_strings = lovely_strings .. "\n    " .. lovely_i .. ": " .. v.name
+                    lovely_i = lovely_i + 1
+                else
+                    mod_strings = mod_strings .. "\n    " .. i .. ": " .. v.name .. " by " ..
+                                      table.concat(v.author, ", ") .. " [ID: " .. v.id ..
+                                      (v.priority ~= 0 and (", Priority: " .. v.priority) or "") ..
+                                      (v.version and v.version ~= '0.0.0' and (", Version: " .. v.version) or "") ..
+                                      (v.lovely and (", Uses Lovely") or "") .. "]"
+                    i = i + 1
+                    local debugInfo = v.debug_info
+                    if debugInfo then
+                        if type(debugInfo) == "string" then
+                            if #debugInfo ~= 0 then
+                                mod_strings = mod_strings .. "\n        " .. debugInfo
+                            end
+                        elseif type(debugInfo) == "table" then
+                            for kk, vv in pairs(debugInfo) do
+                                if type(vv) ~= 'nil' then
+                                    vv = tostring(vv)
+                                end
+                                if #vv ~= 0 then
+                                    mod_strings = mod_strings .. "\n        " .. kk .. ": " .. vv
+                                end
+                            end
                         end
                     end
                 end
             end
         end
+        info = info .. "\nSteamodded Mods:" .. mod_strings .. "\nLovely Mods:" .. lovely_strings
     end
     return info
 end
@@ -598,8 +609,12 @@ function injectStackTrace()
         local err = {}
 
         table.insert(err, "Oops! The game crashed:")
-        table.insert(err, sanitizedmsg)
-
+        if sanitizedmsg:find("Syntax error: game.lua:4: '=' expected near 'Game'") then
+            table.insert(err,
+                'Duplicate installation of Steamodded detected! Please clean your installation: Steam Library > Balatro > Properties > Installed Files > Verify integrity of game files.')
+        else
+            table.insert(err, sanitizedmsg)
+        end
         if #sanitizedmsg ~= #msg then
             table.insert(err, "Invalid UTF-8 string in error message.")
         end
@@ -693,7 +708,7 @@ function injectStackTrace()
             p = p .. "\nCopied to clipboard!"
         end
 
-        p = p .. "\n\nPress ESC to exit\nPress R to restart the game (currently breaks lovely)"
+        p = p .. "\n\nPress ESC to exit\nPress R to restart the game"
         if love.system then
             p = p .. "\nPress Ctrl+C or tap to copy this error"
         end
@@ -728,7 +743,7 @@ function injectStackTrace()
                 elseif e == "keypressed" and a == "c" and love.keyboard.isDown("lctrl", "rctrl") then
                     copyToClipboard()
                 elseif e == "keypressed" and a == "r" then
-                    return "restart"
+                    SMODS.restart_game()
                 elseif e == "keypressed" and a == "down" then
                     scrollDown()
                 elseif e == "keypressed" and a == "up" then

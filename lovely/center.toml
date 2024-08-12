@@ -264,10 +264,15 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 local consumable_nodes = {}
-for _, key in ipairs(SMODS.ConsumableType.obj_buffer) do
-	local id = 'your_collection_'..key:lower()..'s'
-	consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
-end'''
+if #SMODS.ConsumableType.obj_buffer <= 3 then
+	for _, key in ipairs(SMODS.ConsumableType.obj_buffer) do
+		local id = 'your_collection_'..key:lower()..'s'
+		consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
+	end
+else
+	consumable_nodes[#consumable_nodes+1] = UIBox_button({ button = 'your_collection_consumables', label = {localize('b_stat_consumables'), localize{ type = 'variable', key = 'c_types', vars = {#SMODS.ConsumableType.obj_buffer} } }, count = G.DISCOVER_TALLIES['consumeables'], minw = 4, minh = 4, id = 'your_collection_consumables', colour = G.C.FILTER })
+end
+'''
 
 [[patches]]
 [patches.regex]

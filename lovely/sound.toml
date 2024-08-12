@@ -3,6 +3,29 @@ version = "1.0.0"
 dump_lua = true
 priority = 0
 
+#modulate_sound()
+[[patches]]
+[patches.pattern] 
+target = 'functions/misc_functions.lua'
+pattern = 'G.SOUND_MANAGER.channel:push(G.ARGS.push)'
+match_indent = true
+position = 'after'
+payload = '''
+SMODS.previous_track = SMODS.previous_track or ''
+local in_sync = (SMODS.Sounds[desired_track] or {}).sync
+local out_sync = (SMODS.Sounds[SMODS.previous_track] or {}).sync
+local should_sync = true
+if (type(in_sync) == 'table' and not in_sync[SMODS.previous_track]) or in_sync == false then should_sync = false end
+if (type(out_sync) == 'table' and not out_sync[desired_track]) or out_sync == false then should_sync = false end
+if 
+	SMODS.previous_track and SMODS.previous_track ~= desired_track and
+	not should_sync
+then
+	G.ARGS.push.type = 'restart_music'
+	G.SOUND_MANAGER.channel:push(G.ARGS.push)
+end
+SMODS.previous_track = desired_track'''
+
 [[patches]]
 [patches.pattern] 
 target = 'functions/misc_functions.lua'
@@ -10,35 +33,151 @@ pattern = 'G.ARGS.push.ambient_control = G.SETTINGS.ambient_control'
 match_indent = true
 position = 'after'
 payload = '''
-local music_codes = { 'music1', 'music2', 'music3', 'music4', 'music5' }
-for _, sound_code in ipairs(music_codes) do
-	if not (sound_code == desired_track) then
-		local replace_sound = SMODS.Sound.replace_sounds[sound_code]
-        if replace_sound then
-			SMODS.Sounds[replace_sound.key]:play(1, 0, true);
-			SMODS.Sounds[replace_sound.key].sound:setVolume(0)
-        end
-	end
-end
-if SMODS.Sound.current_track and SMODS.Sound.current_track ~= desired_track then
-	SMODS.Sounds[SMODS.Sound.current_track].sound:stop()
-	SMODS.Sound.current_track = nil
-end
-if SMODS.Sounds and SMODS.Sounds[desired_track] then
-	SMODS.Sounds[desired_track]:play(G.PITCH, 1)
-	SMODS.Sound.current_track = desired_track
-	desired_track = ''
+if SMODS.remove_replace_sound and SMODS.remove_replace_sound ~= desired_track then
+	SMODS.Sound.replace_sounds[SMODS.remove_replace_sound] = nil
+	SMODS.remove_replace_sound = nil
 end
 local replace_sound = SMODS.Sound.replace_sounds[desired_track]
 if replace_sound then
-	local sound = SMODS.Sounds[replace_sound.key]
-	if replace_sound.args then
-        local args = replace_sound.args
-        sound:play(args.pitch, args.volume*(G.SETTINGS.SOUND.volume/100.0)*(G.SETTINGS.SOUND.music_volume/100.0), args.stop_previous_instance)
-		if not args.continue_base_sound then return end
-	else
-        sound:play(nil, 1)
-		return
-    end
+	local replaced_track = desired_track
+	desired_track = replace_sound.key
+	G.ARGS.push.desired_track = desired_track
+	if SMODS.previous_track ~= desired_track then
+		if replace_sound.times > 0 then replace_sound.times = replace_sound.times - 1 end
+		if replace_sound.times == 0 then SMODS.remove_replace_sound = replaced_track end
+	end
 end
-if SMODS.Sound.stop_sounds[desired_track] then return end'''
+local stop_sound = SMODS.Sound.stop_sounds[desired_track]
+if SMODS.Sound.stop_sounds[desired_track] then
+	if SMODS.previous_track ~= '' and stop_sound > 0 then stop_sound = stop_sound - 1 end
+	SMODS.Sound.stop_sounds[desired_track] = stop_sound ~= 0 and stop_sound or nil
+	SMODS.previous_track = ''
+	return
+end
+'''
+
+[[patches]]
+[patches.pattern] 
+target = 'functions/misc_functions.lua'
+pattern = "(G.STATE == G.STATES.SPLASH and '') or"
+match_indent = true
+position = 'after'
+payload = 'SMODS.Sound:get_current_music() or'
+
+# PLAY_SOUND 
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = '''local s = {sound = love.audio.newSource("resources/sounds/"..args.sound_code..'.ogg', should_stream and "stream" or 'static')}'''
+match_indent = true
+position = 'at'
+payload = '''
+local c = SMODS_Sounds[args.sound_code]
+local s = c and
+{sound = love.audio.newSource(love.sound.newDecoder(c.data), c.should_stream and 'stream' or 'static'), per = c.per, vol = c.vol } or
+{sound = love.audio.newSource("resources/sounds/"..args.sound_code..'.ogg', should_stream and "stream" or 'static')}''' 
+
+# pass in custom sounds
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = "DISABLE_SFX = false"
+match_indent = true
+position = 'after'
+payload = '''
+SMODS_Sounds = {}
+'''
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = "elseif request.type == 'stop' then"
+match_indent = true
+position = 'before'
+payload = '''
+elseif request.type == 'sound_source' then
+	SMODS_Sounds[request.sound_code] = {
+		sound_code = request.sound_code,
+		data = request.data,
+		sound = sound,
+		per = request.per,
+		vol = request.vol,
+	}
+	SOURCES[request.sound_code] = {}
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = "s.original_pitch = args.per or 1"
+match_indent = true
+position = 'at'
+payload = 's.original_pitch = s.per or args.per or 1'
+
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = "s.original_volume = args.vol or 1"
+match_indent = true
+position = 'at'
+payload = 's.original_volume = s.vol or args.vol or 1'
+
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = "s.original_pitch = args.per or 1"
+match_indent = true
+position = 'at'
+payload = 's.original_pitch = s.per or args.per or 1'
+
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = "s.original_volume = args.vol or 1"
+match_indent = true
+position = 'at'
+payload = 's.original_volume = s.vol or args.vol or 1'
+
+# don't crash RESTART_MUSIC
+
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = "RESTART_MUSIC()"
+match_indent = true
+position = 'at'
+payload = 'RESTART_MUSIC(request)'
+
+# fix looping for music of different length
+
+[[patches]]
+[patches.regex]
+target = 'engine/sound_manager.lua'
+pattern = """(?<indent>[\t ]*)function MODULATE\\(args\\)(\n.*){9}"""
+line_prepend = '$indent'
+position = 'at'
+payload = """function MODULATE(args)
+	if args.desired_track ~= '' then
+		local sound = ((SOURCES[current_track or {}] or {})[1] or {}).sound
+		if not sound or not sound:isPlaying() then
+			RESTART_MUSIC(args)
+		end
+	end
+"""
+[[patches]]
+[patches.pattern]
+target = 'engine/sound_manager.lua'
+pattern = "for _, s in pairs(v) do"
+match_indent = true
+position = 'at'
+payload = """current_track = args.desired_track
+for _, s in pairs(v) do""" 
+
+# [[patches]]
+# [patches.pattern]
+# target = 'engine/sound_manager.lua'
+# pattern = 'if s.sound and not s.sound:isPlaying() then'
+# match_indent = true
+# position = 'at'
+# payload = '''if s.sound and s.sound:isPlaying() then
+# 	s.sound:stop()
+# elseif s.sound and not s.sound:isPlaying() then'''

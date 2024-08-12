@@ -186,14 +186,21 @@ end
 function SMODS.handle_loc_file(path)
     local dir = path .. 'localization/'
 	local file_name
-    for k, v in ipairs({ dir .. G.SETTINGS.language .. '.lua', dir .. 'default.lua', dir .. 'en-us.lua' }) do
+    for k, v in ipairs({ dir .. G.SETTINGS.language .. '.lua', dir .. 'default.lua', dir .. 'en-us.lua', dir .. G.SETTINGS.language .. '.json', dir .. 'default.json', dir .. 'en-us.json' }) do
         if NFS.getInfo(v) then
             file_name = v
             break
         end
     end
     if not file_name then return end
-    local loc_table = assert(loadstring(NFS.read(file_name)))()
+
+    -- check if file name ends in .json
+    local loc_table = nil
+    if file_name:lower():match("%.json$") then
+        loc_table = assert(JSON.decode(NFS.read(file_name)))
+    else
+        loc_table = assert(loadstring(NFS.read(file_name)))()
+    end
     local function recurse(target, ref_table)
         if type(target) ~= 'table' then return end --this shouldn't happen unless there's a bad return value
         for k, v in pairs(target) do
@@ -259,6 +266,20 @@ function SMODS.eval_this(_card, effects)
     end
 end
 
+-- Change a card's suit, rank, or both.
+-- Accepts keys for both objects instead of needing to build a card key yourself.
+function SMODS.change_base(card, suit, rank)
+    if not card then return false end
+    local _suit = SMODS.Suits[suit or card.base.suit]
+    local _rank = SMODS.Ranks[rank or card.base.value]
+    if not _suit or not _rank then
+        sendWarnMessage(('Tried to call SMODS.change_base with invalid arguments: suit="%s", rank="%s"'):format(suit, rank), 'Util')
+        return false
+    end
+    card:set_base(G.P_CARDS[('%s_%s'):format(_suit.card_key, _rank.card_key)])
+    return card
+end
+
 -- Return an array of all (non-debuffed) jokers or consumables with key `key`.
 -- Debuffed jokers count if `count_debuffed` is true.
 -- This function replaces find_joker(); please use SMODS.find_card() instead
@@ -292,18 +313,28 @@ function SMODS.create_card(t)
     return _card
 end
 
+function SMODS.debuff_card(card, debuff, source)
+    debuff = debuff or nil
+    source = source and tostring(source) or nil
+    if debuff == 'reset' then card.ability.debuff_sources = {}; return end
+    card.ability.debuff_sources = card.ability.debuff_sources or {}
+    card.ability.debuff_sources[source] = debuff
+    card:set_debuff()
+end
+
 -- Recalculate whether a card should be debuffed
 function SMODS.recalc_debuff(card)
     G.GAME.blind:debuff_card(card)
 end
 
 function SMODS.restart_game()
-	if love.system.getOS() ~= 'OS X' then
-		love.system.openURL('steam://rungameid/2379780')
-	else
-		os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
-	end
-	love.event.quit()
+    if love.system.getOS() ~= 'OS X' then
+        love.thread.newThread("os.execute(...)\n"):start('"' .. arg[-2] .. '" ' .. table.concat(arg, " "))
+    else
+        os.execute('sh "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro/run_lovely.sh" &')
+    end
+
+    love.event.quit()
 end
 
 function SMODS.create_mod_badges(obj, badges)
@@ -450,6 +481,64 @@ function SMODS.merge_defaults(t, defaults)
     end
     return t
 end
+V_MT = {
+    __eq = function(a, b)
+        return a.major == b.major and
+        a.minor == b.minor and
+        a.patch == b.patch and
+        a.rev == b.rev
+    end,
+    __le = function(a, b)
+        if a.major ~= b.major then return a.major < b.major end
+        if a.minor ~= b.minor then return a.minor < b.minor end
+        if a.patch ~= b.patch then return a.patch < b.patch end
+        return a.rev <= b.rev
+    end,
+    __lt = function(a, b)
+        return a <= b and not (a == b)
+    end,
+    __call = function(_, str)
+        str = str or '0.0.0'
+        local _, _, major, minor, patch, rev = string.find(str, '^(%d-)%.(%d+)%.?(%d*)(.*)$')
+        local t = {
+            major = tonumber(major),
+            minor = tonumber(minor),
+            patch = tonumber(patch) or 0,
+            rev = rev,
+        }
+        return setmetatable(t, V_MT)
+    end
+}
+V = setmetatable({}, V_MT)
+V_MT.__index = V
+function V.is_valid(v)
+    if getmetatable(v) ~= V_MT then return false end
+    return(pcall(function() return V() <= v end))
+end
+
+-- Flatten the given arrays of arrays into one, then
+-- add elements of each table to a new table in order,
+-- skipping any duplicates.
+function SMODS.merge_lists(...)
+    local t = {}
+    for _, v in ipairs({...}) do
+        for _, vv in ipairs(v) do
+            table.insert(t, vv)
+        end
+    end
+    local ret = {}
+    local seen = {}
+    for _, li in ipairs(t) do
+        assert(type(li) == 'table')
+        for _, v in ipairs(li) do
+            if not seen[v] then
+                ret[#ret+1] = v
+                seen[v] = true
+            end
+        end
+    end
+    return ret
+end
 
 --#region palettes
 G.SETTINGS.selected_colours = G.SETTINGS.selected_colours or {}
@@ -561,4 +650,68 @@ function HUE(s, t, h)
 	return s
 end
 
+function round_number(num, precision)
+	precision = 10^(precision or 0)
+	
+	return math.floor(num * precision + 0.4999999999999994) / precision
+end
+
+-- Formatting util for UI elements (look number_formatting.toml)
+function format_ui_value(value)
+    if type(value) ~= "number" then
+        return tostring(value)
+    end
+
+    return number_format(value, 1000000)
+end
+
 --#endregion
+
+
+function SMODS.poll_seal(args)
+    args = args or {}
+    local key = args.key or 'stdseal'
+    local mod = args.mod or 1
+    local guaranteed = args.guaranteed or false
+    local options = args.options or get_current_pool("Seal")
+    local type_key = args.type_key or key.."type"..G.GAME.round_resets.ante
+    key = key..G.GAME.round_resets.ante
+
+    local available_seals = {}
+    local total_weight = 0
+    for _, v in ipairs(options) do
+        if v ~= "UNAVAILABLE" then
+            local seal_option = {}
+            if type(v) == 'string' then
+                assert(G.P_SEALS[v])
+                seal_option = { name = v, weight = G.P_SEALS[v].weight or 5 } -- default weight set to 5 to replicate base game weighting
+            elseif type(v) == 'table' then
+                assert(G.P_SEALS[v.name])
+                seal_option = { name = v.name, weight = v.weight }
+            end
+            if seal_option.weight > 0 then
+                table.insert(available_seals, seal_option)
+                total_weight = total_weight + seal_option.weight
+            end
+        end
+	end
+    total_weight = total_weight + (total_weight / 2 * 98) -- set base rate to 2%
+
+    local type_weight = 0 -- modified weight total
+    for _,v in ipairs(available_seals) do
+        v.weight = G.P_SEALS[v.name].get_weight and G.P_SEALS[v.name]:get_weight() or v.weight
+        type_weight = type_weight + v.weight
+    end
+    
+    local seal_poll = pseudorandom(pseudoseed(key or 'stdseal'..G.GAME.round_resets.ante))
+    if seal_poll > 1 - (type_weight*mod / total_weight) or guaranteed then -- is a seal generated
+        local seal_type_poll = pseudorandom(pseudoseed(type_key)) -- which seal is generated
+        local weight_i = 0
+        for k, v in ipairs(available_seals) do
+            weight_i = weight_i + v.weight
+            if seal_type_poll > 1 - (weight_i / type_weight) then
+                return v.name
+            end
+        end
+    end
+end

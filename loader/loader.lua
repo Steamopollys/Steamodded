@@ -3,6 +3,7 @@
 
 function loadMods(modsDirectory)
     SMODS.Mods = {}
+    SMODS.Mods[SMODS.id] = SMODS
     SMODS.mod_priorities = {}
     SMODS.mod_list = {}
     local header_components = {
@@ -15,7 +16,11 @@ function loadMods(modsDirectory)
         badge_text_colour   = { pattern = '%-%-%- BADGE_TEXT_COLO[U]?R: (%x-)\n', handle = function(x) return HEX(x or 'FFFFFF') end },
         display_name  = { pattern = '%-%-%- DISPLAY_NAME: (.-)\n' },
         dependencies  = {
-            pattern = '%-%-%- DEPENDENCIES: %[(.-)%]\n',
+            pattern = {
+                '%-%-%- DEPENDENCIES: %[(.-)%]\n',
+                '%-%-%- DEPENDS: %[(.-)%]\n',
+                '%-%-%- DEPS: %[(.-)%]\n',
+            },
             parse_array = true,
             handle = function(x)
                 local t = {}
@@ -40,29 +45,21 @@ function loadMods(modsDirectory)
                         v_geq = v:match '>=([^<>]+)',
                         v_leq = v:match '<=([^<>]+)',
                     })
+                    if t.v_geq and not V(t[#t].v_geq):is_valid() then t[#t].v_geq = nil end
+                    if t.v_leq and not V(t[#t].v_leq):is_valid() then t[#t].v_leq = nil end
                 end
+                
                 return t
             end
         },
         prefix        = { pattern = '%-%-%- PREFIX: (.-)\n' },
-        version       = { pattern = '%-%-%- VERSION: (.-)\n', handle = function(x) return x or '0.0.0' end },
-        l_version_geq = {
-            pattern = '%-%-%- LOADER_VERSION_GEQ: (.-)\n',
-            handle = function(x)
-                return x and x:gsub('%-STEAMODDED', '')
-            end
-        },
-        l_version_leq = {
-            pattern = '%-%-%- LOADER_VERSION_LEQ: (.-)\n',
-            handle = function(x)
-                return x and x:gsub('%-STEAMODDED', '')
-            end
-        },
+        version       = { pattern = '%-%-%- VERSION: (.-)\n', handle = function(x) return x and V(x):is_valid() and x or '0.0.0' end },
         outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } },
         dump_loc      = { pattern = { '%-%-%- DUMP_LOCALIZATION\n'}}
     }
     
     local used_prefixes = {}
+    local lovely_directories = {}
 
     -- Function to process each directory (including subdirectories) with depth tracking
     local function processDirectory(directory, depth)
@@ -70,17 +67,27 @@ function loadMods(modsDirectory)
             return
         end
 
+        local isDirLovely = false
+
         for _, filename in ipairs(NFS.getDirectoryItems(directory)) do
             local file_path = directory .. "/" .. filename
 
             -- Check if the current file is a directory
             local file_type = NFS.getInfo(file_path).type
             if file_type == 'directory' or file_type == 'symlink' then
+                -- Lovely patches 
+                if depth == 2 and filename == "lovely" and not isDirLovely then
+                    isDirLovely = true
+                    table.insert(lovely_directories, directory .. "/")
+                end
                 -- If it's a directory and depth is within limit, recursively process it
                 processDirectory(file_path, depth + 1)
+            elseif depth == 2 and filename == "lovely.toml" and not isDirLovely then
+                isDirLovely = true
+                table.insert(lovely_directories, directory .. "/")
             elseif filename:lower():match("%.lua$") then -- Check if the file is a .lua file
                 if depth == 1 then
-                    sendWarnMessage(('Found lone Lua file %s in Mods directory :: Please place the files for each mod in its own subdirectory.'):format(filename))
+                    sendWarnMessage(('Found lone Lua file %s in Mods directory :: Please place the files for each mod in its own subdirectory.'):format(filename), 'Loader')
                 end
                 local file_content = NFS.read(file_path)
 
@@ -90,7 +97,7 @@ function loadMods(modsDirectory)
                 -- Check the header lines using string.match
                 local headerLine = file_content:match("^(.-)\n")
                 if headerLine == "--- STEAMODDED HEADER" then
-                    boot_print_stage('Processing Mod File: ' .. filename)
+                    sendTraceMessage('Processing Mod File: ' .. filename)
                     local mod = {}
                     local sane = true
                     for k, v in pairs(header_components) do
@@ -106,7 +113,7 @@ function loadMods(modsDirectory)
                         if v.required and not component then
                             sane = false
                             sendWarnMessage(string.format('Mod file %s is missing required header component: %s',
-                                filename, k))
+                                filename, k), 'Loader')
                             break
                         end
                         if v.parse_array then
@@ -136,12 +143,17 @@ function loadMods(modsDirectory)
                         mod.prefix = mod.prefix or (mod.id or ''):lower():sub(1, 4)
                     end
                     if mod.prefix and used_prefixes[mod.prefix] then
-                        sane = false
-                        sendWarnMessage(('Duplicate Mod prefix %s used by %s, %s'):format(mod.prefix, mod.id, used_prefixes[mod.prefix]))
+                        mod.can_load = false
+                        mod.load_issues = { 
+                            prefix_conflict = used_prefixes[mod.prefix],
+                            dependencies = {},
+                            conflicts = {},
+                        }
+                        sendWarnMessage(('Duplicate Mod prefix %s used by %s, %s'):format(mod.prefix, mod.id, used_prefixes[mod.prefix]), 'Loader')
                     end
 
                     if sane then
-                        boot_print_stage('Saving Mod Info: ' .. mod.id)
+                        sendTraceMessage('Saving Mod Info: ' .. mod.id)
                         mod.path = directory .. '/'
                         mod.main_file = filename
                         mod.display_name = mod.display_name or mod.name
@@ -165,8 +177,56 @@ function loadMods(modsDirectory)
         end
     end
 
+    
+    boot_print_stage('Processing Mod Files')
     -- Start processing with the initial directory at depth 1
     processDirectory(modsDirectory, 1)
+    for _, path in ipairs(lovely_directories) do
+        local hasSMOD = false
+        for _, mod in pairs(SMODS.Mods) do
+            if mod.path == path then
+                mod.lovely = true
+                hasSMOD = true
+            end
+        end
+        if not hasSMOD then 
+            local name = string.match(path, "[/\\]([^/\\]+)[/\\]?$")
+            local disabled = not not NFS.getInfo(path .. '/.lovelyignore')
+            local mod = {
+                name = name,
+                id = "lovely-compat-" .. name,
+                author = {"???"},
+                description = "A lovely mod.",
+                prefix_config = { key = { mod = false }, atlas = false },
+                priority = 0,
+                badge_colour = HEX("666666FF"),
+                badge_text_colour = HEX('FFFFFF'),
+                path = path,
+                main_file = "",
+                display_name = name,
+                dependencies = {},
+                optional_dependencies = {},
+                conflicts = {},
+                version = "0.0.0",
+                can_load = not disabled,
+                lovely = true,
+                lovely_only = true,
+                disabled = disabled,
+                load_issues = {
+                    dependencies = {},
+                    conflicts = {},
+                    disabled = disabled
+                }
+
+            }
+
+            
+
+            SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
+            table.insert(SMODS.mod_priorities[mod.priority], mod)
+            SMODS.Mods[mod.id] = mod
+        end
+    end
 
     -- sort by priority
     local keyset = {}
@@ -189,8 +249,8 @@ function loadMods(modsDirectory)
             -- block load even if the conflict is also blocked
             if
                 SMODS.Mods[v.id] and
-                (not v.v_leq or SMODS.Mods[v.id].version <= v.v_leq) and
-                (not v.v_geq or SMODS.Mods[v.id].version >= v.v_geq)
+                (not v.v_leq or V(SMODS.Mods[v.id].version) <= V(v.v_leq)) and
+                (not v.v_geq or V(SMODS.Mods[v.id].version) >= V(v.v_geq))
             then
                 can_load = false
                 table.insert(load_issues.conflicts, v.id..(v.v_leq and '<='..v.v_leq or '')..(v.v_geq and '>='..v.v_geq or ''))
@@ -201,12 +261,15 @@ function loadMods(modsDirectory)
             if
                 not SMODS.Mods[v.id] or
                 not check_dependencies(SMODS.Mods[v.id], seen) or
-                (v.v_leq and SMODS.Mods[v.id].version > v.v_leq) or
-                (v.v_geq and SMODS.Mods[v.id].version < v.v_geq)
+                (v.v_leq and V(SMODS.Mods[v.id].version) > V(v.v_leq)) or
+                (v.v_geq and V(SMODS.Mods[v.id].version) < V(v.v_geq))
             then
                 can_load = false
                 table.insert(load_issues.dependencies,
                     v.id .. (v.v_geq and '>=' .. v.v_geq or '') .. (v.v_leq and '<=' .. v.v_leq or ''))
+                if v.id == 'Steamodded' then
+                    load_issues.version_mismatch = ''..(v.v_geq and '>='..v.v_geq or '')..(v.v_leq and '<='..v.v_leq or '')
+                end
             end
         end
         if mod.outdated then
@@ -215,14 +278,6 @@ function loadMods(modsDirectory)
         if mod.disabled then
             can_load = false
             load_issues.disabled = true
-        end
-        local loader_version = MODDED_VERSION:gsub('%-STEAMODDED', '')
-        if
-            (mod.l_version_geq and loader_version < mod.l_version_geq) or
-            (mod.l_version_leq and loader_version > mod.l_version_geq)
-        then
-            can_load = false
-            load_issues.version_mismatch = ''..(mod.l_version_geq and '>='..mod.l_version_geq or '')..(mod.l_version_leq and '<='..mod.l_version_leq or '')
         end
         if not can_load then
             mod.load_issues = load_issues
@@ -234,6 +289,10 @@ function loadMods(modsDirectory)
         return true
     end
 
+    -- check dependencies first (for object dependencies)
+    for _, mod in pairs(SMODS.Mods) do mod.can_load = check_dependencies(mod) end
+
+    boot_print_stage('Loading Mods')
     -- load the mod files
     for _, priority in ipairs(keyset) do
         table.sort(SMODS.mod_priorities[priority],
@@ -241,10 +300,8 @@ function loadMods(modsDirectory)
                 return mod_a.id < mod_b.id
             end)
         for _, mod in ipairs(SMODS.mod_priorities[priority]) do
-            mod.can_load = check_dependencies(mod)
             SMODS.mod_list[#SMODS.mod_list + 1] = mod -- keep mod list in prioritized load order
-            if mod.can_load then
-                boot_print_stage('Loading Mod: ' .. mod.id)
+            if mod.can_load and not mod.lovely_only then
                 SMODS.current_mod = mod
                 if mod.outdated then
                     SMODS.compat_0_9_8.with_compat(function()
@@ -256,14 +313,12 @@ function loadMods(modsDirectory)
                         end
                     end)
                 else
-                    local load_func = type(mod.load_mod_config) == 'function' and mod.load_mod_config or SMODS.load_mod_config
-                    load_func(mod)
+                    SMODS.load_mod_config(mod)
                     assert(load(NFS.read(mod.path..mod.main_file), ('=[SMODS %s "%s"]'):format(mod.id, mod.main_file)))()
                 end
                 SMODS.current_mod = nil
-            else
-                boot_print_stage('Failed to load Mod: ' .. mod.id)
-                sendWarnMessage(string.format("Mod %s was unable to load: %s%s%s", mod.id,
+            elseif not mod.lovely_only then
+                sendTraceMessage(string.format("Mod %s was unable to load: %s%s%s", mod.id,
                     mod.load_issues.outdated and
                     'Outdated: Steamodded versions 0.9.8 and below are no longer supported!\n' or '',
                     next(mod.load_issues.dependencies) and
@@ -317,7 +372,6 @@ end
 
 local function initializeModUIFunctions()
     for id, modInfo in pairs(SMODS.mod_list) do
-        boot_print_stage("Initializing Mod UI: " .. modInfo.id)
         G.FUNCS["openModUI_" .. modInfo.id] = function(arg_736_0)
             G.ACTIVE_MOD_UI = modInfo
             G.FUNCS.overlay_menu({
@@ -329,11 +383,8 @@ end
 
 function initSteamodded()
     initGlobals()
-    boot_print_stage("Loading Steamodded config")
-    SMODS:load_mod_config()
     boot_print_stage("Loading APIs")
     loadAPIs()
-    boot_print_stage("Loading Mods")
     loadMods(SMODS.MODS_DIR)
     initializeModUIFunctions()
     boot_print_stage("Injecting Items")

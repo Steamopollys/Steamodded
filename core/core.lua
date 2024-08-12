@@ -2,11 +2,15 @@
 --- MODULE CORE
 
 SMODS = {}
-MODDED_VERSION = "1.0.0-ALPHA-0722a-STEAMODDED"
+MODDED_VERSION = "1.0.0-ALPHA-0812a-STEAMODDED"
+SMODS.id = 'Steamodded'
+SMODS.version = MODDED_VERSION:gsub('%-STEAMODDED', '')
+SMODS.can_load = true
 
 -- Include lovely and nativefs modules
 local nativefs = require "nativefs"
 local lovely = require "lovely"
+local json = require "json"
 
 local lovely_mod_dir = lovely.mod_dir:gsub("/$", "")
 NFS = nativefs
@@ -16,6 +20,8 @@ NFS.setWorkingDirectory(lovely_mod_dir)
 lovely_mod_dir = NFS.getWorkingDirectory()
 -- make sure NFS behaves the same as love.filesystem
 NFS.setWorkingDirectory(love.filesystem.getSaveDirectory())
+
+JSON = json
 
 local function set_mods_dir()
     local love_dirs = {

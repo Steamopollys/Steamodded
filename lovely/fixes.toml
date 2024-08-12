@@ -98,7 +98,9 @@ pattern = "bypass_lock = self.bypass_lock,"
 position = "after"
 payload = """
 unique_val = self.unique_val,
-unique_val__saved_ID = self.ID,"""
+unique_val__saved_ID = self.ID,
+ignore_base_shader = self.ignore_base_shader,
+ignore_shadow = self.ignore_shadow,"""
 match_indent = true
 
 # Card:load()
@@ -111,7 +113,10 @@ payload = """
 self.unique_val = cardTable.unique_val or self.unique_val
 if cardTable.unique_val__saved_ID and G.ID <= cardTable.unique_val__saved_ID then
     G.ID = cardTable.unique_val__saved_ID + 1
-end"""
+end
+
+self.ignore_base_shader = cardTable.ignore_base_shader or {}
+self.ignore_shadow = cardTable.ignore_shadow or {}"""
 match_indent = true
 
 ## Vars in card descriptions should use `card.ability` instead of `_c.config` where possible
@@ -355,3 +360,102 @@ pattern = 'G\.hand:change_size\(1\)(\s+G\.FUNCS\.draw_from_deck_to_hand\(1\))'
 root_capture = '$1'
 position = 'at'
 payload = ""
+
+#
+# Money scaling fix
+#
+
+## create_UIBox_HUD
+[[patches]] 
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''
+string = \{\{ref_table = G\.GAME\, ref_value = 'dollars'\, prefix = localize\('\$'\)\}\}\,'''
+position = "after"
+payload = '''
+
+                            scale_function = function ()
+                                return scale_number(G.GAME.dollars, 2.2 * scale, 99999, 1000000)
+                            end,'''
+
+## DynaText:update_text
+[[patches]] 
+[patches.pattern]
+target = "engine/text.lua"
+pattern = 'self.config.H = 0'
+position = "after"
+payload = "self.scale = self.config.scale_function and self.config.scale_function() or self.scale"
+match_indent = true
+
+
+#
+# Fix gold stake legendary infloop
+# Do not try to roll for jokers that are not in_pool
+#
+
+# generate_starting_seed()
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = '''if win_ante and (win_ante >= 8) then'''
+match_indent = true
+position = "at"
+payload = '''if win_ante and (win_ante >= 8) or (v.in_pool and type(v.in_pool) == 'function' and not v:in_pool()) then'''
+
+#
+# Fix G.GAME.blind:set_blind(nil, true, nil)
+# being called when not in blind.
+#
+
+# Card:add_to_deck
+# Card:remove_from_deck
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = 'if G\.GAME\.blind then'
+position = "at"
+payload = "if G.GAME.blind and G.GAME.blind.in_blind then"
+
+# Blind:set_blind
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+match_indent = true
+pattern = "if not reset then"
+position = "after"
+payload = '''
+    if blind then
+        self.in_blind = true
+    end'''
+
+# end_round()
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local game_over = true"
+position = "before"
+payload = "G.GAME.blind.in_blind = false"
+match_indent = true
+
+
+
+# Make sure new param is loaded
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+match_indent = true
+pattern = "function Blind:load(blindTable)"
+position = "after"
+payload = '''
+    self.in_blind = blindTable.in_blind'''
+
+# Make sure new param is saved
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+match_indent = true
+pattern = "local blindTable = {"
+position = "after"
+payload = '''
+    in_blind = self.in_blind,'''
+

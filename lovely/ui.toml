@@ -4,15 +4,6 @@ dump_lua = true
 priority = 0
 
 ### Addition Tab
-## TODO: Find better solution (if possible)
-# G.FUNCS.your_collection
-[[patches]]
-[patches.pattern]
-target = "functions/button_callbacks.lua"
-pattern = '''G.FUNCS.your_collection = function(e)'''
-position = "after"
-payload = '''G.ACTIVE_MOD_UI = nil'''
-match_indent = true
 
 ## Jokers tab
 # create_UIBox_your_collection_jokers()
@@ -348,4 +339,65 @@ match_indent = true
 target = 'functions/UI_definitions.lua'
 pattern = '''(?<indent>[\t ]*)UIBox_button\(\{button = 'your_collection_blinds', label = \{localize\('b_blinds'\)\}, count = G\.DISCOVER_TALLIES\.blinds, minw = 5, minh = 2.0, id = 'your_collection_blinds', focus_args = \{snap_to = true\}\}\),'''
 position = 'after'
-payload = '''UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}, func = 'is_other_gameobject_tabs'}),'''
+payload = '''UIBox_button({button = 'your_collection_other_gameobjects', label = {localize('k_other')}, minw = 5, id = 'your_collection_other_gameobjects', focus_args = {snap_to = true}}),'''
+
+# Fix UIElement.config.chosen being overriden if choice=true is set
+# UIElement:click()
+[[patches]]
+[patches.pattern]
+target = "engine/ui.lua"
+match_indent = true
+position = "after"
+pattern = "if self.config.choice then"
+payload = "    local chosen_temp = self.config.chosen"
+
+[[patches]]
+[patches.pattern]
+target = "engine/ui.lua"
+match_indent = true
+position = "at"
+pattern = "self.config.chosen = true"
+payload = "self.config.chosen = chosen_temp or true"
+
+# Escape from mod menu saves config
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+position = 'before'
+line_prepend = '$indent'
+pattern = '''
+(?<indent>[\t ]*)return \{n=G\.UIT\.ROOT, config = \{align = 'cm', colour = G\.C\.CLEAR\}, nodes=\{
+[\t ]*\{n=G\.UIT\.C,'''
+payload = '''
+local cols
+if #info_boxes <= 3 then
+    cols = 1
+elseif #info_boxes <= 10 then
+    cols = 2
+elseif #info_boxes <= 24 then
+    cols = 3
+else
+    cols = 4
+end
+local nodes_per_col = math.ceil(#info_boxes/cols)
+local info_cols = {}
+for i = 0, cols-1 do
+    local col = {}
+    for j = 1, nodes_per_col do
+        local info_box = info_boxes[i*nodes_per_col+j]
+        if info_box then
+            table.insert(col, info_box)
+        else break end
+    end
+    table.insert(info_cols, {n=G.UIT.C, config = {align="cm"}, nodes = col})
+end
+info_boxes = {{n=G.UIT.R, config = {align="cm", padding = 0.05, card_pos = card.T.x }, nodes = info_cols}}
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+match_indent = true
+position = 'at'
+pattern = "config = {offset = {x=-0.03,y=0}, align = 'cl', parent = e}"
+payload = """config = (e.config.ref_table and e.config.ref_table[1].config.card_pos > G.ROOM.T.w*0.4) and {offset = {x=-0.03,y=0}, align = 'cl', parent = e} or {offset = {x=0.03,y=0}, align = 'cr', parent = e}"""

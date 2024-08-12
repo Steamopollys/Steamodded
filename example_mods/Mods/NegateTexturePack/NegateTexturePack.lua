@@ -3,7 +3,7 @@
 --- MOD_ID: NegateTexturePack
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Negated Balatro... THIS IS AN EXAMPLE MOD, FEEL FREE TO USE IT AS A BASE
---- LOADER_VERSION_GEQ: 1.0.0
+--- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA]
 
 ----------------------------------------------
 ------------MOD CODE -------------------------

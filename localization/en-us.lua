@@ -41,6 +41,14 @@ return {
 					'but #2# is installed.'
 				}
 			},
+			load_failure_p = {
+				text = {
+					'{C:attention}Prefix Conflict!{}',
+					'This mod\'s prefix is',
+					'the same as another mod\'s.',
+					'({C:attention}#1#{})'
+				}
+			},
 			load_disabled = {
                 text = {
                     'This mod has been',
@@ -58,6 +66,12 @@ return {
 		}
     },
     misc = {
+		achievement_names = {
+			hidden_achievement = "???",
+		},
+		achievement_descriptions = {
+			hidden_achievement = "Play more to find out!",
+		},
         dictionary = {
 			b_mods = 'Mods',
 			b_mods_cap = 'MODS',
@@ -77,11 +91,19 @@ return {
             b_author = 'Author',
 			b_authors = 'Authors',
             b_unknown = 'Unknown',
+			b_lovely_mod = '(Lovely Mod) ',
             b_by = ' By: ',
 			b_config = "Config",
 			b_additions = 'Additions',
-            b_applies_stakes_1 = 'Applies ',
+      		b_stickers = 'Stickers',
+			b_achievements = "Achievements",
+      		b_applies_stakes_1 = 'Applies ',
 			b_applies_stakes_2 = '',
-		}
+			b_graphics_mipmap_level = "Mipmap level",
+		},
+		v_dictionary = {
+			c_types = '#1# Types',
+			cashout_hidden = '...and #1# more',
+		},
 	}
 }

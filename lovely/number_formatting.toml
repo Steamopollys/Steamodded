@@ -1,0 +1,171 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+#
+# Use number_format for...
+#
+
+# DynaText
+
+[[patches]] 
+[patches.regex]
+target = "engine/text.lua"
+pattern = 'tostring\((?<param>v\.ref_table and v\.ref_table\[v\.ref_value\] or v\.string)\)'
+position = "at"
+payload = "format_ui_value($param)"
+
+# Cash Out
+
+[[patches]] 
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '''
+localize\('\$'\)\.\.config\.dollars'''
+position = "at"
+payload = "localize('$')..format_ui_value(config.dollars)"
+
+# End of round money
+
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '''
+localize\('\$'\)\.\.num_dollars\}'''
+position = "at"
+payload = "localize('$')..format_ui_value(num_dollars)}"
+
+# Tooltip numbers
+
+[[patches]] 
+[patches.regex]
+target = "functions/misc_functions.lua"
+pattern = '(?<param>args\.vars\[tonumber\(subpart\[1\]\)\])'
+position = "at"
+payload = 'format_ui_value($param)'
+
+# Poker Hand chips
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "{n=G.UIT.T, config={text = G.GAME.hands[handname].chips, scale = 0.45, colour = G.C.UI.TEXT_LIGHT}},"
+position = "at"
+payload = "{n=G.UIT.T, config={text = number_format(G.GAME.hands[handname].chips, 1000000), scale = 0.45, colour = G.C.UI.TEXT_LIGHT}},"
+match_indent = true
+
+# Poker Hand mult
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "{n=G.UIT.T, config={text = G.GAME.hands[handname].mult, scale = 0.45, colour = G.C.UI.TEXT_LIGHT}}"
+position = "at"
+payload = "{n=G.UIT.T, config={text = number_format(G.GAME.hands[handname].mult, 1000000), scale = 0.45, colour = G.C.UI.TEXT_LIGHT}}"
+match_indent = true
+
+# Continue Run - Money
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = 'tostring\(saved_game\.GAME\.dollars\)'
+position = "at"
+payload = "format_ui_value(saved_game.GAME.dollars)"
+
+# Continue Run - Best Hand - bigger size
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = 'scale_number\(saved_game\.GAME\.round_scores\.hand\.amt\, 0\.8\*scale\)'
+position = "at"
+payload = "scale_number(saved_game.GAME.round_scores.hand.amt, 0.8*scale, 100000000000)"
+
+
+#
+# Custom sci notation switch point
+#
+
+## number_format
+[[patches]] 
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'function number_format(num)'
+position = "at"
+payload = '''
+function number_format(num, e_switch_point)
+    if type(num) ~= 'number' then return num end
+
+    local sign = (num >= 0 and "") or "-"
+    num = math.abs(num)'''
+match_indent = true
+
+[[patches]] 
+[patches.regex]
+target = "functions/misc_functions.lua"
+pattern = 'num >= G\.E_SWITCH_POINT'
+position = "at"
+payload = "num >= (e_switch_point or G.E_SWITCH_POINT)"
+
+# 1. Fix floating point error (1.000e92 instead of 10.000e91)
+# 2. Lower precision with higher numbers
+[[patches]] 
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = '''
+return string.format("%.3f",x/(10^fac))..'e'..fac'''
+position = "at"
+payload = '''
+if num == math.huge then
+    return sign.."naneinf"
+end
+
+local mantissa = round_number(x/(10^fac), 3)
+if mantissa >= 10 then
+  mantissa = mantissa / 10
+  fac = fac + 1
+end
+return sign..(string.format(fac >= 100 and "%.1fe%i" or fac >= 10 and "%.2fe%i" or "%.3fe%i", mantissa, fac))'''
+match_indent = true
+
+# Remove trailing zeroes
+# E.g. X1.5 being displayed as X1.50
+[[patches]] 
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = '''
+return string.format(num ~= math.floor(num) and (num >= 100 and "%.0f" or num >= 10 and "%.1f" or "%.2f") or "%.0f", num):reverse():gsub("(%d%d%d)", "%1,"):gsub(",$", ""):reverse()'''
+position = "at"
+payload = '''
+local formatted
+if num ~= math.floor(num) and num < 100 then
+  formatted = string.format(num >= 10 and "%.1f" or "%.2f", num)
+  if formatted:sub(-1) == "0" then
+    formatted = formatted:gsub("%.?0+$", "")
+  end
+  -- Return already to avoid comas being added
+  if num < 0.01 then return tostring(num) end
+else 
+  formatted = string.format("%.0f", num)
+end
+return sign..(formatted:reverse():gsub("(%d%d%d)", "%1,"):gsub(",$", ""):reverse())'''
+match_indent = true
+
+## scale_number
+[[patches]] 
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = 'function scale_number(number, scale, max)'
+position = "at"
+payload = 'function scale_number(number, scale, max, e_switch_point)'
+match_indent = true
+
+[[patches]] 
+[patches.regex]
+target = "functions/button_callbacks.lua"
+pattern = 'number >= G\.E_SWITCH_POINT'
+position = "at"
+payload = "math.abs(number) >= (e_switch_point or G.E_SWITCH_POINT)"
+

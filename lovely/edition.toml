@@ -78,6 +78,69 @@ for _, v in ipairs(G.P_CENTER_POOLS.Edition) do
 	G.BADGE_COL[v.key:sub(3)] = v.badge_colour
 end'''
 
+# Limit ARGS.send_to_shader[1] to wiggle between 0 and 2 instead of growing infinitely
+# this makes shaders responsiveness on tilt reliable over time
+# Card:draw()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+G\.TIMERS\.REAL/\(28\)'''
+position = "at"
+payload = '''math.sin(G.TIMERS.REAL/28) + 1'''
+
+# Allow editions to not draw shadow
+# Card:draw()
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+self\.ability\.effect ~= 'Glass Card' and not self\.greyed'''
+position = "after"
+payload = ''' and self:should_draw_shadow() '''
+
+# If shader modifies shape of card, this will stop "back" layer of the card being rendered.
+# Card:draw()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''
+elseif not self.greyed then'''
+position = "before"
+payload = '''
+elseif not self:should_draw_base_shader() then
+    -- Don't render base dissolve shader.
+'''
+match_indent = true
+
+# If shader modifies shape of card, this will stop "back" layer of the card being rendered.
+# spectral cards and booster packs only.
+# Card:draw()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''
+if self.ability.set == 'Booster' or self.ability.set == 'Spectral' then'''
+position = "at"
+payload = '''
+if (self.ability.set == 'Booster' or self.ability.set == 'Spectral') and self:should_draw_base_shader() then'''
+match_indent = true
+
+# If shader modifies shape of card, this will stop "back" layer of the card being rendered.
+# invisible joker and vouchers.
+# Card:draw()
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''
+self.children.center:draw_shader('voucher', nil, self.ARGS.send_to_shader)'''
+position = "at"
+payload = '''
+if self:should_draw_base_shader() then
+    self.children.center:draw_shader('voucher', nil, self.ARGS.send_to_shader)
+end'''
+match_indent = true
+
 # Inject shaders applying to cards
 # Card:draw()
 [[patches]]

@@ -116,6 +116,30 @@ for i = 1, SMODS.Rank.max_id.value do
 	vals[i] = {}
 end'''
 
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = 'function get_X_same(num, hand)'
+position = 'at'
+match_indent = true
+payload = '''function get_X_same(num, hand, or_more)'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = 'function get_X_same(num, hand)'
+position = 'at'
+match_indent = true
+payload = '''function get_X_same(num, hand, or_more)'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = 'if #curr == num then'
+position = 'at'
+match_indent = true
+payload = '''if or_more and (#curr >= num) or (#curr == num) then'''
+
 # Card:get_nominal()
 [[patches]]
 [patches.regex]

@@ -5,10 +5,10 @@
 --- MOD_DESCRIPTION: Adds Royal Flush to demonstrated Steamodded Poker Hand API
 --- BADGE_COLOUR: A67C00
 --- PREFIX: ex_royal_flush
+--- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA-0807a]
 
 SMODS.PokerHand {
     key = 'Royal Flush',
-    above_hand = 'Straight Flush',
     chips = 110,
     mult = 9,
     l_chips = 40,
@@ -30,31 +30,17 @@ SMODS.PokerHand {
             }
         }
     },
-    composite = function(parts)
-        local ret = {}
+    evaluate = function(parts, hand)
         if next(parts._flush) and next(parts._straight) then
-            local _s, _f = parts._straight, parts._flush
-            for _, v in ipairs(_f[1]) do
-              ret[#ret+1] = v
-            end
-            for _, v in ipairs(_s[1]) do
-              local in_straight = nil
-              for _, vv in ipairs(_f[1]) do
-                if vv == v then in_straight = true end
-              end
-              if not in_straight then ret[#ret+1] = v end
-            end
-        end
-        if #ret > 0 then
+            local _strush = SMODS.merge_lists(parts._flush, parts._straight)
             local royal = true
-            for j = 1, #ret do
-                local rank = SMODS.Ranks[ret[j].base.value]
+            for j = 1, #_strush do
+                local rank = SMODS.Ranks[_strush[j].base.value]
                 royal = royal and (rank.key == 'Ace' or rank.key == '10' or rank.face)
             end
-            if not royal then return {} end
+            if royal then return {_strush} end
         end
-        return {ret}
-    end
+    end,
 }
 
 SMODS.Atlas { key = 'vulcan', path = 'vulcan.png', px = 71, py = 95 }
@@ -62,7 +48,8 @@ SMODS.Atlas { key = 'vulcan', path = 'vulcan.png', px = 71, py = 95 }
 SMODS.Consumable {
     set = 'Planet',
     key = 'vulcan',
-    config = { hand_type = 'h_ex_royal_flush_Royal Flush' },
+    --! `h_` prefix was removed
+    config = { hand_type = 'ex_royal_flush_Royal Flush' },
     pos = {x = 0, y = 0 },
     atlas = 'vulcan',
     set_card_type_badge = function(self, card, badges)

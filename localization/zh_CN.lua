@@ -40,6 +40,14 @@ return {
 					'但当前为#2#'
 				}
 			},
+			load_failure_p = { -- To be translated
+				text = {
+					'{C:attention}Prefix Conflict!{}',
+					'This mod\'s prefix is',
+					'the same as another mod\'s.',
+					'({C:attention}#1#{})'
+				}
+			},
 			load_disabled = {
                 text = {
                     '该模组',
@@ -57,6 +65,12 @@ return {
 		}
     },
     misc = {
+		achievement_names = {
+			hidden_achievement = "???",
+		},
+		achievement_descriptions = {
+			hidden_achievement = "Play more to find out!", -- To be translated
+		},
         dictionary = {
 			b_mods = '模组',
 			b_mods_cap = '模组',
@@ -76,11 +90,18 @@ return {
             b_author = '作者',
 			b_authors = '作者',
             b_unknown = '未知',
+			b_lovely_mod = '(Lovely Mod) ', -- TODO
             b_by = ' 作者：',
        		b_config = "配置",
             b_additions = '新增项目',
+			b_achievements = "Achievements", -- To be translated
             b_applies_stakes_1 = '',
 			b_applies_stakes_2 = '的限制也将起效',
-		}
-	}
+		},
+		v_dictionary = {
+			c_types = '共有#1#种',
+			cashout_hidden = '……还有#1#',
+		},
+	},
+	
 }
