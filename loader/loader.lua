@@ -143,7 +143,12 @@ function loadMods(modsDirectory)
                         mod.prefix = mod.prefix or (mod.id or ''):lower():sub(1, 4)
                     end
                     if mod.prefix and used_prefixes[mod.prefix] then
-                        sane = false
+                        mod.can_load = false
+                        mod.load_issues = { 
+                            prefix_conflict = used_prefixes[mod.prefix],
+                            dependencies = {},
+                            conflicts = {},
+                        }
                         sendWarnMessage(('Duplicate Mod prefix %s used by %s, %s'):format(mod.prefix, mod.id, used_prefixes[mod.prefix]), 'Loader')
                     end
 

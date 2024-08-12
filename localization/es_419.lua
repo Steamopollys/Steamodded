@@ -41,6 +41,14 @@ return {
 					'pero la #2# está instalada.'
 				}
 			},
+			load_failure_p = { -- To be translated
+				text = {
+					'{C:attention}Prefix Conflict!{}',
+					'This mod\'s prefix is',
+					'the same as another mod\'s.',
+					'({C:attention}#1#{})'
+				}
+			},
 			load_disabled = {
                 text = {
                     '¡Este mod ha sido',

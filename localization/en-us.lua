@@ -41,6 +41,14 @@ return {
 					'but #2# is installed.'
 				}
 			},
+			load_failure_p = {
+				text = {
+					'{C:attention}Prefix Conflict!{}',
+					'This mod\'s prefix is',
+					'the same as another mod\'s.',
+					'({C:attention}#1#{})'
+				}
+			},
 			load_disabled = {
                 text = {
                     'This mod has been',
