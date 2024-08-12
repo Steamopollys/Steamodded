@@ -176,7 +176,6 @@ function loadMods(modsDirectory)
     boot_print_stage('Processing Mod Files')
     -- Start processing with the initial directory at depth 1
     processDirectory(modsDirectory, 1)
-    print(inspect(lovely_directories))
     for _, path in ipairs(lovely_directories) do
         local hasSMOD = false
         for _, mod in pairs(SMODS.Mods) do
