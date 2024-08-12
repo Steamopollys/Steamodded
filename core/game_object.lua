@@ -65,7 +65,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         if key_cfg ~= false then
             if type(key_cfg) ~= 'table' then key_cfg = {} end
             if not from_take_ownership then
-                if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
                 SMODS.modify_key(obj, mod and mod.prefix, key_cfg.mod)
             end
             SMODS.modify_key(obj, cls.class_prefix, key_cfg.class)
@@ -775,16 +774,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 colour = G.C.RED,
                 no_pips = true
             }) }
-            if SMODS.Palettes[self.key] and #SMODS.Palettes[self.key].names > 1 then
-                option_nodes[#option_nodes + 1] = create_option_cycle({
-                    w = 4.5,
-                    scale = 0.8,
-                    options = SMODS.Palettes[self.key].names,
-                    opt_callback = "update_recolor",
-                    current_option = G.SETTINGS.selected_colours[self.key].order,
-                    type = self.key
-                })
-            end
             local type_buf = {}
             if G.ACTIVE_MOD_UI then
                 for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
@@ -882,28 +871,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.process_loc_text(G.localization.descriptions.Other, 'undiscovered_' .. string.lower(self.key),
                 self.loc_txt, 'undiscovered')
         end,
-        generate_colours = function(self, base_colour, alternate_colour)
-            if not self.colour_shifter then return HEX("000000") end
-            local colours = {}
-            for i = 1, #self.colour_shifter do
-                local new_colour = {}
-                for j = 1, 4 do
-                    table.insert(new_colour, math.max(0, math.min(1, base_colour[j] + self.colour_shifter[i][j])))
-                end
-                table.insert(colours, HSL_RGB(new_colour))
-            end
-            if self.colour_shifter_alt then
-                for i = 1, #self.colour_shifter_alt do
-                    local new_colour = {}
-                    for j = 1, 4 do
-                        table.insert(new_colour,
-                            math.max(0, math.min(1, alternate_colour[j] + self.colour_shifter_alt[i][j])))
-                    end
-                    table.insert(colours, HSL_RGB(new_colour))
-                end
-            end
-            return colours
-        end
     }
 
     SMODS.ConsumableType {
@@ -920,7 +887,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
-        colour_shifter = { { 0, -0.06, -0.60, 0 }, { 0, 0.30, -0.35, 0 }, { 0, 0.20, -0.15, 0 }, { 0, 0, 0, 0 }, { 0, -0.50, 0.20, 0 } }
     }
     SMODS.ConsumableType {
         key = 'Planet',
@@ -936,7 +902,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
-        colour_shifter = { { 0, -0.23, -0.26, 0 }, { 0, 0, 0, 0 }, { 0, -0.10, 0.16, 0 }, { 0.04, -0.35, 0.42, 0 }, { -1, -1, 1, 0 } }
     }
     SMODS.ConsumableType {
         key = 'Spectral',
@@ -944,8 +909,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         primary_colour = G.C.SET.Spectral,
         secondary_colour = G.C.SECONDARY_SET.Spectral,
         loc_txt = {},
-        colour_shifter = { { -0.3, -0.48, -0.61, 0 }, { -0.3, -0.49, -0.48, 0 }, { 0, -0.46, -0.05, 0 }, { -0.02, -0.3, -0.085, 0 }, { 0.08, -0.21, -0.4, 0 }, { 0, -0.03, -0.24, 0 }, { 0, -0.22, -0.31, 0 }, { 0, -0.19, -0.29, 0 }, { 0, -0.21, -0.28, 0 }, { 0, -0.04, -0.125, 0 }, { 0, 0, 0, 0 }, { 0, -0.07, 0.07, 0 }, { 0, -0.1, 0.05, 0 }, { 0, -0.28, 0.12, 0 }, { 0, -0.4, 0, 0 }, { -0.03, -0.47, 0.1, 0 } },
-        colour_shifter_alt = { { -0.015, -0.32, -0.24, 0 }, { 0, -0.22, -0.22, 0 }, { 0, -0.24, -0.13, 0 }, { 0, -0.17, 0.13, 0 }, { 0, -0.03, 0.08, 0 }, { 0, 0, 0, 0 } }
     }
 
     local game_init_game_object_ref = Game.init_game_object
@@ -2627,168 +2590,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_vars = function(self)
             return { vars = { self.config.card_limit } }
         end,
-    })
-
-    -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.Palette
-    -------------------------------------------------------------------------------------------------
-
-    SMODS.local_palettes = {}
-    SMODS.Palettes = { Types = {} }
-    SMODS.Palette = SMODS.GameObject:extend {
-        obj_table = SMODS.local_palettes,
-        obj_buffer = {},
-        required_params = {
-            'key',
-            'old_colours',
-            'new_colours',
-            'type',
-            'name'
-        },
-        set = 'Palette',
-        class_prefix = 'pal',
-        inject = function(self)
-            if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suits" then return end
-            if not SMODS.Palettes[self.type] then
-                table.insert(SMODS.Palettes.Types, self.type)
-                SMODS.Palettes[self.type] = { names = {} }
-                if self.name ~= "Default" then SMODS.Palette:create_default(self.type) end
-                G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or
-                SMODS.Palettes[self.type]["Default"]
-            end
-            if SMODS.Palettes[self.type][self.name] then
-                G.FUNCS.update_atlas(self.type)
-                return
-            end
-            table.insert(SMODS.Palettes[self.type].names, self.name)
-            SMODS.Palettes[self.type][self.name] = {
-                name = self.name,
-                order = #SMODS.Palettes[self.type].names,
-                old_colours = {},
-                new_colours = {}
-            }
-            if self.old_colours then
-                for i = 1, #self.old_colours do
-                    SMODS.Palettes[self.type][self.name].old_colours[i] = type(self.old_colours[i]) == "string" and
-                    HEX(self.old_colours[i]) or self.old_colours[i]
-                    SMODS.Palettes[self.type][self.name].new_colours[i] = type(self.new_colours[i]) == "string" and
-                    HEX(self.new_colours[i]) or self.new_colours[i]
-                end
-            end
-            if not G.SETTINGS.selected_colours[self.type] then
-                G.SETTINGS.selected_colours[self.type] = SMODS.Palettes[self.type][self.name]
-            end
-
-            SMODS.Palette:create_atlas(self.type, self.name)
-            G.FUNCS.update_atlas(self.type)
-        end
-    }
-
-    function SMODS.Palette:create_default(type)
-        table.insert(SMODS.Palettes[type].names, "Default")
-        SMODS.Palettes[type]["Default"] = {
-            name = "Default",
-            old_colours = {},
-            new_colours = {},
-            order = 1
-        }
-        SMODS.Palette:create_atlas(type, "Default")
-    end
-
-    function SMODS.Palette:create_atlas(type, name)
-        local atlas_keys = {}
-        if type == "Suits" then
-            atlas_keys = { "cards_1", "ui_1" }
-        else
-            for _, v in pairs(G.P_CENTER_POOLS[type]) do
-                atlas_keys[v.atlas or type] = v.atlas or type
-            end
-        end
-        G.PALETTE.NEW = SMODS.Palettes[type][name]
-        for _, v in pairs(atlas_keys) do
-            G.ASSET_ATLAS[v][name] = { image_data = G.ASSET_ATLAS[v].image_data:clone() }
-            G.ASSET_ATLAS[v][name].image_data:mapPixel(G.FUNCS.recolour_image)
-            G.ASSET_ATLAS[v][name].image = love.graphics.newImage(G.ASSET_ATLAS[v][name].image_data,
-                { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
-        end
-    end
-
-    function SMODS.Palette:create_colours(type, base_colour, alternate_colour)
-        if SMODS.ConsumableTypes[type].generate_colours then
-            return SMODS.ConsumableTypes[type]:generate_colours(HEX_HSL(base_colour),
-                alternate_colour and HEX_HSL(alternate_colour))
-        end
-        return { HEX(base_colour) }
-    end
-
-    for k, v in pairs(G.P_CENTER_POOLS.Tarot) do
-        SMODS.Consumable:take_ownership(v.key, { atlas = "Tarot", prefix_config = { atlas = false } })
-    end
-    for _, v in pairs(G.P_CENTER_POOLS.Planet) do
-        SMODS.Consumable:take_ownership(v.key, { atlas = "Planet", prefix_config = { atlas = false } })
-    end
-    for _, v in pairs(G.P_CENTER_POOLS.Spectral) do
-        SMODS.Consumable:take_ownership(v.key, { atlas = "Spectral", prefix_config = { atlas = false } })
-    end
-    SMODS.Atlas({
-        key = "Planet",
-        path = "resources/textures/" .. G.SETTINGS.GRAPHICS.texture_scaling .. "x/Tarots.png",
-        px = 71,
-        py = 95,
-        inject = function(self)
-            self.image_data = love.image.newImageData(self.path)
-            self.image = love.graphics.newImage(self.image_data,
-                { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
-            G[self.atlas_table][self.key_noloc or self.key] = self
-        end
-    })
-    SMODS.Atlas({
-        key = "Spectral",
-        path = "resources/textures/" .. G.SETTINGS.GRAPHICS.texture_scaling .. "x/Tarots.png",
-        px = 71,
-        py = 95,
-        inject = function(self)
-            self.image_data = love.image.newImageData(self.path)
-            self.image = love.graphics.newImage(self.image_data,
-                { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
-            G[self.atlas_table][self.key_noloc or self.key] = self
-        end
-    })
-    -- Default palettes defined for base game consumable types
-    SMODS.Palette({
-        key = "tarot_default",
-        old_colours = {},
-        new_colours = {},
-        type = "Tarot",
-        name = "Default"
-    })
-    SMODS.Palette({
-        key = "planet_default",
-        old_colours = {},
-        new_colours = {},
-        type = "Planet",
-        name = "Default"
-    })
-    SMODS.Palette({
-        key = "spectral_default",
-        old_colours = {},
-        new_colours = {},
-        type = "Spectral",
-        name = "Default"
-    })
-    SMODS.Palette({
-        key = "base_cards",
-        old_colours = { "235955", "3c4368", "f06b3f", "f03464" },
-        new_colours = { "235955", "3c4368", "f06b3f", "f03464" },
-        type = "Suits",
-        name = "Default"
-    })
-    SMODS.Palette({
-        key = "high_contrast_cards",
-        old_colours = { "235955", "3c4368", "f06b3f", "f03464" },
-        new_colours = { "008ee6", "3c4368", "e29000", "f83b2f" },
-        type = "Suits",
-        name = "High Contrast"
     })
 
     -------------------------------------------------------------------------------------------------
