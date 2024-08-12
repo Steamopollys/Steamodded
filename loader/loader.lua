@@ -55,7 +55,8 @@ function loadMods(modsDirectory)
         prefix        = { pattern = '%-%-%- PREFIX: (.-)\n' },
         version       = { pattern = '%-%-%- VERSION: (.-)\n', handle = function(x) return x and V(x):is_valid() and x or '0.0.0' end },
         outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } },
-        dump_loc      = { pattern = { '%-%-%- DUMP_LOCALIZATION\n'}}
+        dump_loc      = { pattern = { '%-%-%- DUMP_LOCALIZATION\n'}},
+        no_config      = { pattern = { '%-%-%- NO_CONFIG\n'}}
     }
     
     local used_prefixes = {}

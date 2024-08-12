@@ -1044,6 +1044,7 @@ function G.FUNCS.mods_buttons_page(options)
 end
 
 function SMODS.load_mod_config(mod)
+	if mod.no_config then return end
 	local config = load(NFS.read(('config/%s.jkr'):format(mod.id)) or 'return {}', ('=[SMODS %s "config"]'):format(mod.id))()
 	local default_config = load(NFS.read(('%sconfig.lua'):format(mod.path)) or 'return {}', ('=[SMODS %s "default_config"]'):format(mod.id))()
 	mod.config = {} 
@@ -1053,6 +1054,7 @@ function SMODS.load_mod_config(mod)
 end
 SMODS:load_mod_config()
 function SMODS.save_mod_config(mod)
+	if mod.no_config then return end
 	NFS.createDirectory('config')
 	if not mod.config or not next(mod.config) then return false end
 	local serialized = 'return '..serialize(mod.config)
