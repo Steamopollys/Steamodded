@@ -608,6 +608,12 @@ function SMODS.poll_seal(args)
     end
 end
 
+function SMODS.stake_from_index(index)
+    local stake = G.P_CENTER_POOLS.Stake[index] or nil
+    if not stake then return "error" end
+    return stake.key
+end
+
 function convert_save_data()
     for k, v in pairs(G.PROFILES[G.SETTINGS.profile].deck_usage) do
         if not v.wins_by_key and not v.losses_by_key then

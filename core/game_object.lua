@@ -584,12 +584,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         get_obj = function(self, key) return G.P_STAKES[key] end
     }
 
-    function SMODS.stake_from_index(index)
-        local stake = G.P_CENTER_POOLS.Stake[index] or nil
-        if not stake then return "error" end
-        return stake.key
-    end
-
     function SMODS.build_stake_chain(stake, applied)
         if not applied then applied = {} end
         if not stake or applied[stake.order] then return end
@@ -627,7 +621,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         }
         
         if ante < 1 then return 100 end
-        if ante <= 8 then return math.floor(string.sub(amounts[ante], 1, 3)/10)*10^(string.len(math.floor(amounts[ante]))-2) end
+        if ante <= 8 then return amounts[ante] - amounts[ante]%(10^math.floor(math.log10(amounts[ante])-2)) end
         local a, b, c, d = amounts[8], amounts[8]/amounts[7], ante-8, 1 + 0.2*(ante-8)
         local amount = math.floor(a*(b + (b*0.75*c)^d)^c)
         amount = amount - amount%(10^math.floor(math.log10(amount)-1))
