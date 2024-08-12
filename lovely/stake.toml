@@ -126,16 +126,6 @@ position = "after"
 payload = '''if G.GAME.modifiers.scaling and G.GAME.modifiers.scaling > 3 then return SMODS.get_blind_amount(ante) end'''
 match_indent = true
 
-# set_deck_wins
-[[patches]]
-[patches.pattern]
-target = "functions/misc_functions.lua"
-pattern = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].wins[G.GAME.stake] = (G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].wins[G.GAME.stake] or 0) + 1'
-position = "before"
-payload = '''if not G.PROFILES[G.SETTINGS.profile].Galdur_wins[deck_key] then G.PROFILES[G.SETTINGS.profile].Galdur_wins[deck_key] = {} end
-G.PROFILES[G.SETTINGS.profile].Galdur_wins[deck_key][SMODS.stake_from_index(G.GAME.stake)] = (G.PROFILES[G.SETTINGS.profile].Galdur_wins[deck_key][SMODS.stake_from_index(G.GAME.stake)] or 0) + 1'''
-match_indent = true
-
 # set_joker_usage
 [[patches]]
 [patches.pattern]
@@ -212,6 +202,6 @@ match_indent = true
 [patches.pattern]
 target = "functions/UI_definitions.lua"
 pattern = 'G.viewed_stake = math.min(max_stake+1, G.viewed_stake)'
-position = "at"
-payload = '''G.viewed_stake = math.min(max_stake, G.viewed_stake)'''
+position = "after"
+payload = '''if G.viewed_stake > #G.P_CENTER_POOLS.Stake then G.viewed_stake = #G.P_CENTER_POOLS.Stake end'''
 match_indent = true
