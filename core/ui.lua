@@ -955,6 +955,9 @@ end
 
 -- Helper function to create a clickable mod box
 local function createClickableModBox(modInfo, scale)
+	local function invert(c)
+			return {1-c[1], 1-c[2], 1-c[3], c[4]}
+		end
 	local col, text_col
 	modInfo.should_enable = not modInfo.disabled
     if modInfo.can_load then
@@ -965,8 +968,14 @@ local function createClickableModBox(modInfo, scale)
         col = mix_colours(G.C.RED, G.C.UI.BACKGROUND_INACTIVE, 0.7)
         text_col = G.C.TEXT_DARK
     end
+	local label =  { " " .. modInfo.name .. " " }
+	if modInfo.lovely_only then
+		label[2] = "(Lovely Mod) "
+	else
+		label[2] = localize('b_by') .. concatAuthors(modInfo.author) .. " "
+	end
 	local but = UIBox_button {
-        label = { " " .. modInfo.name .. " ", localize('b_by') .. concatAuthors(modInfo.author) .. " " },
+        label = label,
         shadow = true,
         scale = scale,
         colour = col,
@@ -975,10 +984,12 @@ local function createClickableModBox(modInfo, scale)
         minh = 0.8,
         minw = 7
     }
+	if modInfo.lovely_only then
+		local config = but.nodes[1].nodes[2].nodes[1].config
+		config.colour = mix_colours(invert(col), G.C.UI.TEXT_INACTIVE, 0.8)
+		config.scale = scale * .8
+	end
     if modInfo.version ~= '0.0.0' then
-		local function invert(c)
-			return {1-c[1], 1-c[2], 1-c[3], c[4]}
-		end
         table.insert(but.nodes[1].nodes[1].nodes, {
             n = G.UIT.T,
             config = {
