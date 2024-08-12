@@ -3,7 +3,7 @@
 --- MOD_ID: CKeybinds
 --- MOD_AUTHOR: [stupxd]
 --- MOD_DESCRIPTION: Custom keybinds example!
---- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA-0721a]
+--- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0812d]
 
 ----------------------------------------------
 ------------MOD CODE -------------------------

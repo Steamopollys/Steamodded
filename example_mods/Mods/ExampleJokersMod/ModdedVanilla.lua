@@ -3,7 +3,7 @@
 --- MOD_ID: VSMODS
 --- MOD_AUTHOR: [someone23832]
 --- MOD_DESCRIPTION: Turns some vanilla jokers into an SMODS format, and changes them to give some examples of what you can do.
---- LOADER_VERSION_GEQ: 1.0.0
+--- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0812d]
 --- BADGE_COLOR: c7638f
 --- PREFIX: mvan
 ----------------------------------------------

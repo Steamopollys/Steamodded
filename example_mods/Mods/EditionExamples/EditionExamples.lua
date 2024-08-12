@@ -5,7 +5,7 @@
 --- MOD_AUTHOR: [Eremel_, stupxd]
 --- MOD_DESCRIPTION: Adds editions that demonstrate Edition API.
 --- BADGE_COLOUR: 3FC7EB
---- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA-0508a]
+--- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0812d]
 
 SMODS.Atlas({
     key = 'edition_example',

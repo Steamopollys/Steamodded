@@ -4,7 +4,7 @@
 --- PREFIX: kbc
 --- MOD_AUTHOR: [Aure]
 --- MOD_DESCRIPTION: Enables the built-in keyboard controller and adds config options to customize it.
---- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA-0807c]
+--- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0812d]
 --- CONFLICTS: [BlackHole]
 --- VERSION: 1.0.0
 

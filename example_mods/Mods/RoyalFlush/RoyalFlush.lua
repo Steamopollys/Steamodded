@@ -5,7 +5,7 @@
 --- MOD_DESCRIPTION: Adds Royal Flush to demonstrated Steamodded Poker Hand API
 --- BADGE_COLOUR: A67C00
 --- PREFIX: ex_royal_flush
---- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA-0807a]
+--- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0812d]
 
 SMODS.PokerHand {
     key = 'Royal Flush',
