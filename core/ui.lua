@@ -1073,8 +1073,14 @@ function G.FUNCS.mods_buttons_page(options)
 end
 
 function SMODS.load_mod_config(mod)
-	local config = load(NFS.read(('config/%s.jkr'):format(mod.id)) or 'return {}', ('=[SMODS %s "config"]'):format(mod.id))()
-	local default_config = load(NFS.read(('%sconfig.lua'):format(mod.path)) or 'return {}', ('=[SMODS %s "default_config"]'):format(mod.id))()
+	local s1, config = pcall(function()
+		return load(NFS.read(('config/%s.jkr'):format(mod.id)), ('=[SMODS %s "config"]'):format(mod.id))()
+	end)
+	local s2, default_config = pcall(function()
+		return load(NFS.read(('%sconfig.lua'):format(mod.path)), ('=[SMODS %s "default_config"]'):format(mod.id))()
+	end)
+	if not s1 or type(config) ~= 'table' then config = {} end
+	if not s2 or type(default_config) ~= 'table' then default_config = {} end
 	mod.config = {} 
 	for k, v in pairs(default_config) do mod.config[k] = v end
 	for k, v in pairs(config) do mod.config[k] = v end
@@ -1082,11 +1088,13 @@ function SMODS.load_mod_config(mod)
 end
 SMODS:load_mod_config()
 function SMODS.save_mod_config(mod)
-	NFS.createDirectory('config')
-	if not mod.config or not next(mod.config) then return false end
-	local serialized = 'return '..serialize(mod.config)
-	assert(NFS.write(('config/%s.jkr'):format(mod.id), serialized))
-	return true
+	local success = pcall(function()
+		NFS.createDirectory('config')
+		assert(mod.config and next(mod.config))
+		local serialized = 'return '..serialize(mod.config)
+		NFS.write(('config/%s.jkr'):format(mod.id), serialized)
+	end)
+	return success
 end
 function SMODS.save_all_config()
 	SMODS:save_mod_config()
