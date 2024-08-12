@@ -82,6 +82,7 @@ return {
             b_author = '作者',
 			b_authors = '作者',
             b_unknown = '未知',
+			b_lovely_mod = '(Lovely Mod) ', -- TODO
             b_by = ' 作者：',
        		b_config = "配置",
             b_additions = '新增项目',
