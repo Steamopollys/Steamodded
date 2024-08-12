@@ -970,7 +970,7 @@ local function createClickableModBox(modInfo, scale)
     end
 	local label =  { " " .. modInfo.name .. " " }
 	if modInfo.lovely_only then
-		label[2] = "(Lovely Mod) "
+		label[2] = localize('b_lovely_mod')
 	else
 		label[2] = localize('b_by') .. concatAuthors(modInfo.author) .. " "
 	end
