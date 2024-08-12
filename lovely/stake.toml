@@ -116,3 +116,92 @@ pattern = 'if highest_win >= 8 then'
 position = "at"
 payload = 'if highest_win >= G.P_STAKES["stake_gold"].stake_level then'
 match_indent = true
+
+# get_blind_amount
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'function get_blind_amount(ante)'
+position = "after"
+payload = '''if G.GAME.modifiers.scaling and G.GAME.modifiers.scaling > 3 then return SMODS.get_blind_amount(ante) end'''
+match_indent = true
+
+# set_joker_usage
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key] = {count = 1, order = v.config.center.order, wins = {}, losses = {}}'
+position = "at"
+payload = 'G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key] = {count = 1, order = v.config.center.order, wins = {}, losses = {}, wins_by_key = {}, losses_by_key = {}}'
+match_indent = true
+
+# set_joker_win
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key] = G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key] or {count = 1, order = v.config.center.order, wins = {}, losses = {}}'
+position = "at"
+payload = 'G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key] = G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key] or {count = 1, order = v.config.center.order, wins = {}, losses = {}, wins_by_key = {}, losses_by_key = {}}'
+match_indent = true
+
+#set_joker_win
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key].wins[G.GAME.stake] = (G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key].wins[G.GAME.stake] or 0) + 1'
+position = "after"
+payload = 'G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key].wins_by_key[SMODS.stake_from_index(G.GAME.stake)] = (G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key].wins_by_key[SMODS.stake_from_index(G.GAME.stake)] or 0) + 1'
+match_indent = true
+
+#set_joker_loss
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key].losses[G.GAME.stake] = (G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key].losses[G.GAME.stake] or 0) + 1'
+position = "after"
+payload = 'G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key].losses_by_key[SMODS.stake_from_index(G.GAME.stake)] = (G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key].losses_by_key[SMODS.stake_from_index(G.GAME.stake)] or 0) + 1'
+match_indent = true
+
+#set_deck_usage
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = {count = 1, order = G.GAME.selected_back.effect.center.order, wins = {}, losses = {}}'
+position = "at"
+payload = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = {count = 1, order = G.GAME.selected_back.effect.center.order, wins = {}, losses = {}, wins_by_key = {}, losses_by_key = {}}'
+match_indent = true
+
+#set_deck_win
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'if not G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] then G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = {count = 1, order = G.GAME.selected_back.effect.center.order, wins = {}, losses = {}} end'
+position = "at"
+payload = 'if not G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] then G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = {count = 1, order = G.GAME.selected_back.effect.center.order, wins = {}, losses = {}, wins_by_key = {}, losses_by_key = {}} end'
+match_indent = true
+
+#set_deck_win
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].wins[G.GAME.stake] = (G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].wins[G.GAME.stake] or 0) + 1'
+position = "after"
+payload = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].wins_by_key[SMODS.stake_from_index(G.GAME.stake)] = (G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].wins_by_key[SMODS.stake_from_index(G.GAME.stake)] or 0) + 1'
+match_indent = true
+
+#set_deck_win
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses[G.GAME.stake] = (G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses[G.GAME.stake] or 0) + 1'
+position = "after"
+payload = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses_by_key[SMODS.stake_by_index(G.GAME.stake)] = (G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses_by_key[SMODS.stake_by_index(G.GAME.stake)] or 0) + 1'
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = 'G.viewed_stake = math.min(max_stake+1, G.viewed_stake)'
+position = "after"
+payload = '''if G.viewed_stake > #G.P_CENTER_POOLS.Stake then G.viewed_stake = #G.P_CENTER_POOLS.Stake end'''
+match_indent = true

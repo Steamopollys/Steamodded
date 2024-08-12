@@ -516,37 +516,42 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(self)
             if not self.injected then
                 -- Inject stake in the correct spot
-                local count = #G.P_CENTER_POOLS[self.set] + 1
+                self.count = #G.P_CENTER_POOLS[self.set] + 1
+                self.order = self.count
                 if self.above_stake then
-                    count = G.P_STAKES[self.class_prefix .. "_" .. self.above_stake].stake_level + 1
+                    self.order = G.P_STAKES[self.class_prefix .. "_" .. self.above_stake].order + 1
                 end
-                self.order = count
-                self.stake_level = count
                 for _, v in pairs(G.P_STAKES) do
-                    if v.stake_level >= self.stake_level then
-                        v.stake_level = v.stake_level + 1
-                        v.order = v.stake_level
+                    if v.order >= self.order then
+                        v.order = v.order + 1
                     end
                 end
                 G.P_STAKES[self.key] = self
+                table.insert(G.P_CENTER_POOLS.Stake, self)
                 -- Sticker sprites (stake_ prefix is removed for vanilla compatiblity)
                 if self.sticker_pos ~= nil then
                     G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H,
-                        G.ASSET_ATLAS[self.sticker_atlas] or G.ASSET_ATLAS["stickers"], self.sticker_pos)
-                    G.sticker_map[self.stake_level] = self.key:sub(7)
+                    G.ASSET_ATLAS[self.sticker_atlas] or G.ASSET_ATLAS["stickers"], self.sticker_pos)
+                    G.sticker_map[self.key] = self.key:sub(7)
                 else
-                    G.sticker_map[self.stake_level] = nil
+                    G.sticker_map[self.key] = nil
                 end
             else
                 G.P_STAKES[self.key] = self
+                table.insert(G.P_CENTER_POOLS.Stake, self)
             end
             self.injected = true
             -- should only need to do this once per injection routine
-            G.P_CENTER_POOLS[self.set] = {}
-            for _, v in pairs(G.P_STAKES) do
-                SMODS.insert_pool(G.P_CENTER_POOLS[self.set], v)
+        end,
+        post_inject_class = function(self)
+            table.sort(G.P_CENTER_POOLS[self.set], function(a, b) return a.order < b.order end)
+            for _,stake in pairs(G.P_CENTER_POOLS.Stake) do
+                local applied = SMODS.build_stake_chain(stake)
+                stake.stake_level = 0
+                for i,_ in ipairs(G.P_CENTER_POOLS.Stake) do
+                    if applied[i] then stake.stake_level = stake.stake_level+1 end
+                end
             end
-            table.sort(G.P_CENTER_POOLS[self.set], function(a, b) return a.stake_level < b.stake_level end)
             G.C.STAKES = {}
             for i = 1, #G.P_CENTER_POOLS[self.set] do
                 G.C.STAKES[i] = G.P_CENTER_POOLS[self.set][i].colour or G.C.WHITE
@@ -579,13 +584,25 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         get_obj = function(self, key) return G.P_STAKES[key] end
     }
 
-    function SMODS.setup_stake(i)
-        if G.P_CENTER_POOLS['Stake'][i].modifiers then
-            G.P_CENTER_POOLS['Stake'][i].modifiers()
+    function SMODS.build_stake_chain(stake, applied)
+        if not applied then applied = {} end
+        if not stake or applied[stake.order] then return end
+        applied[stake.order] = stake.order
+        if not stake.applied_stakes then
+            return
         end
-        if G.P_CENTER_POOLS['Stake'][i].applied_stakes then
-            for _, v in pairs(G.P_CENTER_POOLS['Stake'][i].applied_stakes) do
-                SMODS.setup_stake(G.P_STAKES["stake_" .. v].stake_level)
+        for _, s in pairs(stake.applied_stakes) do
+            SMODS.build_stake_chain(G.P_STAKES['stake_'..s], applied)
+        end
+        return applied
+    end 
+
+    function SMODS.setup_stake(i)
+        local applied_stakes = SMODS.build_stake_chain(G.P_CENTER_POOLS.Stake[i])
+        for stake, _ in pairs(applied_stakes) do
+            if G.P_CENTER_POOLS['Stake'][stake].modifiers then
+                sendDebugMessage("Applying "..G.P_CENTER_POOLS['Stake'][stake].key)
+                G.P_CENTER_POOLS['Stake'][stake].modifiers()
             end
         end
     end
@@ -625,7 +642,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 2, y = 0 },
         sticker_pos = { x = 3, y = 0 },
         modifiers = function()
-            G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 2)
+            G.GAME.modifiers.scaling = (G.GAME.modifiers.scaling or 0) + 1
         end,
         colour = G.C.GREEN,
         loc_txt = {}
@@ -664,7 +681,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 0, y = 1 },
         sticker_pos = { x = 1, y = 1 },
         modifiers = function()
-            G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 3)
+            G.GAME.modifiers.scaling = (G.GAME.modifiers.scaling or 0) + 1
         end,
         colour = G.C.PURPLE,
         loc_txt = {}

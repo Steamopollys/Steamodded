@@ -396,6 +396,7 @@ end
 local init_item_prototypes_ref = Game.init_item_prototypes
 function Game:init_item_prototypes()
     init_item_prototypes_ref(self)
+    convert_save_data()
     if SMODS.booted then
         SMODS.injectItems()
     end
