@@ -2238,7 +2238,16 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'label')
         end,
         inject = function(self)
-            G.shared_stickers[self.key] = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)
+            sticker_sprite = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)
+            G.shared_stickers[self.key] = sticker_sprite
+
+            if self.key == 'eternal' then
+                G.shared_sticker_eternal = sticker_sprite
+            elseif self.key == 'perishable' then
+                G.shared_sticker_perishable = sticker_sprite
+            elseif self.key == 'rental' then
+                G.shared_sticker_rental = sticker_sprite
+            end
         end,
         -- relocating sticker checks to here, so if the sticker has different checks than default
         -- they can be handled without hooking/injecting into create_card
