@@ -199,7 +199,7 @@ pattern = "local jokers = card:calculate_joker(context)"
 match_indent = true
 position = "before"
 payload = """
-if center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
+if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then
     center:calculate(context, ret)
     enhancement_calculated = true
 end"""
@@ -210,7 +210,7 @@ pattern = "local seals = card:calculate_seal(context)"
 match_indent = true
 position = "before"
 payload = """
-if center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
+if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
     center:calculate(context, ret)
     enhancement_calculated = true
 end"""
@@ -221,7 +221,7 @@ pattern = "if context.cardarea == G.jokers or context.card == G.consumeables the
 match_indent = true
 position = "before"
 payload = """
-if not enhancement_calculated and center.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
+if not enhancement_calculated and card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
     center:calculate(context, ret)
     enhancement_calculated = true
 end
