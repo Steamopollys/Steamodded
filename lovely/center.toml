@@ -44,7 +44,7 @@ pattern = 'if self.ability.set == "Planet" and not self.debuff then'
 position = 'before'
 payload = '''
 local obj = self.config.center
-if self.ability.set == "Joker" and obj.calculate and type(obj.calculate) == 'function' then
+if self.ability.set ~= "Enhanced" and obj.calculate and type(obj.calculate) == 'function' then
 	local o = obj:calculate(self, context)
 	if o then return o end
 end'''

@@ -200,7 +200,7 @@ match_indent = true
 position = "before"
 payload = """
 if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then
-    center:calculate(context, ret)
+    center:calculate(card, context, ret)
     enhancement_calculated = true
 end"""
 [[patches]]
@@ -211,7 +211,7 @@ match_indent = true
 position = "before"
 payload = """
 if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
-    center:calculate(context, ret)
+    center:calculate(card, context, ret)
     enhancement_calculated = true
 end"""
 [[patches]]
@@ -222,7 +222,7 @@ match_indent = true
 position = "before"
 payload = """
 if not enhancement_calculated and card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
-    center:calculate(context, ret)
+    center:calculate(card, context, ret)
     enhancement_calculated = true
 end
 local seals = card:calculate_seal(context)
