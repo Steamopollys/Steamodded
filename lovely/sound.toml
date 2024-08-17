@@ -111,7 +111,7 @@ target = 'engine/sound_manager.lua'
 pattern = "s.original_pitch = args.per or 1"
 match_indent = true
 position = 'at'
-payload = 's.original_pitch = s.per or args.per or 1'
+payload = 's.original_pitch = ((args.type ~= "sound") and s.per) or args.per or 1'
 
 [[patches]]
 [patches.pattern]
@@ -119,23 +119,7 @@ target = 'engine/sound_manager.lua'
 pattern = "s.original_volume = args.vol or 1"
 match_indent = true
 position = 'at'
-payload = 's.original_volume = s.vol or args.vol or 1'
-
-[[patches]]
-[patches.pattern]
-target = 'engine/sound_manager.lua'
-pattern = "s.original_pitch = args.per or 1"
-match_indent = true
-position = 'at'
-payload = 's.original_pitch = s.per or args.per or 1'
-
-[[patches]]
-[patches.pattern]
-target = 'engine/sound_manager.lua'
-pattern = "s.original_volume = args.vol or 1"
-match_indent = true
-position = 'at'
-payload = 's.original_volume = s.vol or args.vol or 1'
+payload = 's.original_volume = ((args.type ~= "sound") and s.vol) or args.vol or 1'
 
 # don't crash RESTART_MUSIC
 
