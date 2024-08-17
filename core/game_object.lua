@@ -2238,16 +2238,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'label')
         end,
         inject = function(self)
-            sticker_sprite = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)
-            G.shared_stickers[self.key] = sticker_sprite
-
-            if self.key == 'eternal' then
-                G.shared_sticker_eternal = sticker_sprite
-            elseif self.key == 'perishable' then
-                G.shared_sticker_perishable = sticker_sprite
-            elseif self.key == 'rental' then
-                G.shared_sticker_rental = sticker_sprite
-            end
+            self.sticker_sprite = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)
+            G.shared_stickers[self.key] = self.sticker_sprite
         end,
         -- relocating sticker checks to here, so if the sticker has different checks than default
         -- they can be handled without hooking/injecting into create_card
@@ -2282,6 +2274,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         hide_badge = true,
         order = 1,
         should_apply = false,
+        inject = function(self)
+            SMODS.Sticker.inject(self)
+            G.shared_sticker_eternal = self.sticker_sprite
+        end
     }
 
     SMODS.Sticker{
@@ -2299,6 +2295,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_vars = function(self, info_queue, card)
             return {vars = {card.ability.perishable_rounds or 5, card.ability.perish_tally or G.GAME.perishable_rounds}}
         end,
+        inject = function(self)
+            SMODS.Sticker.inject(self)
+            G.shared_sticker_perishable = self.sticker_sprite
+        end
     }
 
     SMODS.Sticker{
@@ -2315,6 +2315,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_vars = function(self, info_queue, card)
             return {vars = {G.GAME.rental_rate or 1}}
         end,
+        inject = function(self)
+            SMODS.Sticker.inject(self)
+            G.shared_sticker_rental = self.sticker_sprite
+        end
     }
 
     SMODS.Sticker{
