@@ -589,7 +589,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         if not stake or applied[stake.order] then return end
         applied[stake.order] = stake.order
         if not stake.applied_stakes then
-            return
+            return applied
         end
         for _, s in pairs(stake.applied_stakes) do
             SMODS.build_stake_chain(G.P_STAKES['stake_'..s], applied)
