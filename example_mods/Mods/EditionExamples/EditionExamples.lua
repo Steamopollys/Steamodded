@@ -33,7 +33,7 @@ SMODS.Consumable({
     discovered = true,
     can_use = function(self, card)
         if G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT or
-        any_state then
+            any_state then
             if next(SMODS.Edition:get_edition_cards(G.jokers, true)) then
                 return true
             end
@@ -54,7 +54,7 @@ SMODS.Consumable({
         }))
     end,
     loc_vars = function(self, info_queue)
-        info_queue[#info_queue+1] = G.P_CENTERS.e_greyscale
+        info_queue[#info_queue + 1] = G.P_CENTERS.e_greyscale
         return {}
     end
 })
@@ -69,7 +69,7 @@ SMODS.Consumable({
     loc_txt = {
         name = "Neon",
         text = {
-            "Remove any edition from", 
+            "Remove any edition from",
             "selected joker"
         }
     },
@@ -78,7 +78,7 @@ SMODS.Consumable({
     discovered = true,
     can_use = function(self, card)
         if G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT or
-        any_state then
+            any_state then
             if G.localization.misc.labels["edex_greyscale"] then
                 sendDebugMessage(G.localization.misc.labels["edex_greyscale"])
             end
@@ -100,7 +100,7 @@ SMODS.Consumable({
         }))
     end,
     loc_vars = function(self, info_queue)
-        info_queue[#info_queue+1] = G.P_CENTERS.e_greyscale
+        info_queue[#info_queue + 1] = G.P_CENTERS.e_greyscale
         return {}
     end
 })
@@ -115,22 +115,22 @@ SMODS.Back({
         }
     },
     config = {
-        consumables = {'c_edex_grey_card'},
-        vouchers = {'v_hone'}
+        consumables = { 'c_edex_grey_card' },
+        vouchers = { 'v_hone' }
     },
     discovered = true,
     unlocked = true
 })
 
-SMODS.Shader({key = 'anaglyphic', path = 'anaglyphic.fs'})
-SMODS.Shader({key = 'flipped', path = 'flipped.fs'})
-SMODS.Shader({key = 'fluorescent', path = 'fluorescent.fs'})
+SMODS.Shader({ key = 'anaglyphic', path = 'anaglyphic.fs' })
+SMODS.Shader({ key = 'flipped', path = 'flipped.fs' })
+SMODS.Shader({ key = 'fluorescent', path = 'fluorescent.fs' })
 -- SMODS.Shader({key = 'gilded', path = 'gilded.fs'})
-SMODS.Shader({key = 'greyscale', path = 'greyscale.fs'})
+SMODS.Shader({ key = 'greyscale', path = 'greyscale.fs' })
 -- SMODS.Shader({key = 'ionized', path = 'ionized.fs'})
 -- SMODS.Shader({key = 'laminated', path = 'laminated.fs'})
 -- SMODS.Shader({key = 'monochrome', path = 'monochrome.fs'})
-SMODS.Shader({key = 'overexposed', path = 'overexposed.fs'})
+SMODS.Shader({ key = 'overexposed', path = 'overexposed.fs' })
 -- SMODS.Shader({key = 'sepia', path = 'sepia.fs'})
 
 SMODS.Edition({
@@ -144,19 +144,19 @@ SMODS.Edition({
     },
     -- Stop shadow from being rendered under the card
     disable_shadow = true,
-    -- Stop extra layer from being rendered below the card. 
+    -- Stop extra layer from being rendered below the card.
     -- For edition that modify shape or transparency of the card.
     disable_base_shader = true,
     shader = "flipped",
     discovered = true,
     unlocked = true,
-    config = { },
+    config = {},
     in_shop = true,
     weight = 8,
     extra_cost = 6,
     apply_to_float = true,
     loc_vars = function(self)
-        return { vars = {  } }
+        return { vars = {} }
     end
 })
 
@@ -203,7 +203,7 @@ SMODS.Edition({
     extra_cost = 4,
     apply_to_float = true,
     loc_vars = function(self)
-        return { vars = {self.config.p_dollars}}
+        return { vars = { self.config.p_dollars } }
     end
 })
 
@@ -226,7 +226,7 @@ SMODS.Edition({
     extra_cost = 4,
     apply_to_float = true,
     loc_vars = function(self)
-        return { vars = {self.config.chips, self.config.mult}}
+        return { vars = { self.config.chips, self.config.mult } }
     end
 })
 
