@@ -1,0 +1,21 @@
+[manifest]
+version = '1.0.0'
+dump_lua = true
+priority = 1
+
+# Enable the keyboard controller without debug mode
+[[patches]]
+[patches.regex]
+target = "main.lua"
+pattern = '''if not _RELEASE_MODE and G.keybind_mapping\[key\] then love.gamepadpressed'''
+position = "at"
+payload = """if KBC.config.enable and not G.CONTROLLER.text_input_hook and G.keybind_mapping[key] then love.gamepadpressed"""
+
+# Stop the on-screen keyboard while in this mod's settings
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = '''if G.CONTROLLER.text_input_hook == e and G.CONTROLLER.HID.controller then'''
+position = "at"
+payload = """if G.CONTROLLER.text_input_hook == e and G.CONTROLLER.HID.controller and G.ACTIVE_MOD_UI ~= KBC then"""
+match_indent = true

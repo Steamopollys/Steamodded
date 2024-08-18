@@ -5,7 +5,7 @@
 --- MOD_AUTHOR: [Eremel_, stupxd]
 --- MOD_DESCRIPTION: Adds editions that demonstrate Edition API.
 --- BADGE_COLOUR: 3FC7EB
---- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA-0508a]
+--- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0812d]
 
 SMODS.Atlas({
     key = 'edition_example',
@@ -142,8 +142,11 @@ SMODS.Edition({
             "nothin"
         }
     },
-    no_shadow = true, -- This will stop shadow from being rendered under the card
-    override_base_shader = true, -- This will stop extra layer being rendered below the shader. Necessary for edition that modify shape of a card.
+    -- Stop shadow from being rendered under the card
+    disable_shadow = true,
+    -- Stop extra layer from being rendered below the card. 
+    -- For edition that modify shape or transparency of the card.
+    disable_base_shader = true,
     shader = "flipped",
     discovered = true,
     unlocked = true,

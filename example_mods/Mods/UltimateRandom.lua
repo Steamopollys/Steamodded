@@ -3,7 +3,7 @@
 --- MOD_ID: UltimateRandomDeck
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Ultimate Random Deck!
---- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA]
+--- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0812d]
 
 ----------------------------------------------
 ------------MOD CODE -------------------------

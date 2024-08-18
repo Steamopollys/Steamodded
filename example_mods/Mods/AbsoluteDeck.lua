@@ -3,7 +3,7 @@
 --- MOD_ID: AbsoluteDeck
 --- MOD_AUTHOR: [Steamo]
 --- MOD_DESCRIPTION: Absolute Deck of PolyGlass!
---- DEPENDENCIES: [Steamodded>=1.0.0-ALPHA]
+--- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0812d]
 
 ----------------------------------------------
 ------------MOD CODE -------------------------

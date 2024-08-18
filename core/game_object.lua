@@ -32,8 +32,6 @@ function loadAPIs()
         SMODS.add_prefixes(self, o)
         if o:check_duplicate_key() then return end
         o:register()
-        --TODO: Use better check to enable "Additions" tab
-        if SMODS.current_mod then SMODS.current_mod.added_obj = true end
         return o
     end
 
@@ -42,7 +40,8 @@ function loadAPIs()
         -- condition == nil counts as true
         if condition ~= false and obj[key] and prefix then
             if string.sub(obj[key], 1, #prefix + 1) == prefix..'_' then
-                sendWarnMessage(("Attempted to prefix field %s=%s on object %s, already prefixed"):format(key, obj[key], obj.key), obj.set)
+                -- this happens within steamodded itself and I don't want to spam the logs with warnings, leaving this disabled for now
+                -- sendWarnMessage(("Attempted to prefix field %s=%s on object %s, already prefixed"):format(key, obj[key], obj.key), obj.set)
                 return
             end
             obj[key] = prefix .. '_' .. obj[key]
@@ -66,7 +65,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         if key_cfg ~= false then
             if type(key_cfg) ~= 'table' then key_cfg = {} end
             if not from_take_ownership then
-                if obj.set == 'Palette' then SMODS.modify_key(obj, obj.type and obj.type:lower(), key_cfg.type) end
                 SMODS.modify_key(obj, mod and mod.prefix, key_cfg.mod)
             end
             SMODS.modify_key(obj, cls.class_prefix, key_cfg.class)
@@ -131,7 +129,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     --- functions with the given key on all subordinate classes
     --- and run all found functions with the given arguments
     function SMODS.GameObject:send_to_subclasses(func, ...)
-        if self[func] and type(self[func]) == 'function' then self[func](self, ...) end
+        if rawget(self, func) and type(self[func]) == 'function' then self[func](self, ...) end
         for _, cls in ipairs(self.subclasses) do
             cls:send_to_subclasses(func, ...)
         end
@@ -518,37 +516,42 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(self)
             if not self.injected then
                 -- Inject stake in the correct spot
-                local count = #G.P_CENTER_POOLS[self.set] + 1
+                self.count = #G.P_CENTER_POOLS[self.set] + 1
+                self.order = self.count
                 if self.above_stake then
-                    count = G.P_STAKES[self.class_prefix .. "_" .. self.above_stake].stake_level + 1
+                    self.order = G.P_STAKES[self.class_prefix .. "_" .. self.above_stake].order + 1
                 end
-                self.order = count
-                self.stake_level = count
                 for _, v in pairs(G.P_STAKES) do
-                    if v.stake_level >= self.stake_level then
-                        v.stake_level = v.stake_level + 1
-                        v.order = v.stake_level
+                    if v.order >= self.order then
+                        v.order = v.order + 1
                     end
                 end
                 G.P_STAKES[self.key] = self
+                table.insert(G.P_CENTER_POOLS.Stake, self)
                 -- Sticker sprites (stake_ prefix is removed for vanilla compatiblity)
                 if self.sticker_pos ~= nil then
                     G.shared_stickers[self.key:sub(7)] = Sprite(0, 0, G.CARD_W, G.CARD_H,
-                        G.ASSET_ATLAS[self.sticker_atlas] or G.ASSET_ATLAS["stickers"], self.sticker_pos)
-                    G.sticker_map[self.stake_level] = self.key:sub(7)
+                    G.ASSET_ATLAS[self.sticker_atlas] or G.ASSET_ATLAS["stickers"], self.sticker_pos)
+                    G.sticker_map[self.key] = self.key:sub(7)
                 else
-                    G.sticker_map[self.stake_level] = nil
+                    G.sticker_map[self.key] = nil
                 end
             else
                 G.P_STAKES[self.key] = self
+                table.insert(G.P_CENTER_POOLS.Stake, self)
             end
             self.injected = true
             -- should only need to do this once per injection routine
-            G.P_CENTER_POOLS[self.set] = {}
-            for _, v in pairs(G.P_STAKES) do
-                SMODS.insert_pool(G.P_CENTER_POOLS[self.set], v)
+        end,
+        post_inject_class = function(self)
+            table.sort(G.P_CENTER_POOLS[self.set], function(a, b) return a.order < b.order end)
+            for _,stake in pairs(G.P_CENTER_POOLS.Stake) do
+                local applied = SMODS.build_stake_chain(stake)
+                stake.stake_level = 0
+                for i,_ in ipairs(G.P_CENTER_POOLS.Stake) do
+                    if applied[i] then stake.stake_level = stake.stake_level+1 end
+                end
             end
-            table.sort(G.P_CENTER_POOLS[self.set], function(a, b) return a.stake_level < b.stake_level end)
             G.C.STAKES = {}
             for i = 1, #G.P_CENTER_POOLS[self.set] do
                 G.C.STAKES[i] = G.P_CENTER_POOLS[self.set][i].colour or G.C.WHITE
@@ -581,13 +584,24 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         get_obj = function(self, key) return G.P_STAKES[key] end
     }
 
-    function SMODS.setup_stake(i)
-        if G.P_CENTER_POOLS['Stake'][i].modifiers then
-            G.P_CENTER_POOLS['Stake'][i].modifiers()
+    function SMODS.build_stake_chain(stake, applied)
+        if not applied then applied = {} end
+        if not stake or applied[stake.order] then return end
+        applied[stake.order] = stake.order
+        if not stake.applied_stakes then
+            return applied
         end
-        if G.P_CENTER_POOLS['Stake'][i].applied_stakes then
-            for _, v in pairs(G.P_CENTER_POOLS['Stake'][i].applied_stakes) do
-                SMODS.setup_stake(G.P_STAKES["stake_" .. v].stake_level)
+        for _, s in pairs(stake.applied_stakes) do
+            SMODS.build_stake_chain(G.P_STAKES['stake_'..s], applied)
+        end
+        return applied
+    end 
+
+    function SMODS.setup_stake(i)
+        local applied_stakes = SMODS.build_stake_chain(G.P_CENTER_POOLS.Stake[i])
+        for stake, _ in pairs(applied_stakes) do
+            if G.P_CENTER_POOLS['Stake'][stake].modifiers then
+                G.P_CENTER_POOLS['Stake'][stake].modifiers()
             end
         end
     end
@@ -627,7 +641,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 2, y = 0 },
         sticker_pos = { x = 3, y = 0 },
         modifiers = function()
-            G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 2)
+            G.GAME.modifiers.scaling = (G.GAME.modifiers.scaling or 1) + 1
         end,
         colour = G.C.GREEN,
         loc_txt = {}
@@ -666,7 +680,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 0, y = 1 },
         sticker_pos = { x = 1, y = 1 },
         modifiers = function()
-            G.GAME.modifiers.scaling = math.max(G.GAME.modifiers.scaling or 0, 3)
+            G.GAME.modifiers.scaling = (G.GAME.modifiers.scaling or 1) + 1
         end,
         colour = G.C.PURPLE,
         loc_txt = {}
@@ -776,16 +790,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 colour = G.C.RED,
                 no_pips = true
             }) }
-            if SMODS.Palettes[self.key] and #SMODS.Palettes[self.key].names > 1 then
-                option_nodes[#option_nodes + 1] = create_option_cycle({
-                    w = 4.5,
-                    scale = 0.8,
-                    options = SMODS.Palettes[self.key].names,
-                    opt_callback = "update_recolor",
-                    current_option = G.SETTINGS.selected_colours[self.key].order,
-                    type = self.key
-                })
-            end
             local type_buf = {}
             if G.ACTIVE_MOD_UI then
                 for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
@@ -883,28 +887,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.process_loc_text(G.localization.descriptions.Other, 'undiscovered_' .. string.lower(self.key),
                 self.loc_txt, 'undiscovered')
         end,
-        generate_colours = function(self, base_colour, alternate_colour)
-            if not self.colour_shifter then return HEX("000000") end
-            local colours = {}
-            for i = 1, #self.colour_shifter do
-                local new_colour = {}
-                for j = 1, 4 do
-                    table.insert(new_colour, math.max(0, math.min(1, base_colour[j] + self.colour_shifter[i][j])))
-                end
-                table.insert(colours, HSL_RGB(new_colour))
-            end
-            if self.colour_shifter_alt then
-                for i = 1, #self.colour_shifter_alt do
-                    local new_colour = {}
-                    for j = 1, 4 do
-                        table.insert(new_colour,
-                            math.max(0, math.min(1, alternate_colour[j] + self.colour_shifter_alt[i][j])))
-                    end
-                    table.insert(colours, HSL_RGB(new_colour))
-                end
-            end
-            return colours
-        end
     }
 
     SMODS.ConsumableType {
@@ -921,7 +903,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
-        colour_shifter = { { 0, -0.06, -0.60, 0 }, { 0, 0.30, -0.35, 0 }, { 0, 0.20, -0.15, 0 }, { 0, 0, 0, 0 }, { 0, -0.50, 0.20, 0 } }
     }
     SMODS.ConsumableType {
         key = 'Planet',
@@ -937,7 +918,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
-        colour_shifter = { { 0, -0.23, -0.26, 0 }, { 0, 0, 0, 0 }, { 0, -0.10, 0.16, 0 }, { 0.04, -0.35, 0.42, 0 }, { -1, -1, 1, 0 } }
     }
     SMODS.ConsumableType {
         key = 'Spectral',
@@ -945,8 +925,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         primary_colour = G.C.SET.Spectral,
         secondary_colour = G.C.SECONDARY_SET.Spectral,
         loc_txt = {},
-        colour_shifter = { { -0.3, -0.48, -0.61, 0 }, { -0.3, -0.49, -0.48, 0 }, { 0, -0.46, -0.05, 0 }, { -0.02, -0.3, -0.085, 0 }, { 0.08, -0.21, -0.4, 0 }, { 0, -0.03, -0.24, 0 }, { 0, -0.22, -0.31, 0 }, { 0, -0.19, -0.29, 0 }, { 0, -0.21, -0.28, 0 }, { 0, -0.04, -0.125, 0 }, { 0, 0, 0, 0 }, { 0, -0.07, 0.07, 0 }, { 0, -0.1, 0.05, 0 }, { 0, -0.28, 0.12, 0 }, { 0, -0.4, 0, 0 }, { -0.03, -0.47, 0.1, 0 } },
-        colour_shifter_alt = { { -0.015, -0.32, -0.24, 0 }, { 0, -0.22, -0.22, 0 }, { 0, -0.24, -0.13, 0 }, { 0, -0.17, 0.13, 0 }, { 0, -0.03, 0.08, 0 }, { 0, 0, 0, 0 } }
     }
 
     local game_init_game_object_ref = Game.init_game_object
@@ -1237,6 +1215,18 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                                 padding = self.sparkles.padding or -1,
                                 attach = G.ROOM_ATTACH,
                                 colours = self.sparkles.colours or {G.C.WHITE, lighten(G.C.GOLD, 0.2)},
+                                fill = true
+                            })
+                        end
+                        if self.meteors then
+                            G.booster_pack_meteors = Particles(1, 1, 0, 0, {
+                                timer = self.meteors.timer or 2,
+                                scale = self.meteors.scale or 0.05,
+                                lifespan = self.meteors.lifespan or 1.5,
+                                speed = self.meteors.speed or 4,
+                                padding = self.meteors.padding or 0,
+                                attach = G.ROOM_ATTACH,
+                                colours = self.meteors.colours or {G.C.WHITE},
                                 fill = true
                             })
                         end
@@ -1777,7 +1767,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 G.E_MANAGER:add_event(Event({
                     func = function()
                         local _card = G.hand.cards[i]
-                        assert(SMODS.change_base(_card, _suit))
+                        assert(SMODS.change_base(_card, _suit.key))
                         return true
                     end
                 }))
@@ -1974,25 +1964,35 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     ----- API CODE GameObject.PokerHand
     -------------------------------------------------------------------------------------------------
 
-    SMODS.PokerHands = {}
-    SMODS.PokerHand = SMODS.GameObject:extend {
-        obj_table = SMODS.PokerHands,
+    SMODS.PokerHandParts = {}
+    SMODS.PokerHandPart = SMODS.GameObject:extend {
+        obj_table = SMODS.PokerHandParts,
         obj_buffer = {},
         required_params = {
             'key',
-            'above_hand',
+            'func',
+        },
+        inject_class = function() end,
+    }
+    local handlist = G.handlist
+    G.handlist = {}
+    SMODS.PokerHands = {}
+    SMODS.PokerHand = SMODS.GameObject:extend {
+        obj_table = SMODS.PokerHands,
+        obj_buffer = G.handlist,
+        required_params = {
+            'key',
             'mult',
             'chips',
             'l_mult',
             'l_chips',
             'example',
+            'evaluate'
         },
-        order_lookup = {},
         visible = true,
         played = 0,
         played_this_round = 0,
         level = 1,
-        class_prefix = 'h',
         set = 'PokerHand',
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.misc.poker_hands, self.key, self.loc_txt, 'name')
@@ -2000,14 +2000,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         register = function(self)
             if self:check_dependencies() and not self.obj_table[self.key] then
-                local j
-                for i, v in ipairs(G.handlist) do
-                    if v == self.above_hand then j = i end
-                end
-                -- insertion must not happen more than once, so do it on registration
-                table.insert(G.handlist, j, self.key)
-                self.order_lookup[j] = (self.order_lookup[j] or 0) - 0.001
-                self.order = j + self.order_lookup[j]
                 self.s_mult = self.mult
                 self.s_chips = self.chips
                 self.visible = self.visible
@@ -2018,9 +2010,86 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 self.obj_buffer[#self.obj_buffer + 1] = self.key
             end
         end,
-        inject = function(self) end
+        inject = function(self) end,
+        post_inject_class = function(self)
+            table.sort(
+                self.obj_buffer,
+                function(a, b)
+                    local x, y = self.obj_table[a], self.obj_table[b]
+                    local x_above = self.obj_table[x.above_hand or {}]
+                    local y_above = self.obj_table[y.above_hand or {}]
+                    local function eval(h) return h.mult*h.chips + (h.order_offset or 0) end
+                    return (x_above and (1e-6*eval(x) + eval(x_above)) or eval(x)) > (y_above and (1e-6*eval(y) + eval(y_above)) or eval(y))
+                end
+            )
+            for i, v in ipairs(self.obj_buffer) do self.obj_table[v].order = i end
+        end
     }
 
+    SMODS.PokerHandPart {
+        key = '_highest',
+        func = function(hand) return get_highest(hand) end
+    }
+    SMODS.PokerHandPart {
+        key = '_straight',
+        func = function(hand) return get_straight(hand) end
+    }
+    SMODS.PokerHandPart {
+        key = '_flush',
+        func = function(hand) return get_flush(hand) end,
+    }
+    -- all sets of 2 or more cards of same rank
+    SMODS.PokerHandPart {
+        key = '_all_pairs',
+        func = function(hand)
+            local _2 = get_X_same(2, hand, true)
+            if not next(_2) then return {} end
+            return {SMODS.merge_lists(_2)}
+        end
+    }
+    for i = 2, 5 do
+        SMODS.PokerHandPart {
+            key = '_'..i,
+            func = function(hand) return get_X_same(i, hand, true) end
+        }
+    end
+
+    local hands = G:init_game_object().hands
+    local eval_functions = {
+        ['Flush Five'] = function(parts)
+            if not next(parts._5) or not next(parts._flush) then return {} end
+            return { SMODS.merge_lists(parts._5, parts._flush) }
+        end,
+        ['Flush House'] = function(parts)
+            if #parts._3 < 1 or #parts._2 < 2 or not next(parts._flush) then return {} end
+            return { SMODS.merge_lists(parts._all_pairs, parts._flush) }
+        end, 
+        ['Five of a Kind'] = function(parts) return parts._5 end,
+        ['Straight Flush'] = function(parts)
+            if not next(parts._straight) or not next(parts._flush) then return end
+            return { SMODS.merge_lists(parts._straight, parts._flush) }
+        end, 
+        ['Four of a Kind'] = function(parts) return parts._4 end, 
+        ['Full House'] = function(parts)
+            if #parts._3 < 1 or #parts._2 < 2 then return {} end
+            return parts._all_pairs
+        end,
+        ['Flush'] = function(parts) return parts._flush end,
+        ['Straight'] = function(parts) return parts._straight end,
+        ['Three of a Kind'] = function(parts) return parts._3 end, 
+        ['Two Pair'] = function(parts)
+            if #parts._2 < 2 then return {} end
+            return parts._all_pairs
+        end, 
+        ['Pair'] = function(parts) return parts._2 end, 
+        ['High Card'] = function(parts) return parts._highest end, 
+    }
+    for _, v in ipairs(handlist) do
+        local hand = copy_table(hands[v])
+        hand.key = v
+        hand.evaluate = eval_functions[v]
+        SMODS.PokerHand(hand)
+    end
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Challenge
     -------------------------------------------------------------------------------------------------
@@ -2156,22 +2225,112 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         required_params = {
             'key',
         },
-        class_prefix = 'st',
         rate = 0.3,
         atlas = 'stickers',
         pos = { x = 0, y = 0 },
-        colour = HEX 'FFFFFF',
+        badge_colour = HEX 'FFFFFF',
         default_compat = true,
         compat_exceptions = {},
         sets = { Joker = true },
         needs_enable_flag = true,
         process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt, 'description')
+            SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
             SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'label')
         end,
-        inject = function() end,
-        set_sticker = function(self, card, val)
+        inject = function(self)
+            self.sticker_sprite = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)
+            G.shared_stickers[self.key] = self.sticker_sprite
+        end,
+        -- relocating sticker checks to here, so if the sticker has different checks than default
+        -- they can be handled without hooking/injecting into create_card
+        -- or handling it in apply
+        -- TODO: rename
+        should_apply = function(self, card, center, area)
+            if 
+                ( not self.sets or self.sets[center.set or {}]) and
+                (
+                    center[self.key..'_compat'] or -- explicit marker
+                    (self.default_compat and not self.compat_exceptions[center.key]) or -- default yes with no exception
+                    (not self.default_compat and self.compat_exceptions[center.key]) -- default no with exception
+                ) and 
+                (not self.needs_enable_flag or G.GAME.modifiers['enable_'..self.key])
+            then
+                self.last_roll = pseudorandom((area == G.pack_cards and 'packssj' or 'shopssj')..self.key..G.GAME.round_resets.ante)
+                return self.last_roll > (1-self.rate)
+            end
+        end,
+        apply = function(self, card, val)
             card.ability[self.key] = val
+        end
+    }
+
+    -- Create base game stickers
+    -- eternal and perishable follow shared checks for sticker application, therefore omitted 
+    SMODS.Sticker{
+        key = "eternal",
+        badge_colour = HEX 'c75985',
+        prefix_config = {key = false},
+        pos = { x = 0, y = 0 },
+        hide_badge = true,
+        order = 1,
+        should_apply = false,
+        inject = function(self)
+            SMODS.Sticker.inject(self)
+            G.shared_sticker_eternal = self.sticker_sprite
+        end
+    }
+
+    SMODS.Sticker{
+        key = "perishable",
+        badge_colour = HEX '4f5da1',
+        prefix_config = {key = false},
+        pos = { x = 0, y = 2 },
+        hide_badge = true,
+        order = 2,
+        should_apply = false,
+        apply = function(self, card, val)
+            card.ability[self.key] = val
+            if card.ability[self.key] then card.ability.perish_tally = G.GAME.perishable_rounds end
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card.ability.perishable_rounds or 5, card.ability.perish_tally or G.GAME.perishable_rounds}}
+        end,
+        inject = function(self)
+            SMODS.Sticker.inject(self)
+            G.shared_sticker_perishable = self.sticker_sprite
+        end
+    }
+
+    SMODS.Sticker{
+        key = "rental",
+        badge_colour = HEX 'b18f43',
+        prefix_config = {key = false},
+        pos = { x = 1, y = 2 },
+        hide_badge = true,
+        order = 3,
+        apply = function(self, card, val)
+            card.ability[self.key] = val
+            if card.ability[self.key] then card:set_cost() end
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {G.GAME.rental_rate or 1}}
+        end,
+        inject = function(self)
+            SMODS.Sticker.inject(self)
+            G.shared_sticker_rental = self.sticker_sprite
+        end
+    }
+
+    SMODS.Sticker{
+        key = "pinned",
+        badge_colour = HEX 'fda200',
+        prefix_config = {key = false},
+        pos = { x = 10, y = 10 }, -- Base game has no art, and I haven't made any yet to represent Pinned with
+        rate = 0,
+        should_apply = false, 
+        order = 4,
+        apply = function(self, card, val)
+            card[self.key] = val
         end
     }
 
@@ -2460,168 +2619,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_vars = function(self)
             return { vars = { self.config.card_limit } }
         end,
-    })
-
-    -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.Palette
-    -------------------------------------------------------------------------------------------------
-
-    SMODS.local_palettes = {}
-    SMODS.Palettes = { Types = {} }
-    SMODS.Palette = SMODS.GameObject:extend {
-        obj_table = SMODS.local_palettes,
-        obj_buffer = {},
-        required_params = {
-            'key',
-            'old_colours',
-            'new_colours',
-            'type',
-            'name'
-        },
-        set = 'Palette',
-        class_prefix = 'pal',
-        inject = function(self)
-            if not G.P_CENTER_POOLS[self.type] and self.type ~= "Suits" then return end
-            if not SMODS.Palettes[self.type] then
-                table.insert(SMODS.Palettes.Types, self.type)
-                SMODS.Palettes[self.type] = { names = {} }
-                if self.name ~= "Default" then SMODS.Palette:create_default(self.type) end
-                G.SETTINGS.selected_colours[self.type] = G.SETTINGS.selected_colours[self.type] or
-                SMODS.Palettes[self.type]["Default"]
-            end
-            if SMODS.Palettes[self.type][self.name] then
-                G.FUNCS.update_atlas(self.type)
-                return
-            end
-            table.insert(SMODS.Palettes[self.type].names, self.name)
-            SMODS.Palettes[self.type][self.name] = {
-                name = self.name,
-                order = #SMODS.Palettes[self.type].names,
-                old_colours = {},
-                new_colours = {}
-            }
-            if self.old_colours then
-                for i = 1, #self.old_colours do
-                    SMODS.Palettes[self.type][self.name].old_colours[i] = type(self.old_colours[i]) == "string" and
-                    HEX(self.old_colours[i]) or self.old_colours[i]
-                    SMODS.Palettes[self.type][self.name].new_colours[i] = type(self.new_colours[i]) == "string" and
-                    HEX(self.new_colours[i]) or self.new_colours[i]
-                end
-            end
-            if not G.SETTINGS.selected_colours[self.type] then
-                G.SETTINGS.selected_colours[self.type] = SMODS.Palettes[self.type][self.name]
-            end
-
-            SMODS.Palette:create_atlas(self.type, self.name)
-            G.FUNCS.update_atlas(self.type)
-        end
-    }
-
-    function SMODS.Palette:create_default(type)
-        table.insert(SMODS.Palettes[type].names, "Default")
-        SMODS.Palettes[type]["Default"] = {
-            name = "Default",
-            old_colours = {},
-            new_colours = {},
-            order = 1
-        }
-        SMODS.Palette:create_atlas(type, "Default")
-    end
-
-    function SMODS.Palette:create_atlas(type, name)
-        local atlas_keys = {}
-        if type == "Suits" then
-            atlas_keys = { "cards_1", "ui_1" }
-        else
-            for _, v in pairs(G.P_CENTER_POOLS[type]) do
-                atlas_keys[v.atlas or type] = v.atlas or type
-            end
-        end
-        G.PALETTE.NEW = SMODS.Palettes[type][name]
-        for _, v in pairs(atlas_keys) do
-            G.ASSET_ATLAS[v][name] = { image_data = G.ASSET_ATLAS[v].image_data:clone() }
-            G.ASSET_ATLAS[v][name].image_data:mapPixel(G.FUNCS.recolour_image)
-            G.ASSET_ATLAS[v][name].image = love.graphics.newImage(G.ASSET_ATLAS[v][name].image_data,
-                { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
-        end
-    end
-
-    function SMODS.Palette:create_colours(type, base_colour, alternate_colour)
-        if SMODS.ConsumableTypes[type].generate_colours then
-            return SMODS.ConsumableTypes[type]:generate_colours(HEX_HSL(base_colour),
-                alternate_colour and HEX_HSL(alternate_colour))
-        end
-        return { HEX(base_colour) }
-    end
-
-    for k, v in pairs(G.P_CENTER_POOLS.Tarot) do
-        SMODS.Consumable:take_ownership(v.key, { atlas = "Tarot", prefix_config = { atlas = false } })
-    end
-    for _, v in pairs(G.P_CENTER_POOLS.Planet) do
-        SMODS.Consumable:take_ownership(v.key, { atlas = "Planet", prefix_config = { atlas = false } })
-    end
-    for _, v in pairs(G.P_CENTER_POOLS.Spectral) do
-        SMODS.Consumable:take_ownership(v.key, { atlas = "Spectral", prefix_config = { atlas = false } })
-    end
-    SMODS.Atlas({
-        key = "Planet",
-        path = "resources/textures/" .. G.SETTINGS.GRAPHICS.texture_scaling .. "x/Tarots.png",
-        px = 71,
-        py = 95,
-        inject = function(self)
-            self.image_data = love.image.newImageData(self.path)
-            self.image = love.graphics.newImage(self.image_data,
-                { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
-            G[self.atlas_table][self.key_noloc or self.key] = self
-        end
-    })
-    SMODS.Atlas({
-        key = "Spectral",
-        path = "resources/textures/" .. G.SETTINGS.GRAPHICS.texture_scaling .. "x/Tarots.png",
-        px = 71,
-        py = 95,
-        inject = function(self)
-            self.image_data = love.image.newImageData(self.path)
-            self.image = love.graphics.newImage(self.image_data,
-                { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
-            G[self.atlas_table][self.key_noloc or self.key] = self
-        end
-    })
-    -- Default palettes defined for base game consumable types
-    SMODS.Palette({
-        key = "tarot_default",
-        old_colours = {},
-        new_colours = {},
-        type = "Tarot",
-        name = "Default"
-    })
-    SMODS.Palette({
-        key = "planet_default",
-        old_colours = {},
-        new_colours = {},
-        type = "Planet",
-        name = "Default"
-    })
-    SMODS.Palette({
-        key = "spectral_default",
-        old_colours = {},
-        new_colours = {},
-        type = "Spectral",
-        name = "Default"
-    })
-    SMODS.Palette({
-        key = "base_cards",
-        old_colours = { "235955", "3c4368", "f06b3f", "f03464" },
-        new_colours = { "235955", "3c4368", "f06b3f", "f03464" },
-        type = "Suits",
-        name = "Default"
-    })
-    SMODS.Palette({
-        key = "high_contrast_cards",
-        old_colours = { "235955", "3c4368", "f06b3f", "f03464" },
-        new_colours = { "008ee6", "3c4368", "e29000", "f83b2f" },
-        type = "Suits",
-        name = "High Contrast"
     })
 
     -------------------------------------------------------------------------------------------------
