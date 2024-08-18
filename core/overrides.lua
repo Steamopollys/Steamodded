@@ -1306,3 +1306,39 @@ function get_deck_win_sticker(_center)
 		if _stake then return G.sticker_map[_stake] end
 	end
 end
+
+function Card:align_h_popup()
+	local focused_ui = self.children.focused_ui and true or false
+	local popup_direction = (self.children.buy_button or (self.area and self.area.config.view_deck) or (self.area and self.area.config.type == 'shop')) and 'cl' or 
+							(self.T.y < G.CARD_H*0.8) and 'bm' or
+							'tm'
+	local sign = 1
+	if popup_direction == 'cl' and self.T.x <= G.ROOM.T.w*0.4 then
+		popup_direction = 'cr'
+		sign = -1
+	end
+	return {
+		major = self.children.focused_ui or self,
+		parent = self,
+		xy_bond = 'Strong',
+		r_bond = 'Weak',
+		wh_bond = 'Weak',
+		offset = {
+			x = popup_direction ~= 'cl' and popup_direction ~= 'cr' and 0 or
+				focused_ui and sign*-0.05 or
+				(self.ability.consumeable and 0.0) or
+				(self.ability.set == 'Voucher' and 0.0) or
+				sign*-0.05,
+			y = focused_ui and (
+						popup_direction == 'tm' and (self.area and self.area == G.hand and -0.08 or-0.15) or
+						popup_direction == 'bm' and 0.12 or
+						0
+					) or
+				popup_direction == 'tm' and -0.13 or
+				popup_direction == 'bm' and 0.1 or
+				0
+		},  
+		type = popup_direction,
+		--lr_clamp = true
+	}
+end
