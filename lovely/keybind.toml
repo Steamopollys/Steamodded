@@ -39,7 +39,7 @@ match_indent = true
 payload = '''
 if key == 'm' then
 	if self.held_key_times[key] > 1.1 then
-		if G.STAGE == G.STAGES.RUN then G.FUNCS.go_to_menu() end
+		SMODS.save_all_config()
 		SMODS.restart_game()
 	else
 		self.held_key_times[key] = self.held_key_times[key] + dt
