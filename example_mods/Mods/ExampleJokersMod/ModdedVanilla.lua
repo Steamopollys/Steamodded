@@ -123,11 +123,11 @@ SMODS.Joker {
     end
 
     -- context.before checks if context.before == true, and context.before is true when it's before the current hand is scored.
-    -- (context.poker_hands == 'Straight') checks if the current hand is a 'Straight'.
+    -- (context.poker_hands['Straight']) checks if the current hand is a 'Straight'.
     -- The 'next()' part makes sure it goes over every option in the table, which the table is context.poker_hands.
     -- context.poker_hands contains every valid hand type in a played hand.
     -- not context.blueprint ensures that Blueprint or Brainstorm don't copy this upgrading part of the joker, but that it'll still copy the added chips.
-    if context.before and next(context.poker_hands == 'Straight') and not context.blueprint then
+    if context.before and next(context.poker_hands['Straight']) and not context.blueprint then
       -- Updated variable is equal to current variable, plus the amount of chips in chip gain.
       -- 15 = 0+15, 30 = 15+15, 75 = 60+15.
       card.ability.extra.chips = card.ability.extra.chips + card.ability.extra.chip_gain
