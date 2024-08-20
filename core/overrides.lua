@@ -1307,6 +1307,62 @@ function get_deck_win_sticker(_center)
 	end
 end
 
+function Card:align_h_popup()
+	local focused_ui = self.children.focused_ui and true or false
+	local popup_direction = (self.children.buy_button or (self.area and self.area.config.view_deck) or (self.area and self.area.config.type == 'shop')) and 'cl' or 
+							(self.T.y < G.CARD_H*0.8) and 'bm' or
+							'tm'
+	local sign = 1
+	if popup_direction == 'cl' and self.T.x <= G.ROOM.T.w*0.4 then
+		popup_direction = 'cr'
+		sign = -1
+	end
+	return {
+		major = self.children.focused_ui or self,
+		parent = self,
+		xy_bond = 'Strong',
+		r_bond = 'Weak',
+		wh_bond = 'Weak',
+		offset = {
+			x = popup_direction ~= 'cl' and popup_direction ~= 'cr' and 0 or
+				focused_ui and sign*-0.05 or
+				(self.ability.consumeable and 0.0) or
+				(self.ability.set == 'Voucher' and 0.0) or
+				sign*-0.05,
+			y = focused_ui and (
+						popup_direction == 'tm' and (self.area and self.area == G.hand and -0.08 or-0.15) or
+						popup_direction == 'bm' and 0.12 or
+						0
+					) or
+				popup_direction == 'tm' and -0.13 or
+				popup_direction == 'bm' and 0.1 or
+				0
+		},  
+		type = popup_direction,
+		--lr_clamp = true
+	}
+end
+
+function get_pack(_key, _type)
+    if not G.GAME.first_shop_buffoon and not G.GAME.banned_keys['p_buffoon_normal_1'] then
+        G.GAME.first_shop_buffoon = true
+        return G.P_CENTERS['p_buffoon_normal_'..(math.random(1, 2))]
+    end
+    local cume, it, center = 0, 0, nil
+    for k, v in ipairs(G.P_CENTER_POOLS['Booster']) do
+		v.current_weight = v.get_weight and v:get_weight() or v.weight or 1
+        if (not _type or _type == v.kind) and not G.GAME.banned_keys[v.key] then cume = cume + (v.current_weight or 1) end
+    end
+    local poll = pseudorandom(pseudoseed((_key or 'pack_generic')..G.GAME.round_resets.ante))*cume
+    for k, v in ipairs(G.P_CENTER_POOLS['Booster']) do
+        if not G.GAME.banned_keys[v.key] then 
+            if not _type or _type == v.kind then it = it + (v.current_weight or 1) end
+            if it >= poll and it - (v.current_weight or 1) <= poll then center = v; break end
+        end
+    end
+   if not center then center = G.P_CENTERS['p_buffoon_normal_1'] end  return center
+end
+
 --#region joker retrigger API
 local cj = Card.calculate_joker
 function Card:calculate_joker(context)

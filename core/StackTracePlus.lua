@@ -491,14 +491,14 @@ function getDebugInfoForCrash()
     if lovely_success then
         info = info .. "\nLovely Version: " .. lovely.version
     end
-    if SMODS and SMODS.mod_list then
+    if SMODS and SMODS.Mods then
         local mod_strings = ""
         local lovely_strings = ""
         local i = 1
         local lovely_i = 1
-        for _, v in ipairs(SMODS.mod_list) do
-            if v.can_load then
-                if v.lovely_only then
+        for _, v in pairs(SMODS.Mods) do
+            if (v.can_load and v ~= SMODS) or (v.lovely and not v.can_load and not v.disabled) then
+                if v.lovely_only or (v.lovely and not v.can_load) then
                     lovely_strings = lovely_strings .. "\n    " .. lovely_i .. ": " .. v.name
                     lovely_i = lovely_i + 1
                 else
