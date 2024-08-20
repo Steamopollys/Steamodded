@@ -1342,3 +1342,23 @@ function Card:align_h_popup()
 		--lr_clamp = true
 	}
 end
+
+function get_pack(_key, _type)
+    if not G.GAME.first_shop_buffoon and not G.GAME.banned_keys['p_buffoon_normal_1'] then
+        G.GAME.first_shop_buffoon = true
+        return G.P_CENTERS['p_buffoon_normal_'..(math.random(1, 2))]
+    end
+    local cume, it, center = 0, 0, nil
+    for k, v in ipairs(G.P_CENTER_POOLS['Booster']) do
+		v.current_weight = v.get_weight and v:get_weight() or v.weight or 1
+        if (not _type or _type == v.kind) and not G.GAME.banned_keys[v.key] then cume = cume + (v.current_weight or 1) end
+    end
+    local poll = pseudorandom(pseudoseed((_key or 'pack_generic')..G.GAME.round_resets.ante))*cume
+    for k, v in ipairs(G.P_CENTER_POOLS['Booster']) do
+        if not G.GAME.banned_keys[v.key] then 
+            if not _type or _type == v.kind then it = it + (v.current_weight or 1) end
+            if it >= poll and it - (v.current_weight or 1) <= poll then center = v; break end
+        end
+    end
+   if not center then center = G.P_CENTERS['p_buffoon_normal_1'] end  return center
+end
