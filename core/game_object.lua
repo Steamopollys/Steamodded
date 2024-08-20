@@ -1373,7 +1373,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G.localization.descriptions.Blind['bl_wheel'].text[1] =
                 "#1#"..G.localization.descriptions.Blind['bl_wheel'].text[1]
             SMODS.Blind.process_loc_text(self)
-        end
+        end,
+        get_loc_debuff_text = function() return G.GAME.blind.loc_debuff_text end,
     })
 
     -------------------------------------------------------------------------------------------------
@@ -1405,8 +1406,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             self.rng_buffer[#self.rng_buffer + 1] = self.key
         end,
         process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.descriptions.Other, self.key:lower() .. '_seal', self.loc_txt,
-                'description')
+            SMODS.process_loc_text(G.localization.descriptions.Other, self.key:lower() .. '_seal', self.loc_txt)
             SMODS.process_loc_text(G.localization.misc.labels, self.key:lower() .. '_seal', self.loc_txt, 'label')
         end,
         get_obj = function(self, key) return G.P_SEALS[key] end
@@ -1591,7 +1591,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
         end,
         process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.misc.ranks, self.key, self.loc_txt)
+            SMODS.process_loc_text(G.localization.misc.ranks, self.key, self.loc_txt, 'name')
         end,
         inject = function(self)
             for _, suit in pairs(SMODS.Suits) do
@@ -2116,7 +2116,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         unlocked = function(self) return true end,
         class_prefix = 'c',
         process_loc_text = function(self)
-            SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.loc_txt)
+            SMODS.process_loc_text(G.localization.misc.challenge_names, self.key, self.loc_txt, 'name')
         end,
         register = function(self)
             if self.registered then
