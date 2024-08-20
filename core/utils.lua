@@ -641,11 +641,11 @@ function convert_save_data()
     for k, v in pairs(G.PROFILES[G.SETTINGS.profile].deck_usage) do
         if not v.wins_by_key and not v.losses_by_key then
             v.wins_by_key = {}
-            for index, number in pairs(v.wins) do
+            for index, number in pairs(v.wins or {}) do
                 v.wins_by_key[SMODS.stake_from_index(index)] = number
             end
             v.losses_by_key = {}
-            for index, number in pairs(v.losses) do
+            for index, number in pairs(v.losses or {}) do
                 v.losses_by_key[SMODS.stake_from_index(index)] = number
             end
         end
