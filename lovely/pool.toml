@@ -107,25 +107,39 @@ match_indent = true
 position = 'at'
 payload = "if v.name == 'Black Hole' or v.name == 'The Soul' or v.hidden then"
 
-# TODO currently this overrides all base game checks
-# Probably move this down below all the add = _ and add an override flag "override_base_checks"
 [[patches]]
 [patches.pattern]
 target = 'functions/common_events.lua'
 pattern = "if _type == 'Enhanced' then"
 match_indent = true
+position = 'before'
+payload = '''
+local in_pool, pool_opts
+if v.in_pool and type(v.in_pool) == 'function' then
+	in_pool, pool_opts = v:in_pool()
+	pool_opts = pool_opts or {}
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = 'elseif not (G.GAME.used_jokers[v.key] and not next(find_joker("Showman"))) and'
+match_indent = true
 position = 'at'
+payload = '''elseif not (G.GAME.used_jokers[v.key] and not pool_opts.allow_duplicates and not next(find_joker("Showman"))) and'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = "if add and not G.GAME.banned_keys[v.key] then"
+match_indent = true
+position = 'before'
 payload = '''
 if v.in_pool and type(v.in_pool) == 'function' then
-	-- TODO currently this overrides all base game checks
-	if (_type == 'Enhanced' or _type == 'Tag' or v.set == 'Voucher' or v.set == 'Planet') then
-		sendWarnMessage(("get_current_pool(): in_pool() may not work correctly on a card of _type=%s"):format(_type), 'Pool')
-	end
-	local res, pool_opts = v:in_pool()
-	if res and (not G.GAME.used_jokers[v.key] or (pool_opts and pool_opts.allow_duplicates) or next(find_joker("Showman"))) then
-		add = true
-	end
-elseif _type == 'Enhanced' then'''
+	add = in_pool and (add or pool_opts.override_base_checks)
+end
+'''
 
 ## G.GAME.used_jokers now checks keys, not names
 # Card:set_ability()
