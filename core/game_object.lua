@@ -1373,7 +1373,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G.localization.descriptions.Blind['bl_wheel'].text[1] =
                 "#1#"..G.localization.descriptions.Blind['bl_wheel'].text[1]
             SMODS.Blind.process_loc_text(self)
-        end
+        end,
+        get_loc_debuff_text = function() return G.GAME.blind.loc_debuff_text end,
     })
 
     -------------------------------------------------------------------------------------------------
