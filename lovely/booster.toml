@@ -37,6 +37,17 @@ if booster_obj.create_card and type(booster_obj.create_card) == "function" then
 elseif self.ability.name:find('Arcana') then'''
 line_prepend = '$indent'
 
+## Stop cards from boosters getting double emplaced
+# Card:open
+G.pack_cards:emplace(v)
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "G.pack_cards:emplace(v)"
+position = "at"
+payload = "--G.pack_cards:emplace(v)"
+match_indent = true
+
 # Game:set_globals
 [[patches]]
 [patches.regex]
