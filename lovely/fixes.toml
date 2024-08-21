@@ -71,14 +71,15 @@ payload = 'if not self.alignment.type_list then return end'
 line_prepend = '$indent'
 
 ## Prevent softlock if booster pack is empty
+## Crashes the game when you skip too fast on this PR, along with being the culprit for allowing you to skip boosters early
 # G.FUNCS.can_skip_booster()
-[[patches]]
-[patches.pattern]
-target = 'functions/button_callbacks.lua'
-pattern = 'if G.pack_cards and (G.pack_cards.cards[1]) and'
-position = 'at'
-payload = 'if G.pack_cards and'
-match_indent = true
+# [[patches]]
+# [patches.pattern]
+# target = 'functions/button_callbacks.lua'
+# pattern = 'if G.pack_cards and (G.pack_cards.cards[1]) and'
+# position = 'at'
+# payload = 'if G.pack_cards and'
+# match_indent = true
 
 ## Set `G.your_collection.config.collection` to true in all cases
 # create_UIBox_your_collection_seals()

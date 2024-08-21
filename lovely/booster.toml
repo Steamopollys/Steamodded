@@ -7,9 +7,9 @@ priority = 0
 
 # Card:open
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "card.lua"
-pattern = '''G.GAME.pack_choices = self.config.center.config.choose or 1'''
+pattern = '''(?<indent>[\t ]*)if self\.ability\.name:find\('Arcana'\) then \n[\s\S]{12}G\.STATE'''
 position = "before"
 payload = '''
 booster_obj = self.config.center
@@ -17,13 +17,13 @@ if booster_obj and SMODS.Centers[booster_obj.key] then
     G.STATE = G.STATES.SMODS_BOOSTER_OPENED
     SMODS.OPENED_BOOSTER = self
 end'''
-match_indent = true
+line_prepend = '$indent'
 
 # Card:open
 [[patches]]
 [patches.regex]
 target = "card.lua"
-pattern = '''(?<indent>[\t ]*)[\s]{12}local card = nil\n[\s\S]{20}if self\.ability\.name:find\('Arcana'\) then''' # Possibly try to target something else
+pattern = '''(?<indent>[\t ]*)local card = nil\n[\s\S]{20}if self\.ability\.name:find\('Arcana'\) then''' # Possibly try to target something else
 position = "at"
 payload = ''' 
 local card = nil
@@ -67,9 +67,9 @@ line_prepend = '$indent'
 [[patches]]
 [patches.regex]
 target = "functions/button_callbacks.lua"
-pattern = '''G\.STATE == G\.STATES\.PLANET_PACK or G\.STATE == G\.STATES\.STANDARD_PACK or G\.STATE == G.STATES\.BUFFOON_PACK'''
-position = "before"
-payload = '''G.STATE == G.STATES.SMODS_BOOSTER_OPENED or '''
+pattern = '''(?<indent>[\t ]*)\(G\.STATE == G\.STATES\.PLANET_PACK or G\.STATE == G\.STATES\.STANDARD_PACK'''
+position = "at"
+payload = '''(G.STATE == G.STATES.SMODS_BOOSTER_OPENED or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.STANDARD_PACK'''
 
 # CardArea:draw()
 [[patches]]
