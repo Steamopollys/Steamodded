@@ -23,14 +23,14 @@ match_indent = true
 [[patches]]
 [patches.regex]
 target = "card.lua"
-pattern = '''(?<indent>[\t ]*)elseif self\.ability\.name:find\('Spectral'\) then\n[\s\S]{24}card'''
-position = "before"
+pattern = '''(?<indent>[\t ]*)[\s]{12}local card = nil\n[\s\S]{20}if self\.ability\.name:find\('Arcana'\) then''' # Possibly try to target something else
+position = "at"
 payload = ''' 
-elseif booster_obj.create_card and type(booster_obj.create_card) == "function" then 
+local card = nil
+if booster_obj.create_card and type(booster_obj.create_card) == "function" then 
     local _card_to_spawn = booster_obj:create_card(self)
-    card = _card_to_spawn
-
-'''
+    card = SMODS.create_card(_card_to_spawn)
+elseif self.ability.name:find('Arcana') then'''
 line_prepend = '$indent'
 
 # Game:set_globals

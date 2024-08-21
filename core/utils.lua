@@ -310,6 +310,18 @@ function SMODS.create_card(t)
     SMODS.bypass_create_card_edition = t.no_edition
     local _card = create_card(t.set, t.area, t.legendary, t.rarity, t.skip_materialize, t.soulable, t.key, t.key_append)
     SMODS.bypass_create_card_edition = nil
+
+    -- Should this be restricted to only cards able to handle these
+    -- or should that be left to the person calling SMODS.create_card to use it correctly? 
+    if t.edition then _card:set_edition(t.edition) end
+    if t.enhancement then _card:set_ability(G.P_CENTERS[t.enhancement]) end
+    if t.seal then _card:set_seal(t.seal) end
+    if t.stickers then 
+        for i, v in ipairs(t.stickers) do
+            if SMODS.Stickers[v]:should_apply(_card, t.area, true) then SMODS.Stickers[v]:apply(_card, true) end
+        end
+    end
+
     return _card
 end
 
