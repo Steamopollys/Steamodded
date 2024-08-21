@@ -29,6 +29,10 @@ payload = '''
 local card = nil
 if booster_obj.create_card and type(booster_obj.create_card) == "function" then 
     local _card_to_spawn = booster_obj:create_card(self)
+    -- Note: the part I don't like about this is that in order to manip this card
+    -- you'd have to override the booster's "create_card" function through take_ownership
+    -- This is bad as it can conflict with other mods that also want to override the "create_card" function for different effects
+    -- Possible proposal: per-mod function to iterate over this card? Additionally pass the key and/or kind of the booster for targeting. 
     card = SMODS.create_card(_card_to_spawn)
 elseif self.ability.name:find('Arcana') then'''
 line_prepend = '$indent'

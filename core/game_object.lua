@@ -1192,7 +1192,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         --[[
         create_card = function(self, card)
             -- Example
-            -- return create_card("Joker", G.pack_cards, nil, nil, true, true, nil, 'buf')
+            -- return {set = "Joker", area = G.pack_cards, skip_materialize = true, soulable = true, key_append = "buf"}
         end,
         --]]
         update_pack = function(self, dt)
@@ -1268,21 +1268,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                         {n=G.UIT.R,config={align = "tm",padding = 0.2, minh = 1.2, minw = 1.8, r=0.15,colour = G.C.GREY, one_press = true, button = 'skip_booster', hover = true,shadow = true, func = 'can_skip_booster'}, nodes = {
                             {n=G.UIT.T, config={text = localize('b_skip'), scale = 0.5, colour = G.C.WHITE, shadow = true, focus_args = {button = 'y', orientation = 'bm'}, func = 'set_button_pip'}}}}}}}}}}}}
             return t
-        end,
-    }
-
-    SMODS.Booster{
-        key = "test_booster",
-        loc_txt = {
-            name = "Test Booster",
-            text = {
-                "I test stuff",
-            },
-            group_name = "Test Booster",
-        },
-        create_card = function(self, card)
-            -- Example
-            return {set = "Joker", area = G.pack_cards, skip_materialize = true, soulable = true, key_append = "buf"}
         end,
     }
 
