@@ -1177,7 +1177,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(self)
             SMODS.Center.inject(self)
             SMODS.insert_pool(G.P_CENTER_POOLS['Consumeables'], self)
-            self.type = SMODS.ObjectTypes[self.set]
+            self.type = SMODS.ConsumableTypes[self.set]
             if self.hidden then
                 self.soul_set = self.soul_set or 'Spectral'
                 self.soul_rate = self.soul_rate or 0.003
