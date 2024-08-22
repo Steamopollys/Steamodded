@@ -666,24 +666,37 @@ function convert_save_data()
 end
 
 function SMODS.poll_rarity(_pool_key, _rand_key)
-	local rarity_poll = pseudorandom(_rand_key or pseudoseed('rarity'..G.GAME.round_resets.ante)) -- Generate the poll value
-	local available_rarities = SMODS.ObjectTypes[_pool_key].rarities or {} -- Table containing a list of rarities and their rates
+	local rarity_poll = pseudorandom(pseudoseed(_rand_key or 'rarity'..G.GAME.round_resets.ante)) -- Generate the poll value
+	local available_rarities = copy_table(SMODS.ObjectTypes[_pool_key].rarities) -- Table containing a list of rarities and their rates
     local base_game_rarities = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
+    
+    -- Calculate total rates of rarities
+    local total_rate = 0
+    for _, v in ipairs(available_rarities) do
+        v.mod = G.GAME[v.key:lower().."_mod"]
+        -- Should this fully override the v.rate calcs? 
+        if SMODS.Rarities[v.key].get_rate and type(SMODS.Rarities[v.key].get_rate) == "function" then
+            v.rate, v.mod = SMODS.Rarities[v.key]:get_rate(v.rate, v.mod)
+        end
+        v.rate = v.rate*v.mod
+        total_rate = total_rate + v.rate
+    end
+    -- recalculate rarities to account for v.mod
+    for _, v in ipairs(available_rarities) do
+        v.rate = v.rate / total_rate
+    end
 
-	-- Calculate total rates of rarities
-	local total_rate = 0
-	for _, v in ipairs(available_rarities) do
-		total_rate = total_rate + (v.rate) -- total all the rates of the polled rarities
-	end
+    print(tprint(available_rarities))
 
-    sendInfoMessage("total rate: "..total_rate)
 	-- Calculate selected rarity
 	local weight_i = 0
 	for _, v in ipairs(available_rarities) do
-		weight_i = weight_i + v.rate
-        sendInfoMessage("weight_i: "..weight_i)
+		weight_i = weight_i + v.rate * v.mod
+        --sendInfoMessage("weight_i: "..weight_i)
+        --sendInfoMessage("v.mod: "..tostring(v.mod))
+        --sendInfoMessage("checking for "..v.key..": "..tostring(rarity_poll > 1 - (weight_i) / total_rate))
 		if rarity_poll > 1 - (weight_i) / total_rate then
-            sendInfoMessage("selected rarity: "..v.key)
+            --sendInfoMessage("selected rarity: "..v.key)
             if base_game_rarities[v.key] then 
                 return base_game_rarities[v.key]
             else
@@ -692,5 +705,6 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
 		end
 	end
 
+    error("i fucked up")
 	return nil
 end

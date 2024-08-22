@@ -34,7 +34,7 @@ pattern = "self.C.EDITION[2] = 0.7+0.2*(1+math.sin(self.TIMERS.REAL*1.5 + 6))"
 position = "after"
 payload = '''
 for k, v in pairs(SMODS.Rarities) do
-    if v.gradient and type(v.gradient) == "function" then v:gradient() end
+    if v.gradient and type(v.gradient) == "function" then v:gradient(dt) end
 end'''
 match_indent = true
 
@@ -46,8 +46,8 @@ pattern = '''(?<indent>[\t ]*)local rarity = _rarity or pseudorandom\('rarity'\.
 position = "at"
 payload = '''
 if type(_rarity) == "number" then 
-    _rarity = (rarity > 0.95 and "Rare") or (rarity > 0.7 and "Uncommon") or "Common"
+    _rarity = (_rarity > 0.95 and 3) or (_rarity > 0.7 and 2) or 1
     print(tostring(_rarity))
 end
-local rarity = _rarity or (_legendary and "Legendary") or SMODS.poll_rarity("Joker", pseudorandom('rarity'..G.GAME.round_resets.ante..(_append or '')))
+local rarity = _rarity or (_legendary and "Legendary") or SMODS.poll_rarity("Joker", 'rarity'..G.GAME.round_resets.ante..(_append or ''))
 '''

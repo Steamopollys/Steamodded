@@ -719,7 +719,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
 
     -- Rarity API TODO List
     -- [x] Add system to allow injecting rarities into SMODS.ObjectTypes (ideally set up so take_ownership isn't needed)
-    -- [] Add function similar to get_weight that lets you change the rarity depending on context
+    -- [x] Add function similar to get_weight that lets you change the rarity depending on context
+        -- [x] Additionally add variable as a modifier
     -- [] Un-spaghetti rarities using integers and strings inconsistently for base game rarities
         -- Currently they're handled as a string internally except when referencing pools where the int corresponding to the rarity is chosen
         -- This means a card with the rarity "Common" will now show up in the shop depsite being a registered rarity, only if set to 1. 
@@ -749,26 +750,32 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     }
 
     -- Helper function to setup rarity additions to ObjectTypes without take_ownership
-    function SMODS.setup_rarities(object_type)
-        for k, v in pairs(SMODS.Rarities) do
-            if v.pools[object_type.key] then 
-                -- If you're defined a rarity with a pool that does not normally have a rarity
-                -- I'm assuming that you're adding one, surely nothing breaks through this :clueless:
-                if not object_type.rarities then 
-                    object_type.rarities = {}
-                    object_type.rarity_pools = {}
-                end
-                object_type.rarities[#object_type.rarities+1] = (type(v.pools[object_type.key]) == "table" and v.pools[object_type.key]) or {key = v.key, rate = v.default_rate}
-                local total = 0
-                for _, vv in ipairs(object_type.rarities) do
-                    total = total + v.rate
-                end
-                for _, v in ipairs(object_type.rarities) do
-                    vv.rate = vv.rate / total
-                    object_type.rarity_pools[vv.key] = {}
-                end
-            end
+    function SMODS.add_rarity(object_type, rarity)
+        -- If you're defined a rarity with a pool that does not normally have rarities
+        -- I'm assuming that you're adding one, surely nothing breaks through this :clueless:
+        if not object_type.rarities then 
+            object_type.rarities = {}
+            object_type.rarity_pools = {}
         end
+        object_type.rarities[#object_type.rarities+1] = (type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key]) or {key = rarity.key, rate = rarity.default_rate}
+        local total = 0
+        for _, vv in ipairs(object_type.rarities) do
+            total = total + vv.rate
+        end
+        for _, vv in ipairs(object_type.rarities) do
+            vv.rate = vv.rate / total
+            object_type.rarity_pools[vv.key] = {}
+        end
+    end
+
+    local game_init_game_object_ref = Game.init_game_object
+    function Game:init_game_object()
+        local t = game_init_game_object_ref(self)
+        for _, v in pairs(SMODS.Rarities) do
+            local key = v.key:lower() .. '_mod'
+            t[key] = t[key] or 1
+        end
+        return t
     end
 
     SMODS.Rarity{
@@ -804,7 +811,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     -------------------------------------------------------------------------------------------------
 
     -- ObjectType TODO list
-    -- [] Inject ObjectType pools into centers. Probably follow SMODS.Rarity implementation of pools var? 
+    -- [x] Inject ObjectType pools into centers. Probably follow SMODS.Rarity implementation of pools var? 
 
     SMODS.ObjectTypes = {}
     SMODS.ObjectType = SMODS.GameObject:extend {
@@ -828,6 +835,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                     v.rate = v.rate / total
                     self.rarity_pools[v.key] = {}
                 end
+            end
+            for _, v in pairs(SMODS.Rarities) do
+                if v.pools and v.pools[self.key] then SMODS.add_rarity(self, v) end
             end
         end,
         inject_card = function(self, center)
@@ -1080,6 +1090,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(self)
             G.P_CENTERS[self.key] = self
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
+            if self.pools then
+                for i, v in ipairs(self.pools) do
+                    table.insert(G.P_CENTER_POOLS[v], self)
+                end
+            end
         end,
         delete = function(self)
             G.P_CENTERS[self.key] = nil
