@@ -76,7 +76,7 @@ elseif SMODS.ObjectTypes[_type] and SMODS.ObjectTypes[_type].rarities then
 	if _legendary and rarities.legendary then
 		rarity = rarities.legendary.key
 	else
-		rarity = _rarity or SMODS.poll_rarity(SMODS.ObjectTypes[_type].rarity_pools, _type, 'rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
+		rarity = _rarity or SMODS.poll_rarity(_type, 'rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
 	end
 	_starting_pool, _pool_key = SMODS.ObjectTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')'''
 
