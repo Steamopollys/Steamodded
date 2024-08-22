@@ -676,7 +676,7 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
         v.mod = G.GAME[v.key:lower().."_mod"]
         -- Should this fully override the v.rate calcs? 
         if SMODS.Rarities[v.key].get_rate and type(SMODS.Rarities[v.key].get_rate) == "function" then
-            v.rate, v.mod = SMODS.Rarities[v.key]:get_rate(v.rate, v.mod)
+            v.rate = SMODS.Rarities[v.key]:get_rate()
         end
         v.rate = v.rate*v.mod
         total_rate = total_rate + v.rate
@@ -691,7 +691,7 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
 	-- Calculate selected rarity
 	local weight_i = 0
 	for _, v in ipairs(available_rarities) do
-		weight_i = weight_i + v.rate * v.mod
+		weight_i = weight_i + v.rate
         --sendInfoMessage("weight_i: "..weight_i)
         --sendInfoMessage("v.mod: "..tostring(v.mod))
         --sendInfoMessage("checking for "..v.key..": "..tostring(rarity_poll > 1 - (weight_i) / total_rate))
