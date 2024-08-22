@@ -1,0 +1,53 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+### Rarity API
+
+# get_badge_colour
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = 'return G.BADGE_COL[key] or {1, 0, 0, 1}'
+position = 'before'
+match_indent = true
+payload = '''
+for k, v in pairs(SMODS.Rarity.obj_buffer) do
+    G.BADGE_COL[k] = G.C.RARITY[v]
+end'''
+
+# G.UIDEF.card_h_popup
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "if AUT.card_type == 'Joker' or (AUT.badges and AUT.badges.force_rarity) then card_type = ({localize('k_common'), localize('k_uncommon'), localize('k_rare'), localize('k_legendary')})[card.config.center.rarity] end"
+position = "at"
+payload = "if AUT.card_type == 'Joker' or (AUT.badges and AUT.badges.force_rarity) then card_type = SMODS.Rarity:get_rarity_badge(card.config.center.rarity) end"
+match_indent = true
+
+# Game:update
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "self.C.EDITION[2] = 0.7+0.2*(1+math.sin(self.TIMERS.REAL*1.5 + 6))"
+position = "after"
+payload = '''
+for k, v in pairs(SMODS.Rarities) do
+    if v.gradient and type(v.gradient) == "function" then v:gradient() end
+end'''
+match_indent = true
+
+# get_current_pool
+[[patches]]
+[patches.regex]
+target = "functions/common_events.lua"
+pattern = '''(?<indent>[\t ]*)local rarity = _rarity or pseudorandom\('rarity'\.\.G\.GAME\.round_resets\.ante\.\.\(_append or ''\)\) \n[\s\S]{12}rarity = \(_legendary and 4\) or \(rarity > 0\.95 and 3\) or \(rarity > 0\.7 and 2\) or 1'''
+position = "at"
+payload = '''
+if type(_rarity) == "number" then 
+    _rarity = (rarity > 0.95 and "Rare") or (rarity > 0.7 and "Uncommon") or "Common"
+    print(tostring(_rarity))
+end
+local rarity = _rarity or (_legendary and "Legendary") or SMODS.poll_rarity("Joker", pseudorandom('rarity'..G.GAME.round_resets.ante..(_append or '')))
+'''

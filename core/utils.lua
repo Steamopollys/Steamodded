@@ -664,3 +664,33 @@ function convert_save_data()
     end
     G:save_settings()
 end
+
+function SMODS.poll_rarity(_pool_key, _rand_key)
+	local rarity_poll = pseudorandom(_rand_key or pseudoseed('rarity'..G.GAME.round_resets.ante)) -- Generate the poll value
+	local available_rarities = SMODS.ObjectTypes[_pool_key].rarities or {} -- Table containing a list of rarities and their rates
+    local base_game_rarities = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
+
+	-- Calculate total rates of rarities
+	local total_rate = 0
+	for _, v in ipairs(available_rarities) do
+		total_rate = total_rate + (v.rate) -- total all the rates of the polled rarities
+	end
+
+    sendInfoMessage("total rate: "..total_rate)
+	-- Calculate selected rarity
+	local weight_i = 0
+	for _, v in ipairs(available_rarities) do
+		weight_i = weight_i + v.rate
+        sendInfoMessage("weight_i: "..weight_i)
+		if rarity_poll > 1 - (weight_i) / total_rate then
+            sendInfoMessage("selected rarity: "..v.key)
+            if base_game_rarities[v.key] then 
+                return base_game_rarities[v.key]
+            else
+			    return v.key
+            end
+		end
+	end
+
+	return nil
+end

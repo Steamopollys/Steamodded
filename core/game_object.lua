@@ -712,22 +712,159 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {}
     }
 
+    -------------------------------------------------------------------------------------------------
+    ------- API CODE GameObject.Rarity
+    -------------------------------------------------------------------------------------------------
+
+
+    -- Rarity API TODO List
+    -- [x] Add system to allow injecting rarities into SMODS.ObjectTypes (ideally set up so take_ownership isn't needed)
+    -- [] Add function similar to get_weight that lets you change the rarity depending on context
+    -- [] Un-spaghetti rarities using integers and strings inconsistently for base game rarities
+        -- Currently they're handled as a string internally except when referencing pools where the int corresponding to the rarity is chosen
+        -- This means a card with the rarity "Common" will now show up in the shop depsite being a registered rarity, only if set to 1. 
+
+    SMODS.Rarities = {}
+    SMODS.Rarity = SMODS.GameObject:extend {
+        obj_table = SMODS.Rarities,
+        obj_buffer = {},
+        set = 'Rarity',
+        required_params = {
+            'key',
+        },
+        badge_colour = HEX 'FFFFFF',
+        inject = function(self)
+            G.P_JOKER_RARITY_POOLS[self.key] = {}
+            G.C.RARITY[self.key] = self.badge_colour
+        end,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.misc.labels, "k_"..self.key:lower(), self.loc_txt, 'name')
+            SMODS.process_loc_text(G.localization.misc.dictionary, "k_"..self.key:lower(), self.loc_txt, 'name')
+        end,
+        get_rarity_badge = function(self, rarity)
+            local base_game_rarity_keys = {localize('k_common'), localize('k_uncommon'), localize('k_rare'), localize('k_legendary')}
+            if (base_game_rarity_keys)[rarity] then return base_game_rarity_keys[rarity] --compat layer in case function gets the int of the rarity
+            else return localize("k_"..rarity) end -- Should be fine to do? 
+        end,
+    }
+
+    -- Helper function to setup rarity additions to ObjectTypes without take_ownership
+    function SMODS.setup_rarities(object_type)
+        for k, v in pairs(SMODS.Rarities) do
+            if v.pools[object_type.key] then 
+                -- If you're defined a rarity with a pool that does not normally have a rarity
+                -- I'm assuming that you're adding one, surely nothing breaks through this :clueless:
+                if not object_type.rarities then 
+                    object_type.rarities = {}
+                    object_type.rarity_pools = {}
+                end
+                object_type.rarities[#object_type.rarities+1] = (type(v.pools[object_type.key]) == "table" and v.pools[object_type.key]) or {key = v.key, rate = v.default_rate}
+                local total = 0
+                for _, vv in ipairs(object_type.rarities) do
+                    total = total + v.rate
+                end
+                for _, v in ipairs(object_type.rarities) do
+                    vv.rate = vv.rate / total
+                    object_type.rarity_pools[vv.key] = {}
+                end
+            end
+        end
+    end
+
+    SMODS.Rarity{
+        key = "Common",
+        loc_txt = {},
+        default_rate = 0.7,
+        badge_colour = HEX('009dff'),
+    }
+
+    SMODS.Rarity{
+        key = "Uncommon",
+        loc_txt = {},
+        default_rate = 0.25,
+        badge_colour = HEX("4BC292"),
+    }
+
+    SMODS.Rarity{
+        key = "Rare",
+        loc_txt = {},
+        default_rate = 0.05,
+        badge_colour = HEX('fe5f55'),
+    }
+
+    SMODS.Rarity{
+        key = "Legendary",
+        loc_txt = {},
+        default_rate = 0,
+        HEX("b26cbb"),
+    }
+
+    -------------------------------------------------------------------------------------------------
+    ------- API CODE GameObject.ObjectType
+    -------------------------------------------------------------------------------------------------
+
+    -- ObjectType TODO list
+    -- [] Inject ObjectType pools into centers. Probably follow SMODS.Rarity implementation of pools var? 
+
+    SMODS.ObjectTypes = {}
+    SMODS.ObjectType = SMODS.GameObject:extend {
+        obj_table = SMODS.ObjectTypes,
+        obj_buffer = {},
+        set = 'ObjectType',
+        required_params = {
+            'key',
+        },
+        prefix_config = { key = false }, 
+        inject = function(self)
+            G.P_CENTER_POOLS[self.key] = G.P_CENTER_POOLS[self.key] or {}
+            if self.rarities then
+                self.rarity_pools = {}
+                local total = 0
+                for _, v in ipairs(self.rarities) do
+                    if not v.rate then v.rate = SMODS.Rarities[v.key].default_rate end
+                    total = total + v.rate
+                end
+                for _, v in ipairs(self.rarities) do
+                    v.rate = v.rate / total
+                    self.rarity_pools[v.key] = {}
+                end
+            end
+        end,
+        inject_card = function(self, center)
+            if self.rarities and self.rarity_pools[center.rarity] then
+                SMODS.insert_pool(self.rarity_pools[center.rarity], center)
+            end
+        end,
+        delete_card = function(self, center)
+            if self.rarities and self.rarity_pools[center.rarity] then
+                SMODS.remove_pool(self.rarity_pools[center.rarity], center)
+            end
+        end,
+    }
+
+    SMODS.ObjectType{
+        key = "Joker",
+        rarities = {
+            { key = "Common" },
+            { key = "Uncommon" },
+            { key = "Rare" },
+        },
+    }
 
     -------------------------------------------------------------------------------------------------
     ------- API CODE GameObject.ConsumableType
     -------------------------------------------------------------------------------------------------
 
     SMODS.ConsumableTypes = {}
-    SMODS.ConsumableType = SMODS.GameObject:extend {
-        obj_table = SMODS.ConsumableTypes,
-        obj_buffer = {},
+    SMODS.ConsumableType = SMODS.ObjectType:extend {
+        ctype_buffer = {},
         set = 'ConsumableType',
         required_params = {
             'key',
             'primary_colour',
             'secondary_colour',
         },
-        prefix_config = { key = false }, -- TODO? should consumable types have a mod prefix?
+        prefix_config = { key = false },
         collection_rows = { 6, 6 },
         create_UIBox_your_collection = function(self)
             local deck_tables = {}
@@ -792,11 +929,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             }) }
             local type_buf = {}
             if G.ACTIVE_MOD_UI then
-                for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+                for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
                     if modsCollectionTally(G.P_CENTER_POOLS[v]).of > 0 then type_buf[#type_buf + 1] = v end
                 end
             else
-                type_buf = SMODS.ConsumableType.obj_buffer
+                type_buf = SMODS.ConsumableType.ctype_buffer
             end
             local t = create_UIBox_generic_options({
                 back_func = #type_buf>3 and 'your_collection_consumables' or G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection',
@@ -808,7 +945,15 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             return t
         end,
         inject = function(self)
-            G.P_CENTER_POOLS[self.key] = G.P_CENTER_POOLS[self.key] or {}
+            SMODS.ObjectType.inject(self)
+            -- TODO: Unscuff this, however it is required
+            -- I need SMODS.ConsumableTypes and obj_buffer 
+            -- in order to have ObjectType logic completely separate from ConsumableType
+            -- Although this works, it's basically just the equivalent of adding an obj_table/obj_buffer
+            -- into the config and adding injected objects into it but NOT having it treated as a main class (e.x. not calling inject_class)
+            -- If there isn't another clean solution this should be built into SMODS. 
+            SMODS.ConsumableTypes[self.key] = self
+            SMODS.ConsumableType.ctype_buffer[#SMODS.ConsumableType.ctype_buffer+1] = self.key
             G.localization.descriptions[self.key] = G.localization.descriptions[self.key] or {}
             G.C.SET[self.key] = self.primary_colour
             G.C.SECONDARY_SET[self.key] = self.secondary_colour
@@ -856,27 +1001,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 end
                 INIT_COLLECTION_CARD_ALERTS()
             end
-            if self.rarities then
-                self.rarity_pools = {}
-                local total = 0
-                for _, v in ipairs(self.rarities) do
-                    total = total + v.rate
-                end
-                for _, v in ipairs(self.rarities) do
-                    v.rate = v.rate / total
-                    self.rarity_pools[v.key] = {}
-                end
-            end
-        end,
-        inject_card = function(self, center)
-            if self.rarities and self.rarity_pools[center.rarity] then
-                SMODS.insert_pool(self.rarity_pools[center.rarity], center)
-            end
-        end,
-        delete_card = function(self, center)
-            if self.rarities and self.rarity_pools[center.rarity] then
-                SMODS.remove_pool(self.rarity_pools[center.rarity], center)
-            end
         end,
         process_loc_text = function(self)
             if not next(self.loc_txt) then return end
@@ -895,11 +1019,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         primary_colour = G.C.SET.Tarot,
         secondary_colour = G.C.SECONDARY_SET.Tarot,
         inject_card = function(self, center)
-            SMODS.ConsumableType.inject_card(self, center)
+            SMODS.ObjectType.inject_card(self, center)
             SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], center)
         end,
         delete_card = function(self, center)
-            SMODS.ConsumableType.delete_card(self, center)
+            SMODS.ObjectType.delete_card(self, center)
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
@@ -910,11 +1034,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         primary_colour = G.C.SET.Planet,
         secondary_colour = G.C.SECONDARY_SET.Planet,
         inject_card = function(self, center)
-            SMODS.ConsumableType.inject_card(self, center)
+            SMODS.ObjectType.inject_card(self, center)
             SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], center)
         end,
         delete_card = function(self, center)
-            SMODS.ConsumableType.delete_card(self, center)
+            SMODS.ObjectType.delete_card(self, center)
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
@@ -1053,7 +1177,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(self)
             SMODS.Center.inject(self)
             SMODS.insert_pool(G.P_CENTER_POOLS['Consumeables'], self)
-            self.type = SMODS.ConsumableTypes[self.set]
+            self.type = SMODS.ObjectTypes[self.set]
             if self.hidden then
                 self.soul_set = self.soul_set or 'Spectral'
                 self.soul_rate = self.soul_rate or 0.003
@@ -1074,7 +1198,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             return {}
         end
     }
-    -- TODO make this set of functions extendable by ConsumableTypes
+    
     SMODS.Tarot = SMODS.Consumable:extend {
         set = 'Tarot',
     }

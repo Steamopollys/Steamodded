@@ -281,7 +281,7 @@ end
 
 function buildAdditionsTab(mod)
 	local consumable_nodes = {}
-	for _, key in ipairs(SMODS.ConsumableType.obj_buffer) do
+	for _, key in ipairs(SMODS.ConsumableType.ctype_buffer) do
 		local id = 'your_collection_'..key:lower()..'s'
 		local tally = modsCollectionTally(G.P_CENTER_POOLS[key])
 		if tally.of > 0 then
@@ -480,11 +480,11 @@ G.UIDEF.consumable_collection_page = function(page)
 	local page_offset = nodes_per_page * ((page or 1) - 1)
 	local type_buf = {}
 	if G.ACTIVE_MOD_UI then
-		for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+		for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
 			if modsCollectionTally(G.P_CENTER_POOLS[v]).of > 0 then type_buf[#type_buf + 1] = v end
 		end
 	else
-		type_buf = SMODS.ConsumableType.obj_buffer
+		type_buf = SMODS.ConsumableType.ctype_buffer
 	end
 	local center_options = {}
 	for i = 1, math.ceil(#type_buf / nodes_per_page) do
