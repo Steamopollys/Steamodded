@@ -344,6 +344,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             self.image = love.graphics.newImage(self.image_data,
                 { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             G[self.atlas_table][self.key_noloc or self.key] = self
+
+            local mipmap_level = SMODS.config.graphics_mipmap_level_options[SMODS.config.graphics_mipmap_level]
+            if mipmap_level and mipmap_level > 0 then
+                self.image:setMipmapFilter('linear', mipmap_level)
+            end
         end,
         process_loc_text = function() end,
         pre_inject_class = function(self) 
