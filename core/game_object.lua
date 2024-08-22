@@ -307,6 +307,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.Atlas = SMODS.GameObject:extend {
         obj_table = SMODS.Atlases,
         obj_buffer = {},
+        disable_mipmap = false,
         required_params = {
             'key',
             'path',
@@ -346,7 +347,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G[self.atlas_table][self.key_noloc or self.key] = self
 
             local mipmap_level = SMODS.config.graphics_mipmap_level_options[SMODS.config.graphics_mipmap_level]
-            if mipmap_level and mipmap_level > 0 then
+            if not self.disable_mipmap and mipmap_level and mipmap_level > 0 then
                 self.image:setMipmapFilter('linear', mipmap_level)
             end
         end,
