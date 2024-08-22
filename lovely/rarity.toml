@@ -47,7 +47,6 @@ position = "at"
 payload = '''
 if type(_rarity) == "number" then 
     _rarity = (_rarity > 0.95 and 3) or (_rarity > 0.7 and 2) or 1
-    print(tostring(_rarity))
 end
 local rarity = _rarity or (_legendary and "Legendary") or SMODS.poll_rarity("Joker", 'rarity'..G.GAME.round_resets.ante..(_append or ''))
 '''

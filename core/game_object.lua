@@ -841,11 +841,13 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
         end,
         inject_card = function(self, center)
+            SMODS.insert_pool(G.P_CENTER_POOLS[self.key], center)
             if self.rarities and self.rarity_pools[center.rarity] then
                 SMODS.insert_pool(self.rarity_pools[center.rarity], center)
             end
         end,
         delete_card = function(self, center)
+            SMODS.remove_pool(G.P_CENTER_POOLS[self.key], center)
             if self.rarities and self.rarity_pools[center.rarity] then
                 SMODS.remove_pool(self.rarity_pools[center.rarity], center)
             end
@@ -1091,8 +1093,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G.P_CENTERS[self.key] = self
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
             if self.pools then
-                for i, v in ipairs(self.pools) do
-                    table.insert(G.P_CENTER_POOLS[v], self)
+                for k, v in ipairs(self.pools) do
+                    SMODS.ObjectTypes[v]:inject_card(self)
                 end
             end
         end,

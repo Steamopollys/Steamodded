@@ -686,8 +686,6 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
         v.rate = v.rate / total_rate
     end
 
-    print(tprint(available_rarities))
-
 	-- Calculate selected rarity
 	local weight_i = 0
 	for _, v in ipairs(available_rarities) do
