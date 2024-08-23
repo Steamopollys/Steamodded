@@ -867,6 +867,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     ------- API CODE GameObject.ConsumableType
     -------------------------------------------------------------------------------------------------
 
+    -- ConsumableType TODO list
+    -- [] Unscuff the fake obj_table/obj_buffer addition. 
+    -- [?] Fix any other jank related to it
+
     SMODS.ConsumableTypes = {}
     SMODS.ConsumableType = SMODS.ObjectType:extend {
         ctype_buffer = {},
@@ -956,16 +960,15 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             })
             return t
         end,
+        register = function(self)
+            SMODS.ConsumableType.super.register(self)
+            if self:check_dependencies() then
+                SMODS.ConsumableType.ctype_buffer[#SMODS.ConsumableType.ctype_buffer+1] = self.key
+            end
+        end,
         inject = function(self)
             SMODS.ObjectType.inject(self)
-            -- TODO: Unscuff this, however it is required
-            -- I need SMODS.ConsumableTypes and obj_buffer 
-            -- in order to have ObjectType logic completely separate from ConsumableType
-            -- Although this works, it's basically just the equivalent of adding an obj_table/obj_buffer
-            -- into the config and adding injected objects into it but NOT having it treated as a main class (e.x. not calling inject_class)
-            -- If there isn't another clean solution this should be built into SMODS. 
             SMODS.ConsumableTypes[self.key] = self
-            SMODS.ConsumableType.ctype_buffer[#SMODS.ConsumableType.ctype_buffer+1] = self.key
             G.localization.descriptions[self.key] = G.localization.descriptions[self.key] or {}
             G.C.SET[self.key] = self.primary_colour
             G.C.SECONDARY_SET[self.key] = self.secondary_colour
