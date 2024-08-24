@@ -718,9 +718,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
 
 
     -- Rarity API TODO List
-    -- [x] Add system to allow injecting rarities into SMODS.ObjectTypes (ideally set up so take_ownership isn't needed)
+    -- [x] Add system to allow injecting rarities into SMODS.ObjectTypes
     -- [x] Add function similar to get_weight that lets you change the rarity depending on context
-        -- [x] Additionally add variable as a modifier
     -- [] Un-spaghetti rarities using integers and strings inconsistently for base game rarities
         -- Currently they're handled as a string internally except when referencing pools where the int corresponding to the rarity is chosen
         -- This means a card with the rarity "Common" will now show up in the shop depsite being a registered rarity, only if set to 1. 
@@ -749,7 +748,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
     }
 
-    -- Helper function to setup rarity additions to ObjectTypes without take_ownership
     function SMODS.add_rarity(object_type, rarity)
         -- If you're defined a rarity with a pool that does not normally have rarities
         -- I'm assuming that you're adding one, surely nothing breaks through this :clueless:
@@ -811,7 +809,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     -------------------------------------------------------------------------------------------------
 
     -- ObjectType TODO list
-    -- [x] Inject ObjectType pools into centers. Probably follow SMODS.Rarity implementation of pools var? 
+    -- [ ] Insure that inject_card does not inject if the card already exists
 
     SMODS.ObjectTypes = {}
     SMODS.ObjectType = SMODS.GameObject:extend {
@@ -868,7 +866,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     -------------------------------------------------------------------------------------------------
 
     -- ConsumableType TODO list
-    -- [] Unscuff the fake obj_table/obj_buffer addition. 
+    -- [?] Unscuff the fake obj_table/obj_buffer addition. 
     -- [?] Fix any other jank related to it
 
     SMODS.ConsumableTypes = {}
