@@ -1095,8 +1095,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(self)
             G.P_CENTERS[self.key] = self
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
-            if self.pools then
-                for k, v in ipairs(self.pools) do
+            for k, v in pairs(SMODS.ObjectType) do
+                -- ObjectType change: rename "cards" to something else?
+                if self.pools[k] or v.cards[self.key] then
                     SMODS.ObjectTypes[v]:inject_card(self)
                 end
             end
@@ -1104,6 +1105,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         delete = function(self)
             G.P_CENTERS[self.key] = nil
             SMODS.remove_pool(G.P_CENTER_POOLS[self.set], self.key)
+            for k, v in pairs(SMODS.ObjectType) do
+                if self.pools[k] or v.cards[self.key] then
+                    SMODS.ObjectTypes[v]:remove_card(self)
+                end
+            end
             local j
             for i, v in ipairs(self.obj_buffer) do
                 if v == self.key then j = i end
