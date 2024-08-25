@@ -2495,14 +2495,16 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         required_params = {
             'key',
-            'shader'
+            'shader' -- can be set to `false` for shaderless edition
         },
-        -- other fields:
-        -- extra_cost
-
+        -- optional fields:
+        extra_cost = nil,
+        
         -- TODO badge colours. need to check how Steamodded already does badge colors
         -- other methods:
-        -- calculate(self)
+        calculate = nil, -- function (self)
+        on_apply = nil,  -- function (card) - modify card when edition is applied
+        on_remove = nil, -- function (card) - modify card when edition is removed
         register = function(self)
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
