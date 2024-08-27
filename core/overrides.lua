@@ -911,6 +911,11 @@ function Card:set_edition(edition, immediate, silent)
 	if old_edition then
 		self.ignore_base_shader[old_edition] = nil
 		self.ignore_shadow[old_edition] = nil
+
+		local on_old_edition_removed = G.P_CENTERS[old_edition] and G.P_CENTERS[old_edition].on_remove
+		if type(on_old_edition_removed) == "function" then
+			on_old_edition_removed(self)
+		end
 	end
 
 	local edition_type = nil
@@ -963,6 +968,11 @@ function Card:set_edition(edition, immediate, silent)
 	end
 	if p_edition.no_shadow or p_edition.disable_shadow then
 		self.ignore_shadow[self.edition.key] = true
+	end
+	
+	local on_edition_applied = p_edition.on_apply
+	if type(on_edition_applied) == "function" then
+		on_edition_applied(self)
 	end
 
 	for k, v in pairs(p_edition.config) do
