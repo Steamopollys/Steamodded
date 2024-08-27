@@ -117,8 +117,8 @@ payload = '''
 local in_pool, pool_opts
 if v.in_pool and type(v.in_pool) == 'function' then
 	in_pool, pool_opts = v:in_pool({ source = _append })
-	pool_opts = pool_opts or {}
 end
+pool_opts = pool_opts or {}
 '''
 
 [[patches]]
