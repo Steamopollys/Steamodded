@@ -42,12 +42,15 @@ position = 'before'
 payload = 'SMODS.UndiscoveredSprites[_center.set] and SMODS.UndiscoveredSprites[_center.set].pos or'
 match_indent = true
 
+# get_front_spriteinfo()
+
 [[patches]]
-[patches.regex]
-target = 'card.lua' 
-pattern = '(_front\.atlas and )?G.ASSET_ATLAS\[_front\.atlas\]'
+[patches.pattern]
+target = 'functions/misc_functions.lua' 
+pattern = 'return G.ASSET_ATLAS[_front.atlas] or G.ASSET_ATLAS["cards_"..(G.SETTINGS.colourblind_option and 2 or 1)], _front.pos'
 position = 'at'
-payload = 'G.ASSET_ATLAS[G.SETTINGS.colourblind_option and _front.hc_atlas or _front.lc_atlas] or G.ASSET_ATLAS[_front.atlas]'
+match_indent = true
+payload = 'return G.ASSET_ATLAS[G.SETTINGS.colourblind_option and _front.hc_atlas or _front.lc_atlas or {}] or G.ASSET_ATLAS[_front.atlas] or G.ASSET_ATLAS["cards_"..(G.SETTINGS.colourblind_option and 2 or 1)], _front.pos'
 
 
 # Game:set_render_settings()
