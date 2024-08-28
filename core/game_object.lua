@@ -307,6 +307,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.Atlas = SMODS.GameObject:extend {
         obj_table = SMODS.Atlases,
         obj_buffer = {},
+        disable_mipmap = false,
         required_params = {
             'key',
             'path',
@@ -344,6 +345,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             self.image = love.graphics.newImage(self.image_data,
                 { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             G[self.atlas_table][self.key_noloc or self.key] = self
+
+            local mipmap_level = SMODS.config.graphics_mipmap_level_options[SMODS.config.graphics_mipmap_level]
+            if not self.disable_mipmap and mipmap_level and mipmap_level > 0 then
+                self.image:setMipmapFilter('linear', mipmap_level)
+            end
         end,
         process_loc_text = function() end,
         pre_inject_class = function(self) 
@@ -2622,14 +2628,16 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         required_params = {
             'key',
-            'shader'
+            'shader' -- can be set to `false` for shaderless edition
         },
-        -- other fields:
-        -- extra_cost
-
+        -- optional fields:
+        extra_cost = nil,
+        
         -- TODO badge colours. need to check how Steamodded already does badge colors
         -- other methods:
-        -- calculate(self)
+        calculate = nil, -- function (self)
+        on_apply = nil,  -- function (card) - modify card when edition is applied
+        on_remove = nil, -- function (card) - modify card when edition is removed
         register = function(self)
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
