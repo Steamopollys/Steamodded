@@ -194,7 +194,6 @@ function SMODS.handle_loc_file(path)
     end
     if not file_name then return end
 
-    -- check if file name ends in .json
     local loc_table = nil
     if file_name:lower():match("%.json$") then
         loc_table = assert(JSON.decode(NFS.read(file_name)))
@@ -204,7 +203,7 @@ function SMODS.handle_loc_file(path)
     local function recurse(target, ref_table)
         if type(target) ~= 'table' then return end --this shouldn't happen unless there's a bad return value
         for k, v in pairs(target) do
-            if not ref_table[k] or (type(v) ~= 'table') then
+            if not ref_table[k] or (type(v) ~= 'table') or type(v[1]) == 'string' then
                 ref_table[k] = v
             else
                 recurse(v, ref_table[k])
