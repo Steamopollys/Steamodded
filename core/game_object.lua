@@ -261,21 +261,17 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         required_params = {
             'key',
             'label',
-            'path',
-            'font',
         },
         prefix_config = { key = false },
         process_loc_text = function() end,
         inject = function(self)
-            self.full_path = self.mod.path .. 'localization/' .. self.path
+            self.font = self.font or 1
             if type(self.font) == 'number' then
                 self.font = G.FONTS[self.font]
             end
             G.LANGUAGES[self.key] = self
+            if self.key == G.SETTINGS.language then G.LANG = self end
         end,
-        post_inject_class = function(self)
-            G:set_language()
-        end
     }
 
     -------------------------------------------------------------------------------------------------
