@@ -150,7 +150,7 @@ target = "card.lua"
 pattern = "local old_center = self.config.center"
 position = 'after'
 payload = '''
-if not next(SMODS.find_card(old_center.key, true)) then
+if old_center and not next(SMODS.find_card(old_center.key, true)) then
     G.GAME.used_jokers[old_center.key] = nil
 end'''
 match_indent = true

@@ -581,7 +581,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             else
                 applied_text = applied_text .. localize('b_applies_stakes_2')
             end
-            local desc_target = copy_table(target.description)
+            local desc_target = copy_table(target)
             table.insert(desc_target.text, applied_text)
             G.localization.descriptions[self.set][self.key] = desc_target
             SMODS.process_loc_text(G.localization.descriptions["Other"], self.key:sub(7) .. "_sticker", self.loc_txt,
@@ -1394,7 +1394,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         rng_buffer = { 'Purple', 'Gold', 'Blue', 'Red' },
         badge_to_key = {},
         set = 'Seal',
-        class_prefix = 's',
         atlas = 'centers',
         pos = { x = 0, y = 0 },
         discovered = false,
