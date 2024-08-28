@@ -460,3 +460,20 @@ position = "after"
 payload = '''
     in_blind = self.in_blind,'''
 
+# Cartomancer and astronomer unlock when *actually all* Tarot/Planet cards are discovered
+# check_for_unlock()
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+match_indent = true
+pattern = "if card.unlock_condition.tarot_count <= args.tarot_count then"
+position = "at"
+payload = 'if #G.P_CENTER_POOLS.Tarot <= args.tarot_count then'
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+match_indent = true
+pattern = "if card.unlock_condition.planet_count <= args.planet_count then"
+position = "at"
+payload = 'if #G.P_CENTER_POOLS.Planet <= args.planet_count then'

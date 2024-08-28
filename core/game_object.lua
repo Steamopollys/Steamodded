@@ -261,21 +261,17 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         required_params = {
             'key',
             'label',
-            'path',
-            'font',
         },
         prefix_config = { key = false },
         process_loc_text = function() end,
         inject = function(self)
-            self.full_path = self.mod.path .. 'localization/' .. self.path
+            self.font = self.font or 1
             if type(self.font) == 'number' then
                 self.font = G.FONTS[self.font]
             end
             G.LANGUAGES[self.key] = self
+            if self.key == G.SETTINGS.language then G.LANG = self end
         end,
-        post_inject_class = function(self)
-            G:set_language()
-        end
     }
 
     -------------------------------------------------------------------------------------------------
@@ -581,7 +577,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             else
                 applied_text = applied_text .. localize('b_applies_stakes_2')
             end
-            local desc_target = copy_table(target.description)
+            local desc_target = copy_table(target)
             table.insert(desc_target.text, applied_text)
             G.localization.descriptions[self.set][self.key] = desc_target
             SMODS.process_loc_text(G.localization.descriptions["Other"], self.key:sub(7) .. "_sticker", self.loc_txt,
@@ -1527,7 +1523,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         rng_buffer = { 'Purple', 'Gold', 'Blue', 'Red' },
         badge_to_key = {},
         set = 'Seal',
-        class_prefix = 's',
         atlas = 'centers',
         pos = { x = 0, y = 0 },
         discovered = false,
@@ -2835,7 +2830,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         pre_inject_class = function()
             for _, mod in ipairs(SMODS.mod_list) do
-                SMODS.handle_loc_file(mod.path)
+                if mod.can_load then
+                    SMODS.handle_loc_file(mod.path)
+                end
             end
         end
     }

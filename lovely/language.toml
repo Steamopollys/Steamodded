@@ -9,26 +9,17 @@ priority = 0
 [[patches]]
 [patches.pattern]
 target = 'game.lua'
-pattern = "G.SETTINGS.language = 'en-us'"
-position = 'before'
-payload = 'self.temp_language = self.SETTINGS.language'
+pattern = "if not (love.filesystem.read('localization/'..G.SETTINGS.language..'.lua')) or G.F_ENGLISH_ONLY then"
+position = 'at'
+payload = 'if false then'
 match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'game.lua'
-pattern = "self.LANG = self.LANGUAGES[self.SETTINGS.language] or self.LANGUAGES['en-us']"
-position = 'before'
-payload = 'if self.temp_language then self.SETTINGS.language = self.temp_language end'
-match_indent = true
-
 
 [[patches]]
 [patches.pattern]
 target = 'game.lua'
 pattern = "local localization = love.filesystem.getInfo('localization/'..G.SETTINGS.language..'.lua')"
 position = 'at'
-payload = "local localization = self.LANG.full_path and NFS.getInfo(self.LANG.full_path) or love.filesystem.getInfo('localization/'..G.SETTINGS.language..'.lua')"
+payload = "local localization = love.filesystem.getInfo('localization/'..G.SETTINGS.language..'.lua') or love.filesystem.getInfo('localization/en-us.lua')"
 match_indent = true
 
 [[patches]]
@@ -36,5 +27,14 @@ match_indent = true
 target = 'game.lua'
 pattern = "self.localization = assert(loadstring(love.filesystem.read('localization/'..G.SETTINGS.language..'.lua')))()"
 position = 'at'
-payload = "self.localization = assert(loadstring(self.LANG.full_path and NFS.read(self.LANG.full_path) or love.filesystem.read('localization/'..G.SETTINGS.language..'.lua')))()"
+payload = "self.localization = assert(loadstring(love.filesystem.read('localization/'..G.SETTINGS.language..'.lua') or love.filesystem.read('localization/en-us.lua')))()"
+match_indent = true
+
+# G.FUNCS.warn_lang (wtf)
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = 'if (_infotip_object.config.set ~= e.config.ref_table.label) and (not G.F_NO_ACHIEVEMENTS) then'
+position = 'at'
+payload = 'if (_infotip_object.config.set ~= e.config.ref_table.label) then'
 match_indent = true
