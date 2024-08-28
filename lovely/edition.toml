@@ -245,7 +245,7 @@ if G.jokers then
         if self.edition and self.edition.card_limit then
             if self.ability.consumeable then
                 G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
-            else
+            elseif self.ability.set == 'Joker' then
                 G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit
             end'''
 line_prepend = "$indent"
@@ -260,7 +260,7 @@ if self.ability.joker_added_to_deck_but_debuffed then
     if self.edition and self.edition.card_limit then
         if self.ability.consumeable then
             G.consumeables.config.card_limit = G.consumeables.config.card_limit - self.edition.card_limit
-        else
+        elseif self.ability.set == 'Joker' then
             G.jokers.config.card_limit = G.jokers.config.card_limit - self.edition.card_limit
         end'''
 line_prepend = "$indent"
