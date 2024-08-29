@@ -1207,7 +1207,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 G.E_MANAGER:add_event(Event({
                     trigger = 'immediate',
                     func = function()
-                        if self.particles and type(self.particles) == "function" then self:create_particles() end
+                        if self.particles and type(self.particles) == "function" then self:particles() end
                         G.booster_pack = UIBox{
                             definition = self:pack_uibox(),
                             config = {align="tmi", offset = {x=0,y=G.ROOM.T.y + 9}, major = G.hand, bond = 'Weak'}
@@ -1282,7 +1282,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             loc_vars = SMODS.Booster.loc_vars,
             ease_background_colour = function(self) ease_background_colour_blind(G.STATES.TAROT_PACK) end,
             pack_uibox = function(self) return create_UIBox_arcana_pack() end,
-            create_particles = function(self)
+            particles = function(self)
                 G.booster_pack_sparkles = Particles(1, 1, 0,0, {
                     timer = 0.015,
                     scale = 0.2,
@@ -1314,7 +1314,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             loc_vars = SMODS.Booster.loc_vars,
             ease_background_colour = function(self) ease_background_colour_blind(G.STATES.PLANET_PACK) end,
             pack_uibox = function(self) return create_UIBox_celestial_pack() end,
-            create_particles = function(self)
+            particles = function(self)
                 G.booster_pack_stars = Particles(1, 1, 0,0, {
                     timer = 0.07,
                     scale = 0.1,
@@ -1367,7 +1367,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             loc_vars = SMODS.Booster.loc_vars,
             ease_background_colour = function(self) ease_background_colour_blind(G.STATES.SPECTRAL_PACK) end,
             pack_uibox = function(self) return create_UIBox_spectral_pack() end,
-            create_particles = function(self)
+            particles = function(self)
                 G.booster_pack_sparkles = Particles(1, 1, 0,0, {
                     timer = 0.015,
                     scale = 0.1,
@@ -1393,7 +1393,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             loc_vars = SMODS.Booster.loc_vars,
             ease_background_colour = function(self) ease_background_colour_blind(G.STATES.STANDARD_PACK) end,
             pack_uibox = function(self) return create_UIBox_standard_pack() end,
-            create_particles = function(self)
+            particles = function(self)
                 G.booster_pack_sparkles = Particles(1, 1, 0,0, {
                     timer = 0.015,
                     scale = 0.3,
