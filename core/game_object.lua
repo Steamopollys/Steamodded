@@ -764,7 +764,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end
         for _, vv in ipairs(object_type.rarities) do
             vv.rate = vv.rate / total
-            object_type.rarity_pools[vv.key] = {}
+            local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 3}
+            if default_rarity_check[vv.key] then
+                object_type.rarity_pools[default_rarity_check[vv.key]] = {}
+            else
+                object_type.rarity_pools[vv.key] = {}
+            end
         end
     end
 
@@ -833,7 +838,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 end
                 for _, v in ipairs(self.rarities) do
                     v.rate = v.rate / total
-                    self.rarity_pools[v.key] = {}
+                    local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 3}
+                    if default_rarity_check[v.key] then
+                        self.rarity_pools[default_rarity_check[v.key]] = {}
+                    else
+                        self.rarity_pools[v.key] = {}
+                    end
                 end
             end
             for _, v in pairs(SMODS.Rarities) do
@@ -1097,7 +1107,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
             for k, v in pairs(SMODS.ObjectTypes) do
                 -- ObjectType change: rename "cards" to something else?
-                if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) and not self.set == k then
+                if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) and self.set ~= k then
                     SMODS.ObjectTypes[k]:inject_card(self)
                 end
             end
@@ -1106,7 +1116,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G.P_CENTERS[self.key] = nil
             SMODS.remove_pool(G.P_CENTER_POOLS[self.set], self.key)
             for k, v in pairs(SMODS.ObjectTypes) do
-                if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) and not self.set == k then
+                if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) and self.set ~= k then
                     SMODS.ObjectTypes[k]:remove_card(self)
                 end
             end
