@@ -261,21 +261,17 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         required_params = {
             'key',
             'label',
-            'path',
-            'font',
         },
         prefix_config = { key = false },
         process_loc_text = function() end,
         inject = function(self)
-            self.full_path = self.mod.path .. 'localization/' .. self.path
+            self.font = self.font or 1
             if type(self.font) == 'number' then
                 self.font = G.FONTS[self.font]
             end
             G.LANGUAGES[self.key] = self
+            if self.key == G.SETTINGS.language then G.LANG = self end
         end,
-        post_inject_class = function(self)
-            G:set_language()
-        end
     }
 
     -------------------------------------------------------------------------------------------------
@@ -307,6 +303,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.Atlas = SMODS.GameObject:extend {
         obj_table = SMODS.Atlases,
         obj_buffer = {},
+        disable_mipmap = false,
         required_params = {
             'key',
             'path',
@@ -344,6 +341,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             self.image = love.graphics.newImage(self.image_data,
                 { mipmaps = true, dpiscale = G.SETTINGS.GRAPHICS.texture_scaling })
             G[self.atlas_table][self.key_noloc or self.key] = self
+
+            local mipmap_level = SMODS.config.graphics_mipmap_level_options[SMODS.config.graphics_mipmap_level]
+            if not self.disable_mipmap and mipmap_level and mipmap_level > 0 then
+                self.image:setMipmapFilter('linear', mipmap_level)
+            end
         end,
         process_loc_text = function() end,
         pre_inject_class = function(self) 
@@ -575,7 +577,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             else
                 applied_text = applied_text .. localize('b_applies_stakes_2')
             end
-            local desc_target = copy_table(target.description)
+            local desc_target = copy_table(target)
             table.insert(desc_target.text, applied_text)
             G.localization.descriptions[self.set][self.key] = desc_target
             SMODS.process_loc_text(G.localization.descriptions["Other"], self.key:sub(7) .. "_sticker", self.loc_txt,
@@ -1388,7 +1390,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         rng_buffer = { 'Purple', 'Gold', 'Blue', 'Red' },
         badge_to_key = {},
         set = 'Seal',
-        class_prefix = 's',
         atlas = 'centers',
         pos = { x = 0, y = 0 },
         discovered = false,
@@ -2489,14 +2490,16 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         sound = { sound = "foil1", per = 1.2, vol = 0.4 },
         required_params = {
             'key',
-            'shader'
+            'shader' -- can be set to `false` for shaderless edition
         },
-        -- other fields:
-        -- extra_cost
-
+        -- optional fields:
+        extra_cost = nil,
+        
         -- TODO badge colours. need to check how Steamodded already does badge colors
         -- other methods:
-        -- calculate(self)
+        calculate = nil, -- function (self)
+        on_apply = nil,  -- function (card) - modify card when edition is applied
+        on_remove = nil, -- function (card) - modify card when edition is removed
         register = function(self)
             self.config = self.config or {}
             SMODS.Edition.super.register(self)
@@ -2694,7 +2697,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         register = function() error('INTERNAL CLASS, DO NOT CALL') end,
         pre_inject_class = function()
             for _, mod in ipairs(SMODS.mod_list) do
-                SMODS.handle_loc_file(mod.path)
+                if mod.can_load then
+                    SMODS.handle_loc_file(mod.path)
+                end
             end
         end
     }

@@ -7,11 +7,11 @@ priority = 0
 
 # generate_UIBox_ability_table()
 [[patches]]
-[patches.regex]
+[patches.pattern]
 target = "card.lua"
-pattern = "(?<indent>[\t ]*)if self.sticker then loc_vars = loc_vars or \\{\\}; loc_vars.sticker=self.sticker end"
+pattern = "if self.sticker or ((self.sticker_run and self.sticker_run~='NONE') and G.SETTINGS.run_stake_stickers)  then loc_vars = loc_vars or {}; loc_vars.sticker=(self.sticker or self.sticker_run) end"
 position = "before"
-line_prepend = "$indent"
+match_indent = true
 payload = '''
 for k, v in ipairs(SMODS.Sticker.obj_buffer) do
 	if self.ability[v] and not SMODS.Stickers[v].hide_badge then

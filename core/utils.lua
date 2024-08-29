@@ -194,7 +194,6 @@ function SMODS.handle_loc_file(path)
     end
     if not file_name then return end
 
-    -- check if file name ends in .json
     local loc_table = nil
     if file_name:lower():match("%.json$") then
         loc_table = assert(JSON.decode(NFS.read(file_name)))
@@ -204,7 +203,7 @@ function SMODS.handle_loc_file(path)
     local function recurse(target, ref_table)
         if type(target) ~= 'table' then return end --this shouldn't happen unless there's a bad return value
         for k, v in pairs(target) do
-            if not ref_table[k] or (type(v) ~= 'table') then
+            if not ref_table[k] or (type(v) ~= 'table') or type(v[1]) == 'string' then
                 ref_table[k] = v
             else
                 recurse(v, ref_table[k])
@@ -639,27 +638,29 @@ end
 
 function convert_save_data()
     for k, v in pairs(G.PROFILES[G.SETTINGS.profile].deck_usage) do
-        if not v.wins_by_key and not v.losses_by_key then
-            v.wins_by_key = {}
-            for index, number in pairs(v.wins) do
-                v.wins_by_key[SMODS.stake_from_index(index)] = number
-            end
-            v.losses_by_key = {}
-            for index, number in pairs(v.losses) do
-                v.losses_by_key[SMODS.stake_from_index(index)] = number
-            end
+        local first_pass = not v.wins_by_key and not v.losses_by_key
+        v.wins_by_key = v.wins_by_key or {}
+        for index, number in pairs(v.wins or {}) do
+            if index > 8 and not first_pass then break end
+            v.wins_by_key[SMODS.stake_from_index(index)] = number
+        end
+        v.losses_by_key = v.losses_by_key or {}
+        for index, number in pairs(v.losses or {}) do
+            if index > 8 and not first_pass then break end
+            v.losses_by_key[SMODS.stake_from_index(index)] = number
         end
     end
     for k, v in pairs(G.PROFILES[G.SETTINGS.profile].joker_usage) do
-        if not v.wins_by_key and not v.losses_by_key then
-            v.wins_by_key = {}
-            for index, number in pairs(v.wins) do
-                v.wins_by_key[SMODS.stake_from_index(index)] = number
-            end
-            v.losses_by_key = {}
-            for index, number in pairs(v.losses) do
-                v.losses_by_key[SMODS.stake_from_index(index)] = number
-            end
+        local first_pass = not v.wins_by_key and not v.losses_by_key
+        v.wins_by_key = v.wins_by_key or {}
+        for index, number in pairs(v.wins or {}) do
+            if index > 8 and not first_pass then break end
+            v.wins_by_key[SMODS.stake_from_index(index)] = number
+        end
+        v.losses_by_key = v.losses_by_key or {}
+        for index, number in pairs(v.losses or {}) do
+            if index > 8 and not first_pass then break end
+            v.losses_by_key[SMODS.stake_from_index(index)] = number
         end
     end
     G:save_settings()
