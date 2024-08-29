@@ -1257,19 +1257,26 @@ end
 --#endregion
 
 function get_joker_win_sticker(_center, index)
-	if G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key] and G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key].wins_by_key then 
-		local _stake = nil
+	local joker_usage = G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key] or {}
+	if joker_usage.wins then
+		local applied = {}
 		local _count = 0
-		for key, _ in pairs(G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key].wins_by_key) do
-			_count = _count + 1
-			if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) > (_stake and G.P_STAKES[_stake].stake_level or 0) then
-				_stake = key
+		local _stake = nil
+		for k, v in pairs(joker_usage.wins_by_key) do
+			SMODS.build_stake_chain(G.P_STAKES[k], applied)
+		end
+		for i, v in ipairs(G.P_CENTER_POOLS.Stake) do
+			if applied[v.order] then
+				_count = _count+1
+				if (v.stake_level or 0) > (_stake and G.P_STAKES[_stake].stake_level or 0) then
+					_stake = v.key
+				end
 			end
 		end
-		if index then return _stake and _count or 0 end
-		return G.sticker_map[_stake]
+		if index then return _count end
+		if _count > 0 then return G.sticker_map[_stake] end
 	end
-  	if index then return 0 end
+	if index then return 0 end
 end
 
 function get_deck_win_stake(_deck_key)
@@ -1314,6 +1321,28 @@ function get_deck_win_sticker(_center)
 			end
 		end
 		if _stake then return G.sticker_map[_stake] end
+	end
+end
+
+function set_deck_win()
+	if G.GAME.selected_back and G.GAME.selected_back.effect and G.GAME.selected_back.effect.center and G.GAME.selected_back.effect.center.key then
+		local deck_key = G.GAME.selected_back.effect.center.key
+		local deck_usage = G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key]
+		if not deck_usage then deck_usage = { count = 1, order =
+			G.GAME.selected_back.effect.center.order, wins = {}, losses = {}, wins_by_key = {}, losses_by_key = {} } end
+		if deck_usage then
+			deck_usage.wins[G.GAME.stake] = (deck_usage.wins[G.GAME.stake] or 0) + 1
+			deck_usage.wins_by_key[SMODS.stake_from_index(G.GAME.stake)] = (deck_usage.wins_by_key[SMODS.stake_from_index(G.GAME.stake)] or 0) + 1
+			local applied = SMODS.build_stake_chain(G.P_STAKES[SMODS.stake_from_index(G.GAME.stake)]) or {}
+			for i, v in ipairs(G.P_CENTER_POOLS.Stake) do
+				if applied[i] then
+					deck_usage.wins[i] = math.max(deck_usage.wins[i] or 0, 1)
+					deck_usage.wins_by_key[SMODS.stake_from_index(i)] = math.max(deck_usage.wins_by_key[SMODS.stake_from_index(i)] or 0, 1)
+				end
+			end
+		end
+		set_challenge_unlock()
+		G:save_settings()
 	end
 end
 
