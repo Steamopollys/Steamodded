@@ -252,6 +252,24 @@ position = "at"
 payload = '''destroyed = G.jokers.cards[j]:calculate_joker({destroying_card = scoring_hand[i], full_hand = G.play.cards, callback = function(ret) if ret then destroyed=true end end})'''
 match_indent = true
 
+# Blueprint/Brainstorm
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "local other_joker_ret = other_joker:calculate_joker(context)"
+position = "at"
+payload = '''local other_joker_ret, trig = other_joker:calculate_joker(context)'''
+match_indent = true
+
+# We don't need to return trig; Blueprint/Brainstorm cause callbacks to trigger twice 
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if other_joker_ret then"
+position = "at"
+payload = '''if other_joker_ret or trig then if not other_joker_ret then other_joker_ret = {} end other_joker_ret.no_callback = true'''
+match_indent = true
+
 # Luchador
 [[patches]]
 [patches.regex]
@@ -261,7 +279,7 @@ pattern = '''[ \t]*G\.GAME\.blind:disable\(\)
 position = "at"
 line_prepend = '$indent'
 payload = '''   G.GAME.blind:disable()
-    return nil, true
+    return nil
 end'''
 
 # Diet Cola
@@ -279,7 +297,7 @@ line_prepend = '$indent'
 payload = '''           return true
        end)
     }))
-    return nil, true
+    return nil
 end
 '''
 
@@ -292,7 +310,7 @@ pattern = '''[ \t]*if card\.ability\.invis_rounds then card\.ability\.invis_roun
 (?<indent>[ \t]*)G\.jokers:emplace\(card\)'''
 position = "after"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Campfire
 [[patches]]
@@ -307,7 +325,7 @@ line_prepend = '$indent'
 payload = '''localize('k_upgrade_ex')}); return true
    end}))
 end
-return nil, true'''
+return nil'''
 
 # Flash Card
 [[patches]]
@@ -323,7 +341,7 @@ payload = '''G.C.MULT})
        return true
    end)}))
 end
-return nil, true'''
+return nil'''
 
 # Perkeo
 [[patches]]
@@ -334,7 +352,7 @@ pattern = '''[ \t]*card_eval_status_text\(context\.blueprint_card or self, 'extr
 position = "at"
 line_prepend = '$indent'
 payload = '''    card_eval_status_text(context.blueprint_card or self, 'extra', nil, nil, nil, {message = localize('k_duplicated_ex')})
-    return nil, true
+    return nil
 end'''
 
 # Throwback
@@ -347,7 +365,7 @@ pattern = '''
 (?<indent>[ \t]*)elseif context\.skipping_booster'''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Red Card
 [[patches]]
@@ -359,7 +377,7 @@ pattern = '''
 (?<indent>[ \t]*)elseif context\.playing_card_added'''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Hologram
 [[patches]]
@@ -370,7 +388,7 @@ pattern = '''
 (?<indent>[ \t]*)elseif context\.first_hand_drawn'''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Certificate
 [[patches]]
@@ -381,7 +399,7 @@ pattern = '''
 (?<indent>[ \t]*)if self\.ability\.name == 'DNA' and not context\.blueprint'''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Chicot
 [[patches]]
@@ -392,7 +410,7 @@ pattern = '''
 (?<indent>[ \t]*)if self\.ability\.name == 'Madness' '''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Madness
 [[patches]]
@@ -403,7 +421,7 @@ pattern = '''
 (?<indent>[ \t]*)if self\.ability\.name == 'Burglar' '''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Burglar
 [[patches]]
@@ -414,7 +432,7 @@ pattern = '''
 (?<indent>[ \t]*)if self\.ability\.name == 'Riff-raff' '''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Riff-raff
 [[patches]]
@@ -425,7 +443,7 @@ pattern = '''
 (?<indent>[ \t]*)if self\.ability\.name == 'Cartomancer' '''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Cartomancer
 [[patches]]
@@ -436,7 +454,7 @@ pattern = '''
 (?<indent>[ \t]*)if self\.ability\.name == 'Ceremonial Dagger' and not context.blueprint'''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Ceremonial Dagger
 [[patches]]
@@ -448,7 +466,7 @@ pattern = '''
 (?<indent>[ \t]*)if self\.ability\.name == 'Marble Joker' '''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Marble Joker
 [[patches]]
@@ -460,7 +478,7 @@ pattern = '''
 (?<indent>[ \t]*)elseif context.destroying_card'''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Caino
 [[patches]]
@@ -470,7 +488,7 @@ pattern = '''[ \t]*func = function\(\) card_eval_status_text\(self, 'extra', nil
 (?<indent>[ \t]*)end\}\)\)'''
 position = "after"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Glass Joker
 [[patches]]
@@ -482,7 +500,7 @@ pattern = '''glass_cards\}\}\}\)
 (?<indent>[ \t]*)\}\)\)'''
 position = "after"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 [[patches]]
 [patches.regex]
@@ -494,7 +512,7 @@ pattern = '''
 (?<indent>[ \t]*)if self\.ability\.name == 'Fortune Teller' and not context\.blueprint'''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Fortune Teller
 [[patches]]
@@ -505,7 +523,7 @@ pattern = '''
 (?<indent>[ \t]*)if self\.ability\.name == 'Constellation' and not context\.blueprint'''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Constellation
 [[patches]]
@@ -528,7 +546,7 @@ pattern = '''
 (?<indent>[ \t]*)elseif context.discard'''
 position = "before"
 line_prepend = '$indent'
-payload = "return nil, true"
+payload = "return nil"
 
 # Faceless Joker
 [[patches]]
@@ -550,4 +568,4 @@ target = "card.lua"
 pattern = "self.ability.yorick_discards = self.ability.yorick_discards - 1"
 position = "after"
 match_indent = true
-payload = "return nil, true"
+payload = "return nil"

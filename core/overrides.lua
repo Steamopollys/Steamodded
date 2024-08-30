@@ -1748,13 +1748,18 @@ end
 --#region joker retrigger API
 local cj = Card.calculate_joker
 function Card:calculate_joker(context)
-	--[[if context and not context.retrigger_joker and not context.retrigger_joker_check and not context.pre_trigger and not context.post_trigger then
-	end--]]
-	print(tprint(context))
 	local ret, triggered = cj(self, context)
+	--Copy ret table before it gets modified
+	local _ret = ret
+	if type(ret) == 'table' then
+		_ret = {}
+		for k, v in pairs(ret) do
+			_ret[k] = v
+		end
+	end
     --Check for retrggering jokers
-    if (ret or triggered) and context and not context.retrigger_joker and not context.retrigger_joker_check and not context.pre_trigger and not context.post_trigger then
-        if type(ret) ~= 'table' then ret = {joker_repetitions = {0}} end
+    if (ret or triggered) and context and not context.retrigger_joker and not context.retrigger_joker_check and not context.post_trigger then
+		if type(ret) ~= 'table' then ret = {joker_repetitions = {0}} end
         ret.joker_repetitions = {0}
         for i = 1, #G.jokers.cards do
             local check = G.jokers.cards[i]:calculate_joker{retrigger_joker_check = true, other_card = self}
@@ -1785,7 +1790,14 @@ function Card:calculate_joker(context)
         end
 		context.retrigger_joker = nil
     end
-    if context.callback and type(context.callback) == 'function' then context.callback(ret, context.retrigger_joker) end
+	if not ret or not ret.no_callback then
+		if context.callback and type(context.callback) == 'function' then context.callback(ret, context.retrigger_joker) end
+		if (_ret or triggered) and not context.retrigger_joker_check and not context.post_trigger then
+			for i = 1, #G.jokers.cards do
+				G.jokers.cards[i]:calculate_joker{blueprint_card = context.blueprint_card, post_trigger = true, other_joker = self, other_context = context, other_ret = _ret}
+			end
+		end
+	end
     return ret, triggered
 end    
 function Card:calculate_retriggers()
