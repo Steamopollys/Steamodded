@@ -446,7 +446,7 @@ G.FUNCS.your_collection_tags_page = function(args)
 
 	local table_nodes = {}
 	for i = 1, rows do
-		table.insert(table_nodes, { n = G.UIT.R, config = { align = "cm" }, nodes = tag_matrix[i] })
+		table.insert(table_nodes, { n = G.UIT.R, config = { align = "cm", minh = 1 }, nodes = tag_matrix[i] })
 	end
 	local page_options = {}
 	for i = 1, math.ceil(#tag_tab/(rows*cols)) do
@@ -456,7 +456,7 @@ G.FUNCS.your_collection_tags_page = function(args)
 		back_func = G.ACTIVE_MOD_UI and "openModUI_" .. G.ACTIVE_MOD_UI.id or 'your_collection',
 		contents = {
 			{
-				n = G.UIT.C,
+				n = G.UIT.R,
 				config = { align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05 },
 				nodes = {
 					{
@@ -464,19 +464,24 @@ G.FUNCS.your_collection_tags_page = function(args)
 						config = { align = "cm" },
 						nodes = {
 							{ n = G.UIT.R, config = { align = "cm" }, nodes = table_nodes },
-							{ n = G.UIT.R, config = { align = 'cm', padding = 0.05 }, nodes = {}},
-							create_option_cycle({
-								options = page_options,
-								w = 4.5, 
-								cycle_shoulders = true,
-								opt_callback = 'your_collection_tags_page',
-								focus_args = {snap_to = true, nav = 'wide'},
-								current_option = page,
-								colour = G.C.RED,
-								no_pips = true
-							})
 						}
 					},
+				}
+			},
+			{
+				n = G.UIT.R,
+				config = { align = 'cm' },
+				nodes = {
+					create_option_cycle({
+						options = page_options,
+						w = 4.5,
+						cycle_shoulders = true,
+						opt_callback = 'your_collection_tags_page',
+						focus_args = { snap_to = true, nav = 'wide' },
+						current_option = page,
+						colour = G.C.RED,
+						no_pips = true
+					})
 				}
 			}
 		}
@@ -1185,7 +1190,6 @@ function create_UIBox_your_collection_editions(exit)
 	local rows, cols = (#edition_pool > 5 and 2 or 1), 5
 	local page = 0
 
-	sendInfoMessage("Creating collections")
 	G.your_collection = {}
 	for j = 1, rows do
 		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
@@ -1201,16 +1205,12 @@ function create_UIBox_your_collection_editions(exit)
 		)
 	end
 
-	sendInfoMessage("Sorting collections")
 	table.sort(edition_pool, function(a, b) return a.order < b.order end)
 
 	local count = math.min(cols * rows, #edition_pool)
 	local index = 1 + (rows * cols * page)
-	sendInfoMessage("Adding cards")
 	for j = 1, rows do
-		sendInfoMessage("Adding card in row "..tostring(j))
 		for i = 1, cols do
-			sendInfoMessage("Adding card in pos "..tostring(i))
 			local edition = edition_pool[index]
 
 			if not edition then
@@ -1710,7 +1710,146 @@ G.FUNCS.your_collection_enhancements_page = function(args)
 	end
 end
 --#endregion
+--#region seals ui
+function create_UIBox_your_collection_seals(exit)
+	local deck_tables = {}
+	local seal_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in pairs(G.P_CENTER_POOLS.Seal) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then seal_pool[#seal_pool + 1] = v end
+		end
+	else
+		seal_pool = G.P_CENTER_POOLS.Seal
+	end
+	local rows, cols = (#seal_pool > 5 and 2 or 1), 5
+	local page = 0
 
+	G.your_collection = {}
+	for j = 1, rows do
+		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
+			{
+				card_limit = cols,
+				type = 'title',
+				highlight_limit = 0,
+				collection = true
+			})
+		table.insert(deck_tables,
+			{n = G.UIT.R, config = {align = "cm", padding = 0, no_fill = true}, nodes = {
+				{n = G.UIT.O, config = {object = G.your_collection[j]}}}}
+		)
+	end
+
+	table.sort(seal_pool, function(a, b) return a.order < b.order end)
+
+	local count = math.min(cols * rows, #seal_pool)
+	local index = 1 + (rows * cols * page)
+	for j = 1, rows do
+		for i = 1, cols do
+			local seal = seal_pool[index]
+
+			if not seal then
+				break
+			end
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS.c_base)
+			card:set_seal(seal.key, true)
+			G.your_collection[j]:emplace(card)
+			index = index + 1
+		end
+		if index > count then
+			break
+		end
+	end
+
+	local edition_options = {}
+
+	local t = create_UIBox_generic_options({
+		infotip = localize('ml_edition_seal_enhancement_explanation'),
+		back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection',
+		snap_back = true,
+		contents = { 
+			{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+				deck_tables}}
+	})
+
+	if #seal_pool > rows * cols then
+		for i = 1, math.ceil(#seal_pool / (rows * cols)) do
+			table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+				tostring(math.ceil(#seal_pool / (rows * cols))))
+		end
+		t = create_UIBox_generic_options({
+			infotip = localize('ml_edition_seal_enhancement_explanation'),
+			back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection',
+			snap_back = true,
+			contents = {
+				{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+					deck_tables},
+				{n = G.UIT.R, config = {align = "cm"}, nodes = { 
+					create_option_cycle({
+						options = edition_options,
+						w = 4.5,
+						cycle_shoulders = true,
+						opt_callback = 'your_collection_seals_page',
+						focus_args = { snap_to = true, nav = 'wide' },
+						current_option = 1,
+						r = rows,
+						c = cols,
+						colour = G.C.RED,
+						no_pips = true
+					})}}
+			}
+		})
+	end
+	return t
+end
+
+G.FUNCS.your_collection_seals_page = function(args)
+	if not args or not args.cycle_config then
+		return
+	end
+	local seal_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in pairs(G.P_CENTER_POOLS.Seal) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then seal_pool[#seal_pool + 1] = v end
+		end
+	else
+		seal_pool = G.P_CENTER_POOLS.Seal
+	end
+	local rows, cols = (#seal_pool > 5 and 2 or 1), 5
+	local page = args.cycle_config.current_option
+	if page > math.ceil(#seal_pool / (rows * cols)) then
+		page = page - math.ceil(#seal_pool / (rows * cols))
+	end
+	local count = rows * cols
+	local offset = (rows * cols) * (page - 1)
+
+	for j = 1, #G.your_collection do
+		for i = #G.your_collection[j].cards, 1, -1 do
+			if G.your_collection[j] ~= nil then
+				local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+				c:remove()
+				c = nil
+			end
+		end
+	end
+
+	for j = 1, rows do
+		for i = 1, cols do
+			if count % rows > 0 and i <= count % rows and j == cols then
+				offset = offset - 1
+				break
+			end
+			local idx = i + (j - 1) * cols + offset
+			if idx > #seal_pool then return end
+			local seal = seal_pool[idx]
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS.c_base)
+			card:set_seal(seal.key, true)
+			G.your_collection[j]:emplace(card)
+		end
+	end
+end
+--#endregion
 function get_joker_win_sticker(_center, index)
 	local joker_usage = G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key] or {}
 	if joker_usage.wins then
