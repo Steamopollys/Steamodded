@@ -379,12 +379,15 @@ function create_UIBox_your_collection_tags()
 	}))
 	return {
 		n = G.UIT.O,
-		config = { object = Moveable(), id = 'your_collection_tags_contents', align = 'cm' },
+		config = { object = UIBox{
+			definition = create_UIBox_your_collection_tags_content(),
+			config = { offset = {x=0, y=0}, align = 'cm' }
+		}, id = 'your_collection_tags_contents', align = 'cm' },
 	}
 end
 
-G.FUNCS.your_collection_tags_page = function(args)
-	local page = args.cycle_config.current_option or 1
+function create_UIBox_your_collection_tags_content(page)
+	page = page or 1
 	local tag_matrix = {}
 	local rows = 4
 	local cols = 6
@@ -486,6 +489,12 @@ G.FUNCS.your_collection_tags_page = function(args)
 			}
 		}
 	})
+	return t
+end
+
+G.FUNCS.your_collection_tags_page = function(args)
+	local page = args.cycle_config.current_option or 1
+	local t = create_UIBox_your_collection_tags_content(page)
 	local e = G.OVERLAY_MENU:get_UIE_by_ID('your_collection_tags_contents')
 	if e.config.object then e.config.object:remove() end
     e.config.object = UIBox{
