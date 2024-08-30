@@ -1219,9 +1219,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 self.soul_rate = self.soul_rate or 0.003
                 table.insert(self.legendaries, self)
             end
-            if self.type and self.type.inject_card and type(self.type.inject_card) == 'function' then
-                self.type:inject_card(self)
-            end
         end,
         delete = function(self)
             if self.type and self.type.delete_card and type(self.type.delete_card) == 'function' then
