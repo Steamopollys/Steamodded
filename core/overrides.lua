@@ -1748,10 +1748,12 @@ end
 --#region joker retrigger API
 local cj = Card.calculate_joker
 function Card:calculate_joker(context)
-    --jank but fixes bugs
+	--[[if context and not context.retrigger_joker and not context.retrigger_joker_check and not context.pre_trigger and not context.post_trigger then
+	end--]]
+	print(tprint(context))
 	local ret, triggered = cj(self, context)
     --Check for retrggering jokers
-    if (ret or triggered) and context and not context.retrigger_joker and not context.retrigger_joker_check then
+    if (ret or triggered) and context and not context.retrigger_joker and not context.retrigger_joker_check and not context.pre_trigger and not context.post_trigger then
         if type(ret) ~= 'table' then ret = {joker_repetitions = {0}} end
         ret.joker_repetitions = {0}
         for i = 1, #G.jokers.cards do
@@ -1763,7 +1765,7 @@ function Card:calculate_joker(context)
             end
             if G.jokers.cards[i] == self and self.edition and self.edition.retriggers then
                 local old_repetitions = ret.joker_repetitions[i] ~= 0 and ret.joker_repetitions[i].repetitions or 0
-                local check = self:calculate_joker_retriggers()
+                local check = self:calculate_retriggers()
                 if check and check.repetitions then
                     check.repetitions = check.repetitions + old_repetitions
                     ret.joker_repetitions[i] = check
@@ -1786,7 +1788,22 @@ function Card:calculate_joker(context)
     if context.callback and type(context.callback) == 'function' then context.callback(ret, context.retrigger_joker) end
     return ret, triggered
 end    
-function Card:calculate_joker_retriggers()
-    return
+function Card:calculate_retriggers()
+    local retriggers = self.edition.retriggers
+
+    if self.edition.retrigger_chance then
+        local chance = self.edition.retrigger_chance
+        chance = G.GAME.probabilities.normal / chance
+
+        if pseudorandom("retrigger") <= chance then
+            retriggers = retriggers + self.edition.extra_retriggers
+        end
+    end
+    
+    return {
+        message = 'Again?',
+        repetitions = retriggers,
+        card = self
+    }
 end
 --#endregion
