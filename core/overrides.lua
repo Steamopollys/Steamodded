@@ -1757,6 +1757,19 @@ function Card:calculate_joker(context)
 			_ret[k] = v
 		end
 	end
+	--Apply editions
+	if not ret or not ret.no_callback then
+		if self.edition and self.edition.key and not context.retrigger_joker_check and not context.post_trigger then
+			local ed = SMODS.Centers[self.edition.key]
+			if ed.calculate and type(ed.calculate) == 'function' then
+				context.from_joker = true
+				context.joker_triggered = (_ret or triggered)
+				ed:calculate(self, context)
+				context.from_joker = nil
+				context.joker_triggered = nil
+			end
+		end
+	end
     --Check for retrggering jokers
     if (ret or triggered) and context and not context.retrigger_joker and not context.retrigger_joker_check and not context.post_trigger then
 		if type(ret) ~= 'table' then ret = {joker_repetitions = {0}} end

@@ -429,3 +429,35 @@ payload = '''
 if not SMODS.bypass_create_card_edition then
     $edi
 end'''
+
+# eval_card() - add calculation calls for editions
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
+match_indent = true
+position = "before"
+payload = """
+if card.edition and card.edition.key then
+    local ed = SMODS.Centers[card.edition.key]
+    if ed.calculate and type(ed.calculate) == 'function' then
+        context.from_playing_card = true
+        ed:calculate(card, context)
+        context.from_playing_card = nil
+    end
+end"""
+
+# G.FUNCS.use_card() - add calculation calls for editions
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "e.config.ref_table:use_consumeable(area)"
+match_indent = true
+position = "after"
+payload = """
+if card.edition and card.edition.key then
+    local ed = SMODS.Centers[card.edition.key]
+    if ed.calculate and type(ed.calculate) == 'function' then
+        ed:calculate(card, {from_consumable = true})
+    end
+end"""
