@@ -369,6 +369,126 @@ function G.FUNCS.your_collection_blinds_page(args)
 	end
 end
 --#endregion
+--#region tag collections
+function create_UIBox_your_collection_tags()
+	G.E_MANAGER:add_event(Event({
+		func = function()
+			G.FUNCS.your_collection_tags_page({ cycle_config = {}})
+			return true
+		end
+	}))
+	return {
+		n = G.UIT.O,
+		config = { object = Moveable(), id = 'your_collection_tags_contents', align = 'cm' },
+	}
+end
+
+G.FUNCS.your_collection_tags_page = function(args)
+	local page = args.cycle_config.current_option or 1
+	local tag_matrix = {}
+	local rows = 4
+	local cols = 6
+	local tag_tab = {}
+	local tag_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for k, v in pairs(G.P_TAGS) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then tag_pool[k] = v end
+		end
+	else
+		tag_pool = G.P_TAGS
+	end
+	for k, v in pairs(tag_pool) do
+		tag_tab[#tag_tab + 1] = v
+	end
+	for i = 1, math.ceil(rows) do
+		table.insert(tag_matrix, {})
+	end
+
+	table.sort(tag_tab, function(a, b) return a.order < b.order end)
+
+	local tags_to_be_alerted = {}
+	local row, col = 1, 1
+	for k, v in ipairs(tag_tab) do
+		if k <= cols*rows*(page-1) then elseif k > cols*rows*page then break else
+			local discovered = v.discovered
+			local temp_tag = Tag(v.key, true)
+			if not v.discovered then temp_tag.hide_ability = true end
+			local temp_tag_ui, temp_tag_sprite = temp_tag:generate_UI()
+			tag_matrix[row][col] = {
+				n = G.UIT.C,
+				config = { align = "cm", padding = 0.1 },
+				nodes = {
+					temp_tag_ui,
+				}
+			}
+			col = col + 1
+			if col > cols then col = 1; row = row + 1 end
+			if discovered and not v.alerted then
+				tags_to_be_alerted[#tags_to_be_alerted + 1] = temp_tag_sprite
+			end
+		end
+	end
+
+	G.E_MANAGER:add_event(Event({
+		trigger = 'immediate',
+		func = (function()
+			for _, v in ipairs(tags_to_be_alerted) do
+				v.children.alert = UIBox {
+					definition = create_UIBox_card_alert(),
+					config = { align = "tri", offset = { x = 0.1, y = 0.1 }, parent = v }
+				}
+				v.children.alert.states.collide.can = false
+			end
+			return true
+		end)
+	}))
+
+
+	local table_nodes = {}
+	for i = 1, rows do
+		table.insert(table_nodes, { n = G.UIT.R, config = { align = "cm" }, nodes = tag_matrix[i] })
+	end
+	local page_options = {}
+	for i = 1, math.ceil(#tag_tab/(rows*cols)) do
+		table.insert(page_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#tag_tab/(rows*cols))))
+	end
+	local t = create_UIBox_generic_options({
+		back_func = G.ACTIVE_MOD_UI and "openModUI_" .. G.ACTIVE_MOD_UI.id or 'your_collection',
+		contents = {
+			{
+				n = G.UIT.C,
+				config = { align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05 },
+				nodes = {
+					{
+						n = G.UIT.C,
+						config = { align = "cm" },
+						nodes = {
+							{ n = G.UIT.R, config = { align = "cm" }, nodes = table_nodes },
+							{ n = G.UIT.R, config = { align = 'cm', padding = 0.05 }, nodes = {}},
+							create_option_cycle({
+								options = page_options,
+								w = 4.5, 
+								cycle_shoulders = true,
+								opt_callback = 'your_collection_tags_page',
+								focus_args = {snap_to = true, nav = 'wide'},
+								current_option = page,
+								colour = G.C.RED,
+								no_pips = true
+							})
+						}
+					},
+				}
+			}
+		}
+	})
+	local e = G.OVERLAY_MENU:get_UIE_by_ID('your_collection_tags_contents')
+	if e.config.object then e.config.object:remove() end
+    e.config.object = UIBox{
+      definition = t,
+      config = {offset = {x=0,y=0}, align = 'cm', parent = e}
+    }
+end
+--#endregion
 --#region stakes UI
 function SMODS.applied_stakes_UI(i, stake_desc_rows, num_added)
 	if num_added == nil then num_added = { val = 0 } end
