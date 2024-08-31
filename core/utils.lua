@@ -650,27 +650,29 @@ end
 
 function convert_save_data()
     for k, v in pairs(G.PROFILES[G.SETTINGS.profile].deck_usage) do
-        if not v.wins_by_key and not v.losses_by_key then
-            v.wins_by_key = {}
-            for index, number in pairs(v.wins or {}) do
-                v.wins_by_key[SMODS.stake_from_index(index)] = number
-            end
-            v.losses_by_key = {}
-            for index, number in pairs(v.losses or {}) do
-                v.losses_by_key[SMODS.stake_from_index(index)] = number
-            end
+        local first_pass = not v.wins_by_key and not v.losses_by_key
+        v.wins_by_key = v.wins_by_key or {}
+        for index, number in pairs(v.wins or {}) do
+            if index > 8 and not first_pass then break end
+            v.wins_by_key[SMODS.stake_from_index(index)] = number
+        end
+        v.losses_by_key = v.losses_by_key or {}
+        for index, number in pairs(v.losses or {}) do
+            if index > 8 and not first_pass then break end
+            v.losses_by_key[SMODS.stake_from_index(index)] = number
         end
     end
     for k, v in pairs(G.PROFILES[G.SETTINGS.profile].joker_usage) do
-        if not v.wins_by_key and not v.losses_by_key then
-            v.wins_by_key = {}
-            for index, number in pairs(v.wins or {}) do
-                v.wins_by_key[SMODS.stake_from_index(index)] = number
-            end
-            v.losses_by_key = {}
-            for index, number in pairs(v.losses or {}) do
-                v.losses_by_key[SMODS.stake_from_index(index)] = number
-            end
+        local first_pass = not v.wins_by_key and not v.losses_by_key
+        v.wins_by_key = v.wins_by_key or {}
+        for index, number in pairs(v.wins or {}) do
+            if index > 8 and not first_pass then break end
+            v.wins_by_key[SMODS.stake_from_index(index)] = number
+        end
+        v.losses_by_key = v.losses_by_key or {}
+        for index, number in pairs(v.losses or {}) do
+            if index > 8 and not first_pass then break end
+            v.losses_by_key[SMODS.stake_from_index(index)] = number
         end
     end
     G:save_settings()

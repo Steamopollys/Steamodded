@@ -171,33 +171,6 @@ position = "at"
 payload = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = {count = 1, order = G.GAME.selected_back.effect.center.order, wins = {}, losses = {}, wins_by_key = {}, losses_by_key = {}}'
 match_indent = true
 
-#set_deck_win
-[[patches]]
-[patches.pattern]
-target = "functions/misc_functions.lua"
-pattern = 'if not G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] then G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = {count = 1, order = G.GAME.selected_back.effect.center.order, wins = {}, losses = {}} end'
-position = "at"
-payload = 'if not G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] then G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = {count = 1, order = G.GAME.selected_back.effect.center.order, wins = {}, losses = {}, wins_by_key = {}, losses_by_key = {}} end'
-match_indent = true
-
-#set_deck_win
-[[patches]]
-[patches.pattern]
-target = "functions/misc_functions.lua"
-pattern = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].wins[G.GAME.stake] = (G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].wins[G.GAME.stake] or 0) + 1'
-position = "after"
-payload = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].wins_by_key[SMODS.stake_from_index(G.GAME.stake)] = (G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].wins_by_key[SMODS.stake_from_index(G.GAME.stake)] or 0) + 1'
-match_indent = true
-
-#set_deck_win
-[[patches]]
-[patches.pattern]
-target = "functions/misc_functions.lua"
-pattern = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses[G.GAME.stake] = (G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses[G.GAME.stake] or 0) + 1'
-position = "after"
-payload = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses_by_key[SMODS.stake_from_index(G.GAME.stake)] = (G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key].losses_by_key[SMODS.stake_from_index(G.GAME.stake)] or 0) + 1'
-match_indent = true
-
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"

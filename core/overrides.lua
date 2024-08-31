@@ -33,6 +33,475 @@ G.FUNCS.HUD_blind_debuff = function(e)
 	e.UIBox:recalculate()
 	assert(G.HUD_blind == e.UIBox)
 end
+
+function create_UIBox_your_collection_blinds(exit)
+	local ante_amounts = {}
+	for i = 1, math.min(16, math.max(16, G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt)) do
+		local spacing = 1 - math.min(20, math.max(15, G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt)) *
+		0.06
+		if spacing > 0 and i > 1 then
+			ante_amounts[#ante_amounts + 1] = { n = G.UIT.R, config = { minh = spacing }, nodes = {} }
+		end
+		local blind_chip = Sprite(0, 0, 0.2, 0.2, G.ASSET_ATLAS["ui_" .. (G.SETTINGS.colourblind_option and 2 or 1)],
+			{ x = 0, y = 0 })
+		blind_chip.states.drag.can = false
+		ante_amounts[#ante_amounts + 1] = {
+			n = G.UIT.R,
+			config = { align = "cm", padding = 0.03 },
+			nodes = {
+				{
+					n = G.UIT.C,
+					config = { align = "cm", minw = 0.7 },
+					nodes = {
+						{ n = G.UIT.T, config = { text = i, scale = 0.4, colour = G.C.FILTER, shadow = true } },
+					}
+				},
+				{
+					n = G.UIT.C,
+					config = { align = "cr", minw = 2.8 },
+					nodes = {
+						{ n = G.UIT.O, config = { object = blind_chip } },
+						{ n = G.UIT.C, config = { align = "cm", minw = 0.03, minh = 0.01 },                                                                                                                                  nodes = {} },
+						{ n = G.UIT.T, config = { text = number_format(get_blind_amount(i)), scale = 0.4, colour = i <= G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt and G.C.RED or G.C.JOKER_GREY, shadow = true } },
+					}
+				}
+			}
+		}
+	end
+
+	local rows = 6
+	local cols = 5
+	local page = 1
+	local deck_tables = {}
+
+	G.your_collection = {}
+	for j = 1, rows do
+		G.your_collection[j] = CardArea(
+			G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h,
+			cols * 1.55,
+			0.95 * 1.33,
+			{ card_limit = cols, type = 'title_2', highlight_limit = 0, collection = true })
+		table.insert(deck_tables,
+			{
+				n = G.UIT.R,
+				config = { align = "cm", padding = 0, no_fill = true },
+				nodes = {
+					j%2 == 0 and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
+					{ n = G.UIT.O, config = { object = G.your_collection[j] } },
+					j%2 == 1 and { n = G.UIT.B, config = { h = 0.2, w = 0.5 } } or nil,
+				}
+			}
+		)
+	end
+
+	local blind_tab = {}
+	for k, v in pairs(G.P_BLINDS) do
+		if not G.ACTIVE_MOD_UI or v.mod == G.ACTIVE_MOD_UI then
+			blind_tab[#blind_tab + 1] = v
+		end
+	end
+	local blinds_amt = #blind_tab
+
+	table.sort(blind_tab, function(a, b)
+		return a.order + (a.boss and a.boss.showdown and 1e5 or 0)
+			< b.order + (b.boss and b.boss.showdown and 1e5 or 0)
+	end)
+
+	local this_page = {}
+	for i, v in ipairs(blind_tab) do
+		if i > rows*cols*(page-1) and i <= rows*cols*page then
+			table.insert(this_page, v)
+		elseif i > rows*cols*page then
+			break
+		end
+	end
+	blind_tab = this_page
+
+	local blinds_to_be_alerted = {}
+	local row, col = 1, 1
+	for k, v in ipairs(blind_tab) do
+		local discovered = v.discovered
+		local temp_blind = AnimatedSprite(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.ANIMATION_ATLAS[discovered and v.atlas or 'blind_chips'],
+			discovered and v.pos or G.b_undiscovered.pos)
+		temp_blind.states.click.can = false
+		temp_blind.states.drag.can = false
+		temp_blind.states.hover.can = true
+		local card = Card(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.P_CARDS.empty, G.P_CENTERS.c_base)
+		temp_blind.states.click.can = false
+		card.states.drag.can = false
+		card.states.hover.can = true
+		card.children.center = temp_blind
+		temp_blind:set_role({major = card, role_type = 'Glued', draw_major = card})
+		card.set_sprites = function(...)
+			local c = card.children.center
+			Card.set_sprites(...)
+			card.children.center = c
+		end
+		temp_blind:define_draw_steps({
+			{ shader = 'dissolve', shadow_height = 0.05 },
+			{ shader = 'dissolve' }
+		})
+		temp_blind.float = true
+		card.states.collide.can = true
+		card.config.blind = v
+		card.config.force_focus = true
+		if discovered and not v.alerted then
+			blinds_to_be_alerted[#blinds_to_be_alerted + 1] = card
+		end
+		card.hover = function()
+			if not G.CONTROLLER.dragging.target or G.CONTROLLER.using_touch then
+				if not card.hovering and card.states.visible then
+					card.hovering = true
+					card.hover_tilt = 3
+					card:juice_up(0.05, 0.02)
+					play_sound('chips1', math.random() * 0.1 + 0.55, 0.12)
+					card.config.h_popup = create_UIBox_blind_popup(v, discovered)
+					card.config.h_popup_config = card:align_h_popup()
+					Node.hover(card)
+					if card.children.alert then
+						card.children.alert:remove()
+						card.children.alert = nil
+						card.config.blind.alerted = true
+						G:save_progress()
+					end
+				end
+			end
+			card.stop_hover = function()
+				card.hovering = false; Node.stop_hover(card); card.hover_tilt = 0
+			end
+		end
+		G.your_collection[row]:emplace(card)
+		col = col + 1
+		if col > cols then col = 1; row = row + 1 end
+	end
+
+	G.E_MANAGER:add_event(Event({
+		trigger = 'immediate',
+		func = (function()
+			for _, v in ipairs(blinds_to_be_alerted) do
+				v.children.alert = UIBox {
+					definition = create_UIBox_card_alert(),
+					config = { align = "tri", offset = { x = 0.1, y = 0.1 }, parent = v }
+				}
+				v.children.alert.states.collide.can = false
+			end
+			return true
+		end)
+	}))
+
+	local page_options = {}
+	for i = 1, math.ceil(blinds_amt/(rows*cols)) do
+		table.insert(page_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(blinds_amt/(rows*cols))))
+	end
+
+	local extras = nil
+	local t = create_UIBox_generic_options({
+		back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection',
+		contents = {
+			{
+				n = G.UIT.C,
+				config = { align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05 },
+				nodes = {
+					{
+						n = G.UIT.C,
+						config = { align = "cm", r = 0.1, colour = G.C.L_BLACK, padding = 0.1, force_focus = true, focus_args = { nav = 'tall' } },
+						nodes = {
+							{
+								n = G.UIT.R,
+								config = { align = "cm", padding = 0.05 },
+								nodes = {
+									{
+										n = G.UIT.C,
+										config = { align = "cm", minw = 0.7 },
+										nodes = {
+											{ n = G.UIT.T, config = { text = localize('k_ante_cap'), scale = 0.4, colour = lighten(G.C.FILTER, 0.2), shadow = true } },
+										}
+									},
+									{
+										n = G.UIT.C,
+										config = { align = "cr", minw = 2.8 },
+										nodes = {
+											{ n = G.UIT.T, config = { text = localize('k_base_cap'), scale = 0.4, colour = lighten(G.C.RED, 0.2), shadow = true } },
+										}
+									}
+								}
+							},
+							{ n = G.UIT.R, config = { align = "cm" }, nodes = ante_amounts }
+						}
+					},
+					{
+						n = G.UIT.C,
+						config = { align = 'cm' },
+						nodes = {
+							{
+								n = G.UIT.R,
+								config = { align = 'cm', padding = 0.15 },
+								nodes = {}
+							},
+							{
+								n= G.UIT.R,
+								config = {align = 'cm' },
+								nodes = {
+									{
+										n = G.UIT.C,
+										config = {
+											align = 'cm',
+										},
+										nodes = deck_tables,
+									}
+								}
+							},
+							{
+								n = G.UIT.R,
+								config = { align = 'cm', padding = 0.1 },
+								nodes = {}
+							},
+							create_option_cycle({
+								options = page_options,
+								w = 4.5, 
+								cycle_shoulders = true,
+								opt_callback = 'your_collection_blinds_page',
+								focus_args = {snap_to = true, nav = 'wide'},
+								current_option = page,
+								colour = G.C.RED,
+								no_pips = true
+							})
+						},
+					},
+				}
+			}
+		}
+	})
+	return t
+end
+
+function G.FUNCS.your_collection_blinds_page(args)
+	if not args or not args.cycle_config then return end
+	for j = 1, #G.your_collection do
+		for i = #G.your_collection[j].cards, 1, -1 do
+			local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+			c:remove()
+			c = nil
+		end
+	end
+
+	local cols = 5
+	local rows = 6
+	local page = args.cycle_config.current_option
+	local blind_tab = {}
+	for k, v in pairs(G.P_BLINDS) do
+		if not G.ACTIVE_MOD_UI or v.mod == G.ACTIVE_MOD_UI then
+			blind_tab[#blind_tab + 1] = v
+		end
+	end
+
+	table.sort(blind_tab, function(a, b)
+		return a.order + (a.boss and a.boss.showdown and 1e5 or 0)
+			< b.order + (b.boss and b.boss.showdown and 1e5 or 0)
+	end)
+
+	local this_page = {}
+	for i, v in ipairs(blind_tab) do
+		if i > rows*cols*(page-1) and i <= rows*cols*page then
+			table.insert(this_page, v)
+		elseif i > rows*cols*page then
+			break
+		end
+	end
+	blind_tab = this_page
+
+	local blinds_to_be_alerted = {}
+	local row, col = 1, 1
+	for k, v in ipairs(blind_tab) do
+		local discovered = v.discovered
+		local temp_blind = AnimatedSprite(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.ANIMATION_ATLAS[discovered and v.atlas or 'blind_chips'],
+			discovered and v.pos or G.b_undiscovered.pos)
+		temp_blind.states.click.can = false
+		temp_blind.states.drag.can = false
+		temp_blind.states.hover.can = true
+		local card = Card(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.P_CARDS.empty, G.P_CENTERS.c_base)
+		temp_blind.states.click.can = false
+		card.states.drag.can = false
+		card.states.hover.can = true
+		card.children.center = temp_blind
+		temp_blind:set_role({major = card, role_type = 'Glued', draw_major = card})
+		card.set_sprites = function(...)
+			local c = card.children.center
+			Card.set_sprites(...)
+			card.children.center = c
+		end
+		temp_blind:define_draw_steps({
+			{ shader = 'dissolve', shadow_height = 0.05 },
+			{ shader = 'dissolve' }
+		})
+		temp_blind.float = true
+		card.states.collide.can = true
+		card.config.blind = v
+		card.config.force_focus = true
+		if discovered and not v.alerted then
+			blinds_to_be_alerted[#blinds_to_be_alerted + 1] = card
+		end
+		card.hover = function()
+			if not G.CONTROLLER.dragging.target or G.CONTROLLER.using_touch then
+				if not card.hovering and card.states.visible then
+					card.hovering = true
+					card.hover_tilt = 3
+					card:juice_up(0.05, 0.02)
+					play_sound('chips1', math.random() * 0.1 + 0.55, 0.12)
+					card.config.h_popup = create_UIBox_blind_popup(v, discovered)
+					card.config.h_popup_config = card:align_h_popup()
+					Node.hover(card)
+					if card.children.alert then
+						card.children.alert:remove()
+						card.children.alert = nil
+						card.config.blind.alerted = true
+						G:save_progress()
+					end
+				end
+			end
+			card.stop_hover = function()
+				card.hovering = false; Node.stop_hover(card); card.hover_tilt = 0
+			end
+		end
+		G.your_collection[row]:emplace(card)
+		col = col + 1
+		if col > cols then col = 1; row = row + 1 end
+	end
+end
+--#endregion
+--#region tag collections
+function create_UIBox_your_collection_tags()
+	G.E_MANAGER:add_event(Event({
+		func = function()
+			G.FUNCS.your_collection_tags_page({ cycle_config = {}})
+			return true
+		end
+	}))
+	return {
+		n = G.UIT.O,
+		config = { object = UIBox{
+			definition = create_UIBox_your_collection_tags_content(),
+			config = { offset = {x=0, y=0}, align = 'cm' }
+		}, id = 'your_collection_tags_contents', align = 'cm' },
+	}
+end
+
+function create_UIBox_your_collection_tags_content(page)
+	page = page or 1
+	local tag_matrix = {}
+	local rows = 4
+	local cols = 6
+	local tag_tab = {}
+	local tag_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for k, v in pairs(G.P_TAGS) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then tag_pool[k] = v end
+		end
+	else
+		tag_pool = G.P_TAGS
+	end
+	for k, v in pairs(tag_pool) do
+		tag_tab[#tag_tab + 1] = v
+	end
+	for i = 1, math.ceil(rows) do
+		table.insert(tag_matrix, {})
+	end
+
+	table.sort(tag_tab, function(a, b) return a.order < b.order end)
+
+	local tags_to_be_alerted = {}
+	local row, col = 1, 1
+	for k, v in ipairs(tag_tab) do
+		if k <= cols*rows*(page-1) then elseif k > cols*rows*page then break else
+			local discovered = v.discovered
+			local temp_tag = Tag(v.key, true)
+			if not v.discovered then temp_tag.hide_ability = true end
+			local temp_tag_ui, temp_tag_sprite = temp_tag:generate_UI()
+			tag_matrix[row][col] = {
+				n = G.UIT.C,
+				config = { align = "cm", padding = 0.1 },
+				nodes = {
+					temp_tag_ui,
+				}
+			}
+			col = col + 1
+			if col > cols then col = 1; row = row + 1 end
+			if discovered and not v.alerted then
+				tags_to_be_alerted[#tags_to_be_alerted + 1] = temp_tag_sprite
+			end
+		end
+	end
+
+	G.E_MANAGER:add_event(Event({
+		trigger = 'immediate',
+		func = (function()
+			for _, v in ipairs(tags_to_be_alerted) do
+				v.children.alert = UIBox {
+					definition = create_UIBox_card_alert(),
+					config = { align = "tri", offset = { x = 0.1, y = 0.1 }, parent = v }
+				}
+				v.children.alert.states.collide.can = false
+			end
+			return true
+		end)
+	}))
+
+
+	local table_nodes = {}
+	for i = 1, rows do
+		table.insert(table_nodes, { n = G.UIT.R, config = { align = "cm", minh = 1 }, nodes = tag_matrix[i] })
+	end
+	local page_options = {}
+	for i = 1, math.ceil(#tag_tab/(rows*cols)) do
+		table.insert(page_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#tag_tab/(rows*cols))))
+	end
+	local t = create_UIBox_generic_options({
+		back_func = G.ACTIVE_MOD_UI and "openModUI_" .. G.ACTIVE_MOD_UI.id or 'your_collection',
+		contents = {
+			{
+				n = G.UIT.R,
+				config = { align = "cm", r = 0.1, colour = G.C.BLACK, padding = 0.1, emboss = 0.05 },
+				nodes = {
+					{
+						n = G.UIT.C,
+						config = { align = "cm" },
+						nodes = {
+							{ n = G.UIT.R, config = { align = "cm" }, nodes = table_nodes },
+						}
+					},
+				}
+			},
+			{
+				n = G.UIT.R,
+				config = { align = 'cm' },
+				nodes = {
+					create_option_cycle({
+						options = page_options,
+						w = 4.5,
+						cycle_shoulders = true,
+						opt_callback = 'your_collection_tags_page',
+						focus_args = { snap_to = true, nav = 'wide' },
+						current_option = page,
+						colour = G.C.RED,
+						no_pips = true
+					})
+				}
+			}
+		}
+	})
+	return t
+end
+
+G.FUNCS.your_collection_tags_page = function(args)
+	local page = args.cycle_config.current_option or 1
+	local t = create_UIBox_your_collection_tags_content(page)
+	local e = G.OVERLAY_MENU:get_UIE_by_ID('your_collection_tags_contents')
+	if e.config.object then e.config.object:remove() end
+    e.config.object = UIBox{
+      definition = t,
+      config = {offset = {x=0,y=0}, align = 'cm', parent = e}
+    }
+end
 --#endregion
 --#region stakes UI
 function SMODS.applied_stakes_UI(i, stake_desc_rows, num_added)
@@ -730,7 +1199,6 @@ function create_UIBox_your_collection_editions(exit)
 	local rows, cols = (#edition_pool > 5 and 2 or 1), 5
 	local page = 0
 
-	sendInfoMessage("Creating collections")
 	G.your_collection = {}
 	for j = 1, rows do
 		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
@@ -746,16 +1214,12 @@ function create_UIBox_your_collection_editions(exit)
 		)
 	end
 
-	sendInfoMessage("Sorting collections")
 	table.sort(edition_pool, function(a, b) return a.order < b.order end)
 
 	local count = math.min(cols * rows, #edition_pool)
 	local index = 1 + (rows * cols * page)
-	sendInfoMessage("Adding cards")
 	for j = 1, rows do
-		sendInfoMessage("Adding card in row "..tostring(j))
 		for i = 1, cols do
-			sendInfoMessage("Adding card in pos "..tostring(i))
 			local edition = edition_pool[index]
 
 			if not edition then
@@ -1255,21 +1719,167 @@ G.FUNCS.your_collection_enhancements_page = function(args)
 	end
 end
 --#endregion
+--#region seals ui
+function create_UIBox_your_collection_seals(exit)
+	local deck_tables = {}
+	local seal_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in pairs(G.P_CENTER_POOLS.Seal) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then seal_pool[#seal_pool + 1] = v end
+		end
+	else
+		seal_pool = G.P_CENTER_POOLS.Seal
+	end
+	local rows, cols = (#seal_pool > 5 and 2 or 1), 5
+	local page = 0
 
-function get_joker_win_sticker(_center, index)
-	if G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key] and G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key].wins_by_key then 
-		local _stake = nil
-		local _count = 0
-		for key, _ in pairs(G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key].wins_by_key) do
-			_count = _count + 1
-			if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) > (_stake and G.P_STAKES[_stake].stake_level or 0) then
-				_stake = key
+	G.your_collection = {}
+	for j = 1, rows do
+		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
+			{
+				card_limit = cols,
+				type = 'title',
+				highlight_limit = 0,
+				collection = true
+			})
+		table.insert(deck_tables,
+			{n = G.UIT.R, config = {align = "cm", padding = 0, no_fill = true}, nodes = {
+				{n = G.UIT.O, config = {object = G.your_collection[j]}}}}
+		)
+	end
+
+	table.sort(seal_pool, function(a, b) return a.order < b.order end)
+
+	local count = math.min(cols * rows, #seal_pool)
+	local index = 1 + (rows * cols * page)
+	for j = 1, rows do
+		for i = 1, cols do
+			local seal = seal_pool[index]
+
+			if not seal then
+				break
+			end
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS.c_base)
+			card:set_seal(seal.key, true)
+			G.your_collection[j]:emplace(card)
+			index = index + 1
+		end
+		if index > count then
+			break
+		end
+	end
+
+	local edition_options = {}
+
+	local t = create_UIBox_generic_options({
+		infotip = localize('ml_edition_seal_enhancement_explanation'),
+		back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection',
+		snap_back = true,
+		contents = { 
+			{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+				deck_tables}}
+	})
+
+	if #seal_pool > rows * cols then
+		for i = 1, math.ceil(#seal_pool / (rows * cols)) do
+			table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+				tostring(math.ceil(#seal_pool / (rows * cols))))
+		end
+		t = create_UIBox_generic_options({
+			infotip = localize('ml_edition_seal_enhancement_explanation'),
+			back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection',
+			snap_back = true,
+			contents = {
+				{n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+					deck_tables},
+				{n = G.UIT.R, config = {align = "cm"}, nodes = { 
+					create_option_cycle({
+						options = edition_options,
+						w = 4.5,
+						cycle_shoulders = true,
+						opt_callback = 'your_collection_seals_page',
+						focus_args = { snap_to = true, nav = 'wide' },
+						current_option = 1,
+						r = rows,
+						c = cols,
+						colour = G.C.RED,
+						no_pips = true
+					})}}
+			}
+		})
+	end
+	return t
+end
+
+G.FUNCS.your_collection_seals_page = function(args)
+	if not args or not args.cycle_config then
+		return
+	end
+	local seal_pool = {}
+	if G.ACTIVE_MOD_UI then
+		for _, v in pairs(G.P_CENTER_POOLS.Seal) do
+			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then seal_pool[#seal_pool + 1] = v end
+		end
+	else
+		seal_pool = G.P_CENTER_POOLS.Seal
+	end
+	local rows, cols = (#seal_pool > 5 and 2 or 1), 5
+	local page = args.cycle_config.current_option
+	if page > math.ceil(#seal_pool / (rows * cols)) then
+		page = page - math.ceil(#seal_pool / (rows * cols))
+	end
+	local count = rows * cols
+	local offset = (rows * cols) * (page - 1)
+
+	for j = 1, #G.your_collection do
+		for i = #G.your_collection[j].cards, 1, -1 do
+			if G.your_collection[j] ~= nil then
+				local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+				c:remove()
+				c = nil
 			end
 		end
-		if index then return _stake and _count or 0 end
-		return G.sticker_map[_stake]
 	end
-  	if index then return 0 end
+
+	for j = 1, rows do
+		for i = 1, cols do
+			if count % rows > 0 and i <= count % rows and j == cols then
+				offset = offset - 1
+				break
+			end
+			local idx = i + (j - 1) * cols + offset
+			if idx > #seal_pool then return end
+			local seal = seal_pool[idx]
+			local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+				G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS.c_base)
+			card:set_seal(seal.key, true)
+			G.your_collection[j]:emplace(card)
+		end
+	end
+end
+--#endregion
+function get_joker_win_sticker(_center, index)
+	local joker_usage = G.PROFILES[G.SETTINGS.profile].joker_usage[_center.key] or {}
+	if joker_usage.wins then
+		local applied = {}
+		local _count = 0
+		local _stake = nil
+		for k, v in pairs(joker_usage.wins_by_key) do
+			SMODS.build_stake_chain(G.P_STAKES[k], applied)
+		end
+		for i, v in ipairs(G.P_CENTER_POOLS.Stake) do
+			if applied[v.order] then
+				_count = _count+1
+				if (v.stake_level or 0) > (_stake and G.P_STAKES[_stake].stake_level or 0) then
+					_stake = v.key
+				end
+			end
+		end
+		if index then return _count end
+		if _count > 0 then return G.sticker_map[_stake] end
+	end
+	if index then return 0 end
 end
 
 function get_deck_win_stake(_deck_key)
@@ -1314,6 +1924,28 @@ function get_deck_win_sticker(_center)
 			end
 		end
 		if _stake then return G.sticker_map[_stake] end
+	end
+end
+
+function set_deck_win()
+	if G.GAME.selected_back and G.GAME.selected_back.effect and G.GAME.selected_back.effect.center and G.GAME.selected_back.effect.center.key then
+		local deck_key = G.GAME.selected_back.effect.center.key
+		local deck_usage = G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key]
+		if not deck_usage then deck_usage = { count = 1, order =
+			G.GAME.selected_back.effect.center.order, wins = {}, losses = {}, wins_by_key = {}, losses_by_key = {} } end
+		if deck_usage then
+			deck_usage.wins[G.GAME.stake] = (deck_usage.wins[G.GAME.stake] or 0) + 1
+			deck_usage.wins_by_key[SMODS.stake_from_index(G.GAME.stake)] = (deck_usage.wins_by_key[SMODS.stake_from_index(G.GAME.stake)] or 0) + 1
+			local applied = SMODS.build_stake_chain(G.P_STAKES[SMODS.stake_from_index(G.GAME.stake)]) or {}
+			for i, v in ipairs(G.P_CENTER_POOLS.Stake) do
+				if applied[i] then
+					deck_usage.wins[i] = math.max(deck_usage.wins[i] or 0, 1)
+					deck_usage.wins_by_key[SMODS.stake_from_index(i)] = math.max(deck_usage.wins_by_key[SMODS.stake_from_index(i)] or 0, 1)
+				end
+			end
+		end
+		set_challenge_unlock()
+		G:save_settings()
 	end
 end
 

@@ -477,3 +477,20 @@ match_indent = true
 pattern = "if card.unlock_condition.planet_count <= args.planet_count then"
 position = "at"
 payload = 'if #G.P_CENTER_POOLS.Planet <= args.planet_count then'
+
+# wtf
+[[patches]]
+[patches.pattern]
+target = "engine/animatedsprite.lua"
+match_indent = true
+pattern = "for _, v in pairs(G.ANIMATIONS) do"
+position = "at"
+payload = 'for k, v in pairs(G.ANIMATIONS) do'
+
+[[patches]]
+[patches.pattern]
+target = "engine/animatedsprite.lua"
+match_indent = true
+pattern = "for _, v in pairs(G.I.SPRITE) do"
+position = "at"
+payload = 'for k, v in pairs(G.I.SPRITE) do'
