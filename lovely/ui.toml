@@ -368,7 +368,7 @@ pattern = "function Controller:key_press_update(key, dt)"
 position = "after"
 payload = '''
     if key == "escape" and G.ACTIVE_MOD_UI then
-        G.FUNCS.exit_mods(e)
+        G.FUNCS.exit_mods()
     end
 '''
 match_indent = true
