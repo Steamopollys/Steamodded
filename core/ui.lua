@@ -1114,7 +1114,10 @@ function G.FUNCS.exit_mods(e)
 		SMODS.restart_game()
     end
 	SMODS.IN_MODS_TAB = nil
-	G.FUNCS.exit_overlay_menu(e)
+	if e then
+		-- This is only needed when back button is pressed
+		G.FUNCS.exit_overlay_menu(e)
+	end
 end
 
 function create_UIBox_mods_button()
