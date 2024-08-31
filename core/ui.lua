@@ -1119,6 +1119,7 @@ end
 
 function create_UIBox_mods_button()
 	local scale = 0.75
+	SMODS.browse_search = SMODS.browse_search or ''
 	return (create_UIBox_generic_options({
 		back_func = 'exit_mods',
 		contents = {
@@ -1144,6 +1145,59 @@ function create_UIBox_mods_button()
 										staticPageDefinition = SMODS.GUI.staticModListContent()
 									})
 								end
+							},
+							{
+								label = localize('b_browse'),
+								tab_definition_function = function()
+									return {
+                                        n = G.UIT.ROOT,
+                                        config = {
+                                            align = "cm",
+                                            padding = 0.05,
+                                            colour = G.C.CLEAR,
+                                        },
+                                        nodes = {
+											{
+												n = G.UIT.C,
+												config = { align = 'cm' },
+												nodes = {
+													{
+														n = G.UIT.R,
+														config = { align = 'cl' },
+														nodes = {
+															create_text_input{
+																prompt_text = localize('b_search_prompt'),
+																max_length = 50,
+																text_scale = 0.6,
+																w = 6,
+																h = 1,
+																ref_table = SMODS,
+																ref_value = "browse_search",
+																extended_corpus = true,
+															},
+															UIBox_button{
+																button = 'browse_search',
+																label = {localize('b_search_button')},
+																minw = 3,
+																colour = G.C.RED
+															}
+														}
+													},
+													{
+														n = G.UIT.R,
+														config = { align = 'cm', emboss = 0.05, colour = G.C.BLACK, minh=5, minw=10.5},
+														nodes = {
+															{
+																n = G.UIT.O,
+																config = { align = 'cm', object = Moveable(), id = 'browse_mods'}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								end,
 							},
 							{
 
@@ -1309,6 +1363,34 @@ function create_UIBox_mods_button()
 			}
 		}
 	}))
+end
+
+G.FUNCS.browse_search = function(e)
+	SMODS.fetch_index()
+
+end
+
+G.FUNCS.browse_mods_page = function(args)
+	local page = args.cycle_config and args.cycle_config.current_option or 1
+end
+
+SMODS.fetch_index = function()
+	if os.execute('git -v') ~= 0 then return 'no-git' end
+	local pwd = NFS.getWorkingDirectory()
+	if NFS.getInfo('index') and NFS.getInfo('index/.git') then
+		if os.execute(('cd %s/index && git pull'):format(pwd)) ~= 0 then return 'fetch-failed' end
+	else
+		local repo = 'https://github.com/Aurelius7309/Steamodded.index.git'
+		if os.execute(('cd %s && git clone %s index'):format(pwd, repo)) ~= 0 then return 'fetch-failed' end
+	end
+	SMODS.index = {}
+	for _, filename in ipairs(NFS.getDirectoryItems('index/mods')) do
+		local key, ext = filename:sub(1, -6), filename:sub(-5)
+		if ext:lower() == '.json' then
+			local success, data = pcall(function() return JSON.decode(NFS.read('index/mods/'..filename)) end)
+			if success then SMODS.index[key] = data end
+		end
+	end
 end
 
 G.FUNCS.SMODS_log_level = function(args)
