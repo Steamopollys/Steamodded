@@ -1576,6 +1576,18 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 	return nil
 end
 
+local cge = Card.get_edition
+function Card:get_edition()
+	local ret = cge(self)
+	if self.edition and self.edition.key then
+		local ed = SMODS.Centers[self.edition.key]
+		if ed.calculate and type(ed.calculate) == 'function' then
+			ed:calculate(self, {edition_main = true, edition_val = ret})
+		end
+	end
+	return ret
+end
+
 --#endregion
 --#region enhancements UI
 function create_UIBox_your_collection_enhancements(exit)
@@ -2051,7 +2063,7 @@ function Card:calculate_joker(context)
             else
                 ret.joker_repetitions[i] = {}
             end
-            if G.jokers.cards[i] == self and self.edition then
+            if G.jokers.cards[i] == self and self.edition and self.edition.key then
                 if self.edition.retriggers then
 					for j = 1, self.edition.retriggers do
 						ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {
@@ -2060,10 +2072,17 @@ function Card:calculate_joker(context)
 						}
 					end
 				end
-				--[[local check = self:calculate_retriggers()
-                if check and check.repetitions then
-                end--]]
-				--working on something
+				local ed = SMODS.Centers[self.edition.key]
+				if ed.calculate and type(ed.calculate) == 'function' then
+					context.retrigger_edition_check = true
+					local check = ed:calculate(self, context)
+					context.retrigger_edition_check = nil
+					if type(check) == 'table' and check.repetitions then 
+						for j = 1, check.repetitions do
+							ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {message = check.message, card = check.card}
+						end
+					end
+				end
             end
         end
         --do the retriggers
@@ -2088,23 +2107,5 @@ function Card:calculate_joker(context)
 		end
 	end
     return ret, triggered
-end    
-function Card:calculate_retriggers()
-    local retriggers = self.edition.retriggers
-
-    if self.edition.retrigger_chance then
-        local chance = self.edition.retrigger_chance
-        chance = G.GAME.probabilities.normal / chance
-
-        if pseudorandom("retrigger") <= chance then
-            retriggers = retriggers + self.edition.extra_retriggers
-        end
-    end
-    
-    return {
-        message = 'Again?',
-        repetitions = retriggers,
-        card = self
-    }
 end
 --#endregion

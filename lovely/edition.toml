@@ -461,3 +461,33 @@ if card.edition and card.edition.key then
         ed:calculate(card, {from_consumable = true})
     end
 end"""
+
+# G.FUNCS.evaluate_play() - calculate playing card retriggers from editions
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "for j=1,#reps do"
+match_indent = true
+position = "before"
+payload = """
+--From edition
+if scoring_hand[i].edition and scoring_hand[i].edition.key then
+    local ed = SMODS.Centers[scoring_hand[i].edition.key]
+    if ed.config and ed.config.retriggers then
+        for h = 1, ed.config.retriggers do
+            reps[#reps+1] = {seals = {
+                message = localize("k_again_ex"),
+                card = scoring_hand[i]
+            }}
+        end
+    end
+    if ed.calculate and type(ed.calculate) == 'function' then
+        local check = ed:calculate(scoring_hand[i], {retrigger_edition_check = true, cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true})
+        if check and type(check) == 'table' and next(check) then 
+            for j = 1, check.repetitions do
+                reps[#reps+1] = {seals = check}
+            end
+        end
+    end
+end
+"""
