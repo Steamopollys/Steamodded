@@ -2041,31 +2041,39 @@ function Card:calculate_joker(context)
     --Check for retrggering jokers
     if (ret or triggered) and context and not context.retrigger_joker and not context.retrigger_joker_check and not context.post_trigger then
 		if type(ret) ~= 'table' then ret = {joker_repetitions = {0}} end
-        ret.joker_repetitions = {0}
+        ret.joker_repetitions = {{}}
         for i = 1, #G.jokers.cards do
             local check = G.jokers.cards[i]:calculate_joker{retrigger_joker_check = true, other_card = self}
-            if type(check) == 'table' then 
-                ret.joker_repetitions[i] = check and check.repetitions and check or 0
+            if type(check) == 'table' and check.repetitions then 
+				for j = 1, check.repetitions do
+					ret.joker_repetitions[i][j] = {message = check.message, card = check.card}
+				end
             else
-                ret.joker_repetitions[i] = 0
+                ret.joker_repetitions[i] = {}
             end
-            if G.jokers.cards[i] == self and self.edition and self.edition.retriggers then
-                local old_repetitions = ret.joker_repetitions[i] ~= 0 and ret.joker_repetitions[i].repetitions or 0
-                local check = self:calculate_retriggers()
+            if G.jokers.cards[i] == self and self.edition then
+                if self.edition.retriggers then
+					for j = 1, self.edition.retriggers do
+						ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {
+							message = localize('k_again_ex'),
+							card = self
+						}
+					end
+				end
+				--[[local check = self:calculate_retriggers()
                 if check and check.repetitions then
-                    check.repetitions = check.repetitions + old_repetitions
-                    ret.joker_repetitions[i] = check
-                end
+                end--]]
+				--working on something
             end
         end
         --do the retriggers
         for z = 1, #ret.joker_repetitions do
-            if type(ret.joker_repetitions[z]) == 'table' and ret.joker_repetitions[z].repetitions then
-                for r = 1, ret.joker_repetitions[z].repetitions do
-                if percent then percent = percent+percent_delta end
-                context.retrigger_joker = ret.joker_repetitions[z]
-                local _ret, _triggered = self:calculate_joker(context, callback)
-                if (_ret or _triggered) and not context.no_retrigger_anim then card_eval_status_text(ret.joker_repetitions[z].card, 'jokers', nil, nil, nil, ret.joker_repetitions[z]) end
+            if type(ret.joker_repetitions[z]) == 'table' and ret.joker_repetitions[z][1] then
+                for r = 1, #ret.joker_repetitions[z] do
+					if percent then percent = percent+percent_delta end
+					context.retrigger_joker = ret.joker_repetitions[z][r]
+					local _ret, _triggered = self:calculate_joker(context, callback)
+					if (_ret or _triggered) and not context.no_retrigger_anim then card_eval_status_text(ret.joker_repetitions[z][r].card, 'jokers', nil, nil, nil, ret.joker_repetitions[z][r]) end
                 end
             end
         end
