@@ -746,13 +746,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         get_rarity_badge = function(self, rarity)
             local base_game_rarity_keys = {localize('k_common'), localize('k_uncommon'), localize('k_rare'), localize('k_legendary')}
             if (base_game_rarity_keys)[rarity] then return base_game_rarity_keys[rarity] --compat layer in case function gets the int of the rarity
-            else return localize("k_"..rarity) end -- Should be fine to do? 
+            else return localize("k_"..rarity) end 
         end,
     }
 
     function SMODS.add_rarity(object_type, rarity)
-        -- If you're defined a rarity with a pool that does not normally have rarities
-        -- I'm assuming that you're adding one, surely nothing breaks through this :clueless:
         if not object_type.rarities then 
             object_type.rarities = {}
             object_type.rarity_pools = {}
@@ -815,9 +813,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     ------- API CODE GameObject.ObjectType
     -------------------------------------------------------------------------------------------------
 
-    -- ObjectType TODO list
-    -- [ ] Insure that inject_card does not inject if the card already exists
-
     SMODS.ObjectTypes = {}
     SMODS.ObjectType = SMODS.GameObject:extend {
         obj_table = SMODS.ObjectTypes,
@@ -878,7 +873,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     -------------------------------------------------------------------------------------------------
 
     -- ConsumableType TODO list
-    -- [?] Unscuff the fake obj_table/obj_buffer addition. 
     -- [?] Fix any other jank related to it
 
     SMODS.ConsumableTypes = {}
