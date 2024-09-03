@@ -1946,6 +1946,7 @@ function set_deck_win()
 		end
 		set_challenge_unlock()
 		G:save_settings()
+		G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = deck_usage
 	end
 end
 
