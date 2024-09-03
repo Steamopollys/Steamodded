@@ -2309,6 +2309,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         pos = { x = 1, y = 2 },
         hide_badge = true,
         order = 3,
+        should_apply = false,
         apply = function(self, card, val)
             card.ability[self.key] = val
             if card.ability[self.key] then card:set_cost() end
