@@ -28,7 +28,7 @@ position = "at"
 payload = ''' 
 local card = nil
 if booster_obj.create_card and type(booster_obj.create_card) == "function" then 
-    local _card_to_spawn = booster_obj:create_card(self)
+    local _card_to_spawn = booster_obj:create_card(self, i)
     -- Note: the part I don't like about this is that in order to manip this card
     -- you'd have to override the booster's "create_card" function through take_ownership
     -- This is bad as it can conflict with other mods that also want to override the "create_card" function for different effects
@@ -39,7 +39,6 @@ line_prepend = '$indent'
 
 ## Stop cards from boosters getting double emplaced
 # Card:open
-G.pack_cards:emplace(v)
 [[patches]]
 [patches.pattern]
 target = "functions/button_callbacks.lua"

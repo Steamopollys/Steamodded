@@ -1209,7 +1209,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                     func = function()
                         if self.particles and type(self.particles) == "function" then self:particles() end
                         G.booster_pack = UIBox{
-                            definition = self:pack_uibox(),
+                            definition = self:create_UIBox(),
                             config = {align="tmi", offset = {x=0,y=G.ROOM.T.y + 9}, major = G.hand, bond = 'Weak'}
                         }
                         G.booster_pack.alignment.offset.y = -2.2
@@ -1239,7 +1239,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             ease_colour(G.C.DYN_UI.MAIN, G.C.FILTER)
             ease_background_colour{new_colour = G.C.FILTER, special_colour = G.C.BLACK, contrast = 2}
         end,
-        pack_uibox = function(self)
+        create_UIBox = function(self)
             local _size = SMODS.OPENED_BOOSTER.ability.extra
             G.pack_cards = CardArea(
                 G.ROOM.T.x + 9 + G.hand.T.x, G.hand.T.y,
@@ -1281,7 +1281,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             update_pack = SMODS.Booster.update_pack,
             loc_vars = SMODS.Booster.loc_vars,
             ease_background_colour = function(self) ease_background_colour_blind(G.STATES.TAROT_PACK) end,
-            pack_uibox = function(self) return create_UIBox_arcana_pack() end,
+            create_UIBox = function(self) return create_UIBox_arcana_pack() end,
             particles = function(self)
                 G.booster_pack_sparkles = Particles(1, 1, 0,0, {
                     timer = 0.015,
@@ -1297,7 +1297,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 G.booster_pack_sparkles.fade_alpha = 1
                 G.booster_pack_sparkles:fade(1, 0)
             end,
-            create_card = function(self, card)
+            create_card = function(self, card, i)
                 local _card
                 if G.GAME.used_vouchers.v_omen_globe and pseudorandom('omen_globe') > 0.8 then
                     _card = {set = "Spectral", area = G.pack_cards, skip_materialize = true, soulable = true, key_append = "ar2"}
@@ -1313,7 +1313,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             update_pack = SMODS.Booster.update_pack,
             loc_vars = SMODS.Booster.loc_vars,
             ease_background_colour = function(self) ease_background_colour_blind(G.STATES.PLANET_PACK) end,
-            pack_uibox = function(self) return create_UIBox_celestial_pack() end,
+            create_UIBox = function(self) return create_UIBox_celestial_pack() end,
             particles = function(self)
                 G.booster_pack_stars = Particles(1, 1, 0,0, {
                     timer = 0.07,
@@ -1336,7 +1336,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                     fill = true
                 })
             end,
-            create_card = function(self, card)
+            create_card = function(self, card, i)
                 local _card
                 if G.GAME.used_vouchers.v_telescope and i == 1 then
                     local _planet, _hand, _tally = nil, nil, 0
@@ -1366,7 +1366,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             update_pack = SMODS.Booster.update_pack,
             loc_vars = SMODS.Booster.loc_vars,
             ease_background_colour = function(self) ease_background_colour_blind(G.STATES.SPECTRAL_PACK) end,
-            pack_uibox = function(self) return create_UIBox_spectral_pack() end,
+            create_UIBox = function(self) return create_UIBox_spectral_pack() end,
             particles = function(self)
                 G.booster_pack_sparkles = Particles(1, 1, 0,0, {
                     timer = 0.015,
@@ -1382,7 +1382,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 G.booster_pack_sparkles.fade_alpha = 1
                 G.booster_pack_sparkles:fade(1, 0)
             end,
-            create_card = function(self, card)
+            create_card = function(self, card, i)
                 return {set = "Spectral", area = G.pack_cards, skip_materialize = true, soulable = true, key_append = "spe"}
             end,
         }},
@@ -1392,7 +1392,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             update_pack = SMODS.Booster.update_pack,
             loc_vars = SMODS.Booster.loc_vars,
             ease_background_colour = function(self) ease_background_colour_blind(G.STATES.STANDARD_PACK) end,
-            pack_uibox = function(self) return create_UIBox_standard_pack() end,
+            create_UIBox = function(self) return create_UIBox_standard_pack() end,
             particles = function(self)
                 G.booster_pack_sparkles = Particles(1, 1, 0,0, {
                     timer = 0.015,
@@ -1408,7 +1408,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 G.booster_pack_sparkles.fade_alpha = 1
                 G.booster_pack_sparkles:fade(1, 0)
             end,
-            create_card = function(self, card)
+            create_card = function(self, card, i)
                 local _edition = poll_edition('standard_edition'..G.GAME.round_resets.ante, 2, true)
                 local _seal = SMODS.poll_seal({mod = 10})
                 return {set = (pseudorandom(pseudoseed('stdset'..G.GAME.round_resets.ante)) > 0.6) and "Enhanced" or "Base", edition = _edition, seal = _seal, area = G.pack_cards, skip_materialize = true, soulable = true, key_append = "sta"}
@@ -1419,7 +1419,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             update_pack = SMODS.Booster.update_pack,
             loc_vars = SMODS.Booster.loc_vars,
             ease_background_colour = function(self) ease_background_colour_blind(G.STATES.BUFFOON_PACK) end,
-            pack_uibox = function(self) return create_UIBox_buffoon_pack() end,
+            create_UIBox = function(self) return create_UIBox_buffoon_pack() end,
             create_card = function(self, card)
                 return {set = "Joker", area = G.pack_cards, skip_materialize = true, soulable = true, key_append = "buf"}
             end,
