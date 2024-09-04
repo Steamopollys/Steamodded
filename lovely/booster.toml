@@ -27,7 +27,11 @@ pattern = '''(?<indent>[\t ]*)if self\.ability\.name:find\('Arcana'\) then[\t\n 
 position = "at"
 payload = '''if booster_obj.create_card and type(booster_obj.create_card) == "function" then 
     local _card_to_spawn = booster_obj:create_card(self, i)
-       card = SMODS.create_card(_card_to_spawn)
+    if type((_card_to_spawn or {}).is) == 'function' and _card_to_spawn:is(Card) then
+        card = _card_to_spawn
+    else
+        card = SMODS.create_card(_card_to_spawn)
+    end
 elseif self.ability.name:find('Arcana') then
     if G.GAME.used_vouchers.v_omen_globe and pseudorandom('omen_globe') > 0.8 then'''
 line_prepend = '$indent'
