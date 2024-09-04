@@ -9,7 +9,7 @@ priority = 0
 target = "functions/state_events.lua"
 pattern = "local effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true})"
 position = "at"
-payload = "local effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true, callback = function(ret) effects = {jokers = ret}"
+payload = "local effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true, callback = function(_card, ret) effects = {jokers = ret}"
 match_indent = true
 
 [[patches]]
@@ -26,7 +26,7 @@ match_indent = true
 target = "functions/state_events.lua"
 pattern = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, end_of_round = true, card_effects = effects})"
 position = "at"
-payload = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, end_of_round = true, card_effects = effects, callback = function(ret) eval = {jokers = ret}"
+payload = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, end_of_round = true, card_effects = effects, callback = function(card, ret) eval = {jokers = ret}"
 match_indent = true
 
 # Played hand retriggering from jokers
@@ -35,7 +35,7 @@ match_indent = true
 target = "functions/state_events.lua"
 pattern = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true})"
 position = "at"
-payload = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true, callback = function(ret) eval = {jokers = ret}"
+payload = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true, callback = function(card, ret) eval = {jokers = ret}"
 match_indent = true
 
 # Held in hand retriggering from jokers
@@ -44,7 +44,7 @@ match_indent = true
 target = "functions/state_events.lua"
 pattern = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects})"
 position = "at"
-payload = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects, callback = function(ret) eval = {jokers = ret}"
+payload = "local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects, callback = function(card, ret) eval = {jokers = ret}"
 match_indent = true
 
 # I learned how to do regex patches for this (fixes syntax for last 3 patches)
@@ -64,7 +64,7 @@ payload = " end})"
 target = "functions/state_events.lua"
 pattern = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})"
 position = "at"
-payload = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true, callback = function(ret) effects = {jokers = ret}"
+payload = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true, callback = function(card, ret) effects = {jokers = ret}"
 match_indent = true
 
 [[patches]]
@@ -82,7 +82,7 @@ payload = " end})"
 target = "functions/state_events.lua"
 pattern = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, debuffed_hand = true})"
 position = "at"
-payload = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, debuffed_hand = true, callback = function(ret) effects = {jokers = ret}"
+payload = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, debuffed_hand = true, callback = function(card, ret) effects = {jokers = ret}"
 match_indent = true
 
 # After hand effects
@@ -91,17 +91,39 @@ match_indent = true
 target = "functions/state_events.lua"
 pattern = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true})"
 position = "at"
-payload = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true, callback = function(ret) effects = {jokers = ret}"
+payload = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true, callback = function(card, ret) effects = {jokers = ret}"
 match_indent = true
 
 # Fixes syntax of last two patches
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
-pattern = '''card_eval_status_text\(G\.jokers\.cards\[i\], 'jokers', nil, percent, nil, effects\.jokers\)
-[ \t]*percent \= percent[ ]*\+[ ]*percent_delta
-[ \t]*end'''
-position = "after"
+pattern = '''[ \t]*end
+[ \t]*
+[ \t]*mult = mod_mult\(G\.GAME\.hands\[text\]\.mult\)'''
+position = "before"
+payload = " end})"
+
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''[ \t]*end
+[ \t]*end
+[ \t]*G\.E_MANAGER:add_event\(Event\(\{
+[ \t]*trigger = 'after',delay = 0.4,'''
+position = "before"
+payload = " end})"
+
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''[ \t]*end
+
+[ \t]*G\.E_MANAGER:add_event\(Event\(\{
+[ \t]*trigger = 'immediate',
+[ \t]*func = \(function\(\)[ ]*
+[ \t]*if G\.GAME\.modifiers\.debuff_played_cards then '''
+position = "before"
 payload = " end})"
 
 # End of round effects
@@ -110,13 +132,13 @@ payload = " end})"
 target = "functions/state_events.lua"
 pattern = "eval = G.jokers.cards[i]:calculate_joker({end_of_round = true, game_over = game_over})"
 position = "at"
-payload = "eval = G.jokers.cards[i]:calculate_joker({end_of_round = true, game_over = game_over, callback = function(eval)"
+payload = "eval = G.jokers.cards[i]:calculate_joker({end_of_round = true, game_over = game_over, callback = function(card, eval)"
 match_indent = true
 
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
-pattern = '''card_eval_status_text\(G\.jokers\.cards\[i\], 'jokers', nil, nil, nil, eval\)
+pattern = '''card_eval_status_text\(card, 'jokers', nil, nil, nil, eval\)
 [ \t]*end'''
 position = "after"
 payload = " end})"
@@ -127,7 +149,7 @@ payload = " end})"
 target = "functions/state_events.lua"
 pattern = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, other_card = G.hand.cards[i], individual = true, end_of_round = true})"
 position = "at"
-payload = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, other_card = G.hand.cards[i], individual = true, end_of_round = true, callback = function(eval, retrigger)"
+payload = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, other_card = G.hand.cards[i], individual = true, end_of_round = true, callback = function(card, eval, retrigger)"
 match_indent = true
 
 # Played hand effects
@@ -136,7 +158,7 @@ match_indent = true
 target = "functions/state_events.lua"
 pattern = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true})"
 position = "at"
-payload = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true, callback = function(eval, retrigger)"
+payload = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true, callback = function(card, eval, retrigger)"
 match_indent = true
 
 # Held in hand effects
@@ -145,7 +167,7 @@ match_indent = true
 target = "functions/state_events.lua"
 pattern = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})"
 position = "at"
-payload = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, callback = function(eval, retrigger)"
+payload = "local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, callback = function(card, eval, retrigger)"
 match_indent = true
 
 # Fix syntax of last 3 patches
@@ -168,7 +190,7 @@ end end, no_retrigger_anim = true})
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
-pattern = '''card_eval_status_text\(G\.hand\.cards\[i\], 'extra', nil, percent, nil, effects\[ii\]\.extra\)
+pattern = '''card_eval_status_text\(card, 'extra', nil, percent, nil, effects\[ii\]\.extra\)
 [ \t]*end'''
 position = "after"
 payload = '''
@@ -213,13 +235,13 @@ end
 target = "functions/state_events.lua"
 pattern = "eval = G.jokers.cards[j]:calculate_joker({discard = true, other_card =  G.hand.highlighted[i], full_hand = G.hand.highlighted})"
 position = "at"
-payload = "eval = G.jokers.cards[j]:calculate_joker({discard = true, other_card =  G.hand.highlighted[i], full_hand = G.hand.highlighted, callback = function(eval)"
+payload = "eval = G.jokers.cards[j]:calculate_joker({discard = true, other_card =  G.hand.highlighted[i], full_hand = G.hand.highlighted, callback = function(card, eval)"
 match_indent = true
 
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
-pattern = '''card_eval_status_text\(G\.jokers\.cards\[j\], 'jokers', nil, 1, nil, eval\)
+pattern = '''card_eval_status_text\(card, 'jokers', nil, 1, nil, eval\)
 [ \t]*end'''
 position = "after"
 payload = " end})"
@@ -230,7 +252,7 @@ payload = " end})"
 target = "functions/state_events.lua"
 pattern = "local effect = v:calculate_joker{full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card}"
 position = "at"
-payload = "local effect = v:calculate_joker({full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card, callback = function(effect)"
+payload = "local effect = v:calculate_joker({full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card, callback = function(v, effect)"
 match_indent = true
 
 [[patches]]
@@ -249,7 +271,7 @@ payload = "end end}) end if edition_effects.jokers"
 target = "functions/state_events.lua"
 pattern = "destroyed = G.jokers.cards[j]:calculate_joker({destroying_card = scoring_hand[i], full_hand = G.play.cards})"
 position = "at"
-payload = '''destroyed = G.jokers.cards[j]:calculate_joker({destroying_card = scoring_hand[i], full_hand = G.play.cards, callback = function(ret) if ret then destroyed=true end end})'''
+payload = '''destroyed = G.jokers.cards[j]:calculate_joker({destroying_card = scoring_hand[i], full_hand = G.play.cards, callback = function(card, ret) if ret then destroyed=true end end})'''
 match_indent = true
 
 # Blueprint/Brainstorm
@@ -569,3 +591,36 @@ pattern = "self.ability.yorick_discards = self.ability.yorick_discards - 1"
 position = "after"
 match_indent = true
 payload = "return nil, true"
+
+# eval_status_text fixes
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "card_eval_status_text(G.jokers.cards[i], 'jokers', nil, nil, nil, eval)"
+position = "at"
+match_indent = true
+payload = "card_eval_status_text(card, 'jokers', nil, nil, nil, eval)"
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "card_eval_status_text(G.jokers.cards[j], 'jokers', nil, 1, nil, eval)"
+position = "at"
+match_indent = true
+payload = "card_eval_status_text(card, 'jokers', nil, 1, nil, eval)"
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "card_eval_status_text(G.jokers.cards[i], 'jokers', nil, percent, nil, effects.jokers)"
+position = "at"
+match_indent = true
+payload = "card_eval_status_text(card, 'jokers', nil, percent, nil, effects.jokers)"
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "level_up_hand(G.jokers.cards[i], text)"
+position = "at"
+match_indent = true
+payload = "level_up_hand(card, text)"

@@ -2100,7 +2100,7 @@ function Card:calculate_joker(context)
 		context.retrigger_joker = nil
     end
 	if not ret or not ret.no_callback then
-		if context.callback and type(context.callback) == 'function' then context.callback(ret, context.retrigger_joker) end
+		if context.callback and type(context.callback) == 'function' then context.callback(self, ret, context.retrigger_joker) end
 		if (_ret or triggered) and not context.retrigger_joker_check and not context.post_trigger then
 			for i = 1, #G.jokers.cards do
 				G.jokers.cards[i]:calculate_joker{blueprint_card = context.blueprint_card, post_trigger = true, other_joker = self, other_context = context, other_ret = _ret}
