@@ -23,18 +23,13 @@ line_prepend = '$indent'
 [[patches]]
 [patches.regex]
 target = "card.lua"
-pattern = '''(?<indent>[\t ]*)local card = nil\n[\s\S]{20}if self\.ability\.name:find\('Arcana'\) then''' # Possibly try to target something else
+pattern = '''(?<indent>[\t ]*)if self\.ability\.name:find\('Arcana'\) then[\t\n ]*if G\.GAME\.used_vouchers\.v_omen_globe and pseudorandom\('omen_globe'\) > 0\.8 then''' # Possibly try to target something else
 position = "at"
-payload = ''' 
-local card = nil
-if booster_obj.create_card and type(booster_obj.create_card) == "function" then 
+payload = '''if booster_obj.create_card and type(booster_obj.create_card) == "function" then 
     local _card_to_spawn = booster_obj:create_card(self, i)
-    -- Note: the part I don't like about this is that in order to manip this card
-    -- you'd have to override the booster's "create_card" function through take_ownership
-    -- This is bad as it can conflict with other mods that also want to override the "create_card" function for different effects
-    -- Possible proposal: per-mod function to iterate over this card? Additionally pass the key and/or kind of the booster for targeting. 
-    card = SMODS.create_card(_card_to_spawn)
-elseif self.ability.name:find('Arcana') then'''
+       card = SMODS.create_card(_card_to_spawn)
+elseif self.ability.name:find('Arcana') then
+    if G.GAME.used_vouchers.v_omen_globe and pseudorandom('omen_globe') > 0.8 then'''
 line_prepend = '$indent'
 
 ## Stop cards from boosters getting double emplaced
