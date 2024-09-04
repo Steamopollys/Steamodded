@@ -2605,7 +2605,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             'path',
         },
         set = 'Shader',
-        send_vars = nil, -- function (shader, sprite)
+        send_vars = nil, -- function (sprite) - get custom externs to send to shader.
         inject = function(self)
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/shaders/' .. self.path
