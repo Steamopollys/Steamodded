@@ -133,6 +133,8 @@ function create_UIBox_your_collection_blinds(exit)
 		card.children.center = temp_blind
 		temp_blind:set_role({major = card, role_type = 'Glued', draw_major = card})
 		card.set_sprites = function(...)
+			local args = {...}
+			if not args[1].animation then return end -- fix for debug unlock
 			local c = card.children.center
 			Card.set_sprites(...)
 			card.children.center = c
