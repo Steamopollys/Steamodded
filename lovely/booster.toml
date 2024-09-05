@@ -7,9 +7,9 @@ priority = 0
 
 # Card:open
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "card.lua"
-pattern = '''G.GAME.pack_choices = self.config.center.config.choose or 1'''
+pattern = '''(?<indent>[\t ]*)if self\.ability\.name:find\('Arcana'\) then \n[\s\S]{12}G\.STATE'''
 position = "before"
 payload = '''
 booster_obj = self.config.center
@@ -17,21 +17,34 @@ if booster_obj and SMODS.Centers[booster_obj.key] then
     G.STATE = G.STATES.SMODS_BOOSTER_OPENED
     SMODS.OPENED_BOOSTER = self
 end'''
-match_indent = true
+line_prepend = '$indent'
 
 # Card:open
 [[patches]]
 [patches.regex]
 target = "card.lua"
-pattern = '''(?<indent>[\t ]*)elseif self\.ability\.name:find\('Spectral'\) then\n[\s\S]{24}card'''
-position = "before"
-payload = ''' 
-elseif booster_obj.create_card and type(booster_obj.create_card) == "function" then 
-    local _card_to_spawn = booster_obj:create_card(self)
-    card = _card_to_spawn
-
-'''
+pattern = '''(?<indent>[\t ]*)if self\.ability\.name:find\('Arcana'\) then[\t\n ]*if G\.GAME\.used_vouchers\.v_omen_globe and pseudorandom\('omen_globe'\) > 0\.8 then''' # Possibly try to target something else
+position = "at"
+payload = '''if booster_obj.create_card and type(booster_obj.create_card) == "function" then 
+    local _card_to_spawn = booster_obj:create_card(self, i)
+    if type((_card_to_spawn or {}).is) == 'function' and _card_to_spawn:is(Card) then
+        card = _card_to_spawn
+    else
+        card = SMODS.create_card(_card_to_spawn)
+    end
+elseif self.ability.name:find('Arcana') then
+    if G.GAME.used_vouchers.v_omen_globe and pseudorandom('omen_globe') > 0.8 then'''
 line_prepend = '$indent'
+
+## Stop cards from boosters getting double emplaced
+# Card:open
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "G.pack_cards:emplace(v)"
+position = "at"
+payload = "--G.pack_cards:emplace(v)"
+match_indent = true
 
 # Game:set_globals
 [[patches]]
@@ -63,9 +76,9 @@ line_prepend = '$indent'
 [[patches]]
 [patches.regex]
 target = "functions/button_callbacks.lua"
-pattern = '''G\.STATE == G\.STATES\.PLANET_PACK or G\.STATE == G\.STATES\.STANDARD_PACK or G\.STATE == G.STATES\.BUFFOON_PACK'''
-position = "before"
-payload = '''G.STATE == G.STATES.SMODS_BOOSTER_OPENED or '''
+pattern = '''(?<indent>[\t ]*)\(G\.STATE == G\.STATES\.PLANET_PACK or G\.STATE == G\.STATES\.STANDARD_PACK'''
+position = "at"
+payload = '''(G.STATE == G.STATES.SMODS_BOOSTER_OPENED or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.STANDARD_PACK'''
 
 # CardArea:draw()
 [[patches]]
