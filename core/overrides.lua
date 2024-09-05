@@ -2041,7 +2041,7 @@ function Card:calculate_joker(context)
 		end
 	end
 	--Apply editions
-	if (not ret or not ret.no_callback) and not context.no_callback then
+	if (not ret or not type(ret) == 'table' or not ret.no_callback) and not context.no_callback then
 		if self.edition and self.edition.key and not context.retrigger_joker_check and not context.post_trigger then
 			local ed = SMODS.Centers[self.edition.key]
 			if ed.calculate and type(ed.calculate) == 'function' then
@@ -2102,7 +2102,7 @@ function Card:calculate_joker(context)
         end
 		context.retrigger_joker = nil
     end
-	if (not ret or not ret.no_callback) and not context.no_callback then
+	if (not ret or not type(ret) == 'table' or not ret.no_callback) and not context.no_callback then
 		if context.callback and type(context.callback) == 'function' then context.callback(context.blueprint_card or self, ret, context.retrigger_joker) end
 		if (_ret or triggered) and not context.retrigger_joker_check and not context.post_trigger then
 			for i = 1, #G.jokers.cards do
