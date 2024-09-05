@@ -1,7 +1,9 @@
 # Introduction
-A Balatro example mod for adding a custom Editions in Steamodded.
+A Balatro example mod for adding custom Editions and Shaders.
 
-Feel free to copy and use this for any of projects!
+Feel free to copy and use this* for any of projects!
+
+***`anaglyphic`, `fluorescent`, `gilded`, `ionized`, `monochrome`, `greyscale` and `overexposed` shaders are not for public use and are only provided for learning purposes! (as requested by Eremel)**
 
 ## Notes in case you can't read
 **If you want an Edition to have more than one of the following:**

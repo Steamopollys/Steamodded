@@ -4,6 +4,12 @@
 	#define PRECISION mediump
 #endif
 
+//
+// Shader made by: stupxd
+// You are free to use and modify this shader in your projects,
+// as long as you credit me for the original work.
+// 
+
 extern PRECISION vec2 gold;
 
 extern PRECISION number dissolve;
