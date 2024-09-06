@@ -1353,6 +1353,18 @@ function Card:should_draw_shadow()
 	return not next(self.ignore_shadow or {})
 end
 
+local smods_card_load = Card.load
+-- 
+function Card:load(cardTable, other_card)
+	local ret = smods_card_load(self, cardTable, other_card)
+	local on_edition_loaded = self.edition and self.edition.key and G.P_CENTERS[self.edition.key].on_load
+	if type(on_edition_loaded) == "function" then
+		on_edition_loaded(self)
+	end
+
+	return ret
+end
+
 -- self = pass the card
 -- edition =
 -- nil (removes edition)

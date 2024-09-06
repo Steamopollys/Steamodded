@@ -2605,6 +2605,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             'path',
         },
         set = 'Shader',
+        send_vars = nil, -- function (sprite) - get custom externs to send to shader.
         inject = function(self)
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/shaders/' .. self.path
@@ -2647,6 +2648,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         calculate = nil, -- function (self)
         on_apply = nil,  -- function (card) - modify card when edition is applied
         on_remove = nil, -- function (card) - modify card when edition is removed
+        on_load = nil,   -- function (card) - modify card when it is loaded from the save file
         register = function(self)
             self.config = self.config or {}
             SMODS.Edition.super.register(self)

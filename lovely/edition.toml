@@ -410,6 +410,28 @@ payload = """
 elseif self.edition.type == 'negative' and (self.ability.set == 'Enhanced' or self.ability.set == 'Default') then
     badges[#badges + 1] = 'negative_playing_card'"""
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "engine/sprite.lua"
+pattern = "love.graphics.setShader( G.SHADERS[_shader or 'dissolve'],  G.SHADERS[_shader or 'dissolve'])"
+position = "before"
+payload = '''
+local p_shader = SMODS.Shader.obj_table[_shader or 'dissolve']
+if p_shader and type(p_shader.send_vars) == "function" then
+    local sh = G.SHADERS[_shader or 'dissolve']
+    local parent_card = self.role.major and self.role.major:is(Card) and self.role.major
+    local send_vars = p_shader.send_vars(self, parent_card)
+    
+    if type(send_vars) == "table" then
+        for key, value in pairs(send_vars) do
+            sh:send(key, value)
+        end
+    end
+end
+'''
+match_indent = true
+
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"
