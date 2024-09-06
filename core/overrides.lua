@@ -120,9 +120,8 @@ function create_UIBox_your_collection_blinds(exit)
 	local blinds_to_be_alerted = {}
 	local row, col = 1, 1
 	for k, v in ipairs(blind_tab) do
-		local discovered = v.discovered
-		local temp_blind = AnimatedSprite(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.ANIMATION_ATLAS[discovered and v.atlas or 'blind_chips'],
-			discovered and v.pos or G.b_undiscovered.pos)
+		local temp_blind = AnimatedSprite(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.ANIMATION_ATLAS[v.discovered and v.atlas or 'blind_chips'],
+			v.discovered and v.pos or G.b_undiscovered.pos)
 		temp_blind.states.click.can = false
 		temp_blind.states.drag.can = false
 		temp_blind.states.hover.can = true
@@ -147,7 +146,7 @@ function create_UIBox_your_collection_blinds(exit)
 		card.states.collide.can = true
 		card.config.blind = v
 		card.config.force_focus = true
-		if discovered and not v.alerted then
+		if v.discovered and not v.alerted then
 			blinds_to_be_alerted[#blinds_to_be_alerted + 1] = card
 		end
 		card.hover = function()
@@ -157,7 +156,7 @@ function create_UIBox_your_collection_blinds(exit)
 					card.hover_tilt = 3
 					card:juice_up(0.05, 0.02)
 					play_sound('chips1', math.random() * 0.1 + 0.55, 0.12)
-					card.config.h_popup = create_UIBox_blind_popup(v, discovered)
+					card.config.h_popup = create_UIBox_blind_popup(v, card.config.blind.discovered)
 					card.config.h_popup_config = card:align_h_popup()
 					Node.hover(card)
 					if card.children.alert then
@@ -315,9 +314,8 @@ function G.FUNCS.your_collection_blinds_page(args)
 	local blinds_to_be_alerted = {}
 	local row, col = 1, 1
 	for k, v in ipairs(blind_tab) do
-		local discovered = v.discovered
-		local temp_blind = AnimatedSprite(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.ANIMATION_ATLAS[discovered and v.atlas or 'blind_chips'],
-			discovered and v.pos or G.b_undiscovered.pos)
+		local temp_blind = AnimatedSprite(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.ANIMATION_ATLAS[v.discovered and v.atlas or 'blind_chips'],
+			v.discovered and v.pos or G.b_undiscovered.pos)
 		temp_blind.states.click.can = false
 		temp_blind.states.drag.can = false
 		temp_blind.states.hover.can = true
@@ -342,7 +340,7 @@ function G.FUNCS.your_collection_blinds_page(args)
 		card.states.collide.can = true
 		card.config.blind = v
 		card.config.force_focus = true
-		if discovered and not v.alerted then
+		if v.discovered and not v.alerted then
 			blinds_to_be_alerted[#blinds_to_be_alerted + 1] = card
 		end
 		card.hover = function()
@@ -352,7 +350,7 @@ function G.FUNCS.your_collection_blinds_page(args)
 					card.hover_tilt = 3
 					card:juice_up(0.05, 0.02)
 					play_sound('chips1', math.random() * 0.1 + 0.55, 0.12)
-					card.config.h_popup = create_UIBox_blind_popup(v, discovered)
+					card.config.h_popup = create_UIBox_blind_popup(v, card.config.blind.discovered)
 					card.config.h_popup_config = card:align_h_popup()
 					Node.hover(card)
 					if card.children.alert then
