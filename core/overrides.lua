@@ -1590,6 +1590,18 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 	return nil
 end
 
+local cge = Card.get_edition
+function Card:get_edition()
+	local ret = cge(self)
+	if self.edition and self.edition.key then
+		local ed = SMODS.Centers[self.edition.key]
+		if ed.calculate and type(ed.calculate) == 'function' then
+			ed:calculate(self, {edition_main = true, edition_val = ret})
+		end
+	end
+	return ret
+end
+
 --#endregion
 --#region enhancements UI
 function create_UIBox_your_collection_enhancements(exit)
@@ -2027,3 +2039,89 @@ function get_pack(_key, _type)
     end
    if not center then center = G.P_CENTERS['p_buffoon_normal_1'] end  return center
 end
+
+--#region joker retrigger API
+local cj = Card.calculate_joker
+function Card:calculate_joker(context)
+	local ret, triggered = cj(self, context)
+	--Copy ret table before it gets modified
+	local _ret = ret
+	if type(ret) == 'table' then
+		_ret = {}
+		for k, v in pairs(ret) do
+			_ret[k] = v
+		end
+	end
+	--Apply editions
+	if (not _ret or not _ret.no_callback) and not context.no_callback then
+		if self.edition and self.edition.key and not context.retrigger_joker_check and not context.post_trigger then
+			local ed = SMODS.Centers[self.edition.key]
+			if ed.calculate and type(ed.calculate) == 'function' then
+				context.from_joker = true
+				context.joker_triggered = (_ret or triggered)
+				ed:calculate(self, context)
+				context.from_joker = nil
+				context.joker_triggered = nil
+			end
+		end
+	end
+    --Check for retrggering jokers
+    if (ret or triggered) and context and not context.retrigger_joker and not context.retrigger_joker_check and not context.post_trigger then
+		if type(ret) ~= 'table' then ret = {joker_repetitions = {0}} end
+        ret.joker_repetitions = {{}}
+        for i = 1, #G.jokers.cards do
+			ret.joker_repetitions[i] = ret.joker_repetitions[i] or {}
+            local check = G.jokers.cards[i]:calculate_joker{retrigger_joker_check = true, other_card = self}
+            if type(check) == 'table' and check.repetitions then 
+				for j = 1, check.repetitions do
+					ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {message = check.message, card = check.card}
+				end
+            else
+                ret.joker_repetitions[i] = {}
+            end
+            if G.jokers.cards[i] == self and self.edition and self.edition.key then
+                if self.edition.retriggers then
+					for j = 1, self.edition.retriggers do
+						ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {
+							message = localize('k_again_ex'),
+							card = self
+						}
+					end
+				end
+				local ed = SMODS.Centers[self.edition.key]
+				if ed.calculate and type(ed.calculate) == 'function' then
+					context.retrigger_edition_check = true
+					local check = ed:calculate(self, context)
+					context.retrigger_edition_check = nil
+					if type(check) == 'table' and check.repetitions then 
+						for j = 1, check.repetitions do
+							ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {message = check.message, card = check.card}
+						end
+					end
+				end
+            end
+        end
+        --do the retriggers
+        for z = 1, #ret.joker_repetitions do
+            if type(ret.joker_repetitions[z]) == 'table' and ret.joker_repetitions[z][1] then
+                for r = 1, #ret.joker_repetitions[z] do
+					if percent then percent = percent+percent_delta end
+					context.retrigger_joker = ret.joker_repetitions[z][r]
+					local _ret, _triggered = self:calculate_joker(context, callback)
+					if (_ret or _triggered) and not context.no_retrigger_anim then card_eval_status_text(ret.joker_repetitions[z][r].card, 'jokers', nil, nil, nil, ret.joker_repetitions[z][r]) end
+                end
+            end
+        end
+		context.retrigger_joker = nil
+    end
+	if (not _ret or not _ret.no_callback) and not context.no_callback then
+		if context.callback and type(context.callback) == 'function' then context.callback(context.blueprint_card or self, ret, context.retrigger_joker) end
+		if (_ret or triggered) and not context.retrigger_joker_check and not context.post_trigger then
+			for i = 1, #G.jokers.cards do
+				G.jokers.cards[i]:calculate_joker{blueprint_card = context.blueprint_card, post_trigger = true, other_joker = self, other_context = context, other_ret = _ret}
+			end
+		end
+	end
+    return ret, triggered
+end
+--#endregion

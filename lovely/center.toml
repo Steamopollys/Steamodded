@@ -45,8 +45,8 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if self.ability.set ~= "Enhanced" and obj.calculate and type(obj.calculate) == 'function' then
-	local o = obj:calculate(self, context)
-	if o then return o end
+	local o, t = obj:calculate(self, context)
+	if o or t then return o, t end
 end'''
 match_indent = true
 
