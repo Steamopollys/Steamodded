@@ -539,7 +539,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 end
             else
                 G.P_STAKES[self.key] = self
-                table.insert(G.P_CENTER_POOLS.Stake, self)
+                SMODS.insert_pool(G.P_CENTER_POOLS.Stake, self)
             end
             self.injected = true
             -- should only need to do this once per injection routine
@@ -2494,7 +2494,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
                 -- card is a dead arg here
-                res = self:loc_vars(info_queue)
+                res = self:loc_vars(info_queue) or {}
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
@@ -2754,6 +2754,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             'path',
         },
         set = 'Shader',
+        send_vars = nil, -- function (sprite) - get custom externs to send to shader.
         inject = function(self)
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/shaders/' .. self.path
@@ -2796,6 +2797,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         calculate = nil, -- function (self)
         on_apply = nil,  -- function (card) - modify card when edition is applied
         on_remove = nil, -- function (card) - modify card when edition is removed
+        on_load = nil,   -- function (card) - modify card when it is loaded from the save file
         register = function(self)
             self.config = self.config or {}
             SMODS.Edition.super.register(self)

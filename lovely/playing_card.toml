@@ -127,14 +127,6 @@ payload = '''function get_X_same(num, hand, or_more)'''
 [[patches]]
 [patches.pattern]
 target = 'functions/misc_functions.lua'
-pattern = 'function get_X_same(num, hand)'
-position = 'at'
-match_indent = true
-payload = '''function get_X_same(num, hand, or_more)'''
-
-[[patches]]
-[patches.pattern]
-target = 'functions/misc_functions.lua'
 pattern = 'if #curr == num then'
 position = 'at'
 match_indent = true
