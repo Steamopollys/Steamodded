@@ -70,11 +70,15 @@ match_indent = true
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
-pattern = '''level_up_hand\(G\.jokers\.cards\[i\], text\)
-[ \t]*end
-[ \t]*end'''
-position = "after"
-payload = " end})"
+pattern = '''
+level_up_hand\(G\.jokers\.cards\[i\], text\)
+(?<ends>[ \t]*end
+[ \t]*end)'''
+position = "at"
+payload = '''
+level_up_hand(card, text)
+$ends
+        end})'''
 
 # Joker debuff effects
 [[patches]]
@@ -499,16 +503,6 @@ position = "before"
 line_prepend = '$indent'
 payload = "return nil, true"
 
-# Fixes syntax of last two patches
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''[ \t]*end
-[ \t]*
-[ \t]*mult = mod_mult\(G\.GAME\.hands\[text\]\.mult\)'''
-position = "before"
-payload = " end})"
-
 # Fortune Teller
 [[patches]]
 [patches.regex]
@@ -601,10 +595,3 @@ position = "at"
 match_indent = true
 payload = "card_eval_status_text(card, 'jokers', nil, percent, nil, effects.jokers)"
 
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "level_up_hand(G.jokers.cards[i], text)"
-position = "at"
-match_indent = true
-payload = "level_up_hand(card, text)"
