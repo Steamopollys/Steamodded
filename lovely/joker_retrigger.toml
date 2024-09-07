@@ -94,16 +94,6 @@ position = "at"
 payload = "local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true, callback = function(card, ret) effects = {jokers = ret}"
 match_indent = true
 
-# Fixes syntax of last two patches
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''[ \t]*end
-[ \t]*
-[ \t]*mult = mod_mult\(G\.GAME\.hands\[text\]\.mult\)'''
-position = "before"
-payload = " end})"
-
 [[patches]]
 [patches.regex]
 target = "functions/state_events.lua"
@@ -134,14 +124,6 @@ pattern = "eval = G.jokers.cards[i]:calculate_joker({end_of_round = true, game_o
 position = "at"
 payload = "eval = G.jokers.cards[i]:calculate_joker({end_of_round = true, game_over = game_over, callback = function(card, eval)"
 match_indent = true
-
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''card_eval_status_text\(card, 'jokers', nil, nil, nil, eval\)
-[ \t]*end'''
-position = "after"
-payload = " end})"
 
 # End of round held in hand effects
 [[patches]]
@@ -186,19 +168,6 @@ end end, no_retrigger_anim = true})
 
 # Use retrigger info when computing repetitions
 
-# End of round held in hand effects
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''card_eval_status_text\(card, 'extra', nil, percent, nil, effects\[ii\]\.extra\)
-[ \t]*end'''
-position = "after"
-payload = '''
- if effects[ii].from_retrigger then
-    card_eval_status_text(effects[ii].from_retrigger.card, 'jokers', nil, nil, nil, effects[ii].from_retrigger)
-end
-'''
-
 # Played hand effects
 [[patches]]
 [patches.regex]
@@ -211,9 +180,10 @@ pattern = '''end
 [ \t]*delay\(0\.3\)'''
 position = "before"
 payload = '''
- if effects[ii].from_retrigger then
-    card_eval_status_text(effects[ii].from_retrigger.card, 'jokers', nil, nil, nil, effects[ii].from_retrigger)
-end
+                    if effects[ii].from_retrigger then
+                        card_eval_status_text(effects[ii].from_retrigger.card, 'jokers', nil, nil, nil, effects[ii].from_retrigger)
+                    end 
+                
 '''
 
 # Held in hand effects
@@ -224,9 +194,10 @@ pattern = '''end
 [ \t]*j[ \t]*=[ \t]*j[ \t]\+1'''
 position = "before"
 payload = '''
- if effects[ii].from_retrigger then
-    card_eval_status_text(effects[ii].from_retrigger.card, 'jokers', nil, nil, nil, effects[ii].from_retrigger)
-end
+                    if effects[ii].from_retrigger then
+                        card_eval_status_text(effects[ii].from_retrigger.card, 'jokers', nil, nil, nil, effects[ii].from_retrigger)
+                    end 
+                
 '''
 
 # Discard effects
@@ -237,14 +208,6 @@ pattern = "eval = G.jokers.cards[j]:calculate_joker({discard = true, other_card 
 position = "at"
 payload = "eval = G.jokers.cards[j]:calculate_joker({discard = true, other_card =  G.hand.highlighted[i], full_hand = G.hand.highlighted, callback = function(card, eval)"
 match_indent = true
-
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''card_eval_status_text\(card, 'jokers', nil, 1, nil, eval\)
-[ \t]*end'''
-position = "after"
-payload = " end})"
 
 # Joker on Joker effects
 [[patches]]
@@ -594,20 +557,31 @@ payload = "return nil, true"
 
 # eval_status_text fixes
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "functions/state_events.lua"
-pattern = "card_eval_status_text(G.jokers.cards[i], 'jokers', nil, nil, nil, eval)"
+pattern = '''
+card_eval_status_text\(G\.jokers\.cards\[i\]\, 'jokers'\, nil\, nil\, nil\, eval\)
+[ \t]*end'''
 position = "at"
-match_indent = true
-payload = "card_eval_status_text(card, 'jokers', nil, nil, nil, eval)"
+payload = '''
+card_eval_status_text(card, 'jokers', nil, nil, nil, eval)
+                end
+            end})
+'''
 
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = "functions/state_events.lua"
-pattern = "card_eval_status_text(G.jokers.cards[j], 'jokers', nil, 1, nil, eval)"
+pattern = '''
+card_eval_status_text\(G\.jokers\.cards\[j\]\, 'jokers'\, nil\, 1\, nil\, eval\)
+[ \t]*end'''
 position = "at"
-match_indent = true
-payload = "card_eval_status_text(card, 'jokers', nil, 1, nil, eval)"
+payload = '''
+card_eval_status_text(card, 'jokers', nil, 1, nil, eval)
+                end
+            end})
+'''
+
 
 [[patches]]
 [patches.pattern]
