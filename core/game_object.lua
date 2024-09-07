@@ -539,7 +539,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 end
             else
                 G.P_STAKES[self.key] = self
-                table.insert(G.P_CENTER_POOLS.Stake, self)
+                SMODS.insert_pool(G.P_CENTER_POOLS.Stake, self)
             end
             self.injected = true
             -- should only need to do this once per injection routine
@@ -2345,7 +2345,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
                 -- card is a dead arg here
-                res = self:loc_vars(info_queue)
+                res = self:loc_vars(info_queue) or {}
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
