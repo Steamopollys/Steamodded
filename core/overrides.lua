@@ -2051,6 +2051,8 @@ function Card:calculate_joker(context)
 		for k, v in pairs(ret) do
 			_ret[k] = v
 		end
+	else
+		_ret = ret and {}
 	end
 	--Apply editions
 	if (not _ret or not _ret.no_callback) and not context.no_callback then
