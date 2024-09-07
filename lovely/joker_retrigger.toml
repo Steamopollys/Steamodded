@@ -499,6 +499,16 @@ position = "before"
 line_prepend = '$indent'
 payload = "return nil, true"
 
+# Fixes syntax of last two patches
+[[patches]]
+[patches.regex]
+target = "functions/state_events.lua"
+pattern = '''[ \t]*end
+[ \t]*
+[ \t]*mult = mod_mult\(G\.GAME\.hands\[text\]\.mult\)'''
+position = "before"
+payload = " end})"
+
 # Fortune Teller
 [[patches]]
 [patches.regex]
