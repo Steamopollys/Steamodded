@@ -598,3 +598,10 @@ position = "at"
 match_indent = true
 payload = "card_eval_status_text(card, 'jokers', nil, percent, nil, effects.jokers)"
 
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "for h = 1, eval.jokers.repetitions do"
+position = "before"
+match_indent = true
+payload = "if not eval.jokers.repetitions then eval.jokers.repetitions = 0 end"
