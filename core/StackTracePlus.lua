@@ -501,6 +501,24 @@ function getDebugInfoForCrash()
                 if v.lovely_only or (v.lovely and not v.can_load) then
                     lovely_strings = lovely_strings .. "\n    " .. lovely_i .. ": " .. v.name
                     lovely_i = lovely_i + 1
+                    if not v.can_load then
+                        lovely_strings = lovely_strings .. "\n        Has Steamodded mod that failed to load."
+                        if #v.load_issues.dependencies > 0 then
+                            lovely_strings = lovely_strings .. "\n        Missing Dependencies:"
+                            for k, v in ipairs(v.load_issues.dependencies) do
+                                lovely_strings = lovely_strings .. "\n            " .. k .. ". " .. v
+                            end
+                        end
+                        if #v.load_issues.conflicts > 0 then
+                            lovely_strings = lovely_strings .. "\n        Conflicts:"
+                            for k, v in ipairs(v.load_issues.conflicts) do
+                                lovely_strings = lovely_strings .. "\n            " .. k .. ". " .. v
+                            end
+                        end
+                        if v.load_issues.outdated then
+                            lovely_strings = lovely_strings .. "\n        Outdated Mod"
+                        end
+                    end
                 else
                     mod_strings = mod_strings .. "\n    " .. i .. ": " .. v.name .. " by " ..
                                       table.concat(v.author, ", ") .. " [ID: " .. v.id ..
