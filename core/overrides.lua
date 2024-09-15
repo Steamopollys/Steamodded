@@ -2073,7 +2073,7 @@ function Card:calculate_joker(context)
         ret.joker_repetitions = {{}}
         for i = 1, #G.jokers.cards do
 			ret.joker_repetitions[i] = ret.joker_repetitions[i] or {}
-            local check = G.jokers.cards[i]:calculate_joker{retrigger_joker_check = true, other_card = self}
+            local check = G.jokers.cards[i]:calculate_joker{retrigger_joker_check = true, other_card = self, other_context = context, other_ret = _ret}
             if type(check) == 'table' and check.repetitions then 
 				for j = 1, check.repetitions do
 					ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {message = check.message, card = check.card}
