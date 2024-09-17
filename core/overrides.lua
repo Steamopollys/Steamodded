@@ -788,7 +788,7 @@ function G.UIDEF.view_deck(unplayed_only)
 		suit_map[#suit_map + 1] = SMODS.Suit.obj_buffer[i]
 	end
 	for k, v in ipairs(G.playing_cards) do
-		table.insert(SUITS[v.base.suit], v)
+		if v.base.suit then table.insert(SUITS[v.base.suit], v) end
 	end
 	local num_suits = 0
 	for j = 1, #suit_map do
@@ -859,16 +859,16 @@ function G.UIDEF.view_deck(unplayed_only)
 		if v.ability.name ~= 'Stone Card' and (not unplayed_only or ((v.area and v.area == G.deck) or v.ability.wheel_flipped)) then
 			if v.ability.wheel_flipped and not (v.area and v.area == G.deck) and unplayed_only then wheel_flipped = wheel_flipped + 1 end
 			--For the suits
-			suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1
+			if v.base.suit then suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1 end
 			for kk, vv in pairs(mod_suit_tallies) do
 				mod_suit_tallies[kk] = (vv or 0) + (v:is_suit(kk) and 1 or 0)
 			end
 
 			--for face cards/numbered cards/aces
 			local card_id = v:get_id()
-			face_tally = face_tally + ((SMODS.Ranks[v.base.value].face) and 1 or 0)
+			if v.base.value then face_tally = face_tally + ((SMODS.Ranks[v.base.value].face) and 1 or 0) end
 			mod_face_tally = mod_face_tally + (v:is_face() and 1 or 0)
-			if not SMODS.Ranks[v.base.value].face and card_id ~= 14 then
+			if v.base.value and not SMODS.Ranks[v.base.value].face and card_id ~= 14 then
 				num_tally = num_tally + 1
 				if not v.debuff then mod_num_tally = mod_num_tally + 1 end
 			end
@@ -878,8 +878,8 @@ function G.UIDEF.view_deck(unplayed_only)
 			end
 
 			--ranks
-			rank_tallies[v.base.value] = rank_tallies[v.base.value] + 1
-			if not v.debuff then mod_rank_tallies[v.base.value] = mod_rank_tallies[v.base.value] + 1 end
+			if v.base.value then rank_tallies[v.base.value] = rank_tallies[v.base.value] + 1 end
+			if v.base.value and not v.debuff then mod_rank_tallies[v.base.value] = mod_rank_tallies[v.base.value] + 1 end
 		end
 	end
 	local modded = face_tally ~= mod_face_tally
