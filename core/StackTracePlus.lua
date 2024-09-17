@@ -374,6 +374,11 @@ Stack Traceback
                             dumper:add_f("(%d) main chunk of file '%s' at line %d (from mod with id %s)\r\n",
                                 level_to_show, fileName:sub(2, -2), info.currentline, modID)
                         end
+                    elseif source == "lovely" then
+                        local module = table.remove(props, 1)
+                        local fileName = table.concat(props, " ")
+                        dumper:add_f("(%d) main chunk of file '%s' at line %d (from lovely module %s)\r\n",
+                            level_to_show, fileName:sub(2, -2), info.currentline, module)
                     else
                         dumper:add_f("(%d) main chunk of %s at line %d\r\n", level_to_show, info.source,
                             info.currentline)
@@ -436,6 +441,12 @@ Stack Traceback
                                 function_type, function_name, fileName:sub(2, -2), info.currentline, modID,
                                 was_guessed and " (best guess)" or "")
                         end
+                    elseif source == "lovely" then
+                        local module = table.remove(props, 1)
+                        local fileName = table.concat(props, " ")
+                        dumper:add_f("(%d) Lua %s '%s' at file '%s:%d' (from lovely module %s)%s\r\n", level_to_show,
+                            function_type, function_name, fileName:sub(2, -2), info.currentline, module,
+                            was_guessed and " (best guess)" or "")
                     else
                         dumper:add_f("(%d) Lua %s '%s' at line %d of chunk '%s'\r\n", level_to_show, function_type,
                             function_name, info.currentline, source)
