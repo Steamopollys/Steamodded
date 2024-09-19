@@ -35,11 +35,20 @@ G.FUNCS.HUD_blind_debuff = function(e)
 end
 
 function create_UIBox_your_collection_blinds(exit)
+	local min_ante = 1
+	local max_ante = 16
+	local spacing = 1 - 15*0.06
+	if G.GAME and G.GAME.round_resets and G.GAME.round_resets.ante then
+		local current_ante = G.GAME.round_resets.ante
+	
+		if current_ante > 8 then
+			min_ante = current_ante - 8 + 1
+			max_ante = current_ante + 8
+		end
+	end
 	local ante_amounts = {}
-	for i = 1, math.min(16, math.max(16, G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt)) do
-		local spacing = 1 - math.min(20, math.max(15, G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt)) *
-		0.06
-		if spacing > 0 and i > 1 then
+	for i = min_ante, max_ante do
+		if i > 1 then
 			ante_amounts[#ante_amounts + 1] = { n = G.UIT.R, config = { minh = spacing }, nodes = {} }
 		end
 		local blind_chip = Sprite(0, 0, 0.2, 0.2, G.ASSET_ATLAS["ui_" .. (G.SETTINGS.colourblind_option and 2 or 1)],
@@ -788,7 +797,7 @@ function G.UIDEF.view_deck(unplayed_only)
 		suit_map[#suit_map + 1] = SMODS.Suit.obj_buffer[i]
 	end
 	for k, v in ipairs(G.playing_cards) do
-		table.insert(SUITS[v.base.suit], v)
+		if v.base.suit then table.insert(SUITS[v.base.suit], v) end
 	end
 	local num_suits = 0
 	for j = 1, #suit_map do
@@ -859,16 +868,16 @@ function G.UIDEF.view_deck(unplayed_only)
 		if v.ability.name ~= 'Stone Card' and (not unplayed_only or ((v.area and v.area == G.deck) or v.ability.wheel_flipped)) then
 			if v.ability.wheel_flipped and not (v.area and v.area == G.deck) and unplayed_only then wheel_flipped = wheel_flipped + 1 end
 			--For the suits
-			suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1
+			if v.base.suit then suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1 end
 			for kk, vv in pairs(mod_suit_tallies) do
 				mod_suit_tallies[kk] = (vv or 0) + (v:is_suit(kk) and 1 or 0)
 			end
 
 			--for face cards/numbered cards/aces
 			local card_id = v:get_id()
-			face_tally = face_tally + ((SMODS.Ranks[v.base.value].face) and 1 or 0)
+			if v.base.value then face_tally = face_tally + ((SMODS.Ranks[v.base.value].face) and 1 or 0) end
 			mod_face_tally = mod_face_tally + (v:is_face() and 1 or 0)
-			if not SMODS.Ranks[v.base.value].face and card_id ~= 14 then
+			if v.base.value and not SMODS.Ranks[v.base.value].face and card_id ~= 14 then
 				num_tally = num_tally + 1
 				if not v.debuff then mod_num_tally = mod_num_tally + 1 end
 			end
@@ -878,8 +887,8 @@ function G.UIDEF.view_deck(unplayed_only)
 			end
 
 			--ranks
-			rank_tallies[v.base.value] = rank_tallies[v.base.value] + 1
-			if not v.debuff then mod_rank_tallies[v.base.value] = mod_rank_tallies[v.base.value] + 1 end
+			if v.base.value then rank_tallies[v.base.value] = rank_tallies[v.base.value] + 1 end
+			if v.base.value and not v.debuff then mod_rank_tallies[v.base.value] = mod_rank_tallies[v.base.value] + 1 end
 		end
 	end
 	local modded = face_tally ~= mod_face_tally
@@ -2073,7 +2082,7 @@ function Card:calculate_joker(context)
         ret.joker_repetitions = {{}}
         for i = 1, #G.jokers.cards do
 			ret.joker_repetitions[i] = ret.joker_repetitions[i] or {}
-            local check = G.jokers.cards[i]:calculate_joker{retrigger_joker_check = true, other_card = self}
+            local check = G.jokers.cards[i]:calculate_joker{retrigger_joker_check = true, other_card = self, other_context = context, other_ret = _ret}
             if type(check) == 'table' and check.repetitions then 
 				for j = 1, check.repetitions do
 					ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {message = check.message, card = check.card}
@@ -2117,7 +2126,7 @@ function Card:calculate_joker(context)
 		context.retrigger_joker = nil
     end
 	if (not _ret or not _ret.no_callback) and not context.no_callback then
-		if context.callback and type(context.callback) == 'function' then context.callback(context.blueprint_card or self, ret, context.retrigger_joker) end
+		if context.callback and type(context.callback) == 'function' then context.callback(context.blueprint_card or self, _ret, context.retrigger_joker) end
 		if (_ret or triggered) and not context.retrigger_joker_check and not context.post_trigger then
 			for i = 1, #G.jokers.cards do
 				G.jokers.cards[i]:calculate_joker{blueprint_card = context.blueprint_card, post_trigger = true, other_joker = self, other_context = context, other_ret = _ret}

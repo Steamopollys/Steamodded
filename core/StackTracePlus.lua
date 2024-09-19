@@ -374,6 +374,11 @@ Stack Traceback
                             dumper:add_f("(%d) main chunk of file '%s' at line %d (from mod with id %s)\r\n",
                                 level_to_show, fileName:sub(2, -2), info.currentline, modID)
                         end
+                    elseif source == "lovely" then
+                        local module = table.remove(props, 1)
+                        local fileName = table.concat(props, " ")
+                        dumper:add_f("(%d) main chunk of file '%s' at line %d (from lovely module %s)\r\n",
+                            level_to_show, fileName:sub(2, -2), info.currentline, module)
                     else
                         dumper:add_f("(%d) main chunk of %s at line %d\r\n", level_to_show, info.source,
                             info.currentline)
@@ -436,6 +441,12 @@ Stack Traceback
                                 function_type, function_name, fileName:sub(2, -2), info.currentline, modID,
                                 was_guessed and " (best guess)" or "")
                         end
+                    elseif source == "lovely" then
+                        local module = table.remove(props, 1)
+                        local fileName = table.concat(props, " ")
+                        dumper:add_f("(%d) Lua %s '%s' at file '%s:%d' (from lovely module %s)%s\r\n", level_to_show,
+                            function_type, function_name, fileName:sub(2, -2), info.currentline, module,
+                            was_guessed and " (best guess)" or "")
                     else
                         dumper:add_f("(%d) Lua %s '%s' at line %d of chunk '%s'\r\n", level_to_show, function_type,
                             function_name, info.currentline, source)
@@ -501,6 +512,24 @@ function getDebugInfoForCrash()
                 if v.lovely_only or (v.lovely and not v.can_load) then
                     lovely_strings = lovely_strings .. "\n    " .. lovely_i .. ": " .. v.name
                     lovely_i = lovely_i + 1
+                    if not v.can_load then
+                        lovely_strings = lovely_strings .. "\n        Has Steamodded mod that failed to load."
+                        if #v.load_issues.dependencies > 0 then
+                            lovely_strings = lovely_strings .. "\n        Missing Dependencies:"
+                            for k, v in ipairs(v.load_issues.dependencies) do
+                                lovely_strings = lovely_strings .. "\n            " .. k .. ". " .. v
+                            end
+                        end
+                        if #v.load_issues.conflicts > 0 then
+                            lovely_strings = lovely_strings .. "\n        Conflicts:"
+                            for k, v in ipairs(v.load_issues.conflicts) do
+                                lovely_strings = lovely_strings .. "\n            " .. k .. ". " .. v
+                            end
+                        end
+                        if v.load_issues.outdated then
+                            lovely_strings = lovely_strings .. "\n        Outdated Mod"
+                        end
+                    end
                 else
                     mod_strings = mod_strings .. "\n    " .. i .. ": " .. v.name .. " by " ..
                                       table.concat(v.author, ", ") .. " [ID: " .. v.id ..
