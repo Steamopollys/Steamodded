@@ -35,11 +35,20 @@ G.FUNCS.HUD_blind_debuff = function(e)
 end
 
 function create_UIBox_your_collection_blinds(exit)
+	local min_ante = 1
+	local max_ante = 16
+	local spacing = 1 - 15*0.06
+	if G.GAME and G.GAME.round_resets and G.GAME.round_resets.ante then
+		local current_ante = G.GAME.round_resets.ante
+	
+		if current_ante > 8 then
+			min_ante = current_ante - 8 + 1
+			max_ante = current_ante + 8
+		end
+	end
 	local ante_amounts = {}
-	for i = 1, math.min(16, math.max(16, G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt)) do
-		local spacing = 1 - math.min(20, math.max(15, G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt)) *
-		0.06
-		if spacing > 0 and i > 1 then
+	for i = min_ante, max_ante do
+		if i > 1 then
 			ante_amounts[#ante_amounts + 1] = { n = G.UIT.R, config = { minh = spacing }, nodes = {} }
 		end
 		local blind_chip = Sprite(0, 0, 0.2, 0.2, G.ASSET_ATLAS["ui_" .. (G.SETTINGS.colourblind_option and 2 or 1)],
