@@ -410,6 +410,28 @@ payload = """
 elseif self.edition.type == 'negative' and (self.ability.set == 'Enhanced' or self.ability.set == 'Default') then
     badges[#badges + 1] = 'negative_playing_card'"""
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "engine/sprite.lua"
+pattern = "love.graphics.setShader( G.SHADERS[_shader or 'dissolve'],  G.SHADERS[_shader or 'dissolve'])"
+position = "before"
+payload = '''
+local p_shader = SMODS.Shader.obj_table[_shader or 'dissolve']
+if p_shader and type(p_shader.send_vars) == "function" then
+    local sh = G.SHADERS[_shader or 'dissolve']
+    local parent_card = self.role.major and self.role.major:is(Card) and self.role.major
+    local send_vars = p_shader.send_vars(self, parent_card)
+    
+    if type(send_vars) == "table" then
+        for key, value in pairs(send_vars) do
+            sh:send(key, value)
+        end
+    end
+end
+'''
+match_indent = true
+
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"
@@ -429,3 +451,65 @@ payload = '''
 if not SMODS.bypass_create_card_edition then
     $edi
 end'''
+
+# eval_card() - add calculation calls for editions
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
+match_indent = true
+position = "before"
+payload = """
+if card.edition and card.edition.key then
+    local ed = SMODS.Centers[card.edition.key]
+    if ed.calculate and type(ed.calculate) == 'function' then
+        context.from_playing_card = true
+        ed:calculate(card, context)
+        context.from_playing_card = nil
+    end
+end"""
+
+# G.FUNCS.use_card() - add calculation calls for editions
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "e.config.ref_table:use_consumeable(area)"
+match_indent = true
+position = "after"
+payload = """
+if card.edition and card.edition.key then
+    local ed = SMODS.Centers[card.edition.key]
+    if ed.calculate and type(ed.calculate) == 'function' then
+        ed:calculate(card, {from_consumable = true})
+    end
+end"""
+
+# G.FUNCS.evaluate_play() - calculate playing card retriggers from editions
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "for j=1,#reps do"
+match_indent = true
+position = "before"
+payload = """
+--From edition
+if scoring_hand[i].edition and scoring_hand[i].edition.key then
+    local ed = SMODS.Centers[scoring_hand[i].edition.key]
+    if ed.config and ed.config.retriggers then
+        for h = 1, ed.config.retriggers do
+            reps[#reps+1] = {seals = {
+                message = localize("k_again_ex"),
+                card = scoring_hand[i]
+            }}
+        end
+    end
+    if ed.calculate and type(ed.calculate) == 'function' then
+        local check = ed:calculate(scoring_hand[i], {retrigger_edition_check = true, cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true})
+        if check and type(check) == 'table' and next(check) then 
+            for j = 1, check.repetitions do
+                reps[#reps+1] = {seals = check}
+            end
+        end
+    end
+end
+"""

@@ -35,11 +35,20 @@ G.FUNCS.HUD_blind_debuff = function(e)
 end
 
 function create_UIBox_your_collection_blinds(exit)
+	local min_ante = 1
+	local max_ante = 16
+	local spacing = 1 - 15*0.06
+	if G.GAME and G.GAME.round_resets and G.GAME.round_resets.ante then
+		local current_ante = G.GAME.round_resets.ante
+	
+		if current_ante > 8 then
+			min_ante = current_ante - 8 + 1
+			max_ante = current_ante + 8
+		end
+	end
 	local ante_amounts = {}
-	for i = 1, math.min(16, math.max(16, G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt)) do
-		local spacing = 1 - math.min(20, math.max(15, G.PROFILES[G.SETTINGS.profile].high_scores.furthest_ante.amt)) *
-		0.06
-		if spacing > 0 and i > 1 then
+	for i = min_ante, max_ante do
+		if i > 1 then
 			ante_amounts[#ante_amounts + 1] = { n = G.UIT.R, config = { minh = spacing }, nodes = {} }
 		end
 		local blind_chip = Sprite(0, 0, 0.2, 0.2, G.ASSET_ATLAS["ui_" .. (G.SETTINGS.colourblind_option and 2 or 1)],
@@ -120,9 +129,8 @@ function create_UIBox_your_collection_blinds(exit)
 	local blinds_to_be_alerted = {}
 	local row, col = 1, 1
 	for k, v in ipairs(blind_tab) do
-		local discovered = v.discovered
-		local temp_blind = AnimatedSprite(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.ANIMATION_ATLAS[discovered and v.atlas or 'blind_chips'],
-			discovered and v.pos or G.b_undiscovered.pos)
+		local temp_blind = AnimatedSprite(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.ANIMATION_ATLAS[v.discovered and v.atlas or 'blind_chips'],
+			v.discovered and v.pos or G.b_undiscovered.pos)
 		temp_blind.states.click.can = false
 		temp_blind.states.drag.can = false
 		temp_blind.states.hover.can = true
@@ -133,6 +141,8 @@ function create_UIBox_your_collection_blinds(exit)
 		card.children.center = temp_blind
 		temp_blind:set_role({major = card, role_type = 'Glued', draw_major = card})
 		card.set_sprites = function(...)
+			local args = {...}
+			if not args[1].animation then return end -- fix for debug unlock
 			local c = card.children.center
 			Card.set_sprites(...)
 			card.children.center = c
@@ -145,7 +155,7 @@ function create_UIBox_your_collection_blinds(exit)
 		card.states.collide.can = true
 		card.config.blind = v
 		card.config.force_focus = true
-		if discovered and not v.alerted then
+		if v.discovered and not v.alerted then
 			blinds_to_be_alerted[#blinds_to_be_alerted + 1] = card
 		end
 		card.hover = function()
@@ -155,7 +165,7 @@ function create_UIBox_your_collection_blinds(exit)
 					card.hover_tilt = 3
 					card:juice_up(0.05, 0.02)
 					play_sound('chips1', math.random() * 0.1 + 0.55, 0.12)
-					card.config.h_popup = create_UIBox_blind_popup(v, discovered)
+					card.config.h_popup = create_UIBox_blind_popup(v, card.config.blind.discovered)
 					card.config.h_popup_config = card:align_h_popup()
 					Node.hover(card)
 					if card.children.alert then
@@ -313,9 +323,8 @@ function G.FUNCS.your_collection_blinds_page(args)
 	local blinds_to_be_alerted = {}
 	local row, col = 1, 1
 	for k, v in ipairs(blind_tab) do
-		local discovered = v.discovered
-		local temp_blind = AnimatedSprite(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.ANIMATION_ATLAS[discovered and v.atlas or 'blind_chips'],
-			discovered and v.pos or G.b_undiscovered.pos)
+		local temp_blind = AnimatedSprite(G.your_collection[row].T.x + G.your_collection[row].T.w/2, G.your_collection[row].T.y, 1.3, 1.3, G.ANIMATION_ATLAS[v.discovered and v.atlas or 'blind_chips'],
+			v.discovered and v.pos or G.b_undiscovered.pos)
 		temp_blind.states.click.can = false
 		temp_blind.states.drag.can = false
 		temp_blind.states.hover.can = true
@@ -326,6 +335,8 @@ function G.FUNCS.your_collection_blinds_page(args)
 		card.children.center = temp_blind
 		temp_blind:set_role({major = card, role_type = 'Glued', draw_major = card})
 		card.set_sprites = function(...)
+			local args = {...}
+			if not args[1].animation then return end -- fix for debug unlock
 			local c = card.children.center
 			Card.set_sprites(...)
 			card.children.center = c
@@ -338,7 +349,7 @@ function G.FUNCS.your_collection_blinds_page(args)
 		card.states.collide.can = true
 		card.config.blind = v
 		card.config.force_focus = true
-		if discovered and not v.alerted then
+		if v.discovered and not v.alerted then
 			blinds_to_be_alerted[#blinds_to_be_alerted + 1] = card
 		end
 		card.hover = function()
@@ -348,7 +359,7 @@ function G.FUNCS.your_collection_blinds_page(args)
 					card.hover_tilt = 3
 					card:juice_up(0.05, 0.02)
 					play_sound('chips1', math.random() * 0.1 + 0.55, 0.12)
-					card.config.h_popup = create_UIBox_blind_popup(v, discovered)
+					card.config.h_popup = create_UIBox_blind_popup(v, card.config.blind.discovered)
 					card.config.h_popup_config = card:align_h_popup()
 					Node.hover(card)
 					if card.children.alert then
@@ -786,7 +797,7 @@ function G.UIDEF.view_deck(unplayed_only)
 		suit_map[#suit_map + 1] = SMODS.Suit.obj_buffer[i]
 	end
 	for k, v in ipairs(G.playing_cards) do
-		table.insert(SUITS[v.base.suit], v)
+		if v.base.suit then table.insert(SUITS[v.base.suit], v) end
 	end
 	local num_suits = 0
 	for j = 1, #suit_map do
@@ -857,16 +868,16 @@ function G.UIDEF.view_deck(unplayed_only)
 		if v.ability.name ~= 'Stone Card' and (not unplayed_only or ((v.area and v.area == G.deck) or v.ability.wheel_flipped)) then
 			if v.ability.wheel_flipped and not (v.area and v.area == G.deck) and unplayed_only then wheel_flipped = wheel_flipped + 1 end
 			--For the suits
-			suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1
+			if v.base.suit then suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1 end
 			for kk, vv in pairs(mod_suit_tallies) do
 				mod_suit_tallies[kk] = (vv or 0) + (v:is_suit(kk) and 1 or 0)
 			end
 
 			--for face cards/numbered cards/aces
 			local card_id = v:get_id()
-			face_tally = face_tally + ((SMODS.Ranks[v.base.value].face) and 1 or 0)
+			if v.base.value then face_tally = face_tally + ((SMODS.Ranks[v.base.value].face) and 1 or 0) end
 			mod_face_tally = mod_face_tally + (v:is_face() and 1 or 0)
-			if not SMODS.Ranks[v.base.value].face and card_id ~= 14 then
+			if v.base.value and not SMODS.Ranks[v.base.value].face and card_id ~= 14 then
 				num_tally = num_tally + 1
 				if not v.debuff then mod_num_tally = mod_num_tally + 1 end
 			end
@@ -876,8 +887,8 @@ function G.UIDEF.view_deck(unplayed_only)
 			end
 
 			--ranks
-			rank_tallies[v.base.value] = rank_tallies[v.base.value] + 1
-			if not v.debuff then mod_rank_tallies[v.base.value] = mod_rank_tallies[v.base.value] + 1 end
+			if v.base.value then rank_tallies[v.base.value] = rank_tallies[v.base.value] + 1 end
+			if v.base.value and not v.debuff then mod_rank_tallies[v.base.value] = mod_rank_tallies[v.base.value] + 1 end
 		end
 	end
 	local modded = face_tally ~= mod_face_tally
@@ -1351,6 +1362,18 @@ function Card:should_draw_shadow()
 	return not next(self.ignore_shadow or {})
 end
 
+local smods_card_load = Card.load
+-- 
+function Card:load(cardTable, other_card)
+	local ret = smods_card_load(self, cardTable, other_card)
+	local on_edition_loaded = self.edition and self.edition.key and G.P_CENTERS[self.edition.key].on_load
+	if type(on_edition_loaded) == "function" then
+		on_edition_loaded(self)
+	end
+
+	return ret
+end
+
 -- self = pass the card
 -- edition =
 -- nil (removes edition)
@@ -1574,6 +1597,18 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 	end
 
 	return nil
+end
+
+local cge = Card.get_edition
+function Card:get_edition()
+	local ret = cge(self)
+	if self.edition and self.edition.key then
+		local ed = SMODS.Centers[self.edition.key]
+		if ed.calculate and type(ed.calculate) == 'function' then
+			ed:calculate(self, {edition_main = true, edition_val = ret})
+		end
+	end
+	return ret
 end
 
 --#endregion
@@ -1888,7 +1923,7 @@ function get_deck_win_stake(_deck_key)
 		local deck_count = 0
 		for _, deck in pairs(G.PROFILES[G.SETTINGS.profile].deck_usage) do
 			local deck_won_with = false
-			for key, _ in pairs(deck.wins_by_key) do
+			for key, _ in pairs(deck.wins_by_key or {}) do
 				deck_won_with = true
 				if (G.P_STAKES[key] and G.P_STAKES[key].stake_level or 0) > (_stake and G.P_STAKES[_stake].stake_level or 0) then
 					_stake = key
@@ -1946,6 +1981,7 @@ function set_deck_win()
 		end
 		set_challenge_unlock()
 		G:save_settings()
+		G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = deck_usage
 	end
 end
 
@@ -2012,3 +2048,91 @@ function get_pack(_key, _type)
     end
    if not center then center = G.P_CENTERS['p_buffoon_normal_1'] end  return center
 end
+
+--#region joker retrigger API
+local cj = Card.calculate_joker
+function Card:calculate_joker(context)
+	local ret, triggered = cj(self, context)
+	--Copy ret table before it gets modified
+	local _ret = ret
+	if type(ret) == 'table' then
+		_ret = {}
+		for k, v in pairs(ret) do
+			_ret[k] = v
+		end
+	else
+		_ret = ret and {}
+	end
+	--Apply editions
+	if (not _ret or not _ret.no_callback) and not context.no_callback then
+		if self.edition and self.edition.key and not context.retrigger_joker_check and not context.post_trigger then
+			local ed = SMODS.Centers[self.edition.key]
+			if ed.calculate and type(ed.calculate) == 'function' then
+				context.from_joker = true
+				context.joker_triggered = (_ret or triggered)
+				ed:calculate(self, context)
+				context.from_joker = nil
+				context.joker_triggered = nil
+			end
+		end
+	end
+    --Check for retrggering jokers
+    if (ret or triggered) and context and not context.retrigger_joker and not context.retrigger_joker_check and not context.post_trigger then
+		if type(ret) ~= 'table' then ret = {joker_repetitions = {0}} end
+        ret.joker_repetitions = {{}}
+        for i = 1, #G.jokers.cards do
+			ret.joker_repetitions[i] = ret.joker_repetitions[i] or {}
+            local check = G.jokers.cards[i]:calculate_joker{retrigger_joker_check = true, other_card = self, other_context = context, other_ret = _ret}
+            if type(check) == 'table' and check.repetitions then 
+				for j = 1, check.repetitions do
+					ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {message = check.message, card = check.card}
+				end
+            else
+                ret.joker_repetitions[i] = {}
+            end
+            if G.jokers.cards[i] == self and self.edition and self.edition.key then
+                if self.edition.retriggers then
+					for j = 1, self.edition.retriggers do
+						ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {
+							message = localize('k_again_ex'),
+							card = self
+						}
+					end
+				end
+				local ed = SMODS.Centers[self.edition.key]
+				if ed.calculate and type(ed.calculate) == 'function' then
+					context.retrigger_edition_check = true
+					local check = ed:calculate(self, context)
+					context.retrigger_edition_check = nil
+					if type(check) == 'table' and check.repetitions then 
+						for j = 1, check.repetitions do
+							ret.joker_repetitions[i][#ret.joker_repetitions[i]+1] = {message = check.message, card = check.card}
+						end
+					end
+				end
+            end
+        end
+        --do the retriggers
+        for z = 1, #ret.joker_repetitions do
+            if type(ret.joker_repetitions[z]) == 'table' and ret.joker_repetitions[z][1] then
+                for r = 1, #ret.joker_repetitions[z] do
+					if percent then percent = percent+percent_delta end
+					context.retrigger_joker = ret.joker_repetitions[z][r]
+					local _ret, _triggered = self:calculate_joker(context, callback)
+					if (_ret or _triggered) and not context.no_retrigger_anim then card_eval_status_text(ret.joker_repetitions[z][r].card, 'jokers', nil, nil, nil, ret.joker_repetitions[z][r]) end
+                end
+            end
+        end
+		context.retrigger_joker = nil
+    end
+	if (not _ret or not _ret.no_callback) and not context.no_callback then
+		if context.callback and type(context.callback) == 'function' then context.callback(context.blueprint_card or self, _ret, context.retrigger_joker) end
+		if (_ret or triggered) and not context.retrigger_joker_check and not context.post_trigger then
+			for i = 1, #G.jokers.cards do
+				G.jokers.cards[i]:calculate_joker{blueprint_card = context.blueprint_card, post_trigger = true, other_joker = self, other_context = context, other_ret = _ret}
+			end
+		end
+	end
+    return ret, triggered
+end
+--#endregion

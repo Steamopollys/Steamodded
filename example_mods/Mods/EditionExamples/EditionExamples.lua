@@ -5,7 +5,7 @@
 --- MOD_AUTHOR: [Eremel_, stupxd]
 --- MOD_DESCRIPTION: Adds editions that demonstrate Edition API.
 --- BADGE_COLOUR: 3FC7EB
---- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0812d]
+--- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0905a]
 
 SMODS.Atlas({
     key = 'edition_example',
@@ -121,6 +121,29 @@ SMODS.Back({
     discovered = true,
     unlocked = true
 })
+
+---- CUSTOM VARS USAGE EXAMPLE
+SMODS.Shader {
+    key = 'gold',
+    path = 'gold.fs',
+    -- card can be nil if sprite.role.major is not Card
+    send_vars = function (sprite, card)
+        return {
+            lines_offset = card and card.edition.example_gold_seed or 0
+        }
+    end,
+}
+SMODS.Edition {
+    key = "gold",
+    shader = "gold",
+    on_apply = function (card)
+        -- Randomize offset to -1..1
+        -- Save in card.edition table so it persists after game restart.
+        card.edition.example_gold_seed = pseudorandom('e_example_gold') * 2 - 1
+    end,
+}
+---- CUSTOM VARS USAGE EXAMPLE END
+
 
 SMODS.Shader({ key = 'anaglyphic', path = 'anaglyphic.fs' })
 SMODS.Shader({ key = 'flipped', path = 'flipped.fs' })
