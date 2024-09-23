@@ -1,55 +1,55 @@
 return {
     descriptions = {
         Other = {
-			load_success = {
-				text = {
-					'Mod loaded',
-					'{C:green}successfully!'
-				}
-			},
-			load_failure_d = {
-				text = {
-					'Missing {C:attention}dependencies!',
-					'#1#',
-				}
-			},
-			load_failure_c = {
-				text = {
-					'Unresolved {C:attention}conflicts!',
-					'#1#'
-				}
-			},
-			load_failure_d_c = {
-				text = {
-					'Missing {C:attention}dependencies!',
-					'#1#',
-					'Unresolved {C:attention}conflicts!',
-					'#2#'
-				}
-			},
-			load_failure_o = {
-				text = {
-					'{C:attention}Outdated!{} Steamodded',
-					'versions {C:money}0.9.8{} and below',
-					'are no longer supported.'
-				}
-			},
-			load_failure_i = {
-				text = {
-					'{C:attention}Incompatible!{} Needs version',
-					'#1# of Steamodded,',
-					'but #2# is installed.'
-				}
-			},
-			load_failure_p = {
-				text = {
-					'{C:attention}Prefix Conflict!{}',
-					'This mod\'s prefix is',
-					'the same as another mod\'s.',
-					'({C:attention}#1#{})'
-				}
-			},
-			load_disabled = {
+            load_success = {
+                text = {
+                    'Mod loaded',
+                    '{C:green}successfully!'
+                }
+            },
+            load_failure_d = {
+                text = {
+                    'Missing {C:attention}dependencies!',
+                    '#1#',
+                }
+            },
+            load_failure_c = {
+                text = {
+                    'Unresolved {C:attention}conflicts!',
+                    '#1#'
+                }
+            },
+            load_failure_d_c = {
+                text = {
+                    'Missing {C:attention}dependencies!',
+                    '#1#',
+                    'Unresolved {C:attention}conflicts!',
+                    '#2#'
+                }
+            },
+            load_failure_o = {
+                text = {
+                    '{C:attention}Outdated!{} Steamodded',
+                    'versions {C:money}0.9.8{} and below',
+                    'are no longer supported.'
+                }
+            },
+            load_failure_i = {
+                text = {
+                    '{C:attention}Incompatible!{} Needs version',
+                    '#1# of Steamodded,',
+                    'but #2# is installed.'
+                }
+            },
+            load_failure_p = {
+                text = {
+                    '{C:attention}Prefix Conflict!{}',
+                    'This mod\'s prefix is',
+                    'the same as another mod\'s.',
+                    '({C:attention}#1#{})'
+                }
+            },
+            load_disabled = {
                 text = {
                     'This mod has been',
                     '{C:attention}disabled!{}'
@@ -57,24 +57,24 @@ return {
             }
         },
         Edition = {
-			e_negative_playing_card = {
+            e_negative_playing_card = {
                 name = "Negative",
                 text = {
                     "{C:dark_edition}+#1#{} hand size"
                 },
             },
-		}
+        }
     },
     misc = {
-		achievement_names = {
-			hidden_achievement = "???",
-		},
-		achievement_descriptions = {
-			hidden_achievement = "Play more to find out!",
-		},
+        achievement_names = {
+            hidden_achievement = "???",
+        },
+        achievement_descriptions = {
+            hidden_achievement = "Play more to find out!",
+        },
         dictionary = {
-			b_mods = 'Mods',
-			b_mods_cap = 'MODS',
+            b_mods = 'Mods',
+            b_mods_cap = 'MODS',
             b_modded_version = 'Modded Version!',
             b_steamodded = 'Steamodded',
             b_credits = 'Credits',
@@ -89,21 +89,21 @@ return {
             b_github_bugs_2 = 'submit contributions there.',
             b_disable_mod_badges = 'Disable Mod Badges',
             b_author = 'Author',
-			b_authors = 'Authors',
+            b_authors = 'Authors',
             b_unknown = 'Unknown',
-			b_lovely_mod = '(Lovely Mod) ',
+            b_lovely_mod = '(Lovely Mod) ',
             b_by = ' By: ',
-			b_config = "Config",
-			b_additions = 'Additions',
-      		b_stickers = 'Stickers',
-			b_achievements = "Achievements",
-      		b_applies_stakes_1 = 'Applies ',
-			b_applies_stakes_2 = '',
-			b_graphics_mipmap_level = "Mipmap level",
-		},
-		v_dictionary = {
-			c_types = '#1# Types',
-			cashout_hidden = '...and #1# more',
-		},
-	}
+            b_config = "Config",
+            b_additions = 'Additions',
+            b_stickers = 'Stickers',
+            b_achievements = "Achievements",
+            b_applies_stakes_1 = 'Applies ',
+            b_applies_stakes_2 = '',
+            b_graphics_mipmap_level = "Mipmap level",
+        },
+        v_dictionary = {
+            c_types = '#1# Types',
+            cashout_hidden = '...and #1# more',
+        },
+    }
 }
