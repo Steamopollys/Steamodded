@@ -732,6 +732,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             'key',
         },
         badge_colour = HEX 'FFFFFF',
+        default_rate = 0,
         inject = function(self)
             G.P_JOKER_RARITY_POOLS[self.key] = {}
             G.C.RARITY[self.key] = self.badge_colour
