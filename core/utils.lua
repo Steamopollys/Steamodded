@@ -689,7 +689,7 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
         v.mod = G.GAME[v.key:lower().."_mod"]
         -- Should this fully override the v.rate calcs? 
         if SMODS.Rarities[v.key].get_rate and type(SMODS.Rarities[v.key].get_rate) == "function" then
-            v.rate = SMODS.Rarities[v.key]:get_rate()
+            v.rate = SMODS.Rarities[v.key]:get_rate(v.rate, SMODS.ObjectTypes[_pool_key])
         end
         v.rate = v.rate*v.mod
         total_rate = total_rate + v.rate
