@@ -721,9 +721,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     -- Rarity API TODO List
     -- [x] Add system to allow injecting rarities into SMODS.ObjectTypes
     -- [x] Add function similar to get_weight that lets you change the rarity depending on context
-    -- [] Un-spaghetti rarities using integers and strings inconsistently for base game rarities
-        -- Currently they're handled as a string internally except when referencing pools where the int corresponding to the rarity is chosen
-        -- This means a card with the rarity "Common" will now show up in the shop depsite being a registered rarity, only if set to 1. 
+    -- [x] Un-spaghetti rarities using integers and strings inconsistently for base game rarities
 
     SMODS.Rarities = {}
     SMODS.Rarity = SMODS.GameObject:extend {
@@ -743,13 +741,16 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.process_loc_text(G.localization.misc.dictionary, "k_"..self.key:lower(), self.loc_txt, 'name')
         end,
         get_rarity_badge = function(self, rarity)
-            local base_game_rarity_keys = {localize('k_common'), localize('k_uncommon'), localize('k_rare'), localize('k_legendary')}
-            if (base_game_rarity_keys)[rarity] then return base_game_rarity_keys[rarity] --compat layer in case function gets the int of the rarity
-            else return localize("k_"..rarity) end 
+            local vanilla_rarity_keys = {localize('k_common'), localize('k_uncommon'), localize('k_rare'), localize('k_legendary')}
+            if (vanilla_rarity_keys)[rarity] then 
+                return vanilla_rarity_keys[rarity] --compat layer in case function gets the int of the rarity
+            else 
+                return localize("k_"..rarity:lower())
+            end 
         end,
     }
 
-    function SMODS.add_rarity(object_type, rarity)
+    function SMODS.inject_rarity(object_type, rarity)
         if not object_type.rarities then 
             object_type.rarities = {}
             object_type.rarity_pools = {}
@@ -805,7 +806,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         key = "Legendary",
         loc_txt = {},
         default_rate = 0,
-        HEX("b26cbb"),
+        badge_colour = HEX("b26cbb"),
     }
 
     -------------------------------------------------------------------------------------------------
@@ -841,7 +842,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 end
             end
             for _, v in pairs(SMODS.Rarities) do
-                if v.pools and v.pools[self.key] then SMODS.add_rarity(self, v) end
+                if v.pools and v.pools[self.key] then SMODS.inject_rarity(self, v) end
             end
         end,
         inject_card = function(self, center)
@@ -1181,6 +1182,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 SMODS.insert_pool(G.P_JOKER_RARITY_POOLS[self.rarity], self, false)
             else
                 SMODS.insert_pool(G.P_JOKER_RARITY_POOLS[self.rarity], self)
+                local vanilla_rarities = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
+                if vanilla_rarities[self.rarity] then
+                    SMODS.insert_pool(G.P_JOKER_RARITY_POOLS[vanilla_rarities[self.rarity]], self)
+                end
             end
         end
     }

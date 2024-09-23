@@ -681,7 +681,7 @@ end
 function SMODS.poll_rarity(_pool_key, _rand_key)
 	local rarity_poll = pseudorandom(pseudoseed(_rand_key or 'rarity'..G.GAME.round_resets.ante)) -- Generate the poll value
 	local available_rarities = copy_table(SMODS.ObjectTypes[_pool_key].rarities) -- Table containing a list of rarities and their rates
-    local base_game_rarities = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
+    local vanilla_rarities = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
     
     -- Calculate total rates of rarities
     local total_rate = 0
@@ -708,8 +708,8 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
         --sendInfoMessage("checking for "..v.key..": "..tostring(rarity_poll > 1 - (weight_i) / total_rate))
 		if rarity_poll > 1 - (weight_i) / total_rate then
             --sendInfoMessage("selected rarity: "..v.key)
-            if base_game_rarities[v.key] then 
-                return base_game_rarities[v.key]
+            if vanilla_rarities[v.key] then 
+                return vanilla_rarities[v.key]
             else
 			    return v.key
             end

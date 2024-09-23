@@ -50,3 +50,12 @@ if type(_rarity) == "number" then
 end
 local rarity = _rarity or (_legendary and "Legendary") or SMODS.poll_rarity("Joker", 'rarity'..G.GAME.round_resets.ante..(_append or ''))
 '''
+## Ensure that other cards set to string rarity work the same as set for int rarity
+# Card:calculate_joker
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.ability.name == 'Baseball Card' and context.other_joker.config.center.rarity == 2 and self ~= context.other_joker then"
+position = "at"
+payload = '''if self.ability.name == 'Baseball Card' and (context.other_joker.config.center.rarity == 2 or context.other_joker.config.center.rarity == "Uncommon") and self ~= context.other_joker then'''
+match_indent = true
