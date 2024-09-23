@@ -68,7 +68,7 @@ local vanilla_joker_tags = {
     },
     j_half = {
         SMODS.meta_tags.plus_mult,
-        SMODS.meta_tags.hand_size,
+        SMODS.meta_tags.scored_hand_size,
     },
     j_credit_card = {
         SMODS.meta_tags.income,
@@ -198,7 +198,6 @@ local vanilla_joker_tags = {
     j_square = {
         SMODS.meta_tags.plus_chip,
         SMODS.meta_tags.scaling,
-        SMODS.meta_tags.booster_pack,
         SMODS.meta_tags.hand_played,
     },
     j_riff_raff = {
