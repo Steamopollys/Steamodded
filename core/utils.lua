@@ -100,13 +100,13 @@ function SMODS.SAVE_UNLOCKS()
             if TESTHELPER_unlocks then
                 v.unlocked = true; v.discovered = true; v.alerted = true
             end --REMOVE THIS
-            if not v.unlocked and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^v_')) and meta.unlocked[k] then
+            if not v.unlocked and meta.unlocked[k] then
                 v.unlocked = true
             end
-            if not v.unlocked and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^v_')) then
+            if not v.unlocked then
                 G.P_LOCKED[#G.P_LOCKED + 1] = v
             end
-            if not v.discovered and (string.find(k, '^j_') or string.find(k, '^b_') or string.find(k, '^e_') or string.find(k, '^c_') or string.find(k, '^p_') or string.find(k, '^v_')) and meta.discovered[k] then
+            if not v.discovered and meta.discovered[k] then
                 v.discovered = true
             end
             if v.discovered and meta.alerted[k] or v.set == 'Back' or v.start_alerted then
