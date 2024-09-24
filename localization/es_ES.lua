@@ -75,7 +75,7 @@ return {
         dictionary = {
             b_mods = 'Mods',
             b_mods_cap = 'MODS',
-            b_modded_version = 'Modded Version!',  -- To be translated
+            b_modded_version = 'Modded Version!', -- To be translated
             b_steamodded = 'Steamodded',
             b_credits = 'Créditos',
             b_open_mods_dir = 'Abrir directorio de Mods',
