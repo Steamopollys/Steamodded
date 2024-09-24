@@ -65,12 +65,12 @@ return {
         }
     },
     misc = {
-        achievement_names = {
-            hidden_achievement = "???",
-        },
-        achievement_descriptions = {
-            hidden_achievement =  "未发现",
-        },
+		    achievement_names = {
+			      hidden_achievement = "???",
+		    },
+		    achievement_descriptions = {
+			      hidden_achievement = "未发现",
+		    },
         dictionary = {
             b_mods = '模组',
             b_mods_cap = '模组',
@@ -97,12 +97,13 @@ return {
             b_stickers = '贴纸',
             b_achievements = "成就",
             b_applies_stakes_1 = '',
-            b_applies_stakes_2 = '的限制也将起效',
-            b_graphics_mipmap_level = "Mipmap level", -- TODO
-        },
-        v_dictionary = {
-            c_types = '共有#1#种',
-            cashout_hidden = '……还有#1#',
-        },
-    },
+            b_applies_stakes_2 = '的限制也都起效',
+            b_graphics_mipmap_level = "多级渐远纹理层级",
+		},
+		v_dictionary = {
+			c_types = '共有#1#种',
+			cashout_hidden = '……还有#1#',
+		},
+	},
+	
 }
