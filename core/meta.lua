@@ -271,112 +271,171 @@ local vanilla_joker_tags = {
         SMODS.meta_tags.card_scored,
     },
     j_shoot_the_moon = {
-        
+        SMODS.meta_tags.held_in_hand,
+        SMODS.meta_tags.plus_mult,
     },
     j_stencil = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.joker_slot,
     },
     j_four_fingers = {
-        
+        SMODS.meta_tags.poker_hand,
     },
     j_mime = {
-        
+        SMODS.meta_tags.retrigger,
+        SMODS.meta_tags.held_in_hand,
     },
     j_ceremonial = {
-        
+        SMODS.meta_tags.blind_selected,
+        SMODS.meta_tags.sell_value,
+        SMODS.meta_tags.plus_mult,
+        SMODS.meta_tags.scaling,
+        SMODS.meta_tags.destroy_card,
     },
     j_marble = {
-        
+        SMODS.meta_tags.blind_selected,
+        SMODS.meta_tags.spawn_card,
+        SMODS.meta_tags.enhancements,
     },
     j_loyalty_card = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.hands,
     },
     j_dusk = {
-        
+        SMODS.meta_tags.retrigger,
+        SMODS.meta_tags.hand_played,
     },
     j_fibonacci = {
-        
+        SMODS.meta_tags.plus_mult,
+        SMODS.meta_tags.card_scored,
     },
     j_steel_joker = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.full_deck,
+        SMODS.meta_tags.enhancements,
     },
     j_hack = {
-        
+        SMODS.meta_tags.retrigger,
+        SMODS.meta_tags.card_scored,
     },
     j_pareidolia = {
-        
+        SMODS.meta_tags.face_card,
+        SMODS.meta_tags.modify_card,
     },
     j_space = {
-        
+        SMODS.meta_tags.probability,
+        SMODS.meta_tags.poker_hand,
     },
     j_burglar = {
-        
+        SMODS.meta_tags.blind_selected,
+        SMODS.meta_tags.discards,
+        SMODS.meta_tags.hands,
     },
     j_blackboard = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.held_in_hand,
+        SMODS.meta_tags.suit_spades,
+        SMODS.meta_tags.suit_clubs,
+        SMODS.meta_tags.suit,
     },
     j_sixth_sense = {
-        
+        SMODS.meta_tags.scored_hand_size,
+        SMODS.meta_tags.spawn_card,
+        SMODS.meta_tags.spectral,
     },
     j_constellation = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.planet,
+        SMODS.meta_tags.scaling,
     },
     j_hiker = {
-        
+        SMODS.meta_tags.modify_card,
+        SMODS.meta_tags.card_scored,
+        SMODS.meta_tags.plus_chip,
+        SMODS.meta_tags.scaling,
     },
     j_card_sharp = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.poker_hand,
     },
     j_madness = {
-        
+        SMODS.meta_tags.blind_selected,
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.destroy_card,
+        SMODS.meta_tags.scaling,
     },
     j_seance = {
-        
+        SMODS.meta_tags.poker_hand,
+        SMODS.meta_tags.spawn_card,
+        SMODS.meta_tags.spectral,
     },
     j_vampire = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.enhancements,
+        SMODS.meta_tags.modify_card,
+        SMODS.meta_tags.scaling,
     },
     j_shortcut = {
-        
+        SMODS.meta_tags.poker_hand,
     },
     j_hologram = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.deck,
     },
     j_cloud_9 = {
-        
+        SMODS.meta_tags.income,
+        SMODS.meta_tags.full_deck,
+        SMODS.meta_tags.end_of_round,
     },
     j_rocket = {
-        
+        SMODS.meta_tags.income,
+        SMODS.meta_tags.end_of_round,
+        SMODS.meta_tags.scaling,
     },
     j_midas_mask = {
-        
+        SMODS.meta_tags.card_played,
+        SMODS.meta_tags.enhancements,
+        SMODS.meta_tags.modify_card,
     },
     j_luchador = {
-        
+        SMODS.meta_tags.on_sell,
+        SMODS.meta_tags.modify_blind,
     },
     j_gift = {
-        
+        SMODS.meta_tags.income,
+        SMODS.meta_tags.sell_value,
     },
     j_turtle_bean = {
-        
+        SMODS.meta_tags.hand_size,
+        SMODS.meta_tags.food,
+        SMODS.meta_tags.scaling,
     },
     j_erosion = {
-        
+        SMODS.meta_tags.plus_mult,
+        SMODS.meta_tags.full_deck,
     },
     j_to_the_moon = {
-        
+        SMODS.meta_tags.income,
+        SMODS.meta_tags.end_of_round,
+        SMODS.meta_tags.interest,
     },
     j_stone = {
-        
+        SMODS.meta_tags.plus_chip,
+        SMODS.meta_tags.full_deck,
+        SMODS.meta_tags.enhancements,
     },
     j_lucky_cat = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.enhancements,
+        SMODS.meta_tags.card_scored,
+        SMODS.meta_tags.scaling,
     },
     j_bull = {
-        
+        SMODS.meta_tags.plus_chip,
     },
     j_diet_cola = {
-        
+        SMODS.meta_tags.on_sell,
+        SMODS.meta_tags.food,
     },
     j_trading = {
         
