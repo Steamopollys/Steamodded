@@ -6,6 +6,7 @@ function loadMods(modsDirectory)
     SMODS.Mods[SMODS.id] = SMODS
     SMODS.mod_priorities = {}
     SMODS.mod_list = {}
+    -- for legacy header support
     local header_components = {
         name          = { pattern = '%-%-%- MOD_NAME: ([^\n]+)\n', required = true },
         id            = { pattern = '%-%-%- MOD_ID: ([^ \n]+)\n', required = true },
@@ -27,8 +28,8 @@ function loadMods(modsDirectory)
                 for _, v in ipairs(x) do
                     table.insert(t, {
                         id = v:match '(.-)[<>]' or v,
-                        v_geq = v:match '>=([^<>]+)',
-                        v_leq = v:match '<=([^<>]+)',
+                        min_version = v:match '>=([^<>]+)',
+                        max_version = v:match '<=([^<>]+)',
                     })
                 end
                 return t
@@ -42,11 +43,11 @@ function loadMods(modsDirectory)
                 for _, v in ipairs(x) do
                     table.insert(t, {
                         id = v:match '(.-)[<>]',
-                        v_geq = v:match '>=([^<>]+)',
-                        v_leq = v:match '<=([^<>]+)',
+                        min_version = v:match '>=([^<>]+)',
+                        max_version = v:match '<=([^<>]+)',
                     })
-                    if t.v_geq and not V(t[#t].v_geq):is_valid() then t[#t].v_geq = nil end
-                    if t.v_leq and not V(t[#t].v_leq):is_valid() then t[#t].v_leq = nil end
+                    if t.min_version and not V(t[#t].min_version):is_valid() then t[#t].min_version = nil end
+                    if t.max_version and not V(t[#t].max_version):is_valid() then t[#t].max_version = nil end
                 end
                 
                 return t
@@ -57,7 +58,7 @@ function loadMods(modsDirectory)
         outdated      = { pattern = { 'SMODS%.INIT', 'SMODS%.Deck' } },
         dump_loc      = { pattern = { '%-%-%- DUMP_LOCALIZATION\n'}}
     }
-    
+
     local used_prefixes = {}
     local lovely_directories = {}
 
@@ -85,7 +86,7 @@ function loadMods(modsDirectory)
             elseif depth == 2 and filename == "lovely.toml" and not isDirLovely then
                 isDirLovely = true
                 table.insert(lovely_directories, directory .. "/")
-            elseif filename:lower():match("%.lua$") then -- Check if the file is a .lua file
+            elseif filename:lower():match("%.lua$") then -- Check for legacy headers
                 if depth == 1 then
                     sendWarnMessage(('Found lone Lua file %s in Mods directory :: Please place the files for each mod in its own subdirectory.'):format(filename), 'Loader')
                 end
@@ -97,7 +98,7 @@ function loadMods(modsDirectory)
                 -- Check the header lines using string.match
                 local headerLine = file_content:match("^(.-)\n")
                 if headerLine == "--- STEAMODDED HEADER" then
-                    sendTraceMessage('Processing Mod File: ' .. filename)
+                    sendTraceMessage('Processing Mod file (Legacy header): ' .. filename)
                     local mod = {}
                     local sane = true
                     for k, v in pairs(header_components) do
@@ -170,8 +171,6 @@ function loadMods(modsDirectory)
                         SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
                         table.insert(SMODS.mod_priorities[mod.priority], mod)
                     end
-                else
-                    sendTraceMessage("Skipping non-Lua file or invalid header: " .. filename, 'Loader')
                 end
             end
         end
@@ -249,11 +248,11 @@ function loadMods(modsDirectory)
             -- block load even if the conflict is also blocked
             if
                 SMODS.Mods[v.id] and
-                (not v.v_leq or V(SMODS.Mods[v.id].version) <= V(v.v_leq)) and
-                (not v.v_geq or V(SMODS.Mods[v.id].version) >= V(v.v_geq))
+                (not v.max_version or V(SMODS.Mods[v.id].version) <= V(v.max_version)) and
+                (not v.min_version or V(SMODS.Mods[v.id].version) >= V(v.min_version))
             then
                 can_load = false
-                table.insert(load_issues.conflicts, v.id..(v.v_leq and '<='..v.v_leq or '')..(v.v_geq and '>='..v.v_geq or ''))
+                table.insert(load_issues.conflicts, v.id..(v.max_version and '<='..v.max_version or '')..(v.min_version and '>='..v.min_version or ''))
             end
         end
         for _, v in ipairs(mod.dependencies or {}) do
@@ -261,14 +260,14 @@ function loadMods(modsDirectory)
             if
                 not SMODS.Mods[v.id] or
                 not check_dependencies(SMODS.Mods[v.id], seen) or
-                (v.v_leq and V(SMODS.Mods[v.id].version) > V(v.v_leq)) or
-                (v.v_geq and V(SMODS.Mods[v.id].version) < V(v.v_geq))
+                (v.max_version and V(SMODS.Mods[v.id].version) > V(v.max_version)) or
+                (v.min_version and V(SMODS.Mods[v.id].version) < V(v.min_version))
             then
                 can_load = false
                 table.insert(load_issues.dependencies,
-                    v.id .. (v.v_geq and '>=' .. v.v_geq or '') .. (v.v_leq and '<=' .. v.v_leq or ''))
+                    v.id .. (v.min_version and '>=' .. v.min_version or '') .. (v.max_version and '<=' .. v.max_version or ''))
                 if v.id == 'Steamodded' then
-                    load_issues.version_mismatch = ''..(v.v_geq and '>='..v.v_geq or '')..(v.v_leq and '<='..v.v_leq or '')
+                    load_issues.version_mismatch = ''..(v.min_version and '>='..v.min_version or '')..(v.max_version and '<='..v.max_version or '')
                 end
             end
         end
