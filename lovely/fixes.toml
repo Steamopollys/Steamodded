@@ -494,3 +494,28 @@ match_indent = true
 pattern = "for _, v in pairs(G.I.SPRITE) do"
 position = "at"
 payload = 'for k, v in pairs(G.I.SPRITE) do'
+
+##
+## Card:draw() - improved mod compatibility
+##
+# Add option for sprites to not be drawn 
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = '''
+if k ~= 'focused_ui' and k ~= "front" and k ~= "back" and k ~= "soul_parts" and k ~= "center" and k ~= 'floating_sprite' and k~= "shadow" and k~= "use_button" and k ~= 'buy_button' and k ~= 'buy_and_use_button' and k~= "debuff" and k ~= 'price' and k~= 'particles' and k ~= 'h_popup' then v:draw() end'''
+position = "at"
+payload = '''
+if not v.custom_draw and k ~= 'focused_ui' and k ~= "front" and k ~= "back" and k ~= "soul_parts" and k ~= "center" and k ~= 'floating_sprite' and k~= "shadow" and k~= "use_button" and k ~= 'buy_button' and k ~= 'buy_and_use_button' and k~= "debuff" and k ~= 'price' and k~= 'particles' and k ~= 'h_popup' then v:draw() end'''
+
+# This check is not necessary?
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = '''
+if self.edition or self.seal or self.ability.eternal or self.ability.rental or self.ability.perishable or self.sticker or self.ability.set == 'Spectral' or self.debuff or self.greyed or self.ability.name == 'The Soul' or self.ability.set == 'Voucher' or self.ability.set == 'Booster' or self.config.center.soul_pos or self.config.center.demo then'''
+position = "at"
+payload = '''
+if true then'''
