@@ -983,9 +983,12 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 res = self:loc_vars(info_queue, card) or {}
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
+                target.set = res.set or target.set
             end
-            if not full_UI_table.name then
-                full_UI_table.name = localize { type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name }
+            if desc_nodes == full_UI_table.main and not full_UI_table.name then
+                full_UI_table.name = localize { type = 'name', set = target.set, key = target.key, nodes = full_UI_table.name }
+            elseif desc_nodes ~= full_UI_table.main and not desc_nodes.name then
+                desc_nodes.name = localize{type = 'name_text', key = target.key, set = target.set } 
             end
             if specific_vars and specific_vars.debuffed and not res.replace_debuff then
                 target = { type = 'other', key = 'debuffed_' ..
@@ -1185,8 +1188,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
             end
-            if not full_UI_table.name then 
+            if desc_nodes == full_UI_table.main and not full_UI_table.name then
                 full_UI_table.name = localize{type = 'name', set = 'Other', key = target.key, nodes = full_UI_table.name}
+            elseif desc_nodes ~= full_UI_table.main and not desc_nodes.name then
+                desc_nodes.name = localize{type = 'name_text', key = target.key, set = 'Other' } 
             end
             localize(target)
         end,
@@ -1290,7 +1295,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         group_key = "k_arcana_pack",
         draw_hand = true,
         update_pack = SMODS.Booster.update_pack,
-        loc_vars = SMODS.Booster.loc_vars,
         ease_background_colour = function(self) ease_background_colour_blind(G.STATES.TAROT_PACK) end,
         create_UIBox = function(self) return create_UIBox_arcana_pack() end,
         particles = function(self)
@@ -1323,7 +1327,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.Booster:take_ownership_by_kind('Celestial', {
         group_key = "k_celestial_pack",
         update_pack = SMODS.Booster.update_pack,
-        loc_vars = SMODS.Booster.loc_vars,
         ease_background_colour = function(self) ease_background_colour_blind(G.STATES.PLANET_PACK) end,
         create_UIBox = function(self) return create_UIBox_celestial_pack() end,
         particles = function(self)
@@ -1378,7 +1381,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         group_key = "k_spectral_pack",
         draw_hand = true,
         update_pack = SMODS.Booster.update_pack,
-        loc_vars = SMODS.Booster.loc_vars,
         ease_background_colour = function(self) ease_background_colour_blind(G.STATES.SPECTRAL_PACK) end,
         create_UIBox = function(self) return create_UIBox_spectral_pack() end,
         particles = function(self)
@@ -1405,7 +1407,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.Booster:take_ownership_by_kind('Standard', {
         group_key = "k_standard_pack",
         update_pack = SMODS.Booster.update_pack,
-        loc_vars = SMODS.Booster.loc_vars,
         ease_background_colour = function(self) ease_background_colour_blind(G.STATES.STANDARD_PACK) end,
         create_UIBox = function(self) return create_UIBox_standard_pack() end,
         particles = function(self)
@@ -1434,7 +1435,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.Booster:take_ownership_by_kind('Buffoon', {
         group_key = "k_buffoon_pack",
         update_pack = SMODS.Booster.update_pack,
-        loc_vars = SMODS.Booster.loc_vars,
         ease_background_colour = function(self) ease_background_colour_blind(G.STATES.BUFFOON_PACK) end,
         create_UIBox = function(self) return create_UIBox_buffoon_pack() end,
         create_card = function(self, card)
@@ -2339,8 +2339,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 key = self.key,
                 set = self.set,
                 nodes = desc_nodes,
-                vars =
-                    specific_vars
+                vars = specific_vars
             }
             local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
@@ -2348,8 +2347,13 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 res = self:loc_vars(info_queue) or {}
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
+                target.set = res.set or target.set
             end
-            full_UI_table.name = localize { type = 'name', set = self.set, key = target.key or self.key, nodes = full_UI_table.name }
+            if desc_nodes == full_UI_table.main and not full_UI_table.name then
+                full_UI_table.name = localize { type = 'name', set = target.set, key = target.key, nodes = full_UI_table.name }
+            elseif desc_nodes ~= full_UI_table.main and not desc_nodes.name then
+                desc_nodes.name = localize{type = 'name_text', key = target.key, set = target.set } 
+            end
             if res.main_start then
                 desc_nodes[#desc_nodes + 1] = res.main_start
             end
