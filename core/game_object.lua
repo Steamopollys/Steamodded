@@ -733,7 +733,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         },
         badge_colour = HEX 'FFFFFF',
         default_rate = 0,
-        pools = {["Joker"] = true},
+        pools = {["Joker"] = true}, -- Should this be formatted as `{[<ObjectType key>] = true}` or {<ObjectType key>}?
         inject = function(self)
             G.P_JOKER_RARITY_POOLS[self.key] = {}
             G.C.RARITY[self.key] = self.badge_colour
@@ -1102,7 +1102,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G.P_CENTERS[self.key] = self
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
             for k, v in pairs(SMODS.ObjectTypes) do
-                -- ObjectType change: rename "cards" to something else?
+                -- Should "cards" be formatted as `{[<center key>] = true}` or {<center key>}?
+                -- Changing "cards" and "pools" wouldn't be hard to do, just depends on preferred format
                 if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) then
                     SMODS.ObjectTypes[k]:inject_card(self)
                 end
