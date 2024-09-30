@@ -710,7 +710,7 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
 		if rarity_poll > 1 - (weight_i) / total_rate then
             --sendInfoMessage("selected rarity: "..v.key)
             if vanilla_rarities[v.key] then 
-                sendInfoMessage("is vanilla rarity as string, returning correctly")
+                --sendInfoMessage("is vanilla rarity as string, returning correctly")
                 return vanilla_rarities[v.key]
             else
 			    return v.key
