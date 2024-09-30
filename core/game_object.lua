@@ -717,12 +717,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     ------- API CODE GameObject.Rarity
     -------------------------------------------------------------------------------------------------
 
-
-    -- Rarity API TODO List
-    -- [x] Add system to allow injecting rarities into SMODS.ObjectTypes
-    -- [x] Add function similar to get_weight that lets you change the rarity depending on context
-    -- [x] Un-spaghetti rarities using integers and strings inconsistently for base game rarities
-
     SMODS.Rarities = {}
     SMODS.Rarity = SMODS.GameObject:extend {
         obj_table = SMODS.Rarities,
@@ -873,9 +867,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     -------------------------------------------------------------------------------------------------
     ------- API CODE GameObject.ConsumableType
     -------------------------------------------------------------------------------------------------
-
-    -- ConsumableType TODO list
-    -- [?] Fix any other jank related to it
 
     SMODS.ConsumableTypes = {}
     SMODS.ConsumableType = SMODS.ObjectType:extend {
