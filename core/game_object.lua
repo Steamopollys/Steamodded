@@ -847,13 +847,13 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
         end,
         inject_card = function(self, center)
-            SMODS.insert_pool(G.P_CENTER_POOLS[self.key], center)
+            if not G.P_CENTER_POOLS[self.key] then SMODS.insert_pool(G.P_CENTER_POOLS[self.key], center) end
             if self.rarities and self.rarity_pools[center.rarity] then
                 SMODS.insert_pool(self.rarity_pools[center.rarity], center)
             end
         end,
         delete_card = function(self, center)
-            SMODS.remove_pool(G.P_CENTER_POOLS[self.key], center)
+            if not G.P_CENTER_POOLS[self.key] then SMODS.remove_pool(G.P_CENTER_POOLS[self.key], center) end
             if self.rarities and self.rarity_pools[center.rarity] then
                 SMODS.remove_pool(self.rarity_pools[center.rarity], center)
             end
@@ -1102,7 +1102,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
             for k, v in pairs(SMODS.ObjectTypes) do
                 -- ObjectType change: rename "cards" to something else?
-                if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) and self.set ~= k then
+                if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) then
                     SMODS.ObjectTypes[k]:inject_card(self)
                 end
             end
@@ -1111,7 +1111,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             G.P_CENTERS[self.key] = nil
             SMODS.remove_pool(G.P_CENTER_POOLS[self.set], self.key)
             for k, v in pairs(SMODS.ObjectTypes) do
-                if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) and self.set ~= k then
+                if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) then
                     SMODS.ObjectTypes[k]:remove_card(self)
                 end
             end
