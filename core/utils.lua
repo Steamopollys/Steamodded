@@ -700,17 +700,11 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
     end
 
 	-- Calculate selected rarity
-    --sendInfoMessage("available_rarities: "..tprint(available_rarities))
 	local weight_i = 0
 	for _, v in ipairs(available_rarities) do
 		weight_i = weight_i + v.rate
-        --sendInfoMessage("weight_i: "..weight_i)
-        --sendInfoMessage("v.mod: "..tostring(v.mod))
-        --sendInfoMessage("checking for "..v.key..": "..tostring(rarity_poll > 1 - (weight_i) / total_rate))
 		if rarity_poll > 1 - (weight_i) / total_rate then
-            --sendInfoMessage("selected rarity: "..v.key)
             if vanilla_rarities[v.key] then 
-                --sendInfoMessage("is vanilla rarity as string, returning correctly")
                 return vanilla_rarities[v.key]
             else
 			    return v.key
