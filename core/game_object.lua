@@ -843,13 +843,13 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         inject_card = function(self, center)
             if not G.P_CENTER_POOLS[self.key] then SMODS.insert_pool(G.P_CENTER_POOLS[self.key], center) end
-            if self.rarities and self.rarity_pools[center.rarity] then
+            if self.rarities and center.rarity self.rarity_pools[center.rarity] then
                 SMODS.insert_pool(self.rarity_pools[center.rarity], center)
             end
         end,
         delete_card = function(self, center)
             if not G.P_CENTER_POOLS[self.key] then SMODS.remove_pool(G.P_CENTER_POOLS[self.key], center) end
-            if self.rarities and self.rarity_pools[center.rarity] then
+            if self.rarities and center.rarity self.rarity_pools[center.rarity] then
                 SMODS.remove_pool(self.rarity_pools[center.rarity], center)
             end
         end,
