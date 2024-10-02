@@ -8,22 +8,18 @@ local vanilla_joker_tags = {
     },
     j_greedy_joker = {
         SMODS.meta_tags.plus_mult,
-        SMODS.meta_tags.suit_diamonds,
         SMODS.meta_tags.suit,
     },
     j_lusty_joker = {
         SMODS.meta_tags.plus_mult,
-        SMODS.meta_tags.suit_hearts,
         SMODS.meta_tags.suit,
     },
     j_wrathful_joker = {
         SMODS.meta_tags.plus_mult,
-        SMODS.meta_tags.suit_spades,
         SMODS.meta_tags.suit,
     },
     j_gluttenous_joker = {
         SMODS.meta_tags.plus_mult,
-        SMODS.meta_tags.suit_clubs,
         SMODS.meta_tags.suit,
     },
     j_jolly = {
@@ -334,8 +330,6 @@ local vanilla_joker_tags = {
     j_blackboard = {
         SMODS.meta_tags.times_mult,
         SMODS.meta_tags.held_in_hand,
-        SMODS.meta_tags.suit_spades,
-        SMODS.meta_tags.suit_clubs,
         SMODS.meta_tags.suit,
     },
     j_sixth_sense = {
@@ -438,91 +432,139 @@ local vanilla_joker_tags = {
         SMODS.meta_tags.food,
     },
     j_trading = {
-        
+        SMODS.meta_tags.card_discarded,
+        SMODS.meta_tags.destroy_card,
+        SMODS.meta_tags.income,
     },
     j_flash = {
-        
+        SMODS.meta_tags.plus_mult,
+        SMODS.meta_tags.reroll,
+        SMODS.meta_tags.scaling,
     },
     j_trousers = {
-        
+        SMODS.meta_tags.plus_mult,
+        SMODS.meta_tags.scaling,
+        SMODS.meta_tags.poker_hand,
     },
     j_ramen = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.discards,
+        SMODS.meta_tags.scaling,
+        SMODS.meta_tags.food,
     },
     j_selzer = {
-        
+        SMODS.meta_tags.retrigger,
+        SMODS.meta_tags.scaling,
+        SMODS.meta_tags.food,
     },
     j_castle = {
-        
+        SMODS.meta_tags.plus_chip,
+        SMODS.meta_tags.suit,
+        SMODS.meta_tags.scaling,
     },
     j_mr_bones = {
-        
+        SMODS.meta_tags.destroy_card,
+        SMODS.meta_tags.end_of_round,
+        SMODS.meta_tags.prevents_death,
     },
     j_acrobat = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.hand_played,
     },
     j_sock_and_buskin = {
-        
+        SMODS.meta_tags.retrigger,
+        SMODS.meta_tags.face_card,
     },
     j_troubadour = {
-        
+        MODS.meta_tags.hand_size,
+        SMODS.meta_tags.hands,
     },
     j_certificate = {
-        
+        SMODS.meta_tags.spawn_card,
+        SMODS.meta_tags.seals,
+        SMODS.meta_tags.blind_selected,
     },
     j_smeared = {
-        
+        SMODS.meta_tags.suit,
     },
     j_throwback = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.blind_skipped,
+        SMODS.meta_tags.scaling,
     },
     j_rough_gem = {
-        
+        SMODS.meta_tags.suit,
+        SMODS.meta_tags.card_scored,
+        SMODS.meta_tags.income,
     },
     j_bloodstone = {
-        
+        SMODS.meta_tags.suit,
+        SMODS.meta_tags.card_scored,
+        SMODS.meta_tags.probability,
+        SMODS.meta_tags.times_mult,
     },
     j_arrowhead = {
-        
+        SMODS.meta_tags.suit,
+        SMODS.meta_tags.card_scored,
+        SMODS.meta_tags.plus_chip,
     },
     j_onyx_agate = {
-        
+        SMODS.meta_tags.suit,
+        SMODS.meta_tags.card_scored,
+        SMODS.meta_tags.plus_mult,
     },
     j_glass = {
-        
+        SMODS.meta_tags.enhancements,
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.card_destroyed,
+        SMODS.meta_tags.scaling,
     },
     j_ring_master = {
-        
+        SMODS.meta_tags.allow_duplicates,
     },
     j_flower_pot = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.suit,
+        SMODS.meta_tags.hand_played,
+        SMODS.meta_tags.card_scored,
     },
     j_merry_andy = {
-        
+        SMODS.meta_tags.discards,
+        SMODS.meta_tags.hand_size,
     },
     j_oops = {
-        
+        SMODS.meta_tags.probability,
     },
     j_idol = {
-        
+        SMODS.meta_tags.suit,
+        SMODS.meta_tags.card_scored,
+        SMODS.meta_tags.times_mult,
     },
     j_seeing_double = {
-        
+        SMODS.meta_tags.suit,
+        SMODS.meta_tags.card_scored,
+        SMODS.meta_tags.times_mult,
     },
     j_matador = {
-        
+        SMODS.meta_tags.boss_ability,
+        SMODS.meta_tags.income,
     },
     j_satellite = {
-        
+        SMODS.meta_tags.income,
+        SMODS.meta_tags.scaling,
+        SMODS.meta_tags.planet,
     },
     j_cartomancer = {
-        
+        SMODS.meta_tags.blind_selected,
+        SMODS.meta_tags.spawn_card,
+        SMODS.meta_tags.tarot,
     },
     j_astronomer = {
-        
+        SMODS.meta_tags.planet,
+        SMODS.meta_tags.modify_shop,
     },
     j_bootstraps = {
-        
+        SMODS.meta_tags.plus_mult,
     },
     j_dna = {
         
