@@ -782,6 +782,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_rate = 0.7,
         badge_colour = HEX('009dff'),
+        get_rate = function(self, rate, object_type)
+            return rate
+        end,
     }
 
     SMODS.Rarity{
@@ -789,6 +792,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_rate = 0.25,
         badge_colour = HEX("4BC292"),
+        get_rate = function(self, rate, object_type)
+            return rate
+        end,
     }
 
     SMODS.Rarity{
@@ -796,6 +802,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_rate = 0.05,
         badge_colour = HEX('fe5f55'),
+        get_rate = function(self, rate, object_type)
+            return rate
+        end,
     }
 
     SMODS.Rarity{
@@ -803,6 +812,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_rate = 0,
         badge_colour = HEX("b26cbb"),
+        get_rate = function(self, rate, object_type)
+            return rate
+        end,
     }
 
     -------------------------------------------------------------------------------------------------
