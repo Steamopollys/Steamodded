@@ -143,6 +143,7 @@ local vanilla_joker_tags = {
         SMODS.meta_tags.income,
         SMODS.meta_tags.food,
         SMODS.meta_tags.sell_value,
+        SMODS.meta_tags.scaling,
     },
     j_runner = {
         SMODS.meta_tags.plus_chip,
@@ -296,6 +297,7 @@ local vanilla_joker_tags = {
     j_loyalty_card = {
         SMODS.meta_tags.times_mult,
         SMODS.meta_tags.hands,
+        SMODS.meta_tags.counter,
     },
     j_dusk = {
         SMODS.meta_tags.retrigger,
@@ -435,6 +437,7 @@ local vanilla_joker_tags = {
         SMODS.meta_tags.card_discarded,
         SMODS.meta_tags.destroy_card,
         SMODS.meta_tags.income,
+        SMODS.meta_tags.scored_hand_size,
     },
     j_flash = {
         SMODS.meta_tags.plus_mult,
@@ -567,78 +570,115 @@ local vanilla_joker_tags = {
         SMODS.meta_tags.plus_mult,
     },
     j_dna = {
-        
+        SMODS.meta_tags.hand_played,
+        SMODS.meta_tags.spawn_card,
+        SMODS.meta_tags.scored_hand_size,
     },
     j_vagabond = {
-        
+        SMODS.meta_tags.spawn_card,
+        SMODS.meta_tags.tarot,
+        SMODS.meta_tags.hand_played,
     },
     j_baron = {
-        
+        SMODS.meta_tags.held_in_hand,
+        SMODS.meta_tags.times_mult,
     },
     j_obelisk = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.hand_played,
+        SMODS.meta_tags.scaling,
+        SMODS.meta_tags.resettable,
     },
     j_baseball = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.joker_trigger,
     },
     j_ancient = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.suit,
+        SMODS.meta_tags.card_scored,
     },
     j_campfire = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.resettable,
+        SMODS.meta_tags.scaling,
+        SMODS.meta_tags.on_sell,
     },
     j_blueprint = {
-        
+        SMODS.meta_tags.blueprint,
     },
     j_wee = {
-        
+        SMODS.meta_tags.plus_chip,
+        SMODS.meta_tags.card_scored,
+        SMODS.meta_tags.scaling,
     },
     j_hit_the_road = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.scaling,
+        SMODS.meta_tags.resettable,
     },
     j_duo = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.poker_hand,
     },
     j_trio = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.poker_hand,
     },
     j_family = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.poker_hand,
     },
     j_order = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.poker_hand,
     },
     j_tribe = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.poker_hand,
     },
     j_stuntman = {
-        
+        SMODS.meta_tags.plus_chip,
+        SMODS.meta_tags.hand_size,
     },
     j_invisible = {
-        
+        SMODS.meta_tags.spawn_card,
+        SMODS.meta_tags.on_sell,
+        SMODS.meta_tags.counter,
     },
     j_brainstorm = {
-        
+        SMODS.meta_tags.blueprint,
     },
     j_drivers_license = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.full_deck,
+        SMODS.meta_tags.enhancements,
     },
     j_burnt = {
-        
+        SMODS.meta_tags.card_discarded,
+        SMODS.meta_tags.poker_hand,
     },
     j_caino = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.face_card,
+        SMODS.meta_tags.card_destroyed,
+        SMODS.meta_tags.scaling,
     },
     j_triboulet = {
-        
+        SMODS.meta_tags.card_played,
+        SMODS.meta_tags.times_mult,
     },
     j_yorick = {
-        
+        SMODS.meta_tags.times_mult,
+        SMODS.meta_tags.scaling,
+        SMODS.meta_tags.counter,
+        SMODS.meta_tags.card_discarded,
     },
     j_chicot = {
-        
+        SMODS.meta_tags.modify_blind,
     },
     j_perkeo = {
-        
+        SMODS.meta_tags.end_of_shop,
+        SMODS.meta_tags.spawn_card,
     }
 }
