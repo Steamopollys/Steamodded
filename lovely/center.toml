@@ -117,6 +117,14 @@ if _c.locked_loc_vars and type(_c.locked_loc_vars) == 'function' then
 	specific_vars.not_hidden = res.not_hidden or specific_vars.not_hidden
 elseif $rest'''
 
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+position = 'at'
+match_indent = true
+pattern = 'elseif desc_nodes ~= full_UI_table.main then'
+payload = 'elseif desc_nodes ~= full_UI_table.main and not desc_nodes.name then'
+
 # check_for_unlock()
 [[patches]]
 [patches.regex]
