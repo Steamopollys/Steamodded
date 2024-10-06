@@ -71,14 +71,14 @@ function loadMods(modsDirectory)
         name = { type = 'string', required = true },
         display_name = { type = 'string', check = function(mod, str) return str or mod.name end },
         description = { type = 'string', required = true },
-        priority = { type = 'number', default = -1 },
+        priority = { type = 'number', default = 0 },
         badge_colour = { type = 'string', default = '666665FF' },
         badge_text_colour = { type = 'string', default = 'FFFFFFFF'},
-        prefix = { type = 'string', check = function(mod, str) return str or mod.id:lower():sub(0, 4) end},
-        version = { type = 'string', check = function(mod, x) return x and V(x):is_valid() and x or '-1.0.0' end },
+        prefix = { type = 'string', required = true },
+        version = { type = 'string', check = function(mod, x) return x and V(x):is_valid() and x or '0.0.0' end },
         dump_loc = { type = 'boolean' },
         dependencies = { type = 'table', check = function(mod, t)
-            for k, v in pairs(t) do
+            for k, v in pairs(t or {}) do
                 if
                     type(k) ~= 'number' or
                     type(v) ~= 'table' or
@@ -91,7 +91,7 @@ function loadMods(modsDirectory)
             end
         end },
         conflicts = { type = 'table', check = function(mod, t)
-            for k, v in pairs(t) do
+            for k, v in pairs(t or {}) do
                 if
                     type(k) ~= 'number' or
                     type(v) ~= 'table' or
@@ -104,6 +104,9 @@ function loadMods(modsDirectory)
             end
         end},
         main_file = { type = 'string', required = true },
+        __ = { check = function(mod)
+            if SMODS.Mods[mod.id] then error('dupe') end
+        end}
     }
     
 
@@ -134,8 +137,55 @@ function loadMods(modsDirectory)
             elseif depth == 2 and filename == "lovely.toml" and not isDirLovely then
                 isDirLovely = true
                 table.insert(lovely_directories, directory .. "/")
-            elseif filename:lower() == 'mod.json' then
-                
+            elseif filename:lower() == 'mod.json' and depth > 1 then
+                local json_str = NFS.read(file_path)
+                local mod = JSON.decode(json_str)
+                mod.path = directory .. '/'
+                mod.optional_dependencies = {}
+                local valid, err = pcall(function()
+                    -- remove invalid fields and check required ones first
+                    for k, v in pairs(json_spec) do
+                        if v.type and type(mod[k]) ~= v.type then mod[k] = nil end
+                        if v.required and mod[k] == nil then error(k) end
+                    end
+                    -- perform additional checks and fill in defaults
+                    for k, v in pairs(json_spec) do
+                        if v.default then mod[k] = mod[k] or v.default end
+                        if v.check then v.check(mod, mod[k]) end
+                    end
+                end)
+                if not valid then
+                    sendInfoMessage(('Found invalid mod.json file at %s, ignoring: %s'):format(file_path, err), 'Loader')
+                else
+                    sendInfoMessage('Valid JSON file found')
+                    if NFS.getInfo(directory..'/.lovelyignore') then
+                        mod.disabled = true
+                    end
+                    if mod.prefix and used_prefixes[mod.prefix] then
+                        mod.can_load = false
+                        mod.load_issues = { 
+                            prefix_conflict = used_prefixes[mod.prefix],
+                            dependencies = {},
+                            conflicts = {},
+                        }
+                        sendWarnMessage(('Duplicate Mod prefix %s used by %s, %s'):format(mod.prefix, mod.id, used_prefixes[mod.prefix]), 'Loader')
+                    end
+                    if not NFS.getInfo(mod.path..mod.main_file) then
+                        mod.can_load = false
+                        mod.load_issues = {
+                            main_file_not_found = true
+                        }
+                        sendWarnMessage(('Unable to load Mod %s: cannot find main file'):format(mod.id), 'Loader')
+                    end
+                    if mod.dump_loc then
+                        SMODS.dump_loc = {
+                            path = mod.path,
+                        }
+                    end
+                    SMODS.Mods[mod.id] = mod
+                    SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
+                    table.insert(SMODS.mod_priorities[mod.priority], mod)
+                end
             elseif filename:lower():match("%.lua$") then -- Check for legacy headers
                 if depth == 1 then
                     sendWarnMessage(('Found lone Lua file %s in Mods directory :: Please place the files for each mod in its own subdirectory.'):format(filename), 'Loader')
@@ -268,9 +318,6 @@ function loadMods(modsDirectory)
                 }
 
             }
-
-            
-
             SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
             table.insert(SMODS.mod_priorities[mod.priority], mod)
             SMODS.Mods[mod.id] = mod
