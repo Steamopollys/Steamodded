@@ -860,9 +860,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
         end,
         delete_card = function(self, center)
-            if not G.P_CENTER_POOLS[self.key] then SMODS.remove_pool(G.P_CENTER_POOLS[self.key], center) end
+            if not G.P_CENTER_POOLS[self.key] then SMODS.remove_pool(G.P_CENTER_POOLS[self.key], center.key) end
             if self.rarities and center.rarity and self.rarity_pools[center.rarity] then
-                SMODS.remove_pool(self.rarity_pools[center.rarity], center)
+                SMODS.remove_pool(self.rarity_pools[center.rarity], center.key)
             end
         end,
     }
@@ -1222,6 +1222,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 self.soul_set = self.soul_set or 'Spectral'
                 self.soul_rate = self.soul_rate or 0.003
                 table.insert(self.legendaries, self)
+            end
+            if self.type and self.type.inject_card and type(self.type.inject_card) == 'function' then
+                self.type:inject_card(self)
             end
         end,
         delete = function(self)
