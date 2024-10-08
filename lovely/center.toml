@@ -259,7 +259,7 @@ pattern = "(?<indent>[\t ]*)for _, v in pairs\\(G.DISCOVER_TALLIES\\) do"
 line_prepend = '$indent'
 position = 'before'
 payload = '''
-for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
 	G.DISCOVER_TALLIES[v:lower()..'s'] = {tally = 0, of = 0}
 end'''
 
@@ -272,13 +272,13 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 local consumable_nodes = {}
-if #SMODS.ConsumableType.obj_buffer <= 3 then
-	for _, key in ipairs(SMODS.ConsumableType.obj_buffer) do
+if #SMODS.ConsumableType.ctype_buffer <= 3 then
+	for _, key in ipairs(SMODS.ConsumableType.ctype_buffer) do
 		local id = 'your_collection_'..key:lower()..'s'
 		consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
 	end
 else
-	consumable_nodes[#consumable_nodes+1] = UIBox_button({ button = 'your_collection_consumables', label = {localize('b_stat_consumables'), localize{ type = 'variable', key = 'c_types', vars = {#SMODS.ConsumableType.obj_buffer} } }, count = G.DISCOVER_TALLIES['consumeables'], minw = 4, minh = 4, id = 'your_collection_consumables', colour = G.C.FILTER })
+	consumable_nodes[#consumable_nodes+1] = UIBox_button({ button = 'your_collection_consumables', label = {localize('b_stat_consumables'), localize{ type = 'variable', key = 'c_types', vars = {#SMODS.ConsumableType.ctype_buffer} } }, count = G.DISCOVER_TALLIES['consumeables'], minw = 4, minh = 4, id = 'your_collection_consumables', colour = G.C.FILTER })
 end
 '''
 
@@ -313,7 +313,7 @@ match_indent = true
 position = 'at'
 payload = '''
 local total_rate = G.GAME.joker_rate + G.GAME.playing_card_rate
-for _,v in ipairs(SMODS.ConsumableType.obj_buffer) do
+for _,v in ipairs(SMODS.ConsumableType.ctype_buffer) do
 	total_rate = total_rate + G.GAME[v:lower()..'_rate']
 end'''
 
@@ -326,7 +326,7 @@ position = 'at'
 payload = '''
 -- need to preserve order to leave RNG unchanged
 local rates = $li
-for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
 	if not (v == 'Tarot' or v == 'Planet' or v == 'Spectral') then
 		table.insert(rates, { type = v, val = G.GAME[v:lower()..'_rate'] })
 	end
