@@ -257,9 +257,16 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = "card.lua"
-pattern = "if other_joker_ret then"
-position = "at"
-payload = '''if other_joker_ret or trig then if not other_joker_ret then other_joker_ret = {} end other_joker_ret.no_callback = true'''
+pattern = "if context.blueprint > #G.jokers.cards + 1 then return end"
+position = "after"
+payload = '''context.no_callback = true'''
+match_indent = true
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "other_joker_ret.card = context.blueprint_card or self"
+position = "after"
+payload = '''context.no_callback = false'''
 match_indent = true
 
 # Luchador
