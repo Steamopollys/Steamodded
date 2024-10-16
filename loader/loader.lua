@@ -59,52 +59,6 @@ function loadMods(modsDirectory)
         dump_loc      = { pattern = { '%-%-%- DUMP_LOCALIZATION\n'}}
     }
 
-    local json_spec = {
-        id = { type = 'string', required = true },
-        author = { type = 'table', required = true, check = function(mod, t)
-            for k, v in pairs(t) do
-                if type(k) ~= 'number' or type(v) ~= 'string' then t[k] = nil end
-            end
-            return t
-        end },
-        name = { type = 'string', required = true },
-        display_name = { type = 'string', check = function(mod, str) return str or mod.name end },
-        description = { type = 'string', required = true },
-        priority = { type = 'number', default = 0 },
-        badge_colour = { type = 'string', default = '666666FF' },
-        badge_text_colour = { type = 'string', default = 'FFFFFFFF'},
-        prefix = { type = 'string', check = function(mod, str) return str or mod.id:lower():sub(1, 4) end},
-        version = { type = 'string', check = function(mod, x) return x and V(x):is_valid() and x or '0.0.0' end },
-        dump_loc = { type = 'boolean' },
-        dependencies = { type = 'table', check = function(mod, t)
-            for k, v in pairs(t) do
-                if
-                    type(k) ~= 'number' or
-                    type(v) ~= 'table' or
-                    not v.id or
-                    (v.min_version and type(v.min_version) ~= 'string') or
-                    (v.max_version and type(v.max_version) ~= 'string')
-                then
-                    t[k] = nil
-                end
-            end
-        end },
-        conflicts = { type = 'table', check = function(mod, t)
-            for k, v in pairs(t) do
-                if
-                    type(k) ~= 'number' or
-                    type(v) ~= 'table' or
-                    not v.id or
-                    (v.min_version and type(v.min_version) ~= 'string') or
-                    (v.max_version and type(v.max_version) ~= 'string')
-                then
-                    t[k] = nil
-                end
-            end
-        end},
-        main_file = { type = 'string', required = true },
-    }
-    
     local used_prefixes = {}
     local lovely_directories = {}
 
@@ -218,8 +172,6 @@ function loadMods(modsDirectory)
                         table.insert(SMODS.mod_priorities[mod.priority], mod)
                     end
                 end
-            elseif filename:lower() == 'mod.json' then
-
             end
         end
     end

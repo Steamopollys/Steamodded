@@ -378,6 +378,19 @@ function G.FUNCS.your_collection_blinds_page(args)
 		col = col + 1
 		if col > cols then col = 1; row = row + 1 end
 	end
+	G.E_MANAGER:add_event(Event({
+		trigger = 'immediate',
+		func = (function()
+			for _, v in ipairs(blinds_to_be_alerted) do
+			  v.children.alert = UIBox{
+				definition = create_UIBox_card_alert(), 
+				config = { align="tri", offset = {x = 0.1, y = 0.1}, parent = v}
+			  }
+			  v.children.alert.states.collide.can = false
+			end
+			return true
+		end)
+	}))
 end
 --#endregion
 --#region tag collections
