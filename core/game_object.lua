@@ -727,7 +727,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         },
         badge_colour = HEX 'FFFFFF',
         default_rate = 0,
-        pools = {["Joker"] = true}, -- Should this be formatted as `{[<ObjectType key>] = true}` or {<ObjectType key>}?
         inject = function(self)
             G.P_JOKER_RARITY_POOLS[self.key] = {}
             G.C.RARITY[self.key] = self.badge_colour
@@ -751,7 +750,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             object_type.rarities = {}
             object_type.rarity_pools = {}
         end
-        object_type.rarities[#object_type.rarities+1] = (type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key]) or {key = rarity.key, rate = rarity.default_rate}
+        object_type.rarities[#object_type.rarities+1] = 
+            (type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key])
+            or {key = rarity.key, rate = type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key].rate or rarity.default_rate}
         local total = 0
         for _, vv in ipairs(object_type.rarities) do
             total = total + vv.rate
@@ -782,6 +783,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_rate = 0.7,
         badge_colour = HEX('009dff'),
+        pools = {["Joker"] = true},
         get_rate = function(self, rate, object_type)
             return rate
         end,
@@ -792,6 +794,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_rate = 0.25,
         badge_colour = HEX("4BC292"),
+        pools = {["Joker"] = true},
         get_rate = function(self, rate, object_type)
             return rate
         end,
@@ -802,6 +805,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_rate = 0.05,
         badge_colour = HEX('fe5f55'),
+        pools = {["Joker"] = true},
         get_rate = function(self, rate, object_type)
             return rate
         end,
@@ -812,6 +816,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_rate = 0,
         badge_colour = HEX("b26cbb"),
+        pools = {["Joker"] = true},
         get_rate = function(self, rate, object_type)
             return rate
         end,
