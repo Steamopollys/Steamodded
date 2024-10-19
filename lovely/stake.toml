@@ -162,7 +162,7 @@ position = "after"
 payload = 'G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key].losses_by_key[SMODS.stake_from_index(G.GAME.stake)] = (G.PROFILES[G.SETTINGS.profile].joker_usage[v.config.center_key].losses_by_key[SMODS.stake_from_index(G.GAME.stake)] or 0) + 1'
 match_indent = true
 
-#set_deck_usage
+# set_deck_usage
 [[patches]]
 [patches.pattern]
 target = "functions/misc_functions.lua"
@@ -171,6 +171,16 @@ position = "at"
 payload = 'G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = {count = 1, order = G.GAME.selected_back.effect.center.order, wins = {}, losses = {}, wins_by_key = {}, losses_by_key = {}}'
 match_indent = true
 
+# set_deck_loss
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = 'if not G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] then G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = {count = 1, order = G.GAME.selected_back.effect.center.order, wins = {}, losses = {}} end'
+position = "at"
+payload = 'if not G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] then G.PROFILES[G.SETTINGS.profile].deck_usage[deck_key] = {count = 1, order = G.GAME.selected_back.effect.center.order, wins = {}, losses = {}, wins_by_key = {}, losses_by_key = {}} end'
+match_indent = true
+
+# G.UIDEF.viewed_stake_option
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"
