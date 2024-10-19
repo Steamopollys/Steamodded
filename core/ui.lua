@@ -1378,22 +1378,22 @@ G.FUNCS.browse_mods_page = function(args)
 end
 
 SMODS.fetch_index = function()
-	if os.execute('git -v') ~= 0 then return 'no-git' end
-	local pwd = NFS.getWorkingDirectory()
-	if NFS.getInfo('index') and NFS.getInfo('index/.git') then
-		if os.execute(('cd %s/index && git pull'):format(pwd)) ~= 0 then return 'fetch-failed' end
-	else
-		local repo = 'https://github.com/Aurelius7309/Steamodded.index.git'
-		if os.execute(('cd %s && git clone %s index'):format(pwd, repo)) ~= 0 then return 'fetch-failed' end
-	end
 	SMODS.index = {}
-	for _, filename in ipairs(NFS.getDirectoryItems('index/mods')) do
+	local https = require"https"
+	local status, contents = https.request("https://github.com/Aurelius7309/Steamodded.index/archive/refs/heads/main.zip")
+	if status ~= 200 then return false end
+	love.filesystem.write('index.zip', contents)
+	if not love.filesystem.mount('index.zip', 'index') then return false end
+	local path = 'index/Steamodded.index-main/mods/'
+	for _, filename in ipairs(love.filesystem.getDirectoryItems(path)) do
 		local key, ext = filename:sub(1, -6), filename:sub(-5)
 		if ext:lower() == '.json' then
-			local success, data = pcall(function() return JSON.decode(NFS.read('index/mods/'..filename)) end)
-			if success then SMODS.index[key] = data end
+			local success, data = pcall(function() return JSON.decode(love.filesystem.read(path..filename)) end)
+			if success and data.id == key then SMODS.index[key] = data end
 		end
 	end
+	love.filesystem.unmount('index.zip')
+	return true
 end
 
 G.FUNCS.SMODS_log_level = function(args)

@@ -133,11 +133,13 @@ function loadMods(modsDirectory)
                     table.insert(lovely_directories, directory .. "/")
                 end
                 -- If it's a directory and depth is within limit, recursively process it
-                processDirectory(file_path, depth + 1)
+                if depth < 2 or (filename:lower() ~= 'localization' and filename:lower() ~= 'assets') then
+                    processDirectory(file_path, depth + 1)
+                end
             elseif depth == 2 and filename == "lovely.toml" and not isDirLovely then
                 isDirLovely = true
                 table.insert(lovely_directories, directory .. "/")
-            elseif filename:lower() == 'mod.json' and depth > 1 then
+            elseif filename:lower():match('%.json') and depth > 1 then
                 local json_str = NFS.read(file_path)
                 local mod = JSON.decode(json_str)
                 mod.path = directory .. '/'
@@ -155,7 +157,7 @@ function loadMods(modsDirectory)
                     end
                 end)
                 if not valid then
-                    sendInfoMessage(('Found invalid mod.json file at %s, ignoring: %s'):format(file_path, err), 'Loader')
+                    sendInfoMessage(('Found invalid metadata JSON file at %s, ignoring: %s'):format(file_path, err), 'Loader')
                 else
                     sendInfoMessage('Valid JSON file found')
                     if NFS.getInfo(directory..'/.lovelyignore') then
