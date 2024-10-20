@@ -1001,6 +1001,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if res.main_end then
                 desc_nodes[#desc_nodes + 1] = res.main_end
             end
+            desc_nodes.background_colour = res.background_colour
         end
     }
 
@@ -1194,6 +1195,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 desc_nodes.name = localize{type = 'name_text', key = target.key, set = 'Other' } 
             end
             localize(target)
+            desc_nodes.background_colour = res.background_colour
         end,
         --[[
         create_card = function(self, card)
@@ -2361,6 +2363,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if res.main_end then
                 desc_nodes[#desc_nodes + 1] = res.main_end
             end
+            desc_nodes.background_colour = res.background_colour
         end
     }
 

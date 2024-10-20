@@ -197,74 +197,10 @@ function buildModDescTab(mod)
 	G.E_MANAGER:add_event(Event({
 		blockable = false,
 		func = function()
-		  G.REFRESH_ALERTS = nil
-		return true
+			G.REFRESH_ALERTS = nil
+			return true
 		end
 	}))
-	local modNodes = {}
-	local scale = 0.75  -- Scale factor for text
-	local maxCharsPerLine = 50
-
-	local wrappedDescription = wrapText(mod.description or '', maxCharsPerLine)
-
-	local authors = localize('b_author'.. (#mod.author > 1 and 's' or '')) .. ': ' .. concatAuthors(mod.author)
-
-	-- Authors names in blue
-	table.insert(modNodes, {
-		n = G.UIT.R,
-		config = {
-			padding = 0,
-			align = "cm",
-			r = 0.1,
-			emboss = 0.1,
-			outline = 1,
-			padding = 0.07
-		},
-		nodes = {
-			{
-				n = G.UIT.T,
-				config = {
-					text = authors,
-					shadow = true,
-					scale = scale * 0.65,
-					colour = G.C.BLUE,
-				}
-			}
-		}
-	})
-
-	-- Mod description
-	if (G.localization.descriptions.Mod or {})[mod.id] then
-		modNodes[#modNodes+1] = {}
-		localize { type = 'descriptions', key = mod.id, set = 'Mod', nodes = modNodes[#modNodes], vars = mod.description_loc_vars and (mod:description_loc_vars() or {}).vars }
-		modNodes[#modNodes] = desc_from_rows(modNodes[#modNodes])
-		modNodes[#modNodes].config.colour = G.C.UI.BACKGROUND_LIGHT
-	else
-		table.insert(modNodes, {
-			n = G.UIT.R,
-			config = {
-				padding = 0.2,
-				align = "cm"
-			},
-			nodes = {
-				{
-					n = G.UIT.T,
-					config = {
-						text = wrappedDescription,
-						shadow = true,
-						scale = scale * 0.5,
-						colour = G.C.UI.TEXT_LIGHT
-					}
-				}
-			}
-		})
-
-	end
-
-	local custom_ui_func = mod.custom_ui
-	if custom_ui_func and type(custom_ui_func) == 'function' then
-		custom_ui_func(modNodes)
-	end
 	local label = mod.name
 	if (G.localization.descriptions.Mod or {})[mod.id] then
 		label = localize { type = 'name_text', set = 'Mod', key = mod.id }
@@ -273,6 +209,71 @@ function buildModDescTab(mod)
 		label = label,
 		chosen = SMODS.LAST_SELECTED_MOD_TAB == "mod_desc" or false,
 		tab_definition_function = function()
+			local modNodes = {}
+			local scale = 0.75 -- Scale factor for text
+			local maxCharsPerLine = 50
+
+			local wrappedDescription = wrapText(mod.description or '', maxCharsPerLine)
+
+			local authors = localize('b_author' .. (#mod.author > 1 and 's' or '')) .. ': ' .. concatAuthors(mod.author)
+
+			-- Authors names in blue
+			table.insert(modNodes, {
+				n = G.UIT.R,
+				config = {
+					padding = 0,
+					align = "cm",
+					r = 0.1,
+					emboss = 0.1,
+					outline = 1,
+					padding = 0.07
+				},
+				nodes = {
+					{
+						n = G.UIT.T,
+						config = {
+							text = authors,
+							shadow = true,
+							scale = scale * 0.65,
+							colour = G.C.BLUE,
+						}
+					}
+				}
+			})
+
+			-- Mod description
+			if (G.localization.descriptions.Mod or {})[mod.id] then
+				modNodes[#modNodes + 1] = {}
+				local loc_vars = mod.description_loc_vars and mod:description_loc_vars() or {}
+				localize { type = 'descriptions', key = loc_vars.key or mod.id, set = 'Mod', nodes = modNodes[#modNodes], vars = loc_vars.vars, scale = loc_vars.scale, text_colour = loc_vars.text_colour }
+				modNodes[#modNodes] = desc_from_rows(modNodes[#modNodes])
+				modNodes[#modNodes].config.colour = loc_vars.background_colour or modNodes[#modNodes].config.colour
+			else
+				table.insert(modNodes, {
+					n = G.UIT.R,
+					config = {
+						padding = 0.2,
+						align = "cm"
+					},
+					nodes = {
+						{
+							n = G.UIT.T,
+							config = {
+								text = wrappedDescription,
+								shadow = true,
+								scale = scale * 0.5,
+								colour = G.C.UI.TEXT_LIGHT
+							}
+						}
+					}
+				})
+			end
+
+			local custom_ui_func = mod.custom_ui
+			if custom_ui_func and type(custom_ui_func) == 'function' then
+				custom_ui_func(modNodes)
+			end
+
 			return {
 				n = G.UIT.ROOT,
 				config = {
