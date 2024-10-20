@@ -677,3 +677,10 @@ function convert_save_data()
     end
     G:save_settings()
 end
+
+function time(func, ...)
+    local start_time = love.timer.getTime()
+    func(...)
+    local end_time = love.timer.getTime()
+    return 1000*(end_time-start_time)
+end
