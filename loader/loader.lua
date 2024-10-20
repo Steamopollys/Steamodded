@@ -106,7 +106,9 @@ function loadMods(modsDirectory)
         main_file = { type = 'string', required = true },
         __ = { check = function(mod)
             if SMODS.Mods[mod.id] then error('dupe') end
-        end}
+        end},
+        provides = { type = 'table' }
+        
     }
     
 
@@ -183,6 +185,9 @@ function loadMods(modsDirectory)
                         SMODS.dump_loc = {
                             path = mod.path,
                         }
+                    end
+                    for _,v in ipairs(mod.provides or {}) do
+                        SMODS.Mods[v] = SMODS.Mods[v] or mod
                     end
                     SMODS.Mods[mod.id] = mod
                     SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}

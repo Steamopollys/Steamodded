@@ -205,7 +205,7 @@ function buildModDescTab(mod)
 	local scale = 0.75  -- Scale factor for text
 	local maxCharsPerLine = 50
 
-	local wrappedDescription = wrapText(mod.description, maxCharsPerLine)
+	local wrappedDescription = wrapText(mod.description or '', maxCharsPerLine)
 
 	local authors = localize('b_author'.. (#mod.author > 1 and 's' or '')) .. ': ' .. concatAuthors(mod.author)
 
@@ -234,32 +234,43 @@ function buildModDescTab(mod)
 	})
 
 	-- Mod description
-	table.insert(modNodes, {
-		n = G.UIT.R,
-		config = {
-			padding = 0.2,
-			align = "cm"
-		},
-		nodes = {
-			{
-				n = G.UIT.T,
-				config = {
-					text = wrappedDescription,
-					shadow = true,
-					scale = scale * 0.5,
-					colour = G.C.UI.TEXT_LIGHT
+	if (G.localization.descriptions.Mod or {})[mod.id] then
+		modNodes[#modNodes+1] = {}
+		localize { type = 'descriptions', key = mod.id, set = 'Mod', nodes = modNodes[#modNodes], vars = mod.description_loc_vars and (mod:description_loc_vars() or {}).vars }
+		modNodes[#modNodes] = desc_from_rows(modNodes[#modNodes])
+		modNodes[#modNodes].config.colour = G.C.UI.BACKGROUND_LIGHT
+	else
+		table.insert(modNodes, {
+			n = G.UIT.R,
+			config = {
+				padding = 0.2,
+				align = "cm"
+			},
+			nodes = {
+				{
+					n = G.UIT.T,
+					config = {
+						text = wrappedDescription,
+						shadow = true,
+						scale = scale * 0.5,
+						colour = G.C.UI.TEXT_LIGHT
+					}
 				}
 			}
-		}
-	})
+		})
+
+	end
 
 	local custom_ui_func = mod.custom_ui
 	if custom_ui_func and type(custom_ui_func) == 'function' then
 		custom_ui_func(modNodes)
 	end
-
+	local label = mod.name
+	if (G.localization.descriptions.Mod or {})[mod.id] then
+		label = localize { type = 'name_text', set = 'Mod', key = mod.id }
+	end
 	return {
-		label = mod.name,
+		label = label,
 		chosen = SMODS.LAST_SELECTED_MOD_TAB == "mod_desc" or false,
 		tab_definition_function = function()
 			return {
@@ -1375,25 +1386,6 @@ end
 
 G.FUNCS.browse_mods_page = function(args)
 	local page = args.cycle_config and args.cycle_config.current_option or 1
-end
-
-SMODS.fetch_index = function()
-	SMODS.index = {}
-	local https = require"https"
-	local status, contents = https.request("https://github.com/Aurelius7309/Steamodded.index/archive/refs/heads/main.zip")
-	if status ~= 200 then return false end
-	love.filesystem.write('index.zip', contents)
-	if not love.filesystem.mount('index.zip', 'index') then return false end
-	local path = 'index/Steamodded.index-main/mods/'
-	for _, filename in ipairs(love.filesystem.getDirectoryItems(path)) do
-		local key, ext = filename:sub(1, -6), filename:sub(-5)
-		if ext:lower() == '.json' then
-			local success, data = pcall(function() return JSON.decode(love.filesystem.read(path..filename)) end)
-			if success and data.id == key then SMODS.index[key] = data end
-		end
-	end
-	love.filesystem.unmount('index.zip')
-	return true
 end
 
 G.FUNCS.SMODS_log_level = function(args)
