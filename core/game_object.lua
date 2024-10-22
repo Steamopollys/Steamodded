@@ -2554,9 +2554,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
             SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars and specific_vars.bonus_chips then
-                local remaining_bonus_chips = specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)
+                local remaining_bonus_chips = specific_vars.bonus_chips - (self.config.bonus or 0)
                 if remaining_bonus_chips > 0 then
-                    localize { type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = { specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0) } }
+                    localize { type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = { specific_vars.bonus_chips - (self.config.bonus or 0) } }
                 end
             end
         end,
@@ -2594,7 +2594,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     --         }
     --     end
     -- })
-    -- stone_card.loc_subtract_extra_chips = stone_card.config.bonus
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Shader
