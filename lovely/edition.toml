@@ -205,8 +205,6 @@ for k, v in pairs(G.P_CENTER_POOLS.Edition) do
     if self.edition[v.key:sub(3)] then
         if v.extra_cost then
             self.extra_cost = self.extra_cost + v.extra_cost
-        else
-            self.extra_cost = 0
         end
     end
 end'''
