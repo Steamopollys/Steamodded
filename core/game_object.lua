@@ -726,7 +726,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             'key',
         },
         badge_colour = HEX 'FFFFFF',
-        default_rate = 0,
+        default_weight = 0,
         inject = function(self)
             G.P_JOKER_RARITY_POOLS[self.key] = {}
             G.C.RARITY[self.key] = self.badge_colour
@@ -752,14 +752,14 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end
         object_type.rarities[#object_type.rarities+1] = {
             key = rarity.key, 
-            rate = type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key].rate or rarity.default_rate
+            weight = type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key].weight or rarity.default_weight
         }
         local total = 0
         for _, vv in ipairs(object_type.rarities) do
-            total = total + vv.rate
+            total = total + vv.weight
         end
         for _, vv in ipairs(object_type.rarities) do
-            vv.rate = vv.rate / total
+            vv.weight = vv.weight / total
             local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 3}
             if default_rarity_check[vv.key] then
                 object_type.rarity_pools[default_rarity_check[vv.key]] = {}
@@ -782,44 +782,44 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     SMODS.Rarity{
         key = "Common",
         loc_txt = {},
-        default_rate = 0.7,
+        default_weight = 0.7,
         badge_colour = HEX('009dff'),
         pools = {["Joker"] = true},
-        get_rate = function(self, rate, object_type)
-            return rate
+        get_weight = function(self, weight, object_type)
+            return weight
         end,
     }
 
     SMODS.Rarity{
         key = "Uncommon",
         loc_txt = {},
-        default_rate = 0.25,
+        default_weight = 0.25,
         badge_colour = HEX("4BC292"),
         pools = {["Joker"] = true},
-        get_rate = function(self, rate, object_type)
-            return rate
+        get_weight = function(self, weight, object_type)
+            return weight
         end,
     }
 
     SMODS.Rarity{
         key = "Rare",
         loc_txt = {},
-        default_rate = 0.05,
+        default_weight = 0.05,
         badge_colour = HEX('fe5f55'),
         pools = {["Joker"] = true},
-        get_rate = function(self, rate, object_type)
-            return rate
+        get_weight = function(self, weight, object_type)
+            return weight
         end,
     }
 
     SMODS.Rarity{
         key = "Legendary",
         loc_txt = {},
-        default_rate = 0,
+        default_weight = 0,
         badge_colour = HEX("b26cbb"),
         pools = {["Joker"] = true},
-        get_rate = function(self, rate, object_type)
-            return rate
+        get_weight = function(self, weight, object_type)
+            return weight
         end,
     }
 
@@ -842,11 +842,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 self.rarity_pools = {}
                 local total = 0
                 for _, v in ipairs(self.rarities) do
-                    if not v.rate then v.rate = SMODS.Rarities[v.key].default_rate end
-                    total = total + v.rate
+                    if not v.weight then v.weight = SMODS.Rarities[v.key].default_weight end
+                    total = total + v.weight
                 end
                 for _, v in ipairs(self.rarities) do
-                    v.rate = v.rate / total
+                    v.weight = v.weight / total
                     local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 3}
                     if default_rarity_check[v.key] then
                         self.rarity_pools[default_rarity_check[v.key]] = {}

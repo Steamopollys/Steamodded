@@ -684,26 +684,26 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
     local vanilla_rarities = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
     
     -- Calculate total rates of rarities
-    local total_rate = 0
+    local total_weight = 0
     for _, v in ipairs(available_rarities) do
         v.mod = G.GAME[v.key:lower().."_mod"]
-        -- Should this fully override the v.rate calcs? 
-        if SMODS.Rarities[v.key].get_rate and type(SMODS.Rarities[v.key].get_rate) == "function" then
-            v.rate = SMODS.Rarities[v.key]:get_rate(v.rate, SMODS.ObjectTypes[_pool_key])
+        -- Should this fully override the v.weight calcs? 
+        if SMODS.Rarities[v.key].get_weight and type(SMODS.Rarities[v.key].get_weight) == "function" then
+            v.weight = SMODS.Rarities[v.key]:get_weight(v.weight, SMODS.ObjectTypes[_pool_key])
         end
-        v.rate = v.rate*v.mod
-        total_rate = total_rate + v.rate
+        v.weight = v.weight*v.mod
+        total_weight = total_weight + v.weight
     end
     -- recalculate rarities to account for v.mod
     for _, v in ipairs(available_rarities) do
-        v.rate = v.rate / total_rate
+        v.weight = v.weight / total_weight
     end
 
 	-- Calculate selected rarity
 	local weight_i = 0
 	for _, v in ipairs(available_rarities) do
-		weight_i = weight_i + v.rate
-		if rarity_poll > 1 - (weight_i) / total_rate then
+		weight_i = weight_i + v.weight
+		if rarity_poll > 1 - (weight_i) / total_weight then
             if vanilla_rarities[v.key] then 
                 return vanilla_rarities[v.key]
             else
