@@ -1346,6 +1346,18 @@ function create_UIBox_main_menu_buttons()
 	local menu = create_UIBox_main_menu_buttonsRef()
 	table.insert(menu.nodes[1].nodes[1].nodes, modsButton)
 	menu.nodes[1].nodes[1].config = {align = "cm", padding = 0.15, r = 0.1, emboss = 0.1, colour = G.C.L_BLACK, mid = true}
+	if SMODS.mod_button_alert then 
+		G.E_MANAGER:add_event(Event({
+			func = function()
+				if G.MAIN_MENU_UI then -- Wait until the ui is rendered before spawning the alert
+					UIBox{definition = create_UIBox_card_alert(), config = {align="tri", offset = {x = 0.05, y = -0.05}, major = G.MAIN_MENU_UI:get_UIE_by_ID('mods_button'), can_collide = false}}
+					return true
+				end
+			end,
+			blocking = false,
+			blockable = false
+		}))
+	end
 	return menu
 end
 
