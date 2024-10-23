@@ -750,9 +750,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             object_type.rarities = {}
             object_type.rarity_pools = {}
         end
-        object_type.rarities[#object_type.rarities+1] = 
-            (type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key])
-            or {key = rarity.key, rate = type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key].rate or rarity.default_rate}
+        object_type.rarities[#object_type.rarities+1] = {
+            key = rarity.key, 
+            rate = type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key].rate or rarity.default_rate
+        }
         local total = 0
         for _, vv in ipairs(object_type.rarities) do
             total = total + vv.rate
