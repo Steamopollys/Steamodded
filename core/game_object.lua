@@ -2106,6 +2106,80 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
         end,
     })
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.DeckSkin
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.DeckSkins = {}
+    SMODS.DeckSkin =SMODS.GameObject:extend {
+        obj_table = SMODS.DeckSkins,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'suit',
+            'ranks',
+            'lc_atlas',
+        },
+        register = function (self)
+            if self:check_dependencies() then
+                if self.hc_atals == nil then self.hc_atals = self.lc_atlas end
+                if self.posStyle == nil then self.posStyle = 'deck' end
+
+                self.obj_table[self.key] = self
+                self.obj_buffer[#self.obj_buffer + 1] = self.key
+                self.registered = true
+            end 
+        end,
+        inject = function (self)
+            local options = G.COLLABS.options[self.suit]
+            options[#options + 1] = self.key
+        end
+    }
+--[[
+        collabs={
+            Clubs={
+                default="Default",
+                collab_VS="Vampire Survivors",
+                collab_STS="Slay the Spire",
+            },
+            Diamonds={
+                default="Default",
+                collab_DTD="Dave the Diver",
+                collab_SV="Stardew Valley",
+            },
+            Hearts={
+                default="Default",
+                collab_AU="Among Us",
+                collab_TBoI="The Binding of Isaac",
+            },
+            Spades={
+                default="Default",
+                collab_TW="The Witcher",
+                collab_CYP="Cyberpunk 2077",
+            },
+        },
+
+
+]]--
+    for suitName, options in pairs(G.COLLABS.options) do
+        --start at 2 to skip default
+        for i = 2, #options do
+            SMODS.DeckSkin{
+                key = options[i],
+                suit = suitName,
+                ranks = {'Jack', 'Queen', 'King'},
+                lc_atlas = options[i] .. '_1',
+                hc_atlas = options[i] .. '_2',
+                posStyle = 'collab'
+            }
+        end
+    end
+
+    --Clear 'Friends of Jimbo' skins so they can be handled via the same pipeline
+    G.COLLABS.options['Spades'] = {'default'}
+    G.COLLABS.options['Hearts'] = {'default'}
+    G.COLLABS.options['Clubs'] = {'default'}
+    G.COLLABS.options['Diamonds'] = {'default'}
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.PokerHand

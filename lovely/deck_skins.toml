@@ -1,0 +1,96 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+#========================================================#
+# Choose any rank for custom deck and use provided atlas #
+# and rework translation too I guess#
+#========================================================#
+[[patches]]
+[patches.regex]
+target = "functions/misc_functions.lua"
+pattern = '''if _front and _front.suit and \(_front.value == 'Jack' or _front.value == 'Queen' or _front.value == 'King'\) then([\s\S]*?)end([\s\S]*?)end([\s\S]*?)end'''
+position = "at"
+payload = '''
+if _front and _front.suit and G.SETTINGS.CUSTOM_DECK and G.SETTINGS.CUSTOM_DECK.Collabs then
+    local collab = G.SETTINGS.CUSTOM_DECK.Collabs[_front.suit]
+    if collab and collab ~= 'default' then
+        local deckSkin = SMODS.DeckSkins[collab]
+        if deckSkin then
+            local hasRank = false
+            for i = 1, #deckSkin.ranks do
+                if deckSkin.ranks[i] == _front.value then hasRank = true break end
+            end
+            if hasRank then
+                local atlas = G.ASSET_ATLAS[G.SETTINGS.colourblind_option and deckSkin.hc_atlas or deckSkin.lc_atlas]
+                if atlas then
+                    if  deckSkin.posStyle == 'collab' then
+                        return atlas, G.COLLABS.pos[_front.value]
+                    elseif deckSkin.posStyle == 'deck' then
+                        return atlas, _front.pos
+                    end
+                end
+            end
+        end
+    end
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/misc_functions.lua"
+pattern = '''local loc_options = localize\(_suit, 'collabs'\)([\s\S]*?)end([\s\S]*?)end'''
+position = "at"
+payload = '''
+
+local loc_options = {}
+
+for _, deckSkin in ipair(SMODS.DeckSkins) do
+    deckSkin.key
+end
+
+'''
+
+#=======================#
+# Extend custom deck ui #
+#=======================#
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''local face_cards = CardArea\(([\s\S]*?)\)'''
+position = "at"
+payload = '''
+
+local rankCount = 0
+	
+for _, rank in pairs(SMODS.Ranks) do
+    rankCount = rankCount + 1
+end
+
+local face_cards = CardArea(
+    0,0,
+    math.min(math.max(rankCount*G.CARD_W*0.6, 4*G.CARD_W), 10*G.CARD_W),
+    1.4*G.CARD_H, 
+    {card_limit = rankCount, type = 'title', highlight_limit = 0})
+'''
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''for i = 1, 3 do([\s\S]*?)end'''
+position = "at"
+payload = '''
+local rank = SMODS.Ranks['2']
+repeat
+    local card_code = (string.sub(_suit, 1, 1))..'_'..rank.card_key
+    local card = Card(0,0, G.CARD_W*1.2, G.CARD_H*1.2, G.P_CARDS[card_code], G.P_CENTERS.c_base)
+    card.no_ui = true
+    face_cards:emplace(card)
+
+    rank = SMODS.Ranks[rank.next[1]]
+until rank.next[1] == '2'
+'''
+match_indent = true
