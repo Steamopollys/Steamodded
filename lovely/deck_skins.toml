@@ -5,7 +5,6 @@ priority = 0
 
 #========================================================#
 # Choose any rank for custom deck and use provided atlas #
-# and rework translation too I guess#
 #========================================================#
 [[patches]]
 [patches.regex]
@@ -83,6 +82,39 @@ until rank.next[1] == '2'
 
 for i = #cards, 1, -1 do
     face_cards:emplace(cards[i])
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''function create_UIBox_customize_deck()([\s\S]*?)end'''
+position = "at"
+payload = '''
+function create_UIBox_customize_deck()
+  local suitTabs = {}
+
+  local index = 1
+  for suitKey, _ in pairs(SMODS.Suits) do
+    suitTabs[index] = {
+                label = localize(suitKey, 'suits_plural'),
+                tab_definition_function = G.UIDEF.custom_deck_tab,
+                tab_definition_function_args = suitKey
+            }
+    index = index + 1
+  end
+
+  suitTabs[1].chosen = true
+
+  local t = create_UIBox_generic_options({ back_func = 'options', snap_back = nil, contents = {
+    {n=G.UIT.R, config={align = "cm", padding = 0}, nodes={
+      create_tabs(
+        {tabs = suitTabs, snap_to_nav = true, no_shoulders = true}
+    )}}}
+  })
+
+  return t
 end
 '''
 match_indent = true
