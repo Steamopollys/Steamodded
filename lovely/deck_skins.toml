@@ -27,6 +27,8 @@ if _front and _front.suit and G.SETTINGS.CUSTOM_DECK and G.SETTINGS.CUSTOM_DECK.
                 if atlas then
                     if  deckSkin.posStyle == 'collab' then
                         return atlas, G.COLLABS.pos[_front.value]
+                    elseif deckSkin.posStyle == 'suit' then
+                        return atlas, { x = _front.pos.x, y = 0}
                     elseif deckSkin.posStyle == 'deck' then
                         return atlas, _front.pos
                     end
@@ -37,21 +39,6 @@ if _front and _front.suit and G.SETTINGS.CUSTOM_DECK and G.SETTINGS.CUSTOM_DECK.
 end
 '''
 match_indent = true
-
-[[patches]]
-[patches.regex]
-target = "functions/misc_functions.lua"
-pattern = '''local loc_options = localize\(_suit, 'collabs'\)([\s\S]*?)end([\s\S]*?)end'''
-position = "at"
-payload = '''
-
-local loc_options = {}
-
-for _, deckSkin in ipair(SMODS.DeckSkins) do
-    deckSkin.key
-end
-
-'''
 
 #=======================#
 # Extend custom deck ui #
@@ -84,13 +71,18 @@ pattern = '''for i = 1, 3 do([\s\S]*?)end'''
 position = "at"
 payload = '''
 local rank = SMODS.Ranks['2']
+local cards = {}
 repeat
     local card_code = (string.sub(_suit, 1, 1))..'_'..rank.card_key
     local card = Card(0,0, G.CARD_W*1.2, G.CARD_H*1.2, G.P_CARDS[card_code], G.P_CENTERS.c_base)
     card.no_ui = true
-    face_cards:emplace(card)
-
+    
+    cards[#cards + 1] = card
     rank = SMODS.Ranks[rank.next[1]]
 until rank.next[1] == '2'
+
+for i = #cards, 1, -1 do
+    face_cards:emplace(cards[i])
+end
 '''
 match_indent = true

@@ -2110,6 +2110,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     ----- API CODE GameObject.DeckSkin
     -------------------------------------------------------------------------------------------------
 
+    local deck_skin_count_by_suit = {}
     SMODS.DeckSkins = {}
     SMODS.DeckSkin =SMODS.GameObject:extend {
         obj_table = SMODS.DeckSkins,
@@ -2120,12 +2121,36 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             'ranks',
             'lc_atlas',
         },
+        process_loc_text = function(self)
+            if G.localization.misc.collabs[self.suit] == nil then
+                G.localization.misc.collabs[self.suit] = {["1"] = 'default'}
+            end
+
+            if G.localization.misc.collabs[self.suit][self.suit_index .. ''] == nil then
+                local localized = self.key
+                if self.loc_txt and self.loc_txt[G.SETTINGS.language] then
+                    localized = self.loc_txt[G.SETTINGS.language]
+                end
+
+                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = localized
+            end
+        end,
         register = function (self)
             if self:check_dependencies() then
                 if self.hc_atals == nil then self.hc_atals = self.lc_atlas end
                 if self.posStyle == nil then self.posStyle = 'deck' end
 
                 self.obj_table[self.key] = self
+
+                if deck_skin_count_by_suit[self.suit] then
+                    self.suit_index  = deck_skin_count_by_suit[self.suit] + 1
+                else
+                    --start at 2 for default
+                    self.suit_index = 2
+                end
+                deck_skin_count_by_suit[self.suit] = self.suit_index
+                sendDebugMessage('registered DeckSkin ' .. self.suit .. ' ' .. self.suit_index .. ' ' .. self.key)
+
                 self.obj_buffer[#self.obj_buffer + 1] = self.key
                 self.registered = true
             end 
