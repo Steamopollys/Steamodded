@@ -50,8 +50,7 @@ position = "at"
 payload = '''
 
 local rankCount = 0
-	
-for _, rank in pairs(SMODS.Ranks) do
+for _,_ in pairs(SMODS.Ranks) do
     rankCount = rankCount + 1
 end
 

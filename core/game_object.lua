@@ -2121,24 +2121,30 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             'ranks',
             'lc_atlas',
         },
+        set = 'DeckSkin',
         process_loc_text = function(self)
             if G.localization.misc.collabs[self.suit] == nil then
                 G.localization.misc.collabs[self.suit] = {["1"] = 'default'}
             end
 
-            if G.localization.misc.collabs[self.suit][self.suit_index .. ''] == nil then
-                local localized = self.key
-                if self.loc_txt and self.loc_txt[G.SETTINGS.language] then
-                    localized = self.loc_txt[G.SETTINGS.language]
-                end
-
-                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = localized
+            if self.loc_txt and self.loc_txt[G.SETTINGS.language] then
+                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = self.loc_txt[G.SETTINGS.language]
+            elseif G.localization.misc.collabs[self.suit][self.suit_index .. ''] == nil then
+                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = self.key
             end
         end,
         register = function (self)
+            if self.registered then
+                sendWarnMessage(('Detected duplicate register call on DeckSkin %s'):format(self.key), self.set)
+                return
+            end
             if self:check_dependencies() then
                 if self.hc_atals == nil then self.hc_atals = self.lc_atlas end
                 if self.posStyle == nil then self.posStyle = 'deck' end
+
+                if not (self.posStyle == 'collab' or self.posStyle == 'suit' or self.posStyle == 'deck') then
+                    sendWarnMessage(('%s is not a valid posStyle on DeckSkin %s. Supported posStyle values are \'collab\', \'suit\' and \'deck\''):format(self.posStyle, self.key), self.set)
+                end
 
                 self.obj_table[self.key] = self
 
@@ -2149,43 +2155,17 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                     self.suit_index = 2
                 end
                 deck_skin_count_by_suit[self.suit] = self.suit_index
-                sendDebugMessage('registered DeckSkin ' .. self.suit .. ' ' .. self.suit_index .. ' ' .. self.key)
 
                 self.obj_buffer[#self.obj_buffer + 1] = self.key
                 self.registered = true
-            end 
+            end
         end,
         inject = function (self)
             local options = G.COLLABS.options[self.suit]
             options[#options + 1] = self.key
         end
     }
---[[
-        collabs={
-            Clubs={
-                default="Default",
-                collab_VS="Vampire Survivors",
-                collab_STS="Slay the Spire",
-            },
-            Diamonds={
-                default="Default",
-                collab_DTD="Dave the Diver",
-                collab_SV="Stardew Valley",
-            },
-            Hearts={
-                default="Default",
-                collab_AU="Among Us",
-                collab_TBoI="The Binding of Isaac",
-            },
-            Spades={
-                default="Default",
-                collab_TW="The Witcher",
-                collab_CYP="Cyberpunk 2077",
-            },
-        },
 
-
-]]--
     for suitName, options in pairs(G.COLLABS.options) do
         --start at 2 to skip default
         for i = 2, #options do
