@@ -960,9 +960,16 @@ function G.UIDEF.view_deck(unplayed_only)
 	}
 	-- add suit tallies
 	local i = 1
+	local num_suits_shown = 0
+	for i = 1, #suit_map do
+		if not (SMODS.Suits[suit_map[i]].hidden and suit_tallies[suit_map[i]] == 0) then
+			num_suits_shown = num_suits_shown+1
+		end
+	end
+	local suits_per_row = num_suits_shown > 6 and 4 or num_suits_shown > 4 and 3 or 2
 	local n_nodes = {}
 	while i <= #suit_map do
-		while #n_nodes < 2 and i <= #suit_map do
+		while #n_nodes < suits_per_row and i <= #suit_map do
 			if not (SMODS.Suits[suit_map[i]].hidden and suit_tallies[suit_map[i]] == 0) then
 				table.insert(n_nodes, tally_sprite(
 					SMODS.Suits[suit_map[i]].ui_pos,
