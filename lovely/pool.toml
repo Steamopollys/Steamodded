@@ -36,9 +36,12 @@ local in_pool_func =
 	args and args.in_pool
 	or type(v) == 'table' and type(v.in_pool) == 'function' and v.in_pool
 	or _t == G.P_CARDS and function(c)
+			--Handles special case for Erratic Deck
+			local initial_deck = args and args.starting_deck or false
+			
 			return not (
-				type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = true})
-				or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = true})
+				type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = initial_deck})
+				or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = initial_deck})
 			)
 		end
 if in_pool_func then

@@ -202,7 +202,7 @@ line_prepend = '$indent'
 payload = '''
 local rank = SMODS.Ranks[self.base.value]
 if not id then return end
-if (id > 0 and rank.face) or next(find_joker("Pareidolia")) then'''
+if (id > 0 and rank and rank.face) or next(find_joker("Pareidolia")) then'''
 
 
 # tally_sprite()
