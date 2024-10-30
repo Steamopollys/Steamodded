@@ -768,5 +768,5 @@ function time(func, ...)
     local start_time = love.timer.getTime()
     func(...)
     local end_time = love.timer.getTime()
-    return 1000*(end_time-start_time
+    return 1000*(end_time-start_time)
 end
