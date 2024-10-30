@@ -484,11 +484,22 @@ local function initializeModUIFunctions()
     end
 end
 
+local function checkForLoadFailure()
+    SMODS.mod_button_alert = false
+    for k,v in pairs(SMODS.Mods) do
+        if v and not v.can_load and not v.disabled then
+            SMODS.mod_button_alert = true
+            return
+        end 
+    end
+end
+
 function initSteamodded()
     initGlobals()
     boot_print_stage("Loading APIs")
     loadAPIs()
     loadMods(SMODS.MODS_DIR)
+    checkForLoadFailure()
     initializeModUIFunctions()
     boot_print_stage("Injecting Items")
     SMODS.injectItems()
