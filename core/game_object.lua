@@ -1149,6 +1149,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
                 target.set = res.set or target.set
+                target.scale = res.scale
+                target.text_colour = res.text_colour
             end
             if desc_nodes == full_UI_table.main and not full_UI_table.name then
                 full_UI_table.name = localize { type = 'name', set = target.set, key = target.key, nodes = full_UI_table.name }
@@ -1166,6 +1168,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if res.main_end then
                 desc_nodes[#desc_nodes + 1] = res.main_end
             end
+            desc_nodes.background_colour = res.background_colour
         end
     }
 
@@ -1356,6 +1359,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 local res = self:loc_vars(info_queue, card) or {}
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
+                target.scale = res.scale
+                target.text_colour = res.text_colour
             end
             if desc_nodes == full_UI_table.main and not full_UI_table.name then
                 full_UI_table.name = localize{type = 'name', set = 'Other', key = target.key, nodes = full_UI_table.name}
@@ -1363,6 +1368,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 desc_nodes.name = localize{type = 'name_text', key = target.key, set = 'Other' } 
             end
             localize(target)
+            desc_nodes.background_colour = res.background_colour
         end,
         --[[
         create_card = function(self, card)
@@ -2517,6 +2523,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
                 target.set = res.set or target.set
+                target.scale = res.scale
+                target.text_colour = res.text_colour
             end
             if desc_nodes == full_UI_table.main and not full_UI_table.name then
                 full_UI_table.name = localize { type = 'name', set = target.set, key = target.key, nodes = full_UI_table.name }
@@ -2530,6 +2538,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if res.main_end then
                 desc_nodes[#desc_nodes + 1] = res.main_end
             end
+            desc_nodes.background_colour = res.background_colour
         end
     }
 
@@ -2723,9 +2732,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
             SMODS.Enhancement.super.generate_ui(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
             if specific_vars and specific_vars.bonus_chips then
-                local remaining_bonus_chips = specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0)
+                local remaining_bonus_chips = specific_vars.bonus_chips - (self.config.bonus or 0)
                 if remaining_bonus_chips > 0 then
-                    localize { type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = { specific_vars.bonus_chips - (self.loc_subtract_extra_chips or 0) } }
+                    localize { type = 'other', key = 'card_extra_chips', nodes = desc_nodes, vars = { specific_vars.bonus_chips - (self.config.bonus or 0) } }
                 end
             end
         end,
@@ -2763,7 +2772,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     --         }
     --     end
     -- })
-    -- stone_card.loc_subtract_extra_chips = stone_card.config.bonus
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Shader

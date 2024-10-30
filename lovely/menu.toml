@@ -16,7 +16,15 @@ match_indent = true
 target = "functions/UI_definitions.lua"
 pattern = '''main_menu = UIBox_button{ label = {localize('b_main_menu')}, button = "go_to_menu", minw = 5}'''
 position = "after"
-payload = '''mods = UIBox_button{ label = {localize('b_mods')}, button = "mods_button", minw = 5}'''
+payload = '''mods = UIBox_button{ id = "mods_button", label = {localize('b_mods')}, button = "mods_button", minw = 5}'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''G.ARGS.set_alerts_alertables[11].should_alert = alert_booster'''
+position = "after"
+payload = '''table.insert(G.ARGS.set_alerts_alertables, {id = 'mods_button', alert_uibox_name = 'mods_button_alert', should_alert = SMODS.mod_button_alert})'''
 match_indent = true
 
 [[patches]]
