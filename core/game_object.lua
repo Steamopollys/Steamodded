@@ -2124,7 +2124,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         set = 'DeckSkin',
         process_loc_text = function(self)
             if G.localization.misc.collabs[self.suit] == nil then
-                G.localization.misc.collabs[self.suit] = {["1"] = 'default'}
+                G.localization.misc.collabs[self.suit] = {["1"] = 'Default'}
             end
 
             if self.loc_txt and self.loc_txt[G.SETTINGS.language] then
@@ -2161,6 +2161,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
         end,
         inject = function (self)
+            if G.COLLABS.options[self.suit] == nil then
+                G.COLLABS.options[self.suit] = {'default'}
+            end
+
             local options = G.COLLABS.options[self.suit]
             options[#options + 1] = self.key
         end
@@ -2181,10 +2185,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     end
 
     --Clear 'Friends of Jimbo' skins so they can be handled via the same pipeline
-    G.COLLABS.options['Spades'] = {'default'}
-    G.COLLABS.options['Hearts'] = {'default'}
-    G.COLLABS.options['Clubs'] = {'default'}
-    G.COLLABS.options['Diamonds'] = {'default'}
+    G.COLLABS.options = {}
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.PokerHand

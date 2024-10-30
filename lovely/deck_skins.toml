@@ -48,10 +48,17 @@ target = "functions/UI_definitions.lua"
 pattern = '''local face_cards = CardArea\(([\s\S]*?)\)'''
 position = "at"
 payload = '''
-
 local rankCount = 0
-for _,_ in pairs(SMODS.Ranks) do
-    rankCount = rankCount + 1
+local lookup = {}
+local options = G.COLLABS.options[_suit]
+for i = 2, #options do
+    local skin = SMODS.DeckSkins[options[i]]
+    for j = 1, #skin.ranks do
+        if not lookup[skin.ranks[j]] then
+            lookup[skin.ranks[j]] = true
+            rankCount = rankCount + 1
+        end
+    end
 end
 
 local face_cards = CardArea(
@@ -70,14 +77,17 @@ position = "at"
 payload = '''
 local rank = SMODS.Ranks['2']
 local cards = {}
+local smodSuit = SMODS.Suits[_suit]
 repeat
-    local card_code = (string.sub(_suit, 1, 1))..'_'..rank.card_key
-    local card = Card(0,0, G.CARD_W*1.2, G.CARD_H*1.2, G.P_CARDS[card_code], G.P_CENTERS.c_base)
-    card.no_ui = true
-    
-    cards[#cards + 1] = card
+    if lookup[rank.key] then
+        local card_code = smodSuit.card_key .. '_' .. rank.card_key
+        local card = Card(0,0, G.CARD_W*1.2, G.CARD_H*1.2, G.P_CARDS[card_code], G.P_CENTERS.c_base)
+        card.no_ui = true
+        
+        cards[#cards + 1] = card
+    end
     rank = SMODS.Ranks[rank.next[1]]
-until rank.next[1] == '2'
+until rank == SMODS.Ranks['2']
 
 for i = #cards, 1, -1 do
     face_cards:emplace(cards[i])
@@ -95,16 +105,20 @@ function create_UIBox_customize_deck()
   local suitTabs = {}
 
   local index = 1
-  for suitKey, _ in pairs(SMODS.Suits) do
-    suitTabs[index] = {
-                label = localize(suitKey, 'suits_plural'),
-                tab_definition_function = G.UIDEF.custom_deck_tab,
-                tab_definition_function_args = suitKey
-            }
-    index = index + 1
+  for i, suit in ipairs(SMODS.Suit:obj_list(true)) do
+    if G.COLLABS.options[suit.key] then
+        suitTabs[index] = {
+                    label = localize(suit.key, 'suits_plural'),
+                    tab_definition_function = G.UIDEF.custom_deck_tab,
+                    tab_definition_function_args = suit.key
+                }
+        index = index + 1
+    end
   end
 
-  suitTabs[1].chosen = true
+  if suitTabs[1] then
+    suitTabs[1].chosen = true
+  end
 
   local t = create_UIBox_generic_options({ back_func = 'options', snap_back = nil, contents = {
     {n=G.UIT.R, config={align = "cm", padding = 0}, nodes={
