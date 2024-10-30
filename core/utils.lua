@@ -511,10 +511,10 @@ V_MT = {
     end,
     __call = function(_, str)
         str = str or '0.0.0'
-        local _, _, major, minor, patch, rev = string.find(str, '^(%d-)%.(%d+)%.?(%d*)(.*)$')
+        local _, _, major, minor, patch, rev = string.find(str, '^(%d+)%.?(%d*)%.?(%d*)(.*)$')
         local t = {
             major = tonumber(major),
-            minor = tonumber(minor),
+            minor = tonumber(minor) or 0,
             patch = tonumber(patch) or 0,
             rev = rev or '',
             beta = rev and rev:sub(1,1) == '~' and -1 or 0
