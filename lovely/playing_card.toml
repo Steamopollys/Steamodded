@@ -85,7 +85,10 @@ pattern = 'return G.ARGS.LOC_COLOURS[_c] or _default or G.C.UI.TEXT_DARK'
 position = 'before'
 match_indent = true
 payload = '''
-	for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+	for _, v in ipairs(SMODS.Rarity.obj_buffer) do
+		G.ARGS.LOC_COLOURS[v:lower()] = G.C.RARITY[v]
+	end
+	for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
 		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SECONDARY_SET[v] 
 	end
 	for _, v in ipairs(SMODS.Suit.obj_buffer) do

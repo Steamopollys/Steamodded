@@ -73,23 +73,15 @@ pattern = "else _starting_pool, _pool_key = G.P_CENTER_POOLS[_type], _type..(_ap
 match_indent = true
 position = 'before'
 payload = '''
-elseif SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].rarities then
-	local rarities = SMODS.ConsumableTypes[_type].rarities
+elseif SMODS.ObjectTypes[_type] and SMODS.ObjectTypes[_type].rarities then
+	local rarities = SMODS.ObjectTypes[_type].rarities
 	local rarity
 	if _legendary and rarities.legendary then
 		rarity = rarities.legendary.key
 	else
-		rarity = _rarity or pseudorandom('rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
-		for _, v in ipairs(rarities) do
-			if rarity <= v.rate then
-				rarity = v.key
-				break
-			else
-				rarity = rarity - v.rate
-			end
-		end
+		rarity = _rarity or SMODS.poll_rarity(_type, 'rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
 	end
-	_starting_pool, _pool_key = SMODS.ConsumableTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')'''
+	_starting_pool, _pool_key = SMODS.ObjectTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')'''
 
 [[patches]]
 [patches.pattern]
@@ -98,8 +90,8 @@ pattern = "if _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1]
 match_indent = true
 position = 'at'
 payload = '''
-if SMODS.ConsumableTypes[_type] and SMODS.ConsumableTypes[_type].default and G.P_CENTERS[SMODS.ConsumableTypes[_type].default] then
-	_pool[#_pool+1] = SMODS.ConsumableTypes[_type].default
+if SMODS.ObjectTypes[_type] and SMODS.ObjectTypes[_type].default and G.P_CENTERS[SMODS.ObjectTypes[_type].default] then
+	_pool[#_pool+1] = SMODS.ObjectTypes[_type].default
 elseif _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1] = "c_strength"'''
 
 [[patches]]

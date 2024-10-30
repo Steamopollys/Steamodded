@@ -713,22 +713,189 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {}
     }
 
+    -------------------------------------------------------------------------------------------------
+    ------- API CODE GameObject.Rarity
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.Rarities = {}
+    SMODS.Rarity = SMODS.GameObject:extend {
+        obj_table = SMODS.Rarities,
+        obj_buffer = {},
+        set = 'Rarity',
+        required_params = {
+            'key',
+        },
+        badge_colour = HEX 'FFFFFF',
+        default_weight = 0,
+        inject = function(self)
+            G.P_JOKER_RARITY_POOLS[self.key] = {}
+            G.C.RARITY[self.key] = self.badge_colour
+        end,
+        process_loc_text = function(self)
+            SMODS.process_loc_text(G.localization.misc.labels, "k_"..self.key:lower(), self.loc_txt, 'name')
+            SMODS.process_loc_text(G.localization.misc.dictionary, "k_"..self.key:lower(), self.loc_txt, 'name')
+        end,
+        get_rarity_badge = function(self, rarity)
+            local vanilla_rarity_keys = {localize('k_common'), localize('k_uncommon'), localize('k_rare'), localize('k_legendary')}
+            if (vanilla_rarity_keys)[rarity] then 
+                return vanilla_rarity_keys[rarity] --compat layer in case function gets the int of the rarity
+            else 
+                return localize("k_"..rarity:lower())
+            end 
+        end,
+    }
+
+    function SMODS.inject_rarity(object_type, rarity)
+        if not object_type.rarities then 
+            object_type.rarities = {}
+            object_type.rarity_pools = {}
+        end
+        object_type.rarities[#object_type.rarities+1] = {
+            key = rarity.key, 
+            weight = type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key].weight or rarity.default_weight
+        }
+        local total = 0
+        for _, vv in ipairs(object_type.rarities) do
+            total = total + vv.weight
+        end
+        for _, vv in ipairs(object_type.rarities) do
+            vv.weight = vv.weight / total
+            local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
+            if default_rarity_check[vv.key] then
+                object_type.rarity_pools[default_rarity_check[vv.key]] = {}
+            else
+                object_type.rarity_pools[vv.key] = {}
+            end
+        end
+    end
+
+    local game_init_game_object_ref = Game.init_game_object
+    function Game:init_game_object()
+        local t = game_init_game_object_ref(self)
+        for _, v in pairs(SMODS.Rarities) do
+            local key = v.key:lower() .. '_mod'
+            t[key] = t[key] or 1
+        end
+        return t
+    end
+
+    SMODS.Rarity{
+        key = "Common",
+        loc_txt = {},
+        default_weight = 0.7,
+        badge_colour = HEX('009dff'),
+        pools = {["Joker"] = true},
+        get_weight = function(self, weight, object_type)
+            return weight
+        end,
+    }
+
+    SMODS.Rarity{
+        key = "Uncommon",
+        loc_txt = {},
+        default_weight = 0.25,
+        badge_colour = HEX("4BC292"),
+        pools = {["Joker"] = true},
+        get_weight = function(self, weight, object_type)
+            return weight
+        end,
+    }
+
+    SMODS.Rarity{
+        key = "Rare",
+        loc_txt = {},
+        default_weight = 0.05,
+        badge_colour = HEX('fe5f55'),
+        pools = {["Joker"] = true},
+        get_weight = function(self, weight, object_type)
+            return weight
+        end,
+    }
+
+    SMODS.Rarity{
+        key = "Legendary",
+        loc_txt = {},
+        default_weight = 0,
+        badge_colour = HEX("b26cbb"),
+        pools = {["Joker"] = true},
+        get_weight = function(self, weight, object_type)
+            return weight
+        end,
+    }
+
+    -------------------------------------------------------------------------------------------------
+    ------- API CODE GameObject.ObjectType
+    -------------------------------------------------------------------------------------------------
+
+    SMODS.ObjectTypes = {}
+    SMODS.ObjectType = SMODS.GameObject:extend {
+        obj_table = SMODS.ObjectTypes,
+        obj_buffer = {},
+        set = 'ObjectType',
+        required_params = {
+            'key',
+        },
+        prefix_config = { key = false }, 
+        inject = function(self)
+            G.P_CENTER_POOLS[self.key] = G.P_CENTER_POOLS[self.key] or {}
+            if self.rarities then
+                self.rarity_pools = {}
+                local total = 0
+                for _, v in ipairs(self.rarities) do
+                    if not v.weight then v.weight = SMODS.Rarities[v.key].default_weight end
+                    total = total + v.weight
+                end
+                for _, v in ipairs(self.rarities) do
+                    v.weight = v.weight / total
+                    local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
+                    if default_rarity_check[v.key] then
+                        self.rarity_pools[default_rarity_check[v.key]] = {}
+                    else
+                        self.rarity_pools[v.key] = {}
+                    end
+                end
+            end
+            for _, v in pairs(SMODS.Rarities) do
+                if v.pools and v.pools[self.key] then SMODS.inject_rarity(self, v) end
+            end
+        end,
+        inject_card = function(self, center)
+            if not G.P_CENTER_POOLS[self.key] then SMODS.insert_pool(G.P_CENTER_POOLS[self.key], center) end
+            if self.rarities and center.rarity and self.rarity_pools[center.rarity] then
+                SMODS.insert_pool(self.rarity_pools[center.rarity], center)
+            end
+        end,
+        delete_card = function(self, center)
+            if not G.P_CENTER_POOLS[self.key] then SMODS.remove_pool(G.P_CENTER_POOLS[self.key], center.key) end
+            if self.rarities and center.rarity and self.rarity_pools[center.rarity] then
+                SMODS.remove_pool(self.rarity_pools[center.rarity], center.key)
+            end
+        end,
+    }
+
+    SMODS.ObjectType{
+        key = "Joker",
+        rarities = {
+            { key = "Common" },
+            { key = "Uncommon" },
+            { key = "Rare" },
+        },
+    }
 
     -------------------------------------------------------------------------------------------------
     ------- API CODE GameObject.ConsumableType
     -------------------------------------------------------------------------------------------------
 
     SMODS.ConsumableTypes = {}
-    SMODS.ConsumableType = SMODS.GameObject:extend {
-        obj_table = SMODS.ConsumableTypes,
-        obj_buffer = {},
+    SMODS.ConsumableType = SMODS.ObjectType:extend {
+        ctype_buffer = {},
         set = 'ConsumableType',
         required_params = {
             'key',
             'primary_colour',
             'secondary_colour',
         },
-        prefix_config = { key = false }, -- TODO? should consumable types have a mod prefix?
+        prefix_config = { key = false },
         collection_rows = { 6, 6 },
         create_UIBox_your_collection = function(self)
             local deck_tables = {}
@@ -793,11 +960,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             }) }
             local type_buf = {}
             if G.ACTIVE_MOD_UI then
-                for _, v in ipairs(SMODS.ConsumableType.obj_buffer) do
+                for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
                     if modsCollectionTally(G.P_CENTER_POOLS[v]).of > 0 then type_buf[#type_buf + 1] = v end
                 end
             else
-                type_buf = SMODS.ConsumableType.obj_buffer
+                type_buf = SMODS.ConsumableType.ctype_buffer
             end
             local t = create_UIBox_generic_options({
                 back_func = #type_buf>3 and 'your_collection_consumables' or G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection',
@@ -808,8 +975,15 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             })
             return t
         end,
+        register = function(self)
+            SMODS.ConsumableType.super.register(self)
+            if self:check_dependencies() then
+                SMODS.ConsumableType.ctype_buffer[#SMODS.ConsumableType.ctype_buffer+1] = self.key
+            end
+        end,
         inject = function(self)
-            G.P_CENTER_POOLS[self.key] = G.P_CENTER_POOLS[self.key] or {}
+            SMODS.ObjectType.inject(self)
+            SMODS.ConsumableTypes[self.key] = self
             G.localization.descriptions[self.key] = G.localization.descriptions[self.key] or {}
             G.C.SET[self.key] = self.primary_colour
             G.C.SECONDARY_SET[self.key] = self.secondary_colour
@@ -857,27 +1031,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 end
                 INIT_COLLECTION_CARD_ALERTS()
             end
-            if self.rarities then
-                self.rarity_pools = {}
-                local total = 0
-                for _, v in ipairs(self.rarities) do
-                    total = total + v.rate
-                end
-                for _, v in ipairs(self.rarities) do
-                    v.rate = v.rate / total
-                    self.rarity_pools[v.key] = {}
-                end
-            end
-        end,
-        inject_card = function(self, center)
-            if self.rarities and self.rarity_pools[center.rarity] then
-                SMODS.insert_pool(self.rarity_pools[center.rarity], center)
-            end
-        end,
-        delete_card = function(self, center)
-            if self.rarities and self.rarity_pools[center.rarity] then
-                SMODS.remove_pool(self.rarity_pools[center.rarity], center)
-            end
         end,
         process_loc_text = function(self)
             if not next(self.loc_txt) then return end
@@ -896,11 +1049,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         primary_colour = G.C.SET.Tarot,
         secondary_colour = G.C.SECONDARY_SET.Tarot,
         inject_card = function(self, center)
-            SMODS.ConsumableType.inject_card(self, center)
+            SMODS.ObjectType.inject_card(self, center)
             SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], center)
         end,
         delete_card = function(self, center)
-            SMODS.ConsumableType.delete_card(self, center)
+            SMODS.ObjectType.delete_card(self, center)
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
@@ -911,11 +1064,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         primary_colour = G.C.SET.Planet,
         secondary_colour = G.C.SECONDARY_SET.Planet,
         inject_card = function(self, center)
-            SMODS.ConsumableType.inject_card(self, center)
+            SMODS.ObjectType.inject_card(self, center)
             SMODS.insert_pool(G.P_CENTER_POOLS['Tarot_Planet'], center)
         end,
         delete_card = function(self, center)
-            SMODS.ConsumableType.delete_card(self, center)
+            SMODS.ObjectType.delete_card(self, center)
             SMODS.remove_pool(G.P_CENTER_POOLS['Tarot_Planet'], center.key)
         end,
         loc_txt = {},
@@ -957,10 +1110,22 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         inject = function(self)
             G.P_CENTERS[self.key] = self
             SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
+            for k, v in pairs(SMODS.ObjectTypes) do
+                -- Should "cards" be formatted as `{[<center key>] = true}` or {<center key>}?
+                -- Changing "cards" and "pools" wouldn't be hard to do, just depends on preferred format
+                if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) then
+                    SMODS.ObjectTypes[k]:inject_card(self)
+                end
+            end
         end,
         delete = function(self)
             G.P_CENTERS[self.key] = nil
             SMODS.remove_pool(G.P_CENTER_POOLS[self.set], self.key)
+            for k, v in pairs(SMODS.ObjectTypes) do
+                if ((self.pools and self.pools[k]) or (v.cards and v.cards[self.key])) then
+                    SMODS.ObjectTypes[k]:remove_card(self)
+                end
+            end
             local j
             for i, v in ipairs(self.obj_buffer) do
                 if v == self.key then j = i end
@@ -1035,6 +1200,10 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 SMODS.insert_pool(G.P_JOKER_RARITY_POOLS[self.rarity], self, false)
             else
                 SMODS.insert_pool(G.P_JOKER_RARITY_POOLS[self.rarity], self)
+                local vanilla_rarities = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
+                if vanilla_rarities[self.rarity] then
+                    SMODS.insert_pool(G.P_JOKER_RARITY_POOLS[vanilla_rarities[self.rarity]], self)
+                end
             end
         end
     }
@@ -1081,7 +1250,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             return {}
         end
     }
-    -- TODO make this set of functions extendable by ConsumableTypes
+    
     SMODS.Tarot = SMODS.Consumable:extend {
         set = 'Tarot',
     }
