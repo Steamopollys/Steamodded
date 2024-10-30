@@ -1355,8 +1355,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 nodes = desc_nodes,
                 vars = {}
             }
+            local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
-                local res = self:loc_vars(info_queue, card) or {}
+                res = self:loc_vars(info_queue, card) or {}
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
                 target.scale = res.scale
