@@ -680,14 +680,14 @@ end
 
 
 function SMODS.poll_rarity(_pool_key, _rand_key)
-	local rarity_poll = pseudorandom(pseudoseed(_rand_key or 'rarity'..G.GAME.round_resets.ante)) -- Generate the poll value
+	local rarity_poll = pseudorandom(pseudoseed(_rand_key or ('rarity'..G.GAME.round_resets.ante))) -- Generate the poll value
 	local available_rarities = copy_table(SMODS.ObjectTypes[_pool_key].rarities) -- Table containing a list of rarities and their rates
     local vanilla_rarities = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
     
     -- Calculate total rates of rarities
     local total_weight = 0
     for _, v in ipairs(available_rarities) do
-        v.mod = G.GAME[v.key:lower().."_mod"]
+        v.mod = G.GAME[v.key:lower().."_mod"] or 1
         -- Should this fully override the v.weight calcs? 
         if SMODS.Rarities[v.key].get_weight and type(SMODS.Rarities[v.key].get_weight) == "function" then
             v.weight = SMODS.Rarities[v.key]:get_weight(v.weight, SMODS.ObjectTypes[_pool_key])
