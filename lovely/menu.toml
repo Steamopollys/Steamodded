@@ -55,6 +55,6 @@ target = 'functions/UI_definitions.lua'
 pattern = '''create_option_cycle({w = 4,scale = 0.8, label = localize("b_set_CRT_bloom"),options = localize('ml_bloom_opt'), opt_callback = 'change_crt_bloom', current_option = G.SETTINGS.GRAPHICS.bloom}),'''
 position = 'after'
 payload = '''
-create_option_cycle({label = localize('b_graphics_mipmap_level'),scale = 0.8, options = SMODS.config.graphics_mipmap_level_options, opt_callback = 'SMODS_change_mipmap', current_option = SMODS.config.graphics_mipmap_level_options[SMODS.config.graphics_mipmap_level]}),'''
+create_option_cycle({label = localize('b_graphics_mipmap_level'),scale = 0.8, options = SMODS.config.graphics_mipmap_level_options, opt_callback = 'SMODS_change_mipmap', current_option = SMODS.config.graphics_mipmap_level}),'''
 match_indent = true
 
