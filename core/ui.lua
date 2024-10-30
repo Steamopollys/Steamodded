@@ -1161,59 +1161,59 @@ function create_UIBox_mods_button()
 									})
 								end
 							},
-							false and {
-								label = localize('b_browse'),
-								tab_definition_function = function()
-									return {
-                                        n = G.UIT.ROOT,
-                                        config = {
-                                            align = "cm",
-                                            padding = 0.05,
-                                            colour = G.C.CLEAR,
-                                        },
-                                        nodes = {
-											{
-												n = G.UIT.C,
-												config = { align = 'cm' },
-												nodes = {
-													{
-														n = G.UIT.R,
-														config = { align = 'cl' },
-														nodes = {
-															create_text_input{
-																prompt_text = localize('b_search_prompt'),
-																max_length = 50,
-																text_scale = 0.6,
-																w = 6,
-																h = 1,
-																ref_table = SMODS,
-																ref_value = "browse_search",
-																extended_corpus = true,
-															},
-															UIBox_button{
-																button = 'browse_search',
-																label = {localize('b_search_button')},
-																minw = 3,
-																colour = G.C.RED
-															}
-														}
-													},
-													{
-														n = G.UIT.R,
-														config = { align = 'cm', emboss = 0.05, colour = G.C.BLACK, minh=5, minw=10.5},
-														nodes = {
-															{
-																n = G.UIT.O,
-																config = { align = 'cm', object = Moveable(), id = 'browse_mods'}
-															}
-														}
-													}
-												}
-											}
-										}
-									}
-								end,
-							} or nil,
+							-- {
+							-- 	label = localize('b_browse'),
+							-- 	tab_definition_function = function()
+							-- 		return {
+                            --             n = G.UIT.ROOT,
+                            --             config = {
+                            --                 align = "cm",
+                            --                 padding = 0.05,
+                            --                 colour = G.C.CLEAR,
+                            --             },
+                            --             nodes = {
+							-- 				{
+							-- 					n = G.UIT.C,
+							-- 					config = { align = 'cm' },
+							-- 					nodes = {
+							-- 						{
+							-- 							n = G.UIT.R,
+							-- 							config = { align = 'cl' },
+							-- 							nodes = {
+							-- 								create_text_input{
+							-- 									prompt_text = localize('b_search_prompt'),
+							-- 									max_length = 50,
+							-- 									text_scale = 0.6,
+							-- 									w = 6,
+							-- 									h = 1,
+							-- 									ref_table = SMODS,
+							-- 									ref_value = "browse_search",
+							-- 									extended_corpus = true,
+							-- 								},
+							-- 								UIBox_button{
+							-- 									button = 'browse_search',
+							-- 									label = {localize('b_search_button')},
+							-- 									minw = 3,
+							-- 									colour = G.C.RED
+							-- 								}
+							-- 							}
+							-- 						},
+							-- 						{
+							-- 							n = G.UIT.R,
+							-- 							config = { align = 'cm', emboss = 0.05, colour = G.C.BLACK, minh=5, minw=10.5},
+							-- 							nodes = {
+							-- 								{
+							-- 									n = G.UIT.O,
+							-- 									config = { align = 'cm', object = Moveable(), id = 'browse_mods'}
+							-- 								}
+							-- 							}
+							-- 						}
+							-- 					}
+							-- 				}
+							-- 			}
+							-- 		}
+							-- 	end,
+							-- },
 							{
 
 								label = localize('b_credits'),
