@@ -197,71 +197,83 @@ function buildModDescTab(mod)
 	G.E_MANAGER:add_event(Event({
 		blockable = false,
 		func = function()
-		  G.REFRESH_ALERTS = nil
-		return true
+			G.REFRESH_ALERTS = nil
+			return true
 		end
 	}))
-	local modNodes = {}
-	local scale = 0.75  -- Scale factor for text
-	local maxCharsPerLine = 50
-
-	local wrappedDescription = wrapText(mod.description, maxCharsPerLine)
-
-	local authors = localize('b_author'.. (#mod.author > 1 and 's' or '')) .. ': ' .. concatAuthors(mod.author)
-
-	-- Authors names in blue
-	table.insert(modNodes, {
-		n = G.UIT.R,
-		config = {
-			padding = 0,
-			align = "cm",
-			r = 0.1,
-			emboss = 0.1,
-			outline = 1,
-			padding = 0.07
-		},
-		nodes = {
-			{
-				n = G.UIT.T,
-				config = {
-					text = authors,
-					shadow = true,
-					scale = scale * 0.65,
-					colour = G.C.BLUE,
-				}
-			}
-		}
-	})
-
-	-- Mod description
-	table.insert(modNodes, {
-		n = G.UIT.R,
-		config = {
-			padding = 0.2,
-			align = "cm"
-		},
-		nodes = {
-			{
-				n = G.UIT.T,
-				config = {
-					text = wrappedDescription,
-					shadow = true,
-					scale = scale * 0.5,
-					colour = G.C.UI.TEXT_LIGHT
-				}
-			}
-		}
-	})
-
-	local custom_ui_func = mod.custom_ui
-	if custom_ui_func and type(custom_ui_func) == 'function' then
-		custom_ui_func(modNodes)
+	local label = mod.name
+	if (G.localization.descriptions.Mod or {})[mod.id] then
+		label = localize { type = 'name_text', set = 'Mod', key = mod.id }
 	end
-
 	return {
-		label = mod.name,
+		label = label,
 		chosen = SMODS.LAST_SELECTED_MOD_TAB == "mod_desc" or false,
 		tab_definition_function = function()
+			local modNodes = {}
+			local scale = 0.75 -- Scale factor for text
+			local maxCharsPerLine = 50
+
+			local wrappedDescription = wrapText(mod.description or '', maxCharsPerLine)
+
+			local authors = localize('b_author' .. (#mod.author > 1 and 's' or '')) .. ': ' .. concatAuthors(mod.author)
+
+			-- Authors names in blue
+			table.insert(modNodes, {
+				n = G.UIT.R,
+				config = {
+					padding = 0,
+					align = "cm",
+					r = 0.1,
+					emboss = 0.1,
+					outline = 1,
+					padding = 0.07
+				},
+				nodes = {
+					{
+						n = G.UIT.T,
+						config = {
+							text = authors,
+							shadow = true,
+							scale = scale * 0.65,
+							colour = G.C.BLUE,
+						}
+					}
+				}
+			})
+
+			-- Mod description
+			if (G.localization.descriptions.Mod or {})[mod.id] then
+				modNodes[#modNodes + 1] = {}
+				local loc_vars = mod.description_loc_vars and mod:description_loc_vars() or {}
+				localize { type = 'descriptions', key = loc_vars.key or mod.id, set = 'Mod', nodes = modNodes[#modNodes], vars = loc_vars.vars, scale = loc_vars.scale, text_colour = loc_vars.text_colour }
+				modNodes[#modNodes] = desc_from_rows(modNodes[#modNodes])
+				modNodes[#modNodes].config.colour = loc_vars.background_colour or modNodes[#modNodes].config.colour
+			else
+				table.insert(modNodes, {
+					n = G.UIT.R,
+					config = {
+						padding = 0.2,
+						align = "cm"
+					},
+					nodes = {
+						{
+							n = G.UIT.T,
+							config = {
+								text = wrappedDescription,
+								shadow = true,
+								scale = scale * 0.5,
+								colour = G.C.UI.TEXT_LIGHT
+							}
+						}
+					}
+				})
+			end
+
+			local custom_ui_func = mod.custom_ui
+			if custom_ui_func and type(custom_ui_func) == 'function' then
+				custom_ui_func(modNodes)
+			end
+
 			return {
 				n = G.UIT.ROOT,
 				config = {
@@ -1122,6 +1134,7 @@ end
 
 function create_UIBox_mods_button()
 	local scale = 0.75
+	SMODS.browse_search = SMODS.browse_search or ''
 	return (create_UIBox_generic_options({
 		back_func = 'exit_mods',
 		contents = {
@@ -1148,6 +1161,59 @@ function create_UIBox_mods_button()
 									})
 								end
 							},
+							-- {
+							-- 	label = localize('b_browse'),
+							-- 	tab_definition_function = function()
+							-- 		return {
+                            --             n = G.UIT.ROOT,
+                            --             config = {
+                            --                 align = "cm",
+                            --                 padding = 0.05,
+                            --                 colour = G.C.CLEAR,
+                            --             },
+                            --             nodes = {
+							-- 				{
+							-- 					n = G.UIT.C,
+							-- 					config = { align = 'cm' },
+							-- 					nodes = {
+							-- 						{
+							-- 							n = G.UIT.R,
+							-- 							config = { align = 'cl' },
+							-- 							nodes = {
+							-- 								create_text_input{
+							-- 									prompt_text = localize('b_search_prompt'),
+							-- 									max_length = 50,
+							-- 									text_scale = 0.6,
+							-- 									w = 6,
+							-- 									h = 1,
+							-- 									ref_table = SMODS,
+							-- 									ref_value = "browse_search",
+							-- 									extended_corpus = true,
+							-- 								},
+							-- 								UIBox_button{
+							-- 									button = 'browse_search',
+							-- 									label = {localize('b_search_button')},
+							-- 									minw = 3,
+							-- 									colour = G.C.RED
+							-- 								}
+							-- 							}
+							-- 						},
+							-- 						{
+							-- 							n = G.UIT.R,
+							-- 							config = { align = 'cm', emboss = 0.05, colour = G.C.BLACK, minh=5, minw=10.5},
+							-- 							nodes = {
+							-- 								{
+							-- 									n = G.UIT.O,
+							-- 									config = { align = 'cm', object = Moveable(), id = 'browse_mods'}
+							-- 								}
+							-- 							}
+							-- 						}
+							-- 					}
+							-- 				}
+							-- 			}
+							-- 		}
+							-- 	end,
+							-- },
 							{
 
 								label = localize('b_credits'),
@@ -1312,6 +1378,15 @@ function create_UIBox_mods_button()
 			}
 		}
 	}))
+end
+
+G.FUNCS.browse_search = function(e)
+	SMODS.fetch_index()
+
+end
+
+G.FUNCS.browse_mods_page = function(args)
+	local page = args.cycle_config and args.cycle_config.current_option or 1
 end
 
 G.FUNCS.SMODS_log_level = function(args)

@@ -93,17 +93,20 @@ return {
             b_unknown = 'Unknown',
             b_lovely_mod = '(Lovely Mod) ',
             b_by = ' By: ',
-            b_config = "Config",
-            b_additions = 'Additions',
-            b_stickers = 'Stickers',
-            b_achievements = "Achievements",
-            b_applies_stakes_1 = 'Applies ',
-            b_applies_stakes_2 = '',
-            b_graphics_mipmap_level = "Mipmap level",
-        },
-        v_dictionary = {
-            c_types = '#1# Types',
-            cashout_hidden = '...and #1# more',
-        },
-    }
+			b_config = "Config",
+			b_additions = 'Additions',
+      		b_stickers = 'Stickers',
+			b_achievements = "Achievements",
+      		b_applies_stakes_1 = 'Applies ',
+			b_applies_stakes_2 = '',
+			b_graphics_mipmap_level = "Mipmap level",
+			b_browse = 'Browse',
+			b_search_prompt = 'Search for mods',
+			b_search_button = 'Search',
+		},
+		v_dictionary = {
+			c_types = '#1# Types',
+			cashout_hidden = '...and #1# more',
+		},
+	}
 }

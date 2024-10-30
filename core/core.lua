@@ -2,7 +2,7 @@
 --- MODULE CORE
 
 SMODS = {}
-MODDED_VERSION = "1.0.0~ALPHA-1021a-STEAMODDED"
+MODDED_VERSION = "1.0.0~ALPHA-1030a-STEAMODDED"
 SMODS.id = 'Steamodded'
 SMODS.version = MODDED_VERSION:gsub('%-STEAMODDED', '')
 SMODS.can_load = true
@@ -68,6 +68,7 @@ SMODS.path = find_self(SMODS.MODS_DIR, 'core.lua', '--- STEAMODDED CORE')
 
 for _, path in ipairs {
 	"core/ui.lua",
+	"core/index.lua",
 	"core/utils.lua",
 	"core/overrides.lua",
 	"core/game_object.lua",

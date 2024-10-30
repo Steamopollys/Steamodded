@@ -704,7 +704,7 @@ function SMODS.poll_enhancement(args)
                 total_weight = total_weight + enhance_option.weight
             end
         end
-	end
+	  end
     total_weight = total_weight + (total_weight / 40 * 60) -- set base rate to 40%
 
     local type_weight = 0 -- modified weight total
@@ -724,4 +724,11 @@ function SMODS.poll_enhancement(args)
             end
         end
     end
+end
+
+function time(func, ...)
+    local start_time = love.timer.getTime()
+    func(...)
+    local end_time = love.timer.getTime()
+    return 1000*(end_time-start_time)
 end

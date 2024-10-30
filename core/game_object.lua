@@ -984,6 +984,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
                 target.set = res.set or target.set
+                target.scale = res.scale
+                target.text_colour = res.text_colour
             end
             if desc_nodes == full_UI_table.main and not full_UI_table.name then
                 full_UI_table.name = localize { type = 'name', set = target.set, key = target.key, nodes = full_UI_table.name }
@@ -1001,6 +1003,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if res.main_end then
                 desc_nodes[#desc_nodes + 1] = res.main_end
             end
+            desc_nodes.background_colour = res.background_colour
         end
     }
 
@@ -1187,6 +1190,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 local res = self:loc_vars(info_queue, card) or {}
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
+                target.scale = res.scale
+                target.text_colour = res.text_colour
             end
             if desc_nodes == full_UI_table.main and not full_UI_table.name then
                 full_UI_table.name = localize{type = 'name', set = 'Other', key = target.key, nodes = full_UI_table.name}
@@ -1194,6 +1199,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 desc_nodes.name = localize{type = 'name_text', key = target.key, set = 'Other' } 
             end
             localize(target)
+            desc_nodes.background_colour = res.background_colour
         end,
         --[[
         create_card = function(self, card)
@@ -2348,6 +2354,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
                 target.set = res.set or target.set
+                target.scale = res.scale
+                target.text_colour = res.text_colour
             end
             if desc_nodes == full_UI_table.main and not full_UI_table.name then
                 full_UI_table.name = localize { type = 'name', set = target.set, key = target.key, nodes = full_UI_table.name }
@@ -2361,6 +2369,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if res.main_end then
                 desc_nodes[#desc_nodes + 1] = res.main_end
             end
+            desc_nodes.background_colour = res.background_colour
         end
     }
 
