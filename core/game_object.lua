@@ -760,7 +760,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end
         for _, vv in ipairs(object_type.rarities) do
             vv.weight = vv.weight / total
-            local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 3}
+            local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
             if default_rarity_check[vv.key] then
                 object_type.rarity_pools[default_rarity_check[vv.key]] = {}
             else
@@ -847,7 +847,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 end
                 for _, v in ipairs(self.rarities) do
                     v.weight = v.weight / total
-                    local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 3}
+                    local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
                     if default_rarity_check[v.key] then
                         self.rarity_pools[default_rarity_check[v.key]] = {}
                     else
