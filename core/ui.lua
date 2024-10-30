@@ -1161,7 +1161,7 @@ function create_UIBox_mods_button()
 									})
 								end
 							},
-							{
+							false and {
 								label = localize('b_browse'),
 								tab_definition_function = function()
 									return {
@@ -1213,7 +1213,7 @@ function create_UIBox_mods_button()
 										}
 									}
 								end,
-							},
+							} or nil,
 							{
 
 								label = localize('b_credits'),
