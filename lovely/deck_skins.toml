@@ -1,0 +1,133 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+#========================================================#
+# Choose any rank for custom deck and use provided atlas #
+#========================================================#
+[[patches]]
+[patches.regex]
+target = "functions/misc_functions.lua"
+pattern = '''if _front and _front.suit and \(_front.value == 'Jack' or _front.value == 'Queen' or _front.value == 'King'\) then([\s\S]*?)end([\s\S]*?)end([\s\S]*?)end'''
+position = "at"
+payload = '''
+if _front and _front.suit and G.SETTINGS.CUSTOM_DECK and G.SETTINGS.CUSTOM_DECK.Collabs then
+    local collab = G.SETTINGS.CUSTOM_DECK.Collabs[_front.suit]
+    if collab and collab ~= 'default' then
+        local deckSkin = SMODS.DeckSkins[collab]
+        if deckSkin then
+            local hasRank = false
+            for i = 1, #deckSkin.ranks do
+                if deckSkin.ranks[i] == _front.value then hasRank = true break end
+            end
+            if hasRank then
+                local atlas = G.ASSET_ATLAS[G.SETTINGS.colourblind_option and deckSkin.hc_atlas or deckSkin.lc_atlas]
+                if atlas then
+                    if  deckSkin.posStyle == 'collab' then
+                        return atlas, G.COLLABS.pos[_front.value]
+                    elseif deckSkin.posStyle == 'suit' then
+                        return atlas, { x = _front.pos.x, y = 0}
+                    elseif deckSkin.posStyle == 'deck' then
+                        return atlas, _front.pos
+                    end
+                end
+            end
+        end
+    end
+end
+'''
+match_indent = true
+
+#=======================#
+# Extend custom deck ui #
+#=======================#
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''local face_cards = CardArea\(([\s\S]*?)\)'''
+position = "at"
+payload = '''
+local rankCount = 0
+local lookup = {}
+local options = G.COLLABS.options[_suit]
+for i = 2, #options do
+    local skin = SMODS.DeckSkins[options[i]]
+    for j = 1, #skin.ranks do
+        if not lookup[skin.ranks[j]] then
+            lookup[skin.ranks[j]] = true
+            rankCount = rankCount + 1
+        end
+    end
+end
+
+local face_cards = CardArea(
+    0,0,
+    math.min(math.max(rankCount*G.CARD_W*0.6, 4*G.CARD_W), 10*G.CARD_W),
+    1.4*G.CARD_H, 
+    {card_limit = rankCount, type = 'title', highlight_limit = 0})
+'''
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''for i = 1, 3 do([\s\S]*?)end'''
+position = "at"
+payload = '''
+local rank = SMODS.Ranks['2']
+local cards = {}
+local smodSuit = SMODS.Suits[_suit]
+repeat
+    if lookup[rank.key] then
+        local card_code = smodSuit.card_key .. '_' .. rank.card_key
+        local card = Card(0,0, G.CARD_W*1.2, G.CARD_H*1.2, G.P_CARDS[card_code], G.P_CENTERS.c_base)
+        card.no_ui = true
+        
+        cards[#cards + 1] = card
+    end
+    rank = SMODS.Ranks[rank.next[1]]
+until rank == SMODS.Ranks['2']
+
+for i = #cards, 1, -1 do
+    face_cards:emplace(cards[i])
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''function create_UIBox_customize_deck()([\s\S]*?)end'''
+position = "at"
+payload = '''
+function create_UIBox_customize_deck()
+  local suitTabs = {}
+
+  local index = 1
+  for i, suit in ipairs(SMODS.Suit:obj_list(true)) do
+    if G.COLLABS.options[suit.key] then
+        suitTabs[index] = {
+                    label = localize(suit.key, 'suits_plural'),
+                    tab_definition_function = G.UIDEF.custom_deck_tab,
+                    tab_definition_function_args = suit.key
+                }
+        index = index + 1
+    end
+  end
+
+  if suitTabs[1] then
+    suitTabs[1].chosen = true
+  end
+
+  local t = create_UIBox_generic_options({ back_func = 'options', snap_back = nil, contents = {
+    {n=G.UIT.R, config={align = "cm", padding = 0}, nodes={
+      create_tabs(
+        {tabs = suitTabs, snap_to_nav = true, no_shoulders = true}
+    )}}}
+  })
+
+  return t
+end
+'''
+match_indent = true

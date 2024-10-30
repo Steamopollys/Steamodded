@@ -2282,6 +2282,86 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             end
         end,
     })
+    -------------------------------------------------------------------------------------------------
+    ----- API CODE GameObject.DeckSkin
+    -------------------------------------------------------------------------------------------------
+
+    local deck_skin_count_by_suit = {}
+    SMODS.DeckSkins = {}
+    SMODS.DeckSkin =SMODS.GameObject:extend {
+        obj_table = SMODS.DeckSkins,
+        obj_buffer = {},
+        required_params = {
+            'key',
+            'suit',
+            'ranks',
+            'lc_atlas',
+        },
+        set = 'DeckSkin',
+        process_loc_text = function(self)
+            if G.localization.misc.collabs[self.suit] == nil then
+                G.localization.misc.collabs[self.suit] = {["1"] = 'Default'}
+            end
+
+            if self.loc_txt and self.loc_txt[G.SETTINGS.language] then
+                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = self.loc_txt[G.SETTINGS.language]
+            elseif G.localization.misc.collabs[self.suit][self.suit_index .. ''] == nil then
+                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = self.key
+            end
+        end,
+        register = function (self)
+            if self.registered then
+                sendWarnMessage(('Detected duplicate register call on DeckSkin %s'):format(self.key), self.set)
+                return
+            end
+            if self:check_dependencies() then
+                if self.hc_atals == nil then self.hc_atals = self.lc_atlas end
+                if self.posStyle == nil then self.posStyle = 'deck' end
+
+                if not (self.posStyle == 'collab' or self.posStyle == 'suit' or self.posStyle == 'deck') then
+                    sendWarnMessage(('%s is not a valid posStyle on DeckSkin %s. Supported posStyle values are \'collab\', \'suit\' and \'deck\''):format(self.posStyle, self.key), self.set)
+                end
+
+                self.obj_table[self.key] = self
+
+                if deck_skin_count_by_suit[self.suit] then
+                    self.suit_index  = deck_skin_count_by_suit[self.suit] + 1
+                else
+                    --start at 2 for default
+                    self.suit_index = 2
+                end
+                deck_skin_count_by_suit[self.suit] = self.suit_index
+
+                self.obj_buffer[#self.obj_buffer + 1] = self.key
+                self.registered = true
+            end
+        end,
+        inject = function (self)
+            if G.COLLABS.options[self.suit] == nil then
+                G.COLLABS.options[self.suit] = {'default'}
+            end
+
+            local options = G.COLLABS.options[self.suit]
+            options[#options + 1] = self.key
+        end
+    }
+
+    for suitName, options in pairs(G.COLLABS.options) do
+        --start at 2 to skip default
+        for i = 2, #options do
+            SMODS.DeckSkin{
+                key = options[i],
+                suit = suitName,
+                ranks = {'Jack', 'Queen', 'King'},
+                lc_atlas = options[i] .. '_1',
+                hc_atlas = options[i] .. '_2',
+                posStyle = 'collab'
+            }
+        end
+    end
+
+    --Clear 'Friends of Jimbo' skins so they can be handled via the same pipeline
+    G.COLLABS.options = {}
 
     -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.PokerHand
