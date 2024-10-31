@@ -80,6 +80,7 @@ function loadMods(modsDirectory)
         dependencies = { type = 'table', check = function(mod, t)
             local ops = {
                 ['<<'] = function(a,b) return a<b end,
+                -- ['<~'] = function(a,b) return a<b end,
                 ['>>'] = function(a,b) return a>b end,
                 ['<='] = function(a,b) return a<=b end,
                 ['>='] = function(a,b) return a>=b end,
@@ -96,7 +97,11 @@ function loadMods(modsDirectory)
                         local operator, version = string.match(version_string, '^(..)(.*)$')
                         local op = ops[operator]
                         local ver = V(version)
-                        if op and ver:is_valid() then
+                        -- if operator == '<<' and not ver.rev then
+                        --     ver.beta = -1
+                        --     ver.rev = '~'
+                        -- end
+                        if op and ver:is_valid(operator == '==') then
                            x[j] = { op = op, ver = ver }
                            j = j+1
                         end
@@ -109,6 +114,7 @@ function loadMods(modsDirectory)
         conflicts = { type = 'table', check = function(mod, t)
             local ops = {
                 ['<<'] = function(a,b) return a<b end,
+                --['<~'] = function(a,b) return a<b end,
                 ['>>'] = function(a,b) return a>b end,
                 ['<='] = function(a,b) return a<=b end,
                 ['>='] = function(a,b) return a>=b end,
@@ -125,7 +131,11 @@ function loadMods(modsDirectory)
                     local operator, version = string.match(version_string, '^(..)(.*)$')
                     local op = ops[operator]
                     local ver = V(version)
-                    if op and ver:is_valid() then
+                    -- if operator == '<<' and not ver.rev then
+                    --     ver.beta = -1
+                    --     ver.rev = '~'
+                    -- end
+                    if op and ver:is_valid(operator == '==') then
                         x[j] = { op = op, ver = ver, str = '('..version_string..')' }
                         j = j+1
                     end
@@ -414,13 +424,14 @@ function loadMods(modsDirectory)
                     if fulfilled then break end
                     local id = y.id
                     if SMODS.Mods[id] and check_dependencies(SMODS.Mods[id], seen) then
+                        fulfilled = true
                         local dep_ver = V(SMODS.Mods[id].version)
                         for _, v in ipairs(y) do
-                            if v.op(dep_ver, v.ver) then
-                                fulfilled = true
-                                y.fulfilled = true
+                            if not v.op(dep_ver, v.ver) then
+                                fulfilled = false
                             end
                         end
+                        if fulfilled then y.fulfilled = true end
                     end
                 end
                 if not fulfilled then
