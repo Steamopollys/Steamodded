@@ -2297,6 +2297,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             'ranks',
             'lc_atlas',
         },
+        posStyle = 'deck',
         set = 'DeckSkin',
         process_loc_text = function(self)
             if G.localization.misc.collabs[self.suit] == nil then
@@ -2315,8 +2316,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 return
             end
             if self:check_dependencies() then
-                if self.hc_atals == nil then self.hc_atals = self.lc_atlas end
-                if self.posStyle == nil then self.posStyle = 'deck' end
+                self.hc_atlas = self.hc_atlas or self.lc_atlas
 
                 if not (self.posStyle == 'collab' or self.posStyle == 'suit' or self.posStyle == 'deck') then
                     sendWarnMessage(('%s is not a valid posStyle on DeckSkin %s. Supported posStyle values are \'collab\', \'suit\' and \'deck\''):format(self.posStyle, self.key), self.set)
