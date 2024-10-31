@@ -511,7 +511,10 @@ V_MT = {
     end,
     __call = function(_, str)
         str = str or '0.0.0'
-        local _, _, major, minor, patch, rev = string.find(str, '^(%d+)%.?(%d*)%.?(%d*)(.*)$')
+        local _, _, major, minorFull, minor, patchFull, patch, rev = string.find(str, '^(%d+)(%.?(%d*))(%.?(%d*))(.*)$')
+        if (minorFull ~= "" and minor == "") or (patchFull ~= "" and patch == "") then
+            error('Trailing dot found in version "' .. str .. '".')
+        end
         local t = {
             major = tonumber(major),
             minor = tonumber(minor) or 0,
