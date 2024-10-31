@@ -101,7 +101,7 @@ function loadMods(modsDirectory)
                         --     ver.beta = -1
                         --     ver.rev = '~'
                         -- end
-                        if op and ver:is_valid(operator == '==') then
+                        if op and ver:is_valid(true) then
                            x[j] = { op = op, ver = ver }
                            j = j+1
                         end
@@ -135,7 +135,7 @@ function loadMods(modsDirectory)
                     --     ver.beta = -1
                     --     ver.rev = '~'
                     -- end
-                    if op and ver:is_valid(operator == '==') then
+                    if op and ver:is_valid(true) then
                         x[j] = { op = op, ver = ver, str = '('..version_string..')' }
                         j = j+1
                     end
