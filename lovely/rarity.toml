@@ -45,7 +45,7 @@ target = "functions/common_events.lua"
 pattern = '''(?<indent>[\t ]*)local rarity = _rarity or pseudorandom\('rarity'\.\.G\.GAME\.round_resets\.ante\.\.\(_append or ''\)\) \n[\s\S]{12}rarity = \(_legendary and 4\) or \(rarity > 0\.95 and 3\) or \(rarity > 0\.7 and 2\) or 1'''
 position = "at"
 payload = '''
-_rarity = (_legendary and 4) or type(_rarity) == "number" and ((_rarity > 0.95 and 3) or (_rarity > 0.7 and 2) or 1)
+_rarity = (_legendary and 4) or (type(_rarity) == "number" and ((_rarity > 0.95 and 3) or (_rarity > 0.7 and 2) or 1)) or _rarity
 local rarity = _rarity or SMODS.poll_rarity("Joker", 'rarity'..G.GAME.round_resets.ante..(_append or ''))
 '''
 ## Ensure that other cards set to string rarity work the same as set for int rarity
