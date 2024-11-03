@@ -704,7 +704,7 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
 	local weight_i = 0
 	for _, v in ipairs(available_rarities) do
 		weight_i = weight_i + v.weight
-		if rarity_poll > 1 - (weight_i) / total_weight then
+		if rarity_poll > 1 - (weight_i) then
             if vanilla_rarities[v.key] then 
                 return vanilla_rarities[v.key]
             else
@@ -712,7 +712,6 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
             end
 		end
 	end
-
 	return nil
 end
 
