@@ -112,8 +112,7 @@ function create_UIBox_your_collection_blinds(exit)
 	local blinds_amt = #blind_tab
 
 	table.sort(blind_tab, function(a, b)
-		return a.order + (a.boss and a.boss.showdown and 1e5 or 0)
-			< b.order + (b.boss and b.boss.showdown and 1e5 or 0)
+		return a.order < b.order
 	end)
 
 	local this_page = {}
@@ -306,8 +305,7 @@ function G.FUNCS.your_collection_blinds_page(args)
 	end
 
 	table.sort(blind_tab, function(a, b)
-		return a.order + (a.boss and a.boss.showdown and 1e5 or 0)
-			< b.order + (b.boss and b.boss.showdown and 1e5 or 0)
+		return a.order < b.order
 	end)
 
 	local this_page = {}
@@ -1494,11 +1492,11 @@ function Card:set_edition(edition, immediate, silent)
 			elseif self.ability.set == 'Joker' then
 				G.jokers.config.card_limit = G.jokers.config.card_limit + v
 			elseif self.area == G.hand and not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) then
-				G.hand.config.card_limit = G.hand.config.card_limit + v
 				G.E_MANAGER:add_event(Event({
 					trigger = 'immediate',
 					func = function()
-						G.FUNCS.draw_from_deck_to_hand()
+						G.hand.config.card_limit = G.hand.config.card_limit + v
+						G.FUNCS.draw_from_deck_to_hand(v)
 						return true
 					end
 				}))
