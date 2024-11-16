@@ -612,3 +612,20 @@ pattern = "for h = 1, eval.jokers.repetitions do"
 position = "before"
 match_indent = true
 payload = "if not eval.jokers.repetitions then eval.jokers.repetitions = 0 end"
+
+# Scoring coroutine
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = "check_for_unlock({type = 'play_all_hearts'})"
+position = 'before'
+payload = 'if G.SCORING_COROUTINE then return false end '
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = "G.STATE_COMPLETE = false"
+position = 'before'
+payload = 'if G.SCORING_COROUTINE then return false end '
+match_indent = true
