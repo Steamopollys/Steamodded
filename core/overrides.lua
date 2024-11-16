@@ -2106,8 +2106,9 @@ function love.update(...)
 			--this coroutine allows us to stagger GC cycles through
 			--the main source of waste in terms of memory (especially w joker retriggers) is through local variables that become garbage
 			--this practically eliminates the memory overhead of scoring
-			--event queue overhead seems to not exist until scoring finalizes
-			--event manager has to wait for scoring to finish until it can keep processing events anyways
+			--event queue overhead seems to not exist if Talismans Disable Scoring Animations is off.
+			--event manager has to wait for scoring to finish until it can keep processing events anyways.
+			
             collectgarbage("collect")
 	    G.LAST_SCORING_YIELD = love.timer.getTime()
             coroutine.resume(G.SCORING_COROUTINE)
