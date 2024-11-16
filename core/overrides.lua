@@ -2067,9 +2067,63 @@ function get_pack(_key, _type)
    if not center then center = G.P_CENTERS['p_buffoon_normal_1'] end  return center
 end
 
+--scoring coroutine
+local oldplay = G.FUNCS.evaluate_play
+
+function G.FUNCS.evaluate_play()
+    G.SCORING_COROUTINE = coroutine.create(oldplay)
+    G.LAST_SCORING_YIELD = love.timer.getTime()
+    G.LAST_DOT_UPDATE = love.timer.getTime()
+    coroutine.resume(G.SCORING_COROUTINE)
+end
+
+local oldupd = love.update
+function love.update(...)
+    oldupd(...)
+    if G.SCORING_COROUTINE then
+        if coroutine.status(G.SCORING_COROUTINE) == "dead" then
+            G.SCORING_COROUTINE = nil
+            print("dead")
+            G.FUNCS.exit_overlay_menu()
+        else
+            G.SCORING_TEXT = nil
+            if not G.OVERLAY_MENU then
+                G.scoring_text = "Calculating"
+                G.SCORING_TEXT = DynaText({string = {{ref_table = G, ref_value = 'scoring_text'}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, pop_in = 0, scale = 1.5, silent = true})
+                G.FUNCS.overlay_menu({
+                    definition = 
+                    {n=G.UIT.ROOT, minw = G.ROOM.T.w*5, minh = G.ROOM.T.h*5, config={align = "cm", padding = 9999, offset = {x = 0, y = -3}, r = 0.1, colour = {G.C.GREY[1], G.C.GREY[2], G.C.GREY[3],0.7}}, nodes={
+                        {n=G.UIT.O, config={object = G.SCORING_TEXT}}
+                    }}, 
+                    config = {align="cm", offset = {x=0,y=0}, major = G.ROOM_ATTACH, bond = 'Weak'}
+                })
+            else
+                if G.OVERLAY_MENU and G.scoring_text and ((G.LAST_DOT_UPDATE + 1) < love.timer.getTime()) then
+                    G.LAST_DOT_UPDATE = love.timer.getTime()
+                    G.scoring_text = G.scoring_text.."."
+                end
+            end
+			--this coroutine allows us to stagger GC cycles through
+			--the main source of waste in terms of memory (especially w joker retriggers) is through local variables that become garbage
+			--this practically eliminates the memory overhead of scoring
+			--event queue overhead seems to not exist until scoring finalizes
+			--event manager has to wait for scoring to finish until it can keep processing events anyways
+            collectgarbage("collect")
+            coroutine.resume(G.SCORING_COROUTINE)
+        end
+    end
+end
+
+TIME_BETWEEN_SCORING_FRAMES = 0.1 -- 10 fps during scoring
+								  -- we dont want overhead from updates making scoring much slower
 --#region joker retrigger API
 local cj = Card.calculate_joker
 function Card:calculate_joker(context)
+	--scoring coroutine
+	if ((love.timer.getTime() - G.LAST_SCORING_YIELD) > TIME_BETWEEN_SCORING_FRAMES) and coroutine.running() then
+	        G.LAST_SCORING_YIELD = love.timer.getTime()
+	        coroutine.yield()
+    	end
 	local ret, triggered = cj(self, context)
 	--Copy ret table before it gets modified
 	local _ret = ret
