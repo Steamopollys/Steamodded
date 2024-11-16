@@ -2109,6 +2109,7 @@ function love.update(...)
 			--event queue overhead seems to not exist until scoring finalizes
 			--event manager has to wait for scoring to finish until it can keep processing events anyways
             collectgarbage("collect")
+	    G.LAST_SCORING_YIELD = love.timer.getTime()
             coroutine.resume(G.SCORING_COROUTINE)
         end
     end
@@ -2121,7 +2122,6 @@ local cj = Card.calculate_joker
 function Card:calculate_joker(context)
 	--scoring coroutine
 	if ((love.timer.getTime() - G.LAST_SCORING_YIELD) > TIME_BETWEEN_SCORING_FRAMES) and coroutine.running() then
-	        G.LAST_SCORING_YIELD = love.timer.getTime()
 	        coroutine.yield()
     	end
 	local ret, triggered = cj(self, context)
