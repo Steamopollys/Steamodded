@@ -48,6 +48,15 @@ position = "at"
 payload = '''if G.PROFILES[G.SETTINGS.profile].all_unlocked and (G.ACHIEVEMENTS and G.ACHIEVEMENTS[achievement_name] and not G.ACHIEVEMENTS[achievement_name].bypass_all_unlocked) then return end'''
 match_indent = true
 
+# unlock_achievement() - fix event queue leaking
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''if G.F_NO_ACHIEVEMENTS then return end'''
+position = "at"
+payload = '''if G.F_NO_ACHIEVEMENTS then return true end'''
+match_indent = true
+
 [[patches]]
 [patches.regex]
 target = "functions/common_events.lua"
