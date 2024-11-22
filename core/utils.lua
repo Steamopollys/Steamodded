@@ -183,17 +183,7 @@ function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
     ref_table[ref_value] = target
 end
 
-function SMODS.handle_loc_file(path)
-    local dir = path .. 'localization/'
-	local file_name
-    for k, v in ipairs({ dir .. G.SETTINGS.language .. '.lua', dir .. 'default.lua', dir .. 'en-us.lua', dir .. G.SETTINGS.language .. '.json', dir .. 'default.json', dir .. 'en-us.json' }) do
-        if NFS.getInfo(v) then
-            file_name = v
-            break
-        end
-    end
-    if not file_name then return end
-
+local function parse_loc_file(file_name)
     local loc_table = nil
     if file_name:lower():match("%.json$") then
         loc_table = assert(JSON.decode(NFS.read(file_name)))
@@ -203,7 +193,7 @@ function SMODS.handle_loc_file(path)
     local function recurse(target, ref_table)
         if type(target) ~= 'table' then return end --this shouldn't happen unless there's a bad return value
         for k, v in pairs(target) do
-            if not ref_table[k] or (type(v) ~= 'table') or type(v[1]) == 'string' then
+            if not ref_table[k] --[[or (type(v) ~= 'table') or type(v[1]) == 'string'--]] then
                 ref_table[k] = v
             else
                 recurse(v, ref_table[k])
@@ -211,6 +201,22 @@ function SMODS.handle_loc_file(path)
         end
     end
 	recurse(loc_table, G.localization)
+end
+
+local function handle_loc_file(dir, language)
+    for k, v in ipairs({ dir .. language .. '.lua', dir .. language .. '.json' }) do
+        if NFS.getInfo(v) then
+            parse_loc_file(v)
+            break
+        end
+    end
+end
+
+function SMODS.handle_loc_file(path)
+    local dir = path .. 'localization/'
+    handle_loc_file(dir, G.SETTINGS.language)
+    handle_loc_file(dir, 'default')
+    handle_loc_file(dir, 'en-us')
 end
 
 function SMODS.insert_pool(pool, center, replace)
