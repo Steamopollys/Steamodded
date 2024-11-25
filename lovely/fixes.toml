@@ -519,3 +519,23 @@ if self.edition or self.seal or self.ability.eternal or self.ability.rental or s
 position = "at"
 payload = '''
 if true then'''
+
+# Basegame fix for the reroll vouchers redeem function when only the center but no card object exists
+
+# Card:apply_to_run
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = """G.GAME.round_resets.reroll_cost = G.GAME.round_resets.reroll_cost - self.ability.extra"""
+position = 'at'
+match_indent = true
+payload = """G.GAME.round_resets.reroll_cost = G.GAME.round_resets.reroll_cost - center_table.extra"""
+
+# Card:apply_to_run
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = """G.GAME.current_round.reroll_cost = math.max(0, G.GAME.current_round.reroll_cost - self.ability.extra)"""
+position = 'at'
+match_indent = true
+payload = """G.GAME.current_round.reroll_cost = math.max(0, G.GAME.current_round.reroll_cost - center_table.extra)"""
