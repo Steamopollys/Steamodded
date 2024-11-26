@@ -183,7 +183,7 @@ function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
     ref_table[ref_value] = target
 end
 
-local function parse_loc_file(file_name)
+local function parse_loc_file(file_name, force)
     local loc_table = nil
     if file_name:lower():match("%.json$") then
         loc_table = assert(JSON.decode(NFS.read(file_name)))
@@ -193,7 +193,11 @@ local function parse_loc_file(file_name)
     local function recurse(target, ref_table)
         if type(target) ~= 'table' then return end --this shouldn't happen unless there's a bad return value
         for k, v in pairs(target) do
-            if not ref_table[k] --[[or (type(v) ~= 'table') or type(v[1]) == 'string'--]] then
+            -- If the value doesn't exist *or*
+            -- force mode is on and the value is not a table,
+            -- change/add the thing
+            -- brings back compatibility with language patching mods
+            if not ref_table[k] or (force and ((type(v) ~= 'table') or type(v[1]) == 'string')) then
                 ref_table[k] = v
             else
                 recurse(v, ref_table[k])
@@ -203,10 +207,10 @@ local function parse_loc_file(file_name)
 	recurse(loc_table, G.localization)
 end
 
-local function handle_loc_file(dir, language)
+local function handle_loc_file(dir, language, force)
     for k, v in ipairs({ dir .. language .. '.lua', dir .. language .. '.json' }) do
         if NFS.getInfo(v) then
-            parse_loc_file(v)
+            parse_loc_file(v, force)
             break
         end
     end
@@ -214,7 +218,7 @@ end
 
 function SMODS.handle_loc_file(path)
     local dir = path .. 'localization/'
-    handle_loc_file(dir, G.SETTINGS.language)
+    handle_loc_file(dir, G.SETTINGS.language, true)
     handle_loc_file(dir, 'default')
     handle_loc_file(dir, 'en-us')
 end
