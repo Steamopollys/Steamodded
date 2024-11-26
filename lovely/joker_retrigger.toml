@@ -250,7 +250,8 @@ match_indent = true
 target = "card.lua"
 pattern = "local other_joker_ret = other_joker:calculate_joker(context)"
 position = "at"
-payload = '''local other_joker_ret, trig = other_joker:calculate_joker(context)'''
+payload = '''local other_joker_ret, trig = other_joker:calculate_joker(context)
+'''
 match_indent = true
 
 # We don't need to return trig; Blueprint/Brainstorm cause callbacks to trigger twice 
@@ -261,12 +262,22 @@ pattern = "if context.blueprint > #G.jokers.cards + 1 then return end"
 position = "after"
 payload = '''context.no_callback = true'''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "context.blueprint = (context.blueprint and (context.blueprint + 1)) or 1"
+position = "after"
+payload = '''context.copy_depth = (context.copy_depth and (context.copy_depth + 1)) or 1'''
+match_indent = true
+
 [[patches]]
 [patches.pattern]
 target = "card.lua"
 pattern = "other_joker_ret.card = context.blueprint_card or self"
 position = "after"
-payload = '''context.no_callback = false'''
+payload = '''context.no_callback = not (context.copy_depth <= 1)
+context.copy_depth = context.copy_depth - 1;'''
 match_indent = true
 
 # Luchador
