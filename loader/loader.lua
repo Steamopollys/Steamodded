@@ -351,7 +351,7 @@ function loadMods(modsDirectory)
         for _, v in ipairs(mod.conflicts or {}) do
             -- block load even if the conflict is also blocked
             if
-                SMODS.Mods[v.id] and
+                SMODS.Mods[v.id] and not SMODS.Mods[v.id].disabled and
                 (not v.max_version or V(SMODS.Mods[v.id].version) <= V(v.max_version)) and
                 (not v.min_version or V(SMODS.Mods[v.id].version) >= V(v.min_version))
             then
@@ -362,7 +362,7 @@ function loadMods(modsDirectory)
         for _, v in ipairs(mod.dependencies or {}) do
             -- recursively check dependencies of dependencies to make sure they are actually fulfilled
             if
-                not SMODS.Mods[v.id] or
+                not SMODS.Mods[v.id] or SMODS.Mods[v.id].disabled or
                 not check_dependencies(SMODS.Mods[v.id], seen) or
                 (v.max_version and V(SMODS.Mods[v.id].version) > V(v.max_version)) or
                 (v.min_version and V(SMODS.Mods[v.id].version) < V(v.min_version))
