@@ -369,3 +369,5 @@ pattern = "if vv.config.center.key == v.enhancement_gate then"
 position = "at"
 payload = "if SMODS.has_enhancement(vv, v.enhancement_gate) then"
 match_indent = true
+
+# Todo - glass card shattering, wild card effect
