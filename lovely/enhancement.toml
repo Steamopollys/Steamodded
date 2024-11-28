@@ -304,6 +304,63 @@ scoring_hand[i]:set_sprites(old_center)
 '''
 match_indent = true
 
+# Calculate extra enhancements when held in hand
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = {eval_card(G.hand.cards[i], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})}"
+position = "after"
+payload = '''
+local extra_enhancements = SMODS.get_enhancements(G.hand.cards[i], true)
+local old_ability = copy_table(G.hand.cards[i].ability)
+local old_center = G.hand.cards[i].config.center
+for k, _ in pairs(extra_enhancements) do
+    if G.P_CENTERS[k] then
+        G.hand.cards[i]:set_ability(G.P_CENTERS[k])
+        G.hand.cards[i].ability.extra_enhancement = k
+        effects[#effects+1] = eval_card(G.hand.cards[i], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, extra_enhancement = true})
+    end
+end
+G.hand.cards[i].ability = old_ability
+G.hand.cards[i].config.center = old_center
+G.hand.cards[i]:set_sprites(old_center)
+'''
+match_indent = true
+
+# Calculate extra enhancements when held in hand at end of round
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = {G.hand.cards[i]:get_end_of_round_effect()}"
+position = "after"
+payload = '''
+local extra_enhancements = SMODS.get_enhancements(G.hand.cards[i], true)
+local old_ability = copy_table(G.hand.cards[i].ability)
+local old_center = G.hand.cards[i].config.center
+for k, _ in pairs(extra_enhancements) do
+    if G.P_CENTERS[k] then
+        G.hand.cards[i]:set_ability(G.P_CENTERS[k])
+        G.hand.cards[i].ability.extra_enhancement = k
+        effects[#effects+1] = G.hand.cards[i]:get_end_of_round_effect()
+    end
+end
+G.hand.cards[i].ability = old_ability
+G.hand.cards[i].config.center = old_center
+G.hand.cards[i]:set_sprites(old_center)
+'''
+match_indent = true
+
+# Prevent blue seal effect on extra enhancements at end of round
+[[patches]]
+[patches.pattern]
+target = "card"
+pattern = "if self.seal == 'Blue' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then"
+position = "before"
+payload = '''
+if self.extra_enhancement then return ret end
+'''
+match_indent = true
+
 # Use the has enhancement function for enhancement gates
 [[patches]]
 [patches.pattern]
