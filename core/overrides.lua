@@ -2154,3 +2154,15 @@ function Card:calculate_joker(context)
     return ret, triggered
 end
 --#endregion
+
+--#region quantum enhancements API
+-- prevent base chips from applying with extra enhancements
+local gcb = Card.get_chip_bonus
+function Card:get_chip_bonus()
+    if not self.ability.extra_enhancement then
+        return gcb(self)
+    end
+    if self.debuff then return 0 end
+    return self.ability.bonus + (self.ability.perma_bonus or 0)
+end
+--#endregion

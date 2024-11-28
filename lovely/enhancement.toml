@@ -225,7 +225,7 @@ if not enhancement_calculated and card.ability.set == 'Enhanced' and center.calc
     center:calculate(card, context, ret)
     enhancement_calculated = true
 end
-local seals = card:calculate_seal(context)
+local seals = not card.ability.extra_enhancement and card:calculate_seal(context)
 if seals then
     ret.seals = seals
 end"""
@@ -274,3 +274,41 @@ if eval and eval.remove then
     removed = true
     card_eval_status_text(G.hand.highlighted[i], 'jokers', nil, 1, nil, eval)
 end"""
+
+## Allow cards to function as multiple enhancements (e.g. from jokers)
+
+# Calculate extra enhancements when played
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = {eval_card(scoring_hand[i], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, poker_hand = text})}"
+position = "after"
+payload = '''
+local post_effect = {seals = effects[1].seals, edition = effects[1].edition}
+effects[1].seals = nil
+effects[1].edition = nil
+local extra_enhancements = SMODS.get_enhancements(scoring_hand[i], true)
+local old_ability = copy_table(scoring_hand[i].ability)
+local old_center = scoring_hand[i].config.center
+for k, _ in pairs(extra_enhancements) do
+    if G.P_CENTERS[k] then
+        scoring_hand[i]:set_ability(G.P_CENTERS[k])
+        scoring_hand[i].ability.extra_enhancement = k
+        effects[#effects+1] = eval_card(scoring_hand[i], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, poker_hand = text, extra_enhancement = true})
+    end
+end
+effects[#effects+1] = post_effect
+scoring_hand[i].ability = old_ability
+scoring_hand[i].config.center = old_center
+scoring_hand[i]:set_sprites(old_center)
+'''
+match_indent = true
+
+# Use the has enhancement function for enhancement gates
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if vv.config.center.key == v.enhancement_gate then"
+position = "at"
+payload = "if SMODS.has_enhancement(vv, v.enhancement_gate) then"
+match_indent = true
