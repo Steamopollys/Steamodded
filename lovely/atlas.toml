@@ -88,7 +88,7 @@ pattern = '''shared_sprite:draw_shader('dissolve', nil, nil, nil, self.children.
 position = 'at'
 match_indent = true
 payload = '''
-if (self.ability.center.undiscovered and not self.ability.center.undiscovered.no_overly) or not SMODS.UndiscoveredSprites[self.ability.set].no_overlay then 
+if (self.config.center.undiscovered and not self.config.center.undiscovered.no_overly) or not SMODS.UndiscoveredSprites[self.ability.set].no_overlay then 
     shared_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
 else
 end'''
