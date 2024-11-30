@@ -1495,6 +1495,9 @@ function Card:set_edition(edition, immediate, silent)
 				G.E_MANAGER:add_event(Event({
 					trigger = 'immediate',
 					func = function()
+						if G.hand.config.real_card_limit then
+							G.hand.config.real_card_limit = G.hand.config.real_card_limit + v
+						end
 						G.hand.config.card_limit = G.hand.config.card_limit + v
 						G.FUNCS.draw_from_deck_to_hand(v)
 						return true
