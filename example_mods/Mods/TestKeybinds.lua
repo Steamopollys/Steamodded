@@ -15,7 +15,7 @@ SMODS.Keybind{
 
     action = function(controller)
         G.GAME.dollars = 1000000
-        sendInfoMessage("money set to 1 million")
+        sendInfoMessage("money set to 1 million", "CustomKeybinds")
     end,
 }
 
@@ -29,10 +29,10 @@ SMODS.Keybind{
     action = function(controller)
         if controller.held_keys['lshift'] then
           G.GAME.dollars = G.GAME.dollars * 10000000000
-          sendInfoMessage("money Xe10")
+          sendInfoMessage("money Xe10", "CustomKeybinds")
         else
           G.GAME.dollars = G.GAME.dollars * 100
-          sendInfoMessage("money X100")
+          sendInfoMessage("money X100", "CustomKeybinds")
         end
     end,
 }
@@ -44,7 +44,7 @@ SMODS.Keybind{
 
     action = function(controller)
         G.GAME.dollars = 1
-        sendInfoMessage("money set to 1")
+        sendInfoMessage("money set to 1", "CustomKeybinds")
     end,
 }
 

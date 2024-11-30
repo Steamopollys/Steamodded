@@ -205,7 +205,7 @@ function loadMods(modsDirectory)
                 -- Check the header lines using string.match
                 local headerLine = file_content:match("^(.-)\n")
                 if headerLine == "--- STEAMODDED HEADER" then
-                    sendTraceMessage('Processing Mod file (Legacy header): ' .. filename)
+                    sendTraceMessage('Processing Mod file (Legacy header): ' .. filename, "Loader")
                     local mod = {}
                     local sane = true
                     for k, v in pairs(header_components) do
@@ -261,7 +261,7 @@ function loadMods(modsDirectory)
                     end
 
                     if sane then
-                        sendTraceMessage('Saving Mod Info: ' .. mod.id)
+                        sendTraceMessage('Saving Mod Info: ' .. mod.id, 'Loader')
                         mod.path = directory .. '/'
                         mod.main_file = filename
                         mod.display_name = mod.display_name or mod.name
@@ -428,7 +428,7 @@ function loadMods(modsDirectory)
                     ('Missing Dependencies: ' .. inspect(mod.load_issues.dependencies) .. '\n') or '',
                     next(mod.load_issues.conflicts) and
                     ('Unresolved Conflicts: ' .. inspect(mod.load_issues.conflicts) .. '\n') or ''
-                ))
+                ), 'Loader')
             end
         end
     end

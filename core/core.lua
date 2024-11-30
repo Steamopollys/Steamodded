@@ -72,7 +72,7 @@ for _, path in ipairs {
 	"core/utils.lua",
 	"core/overrides.lua",
 	"core/game_object.lua",
-	"debug/debug.lua",
+	"core/logging.lua",
 	"core/compat_0_9_8.lua",
 	"loader/loader.lua",
 } do

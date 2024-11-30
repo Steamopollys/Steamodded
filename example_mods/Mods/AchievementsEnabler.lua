@@ -8,7 +8,7 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
-sendDebugMessage("AchievementsEnabler Activated!")
+sendDebugMessage("AchievementsEnabler Activated!", "AchievementsEnabler")
 G.F_NO_ACHIEVEMENTS = false
 
 ----------------------------------------------

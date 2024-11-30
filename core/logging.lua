@@ -1,22 +1,6 @@
 --- STEAMODDED CORE
---- MODULE DEBUG
+--- MODULE LOGGING
 
-function initializeSocketConnection()
-    local socket = require("socket")
-    client = socket.connect("localhost", 12345)
-    if not client then
-        print("Failed to connect to the debug server")
-    end
-end
-
-local log_levels = {
-    ['TRACE'] = 1,
-    ['DEBUG'] = 2,
-    ['INFO '] = 3,
-    ['WARN '] = 4,
-    ['ERROR'] = 5,
-    ['FATAL'] = 10,
-}
 -- message, logger in this order to preserve backward compatibility
 function sendTraceMessage(message, logger)
 	sendMessageToConsole("TRACE", logger, message)
@@ -46,21 +30,11 @@ end
 
 function sendMessageToConsole(level, logger, message)
     level = level or "DEBUG"
-    if log_levels[level] < SMODS.config.log_level then return end
     logger = logger or "DefaultLogger"
     message = message or "Default log message"
     date = os.date('%Y-%m-%d %H:%M:%S')
     print(date .. " :: " .. level .. " :: " .. logger .. " :: " .. message)
-    if client then
-        -- naive way to separate the logs if the console receive multiple logs at the same time
-        client:send(date .. " :: " .. level .. " :: " .. logger .. " :: " .. message .. "ENDOFLOG")
-    end
 end
 
-initializeSocketConnection()
-
--- Use the function to send messages
-sendDebugMessage("Steamodded Debug Socket started !", "DebugConsole")
-
-----------------------------------------------
-------------MOD DEBUG SOCKET END--------------
+-----------------------------------------------
+---------------MOD LOGGING END-----------------
