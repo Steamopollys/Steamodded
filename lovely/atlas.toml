@@ -21,7 +21,7 @@ position = 'at'
 payload = '''
 G.ASSET_ATLAS[(_center.undiscovered and (_center.undiscovered[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.undiscovered.atlas))
 	or (SMODS.UndiscoveredSprites[_center.set] and (SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas))
-	or _center.set]'''
+	or _center.set] or G.ASSET_ATLAS["Joker"]'''
 
 [[patches]]
 [patches.regex]
@@ -43,6 +43,14 @@ target = 'card.lua'
 pattern = "(_center.set == 'Joker' and G.j_undiscovered.pos) or"
 position = 'before'
 payload = '(_center.undiscovered and _center.undiscovered.pos) or (SMODS.UndiscoveredSprites[_center.set] and SMODS.UndiscoveredSprites[_center.set].pos) or'
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''(_center.set == 'Booster' and G.booster_undiscovered.pos))'''
+position = 'at'
+payload = '''(_center.set == 'Booster' and G.booster_undiscovered.pos) or G.j_undiscovered.pos)'''
 match_indent = true
 
 # get_front_spriteinfo()
@@ -88,7 +96,7 @@ pattern = '''shared_sprite:draw_shader('dissolve', nil, nil, nil, self.children.
 position = 'at'
 match_indent = true
 payload = '''
-if (self.config.center.undiscovered and not self.config.center.undiscovered.no_overlay) or not SMODS.UndiscoveredSprites[self.ability.set].no_overlay then 
+if (self.config.center.undiscovered and not self.config.center.undiscovered.no_overlay) or not( SMODS.UndiscoveredSprites[self.ability.set] and SMODS.UndiscoveredSprites[self.ability.set].no_overlay) then 
     shared_sprite:draw_shader('dissolve', nil, nil, nil, self.children.center, scale_mod, rotate_mod)
 else
 end'''
