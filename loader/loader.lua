@@ -78,29 +78,69 @@ function loadMods(modsDirectory)
         version = { type = 'string', check = function(mod, x) return x and V(x):is_valid() and x or '0.0.0' end },
         dump_loc = { type = 'boolean' },
         dependencies = { type = 'table', check = function(mod, t)
-            for k, v in pairs(t or {}) do
-                if
-                    type(k) ~= 'number' or
-                    type(v) ~= 'table' or
-                    not v.id or
-                    (v.min_version and type(v.min_version) ~= 'string') or
-                    (v.max_version and type(v.max_version) ~= 'string')
-                then
-                    t[k] = nil
+            local ops = {
+                ['<<'] = function(a,b) return a<b end,
+                -- ['<~'] = function(a,b) return a<b end,
+                ['>>'] = function(a,b) return a>b end,
+                ['<='] = function(a,b) return a<=b end,
+                ['>='] = function(a,b) return a>=b end,
+                ['=='] = function(a,b) return a==b end
+            }
+            for i,v in ipairs(t) do
+                local parts = {}
+                parts.str = v
+                for part in v:gmatch('([^|]+)') do
+                    local x = {}
+                    x.id = part:match '(.-)%s*%('
+                    local j = 1
+                    for version_string in string.gmatch(part, '%((.-)%)') do
+                        local operator, version = string.match(version_string, '^(..)(.*)$')
+                        local op = ops[operator]
+                        local ver = V(version)
+                        -- if operator == '<<' and not ver.rev then
+                        --     ver.beta = -1
+                        --     ver.rev = '~'
+                        -- end
+                        if op and ver:is_valid(true) then
+                           x[j] = { op = op, ver = ver }
+                           j = j+1
+                        end
+                    end
+                    parts[#parts+1] = x
                 end
+                t[i] = parts
             end
-        end },
+        end},
         conflicts = { type = 'table', check = function(mod, t)
-            for k, v in pairs(t or {}) do
-                if
-                    type(k) ~= 'number' or
-                    type(v) ~= 'table' or
-                    not v.id or
-                    (v.min_version and type(v.min_version) ~= 'string') or
-                    (v.max_version and type(v.max_version) ~= 'string')
-                then
-                    t[k] = nil
+            local ops = {
+                ['<<'] = function(a,b) return a<b end,
+                --['<~'] = function(a,b) return a<b end,
+                ['>>'] = function(a,b) return a>b end,
+                ['<='] = function(a,b) return a<=b end,
+                ['>='] = function(a,b) return a>=b end,
+                ['=='] = function(a,b) return a==b end
+            }
+            for i,v in ipairs(t) do
+                v = v:gsub('%s', '')
+                local x = {}
+                x.str = v
+                v = v:gsub('%s', '')
+                x.id = v:match '(.-)%('
+                local j = 1
+                for version_string in string.gmatch(v, '%((.-)%)') do
+                    local operator, version = string.match(version_string, '^(..)(.*)$')
+                    local op = ops[operator]
+                    local ver = V(version)
+                    -- if operator == '<<' and not ver.rev then
+                    --     ver.beta = -1
+                    --     ver.rev = '~'
+                    -- end
+                    if op and ver:is_valid(true) then
+                        x[j] = { op = op, ver = ver, str = '('..version_string..')' }
+                        j = j+1
+                    end
                 end
+                t[i] = x
             end
         end},
         main_file = { type = 'string', required = true },
@@ -144,6 +184,7 @@ function loadMods(modsDirectory)
             elseif filename:lower():match('%.json') and depth > 1 then
                 local json_str = NFS.read(file_path)
                 local mod = JSON.decode(json_str)
+                mod.json = true
                 mod.path = directory .. '/'
                 mod.optional_dependencies = {}
                 local valid, err = pcall(function()
@@ -348,35 +389,74 @@ function loadMods(modsDirectory)
             dependencies = {},
             conflicts = {},
         }
-        for _, v in ipairs(mod.conflicts or {}) do
-            -- block load even if the conflict is also blocked
-            if
-                SMODS.Mods[v.id] and
-                (not v.max_version or V(SMODS.Mods[v.id].version) <= V(v.max_version)) and
-                (not v.min_version or V(SMODS.Mods[v.id].version) >= V(v.min_version))
-            then
-                can_load = false
-                table.insert(load_issues.conflicts, v.id..(v.max_version and '<='..v.max_version or '')..(v.min_version and '>='..v.min_version or ''))
-            end
-        end
-        for _, v in ipairs(mod.dependencies or {}) do
-            -- recursively check dependencies of dependencies to make sure they are actually fulfilled
-            if
-                not SMODS.Mods[v.id] or
-                not check_dependencies(SMODS.Mods[v.id], seen) or
-                (v.max_version and V(SMODS.Mods[v.id].version) > V(v.max_version)) or
-                (v.min_version and V(SMODS.Mods[v.id].version) < V(v.min_version))
-            then
-                can_load = false
-                table.insert(load_issues.dependencies,
-                    v.id .. (v.min_version and '>=' .. v.min_version or '') .. (v.max_version and '<=' .. v.max_version or ''))
-                if v.id == 'Steamodded' then
-                    load_issues.version_mismatch = ''..(v.min_version and '>='..v.min_version or '')..(v.max_version and '<='..v.max_version or '')
+        if not mod.json then 
+            for _, v in ipairs(mod.conflicts or {}) do
+                -- block load even if the conflict is also blocked
+                if
+                    SMODS.Mods[v.id] and
+                    (not v.max_version or V(SMODS.Mods[v.id].version) <= V(v.max_version)) and
+                    (not v.min_version or V(SMODS.Mods[v.id].version) >= V(v.min_version))
+                then
+                    can_load = false
+                    table.insert(load_issues.conflicts, v.id..(v.max_version and '<='..v.max_version or '')..(v.min_version and '>='..v.min_version or ''))
                 end
             end
-        end
-        if mod.outdated then
-            load_issues.outdated = true
+            for _, v in ipairs(mod.dependencies or {}) do
+                -- recursively check dependencies of dependencies to make sure they are actually fulfilled
+                if
+                    not SMODS.Mods[v.id] or
+                    not check_dependencies(SMODS.Mods[v.id], seen) or
+                    (v.max_version and V(SMODS.Mods[v.id].version) > V(v.max_version)) or
+                    (v.min_version and V(SMODS.Mods[v.id].version) < V(v.min_version))
+                then
+                    can_load = false
+                    table.insert(load_issues.dependencies,
+                        v.id .. (v.min_version and '>=' .. v.min_version or '') .. (v.max_version and '<=' .. v.max_version or ''))
+                    if v.id == 'Steamodded' then
+                        load_issues.version_mismatch = ''..(v.min_version and '>='..v.min_version or '')..(v.max_version and '<='..v.max_version or '')
+                    end
+                end
+            end
+        else
+            for _, x in ipairs(mod.dependencies or {}) do
+                local fulfilled
+                for _, y in ipairs(x) do
+                    if fulfilled then break end
+                    local id = y.id
+                    if SMODS.Mods[id] and check_dependencies(SMODS.Mods[id], seen) then
+                        fulfilled = true
+                        local dep_ver = V(SMODS.Mods[id].version)
+                        for _, v in ipairs(y) do
+                            if not v.op(dep_ver, v.ver) then
+                                fulfilled = false
+                            end
+                        end
+                        if fulfilled then y.fulfilled = true end
+                    end
+                end
+                if not fulfilled then
+                    can_load = false
+                    table.insert(load_issues.dependencies, x.str)
+                end
+            end
+            for _, y in ipairs(mod.conflicts or {}) do
+                local id = y.id
+                local conflict = false
+                if SMODS.Mods[id] and check_dependencies(SMODS.Mods[id], seen) then
+                    conflict = true
+                    local dep_ver = V(SMODS.Mods[id].version)
+                    for _, v in ipairs(y) do
+                        if not v.op(dep_ver, v.ver) then
+                            conflict = false
+                            break
+                        end
+                    end
+                end
+                if conflict then
+                    can_load = false
+                    table.insert(load_issues.conflicts, y.str)
+                end
+            end
         end
         if mod.disabled then
             can_load = false
@@ -386,8 +466,10 @@ function loadMods(modsDirectory)
             mod.load_issues = load_issues
             return false
         end
-        for _, v in ipairs(mod.dependencies) do
-            SMODS.Mods[v.id].can_load = true
+        for _, x in ipairs(mod.dependencies or {}) do
+            for _, y in ipairs(x) do
+                if y.fulfilled then SMODS.Mods[y.id].can_load = true end
+            end 
         end
         return true
     end
