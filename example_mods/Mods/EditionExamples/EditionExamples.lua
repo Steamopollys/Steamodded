@@ -80,7 +80,7 @@ SMODS.Consumable({
         if G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT or
             any_state then
             if G.localization.misc.labels["edex_greyscale"] then
-                sendDebugMessage(G.localization.misc.labels["edex_greyscale"])
+                sendDebugMessage(G.localization.misc.labels["edex_greyscale"], "EditionExamples")
             end
             if #G.jokers.highlighted == 1 and G.jokers.highlighted[1].edition then
                 return true

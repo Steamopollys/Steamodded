@@ -28,5 +28,5 @@ SMODS.update_mod_files = function(id)
     local url = mod.github or (SMODS.index[id] or {}).github
 	local status, contents = https.request(url) -- TODO account for branches
 	local hash = contents:match('"currentOid":"([^"]*)"')
-	sendWarnMessage(hash)
+	sendWarnMessage(hash, "Index")
 end

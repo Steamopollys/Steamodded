@@ -45,7 +45,7 @@ SMODS.Joker {
     text = {
       --[[
       The #1# is a variable that's stored in config, and is put into loc_vars.
-      The {C:} is a color modifier, and uses the color "mult" for the "+#1# " part, and then the empty {} is to close the modifier, so that Mult remains uncolored.
+      The {C:} is a color modifier, and uses the color "mult" for the "+#1# " part, and then the empty {} is to reset all formatting, so that Mult remains uncolored.
       There's {X:}, which sets the background, usually used for XMult.
       There's {s:}, which is scale, and multiplies the text size by the value, like 0.8
       There's one more, {V:1}, but is more advanced, and is used in Castle and Ancient Jokers. It allows for a variable to dynamically change the color, but is very rarely used.

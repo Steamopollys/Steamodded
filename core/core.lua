@@ -2,7 +2,7 @@
 --- MODULE CORE
 
 SMODS = {}
-MODDED_VERSION = "1.0.0~ALPHA-1031b-STEAMODDED"
+MODDED_VERSION = "1.0.0~ALPHA-1203b-STEAMODDED"
 SMODS.id = 'Steamodded'
 SMODS.version = MODDED_VERSION:gsub('%-STEAMODDED', '')
 SMODS.can_load = true
@@ -72,7 +72,7 @@ for _, path in ipairs {
 	"core/utils.lua",
 	"core/overrides.lua",
 	"core/game_object.lua",
-	"debug/debug.lua",
+	"core/logging.lua",
 	"core/compat_0_9_8.lua",
 	"loader/loader.lua",
 } do
