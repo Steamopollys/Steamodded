@@ -163,7 +163,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
 
             -- Setup Localize text
             o:process_loc_text()
-            if SMODS.config.log_level == 1 and self.log_interval and i%(self.log_interval) == 0 then
+            if self.log_interval and i%(self.log_interval) == 0 then
                 end_time = love.timer.getTime()
                 inject_time = inject_time + end_time - start_time
                 start_time = end_time
