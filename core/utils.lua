@@ -697,9 +697,9 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
     -- Calculate total rates of rarities
     local total_weight = 0
     for _, v in ipairs(available_rarities) do
-        v.mod = G.GAME[v.key:lower().."_mod"] or 1
+        v.mod = G.GAME[tostring(v.key):lower().."_mod"] or 1
         -- Should this fully override the v.weight calcs? 
-        if SMODS.Rarities[v.key].get_weight and type(SMODS.Rarities[v.key].get_weight) == "function" then
+        if SMODS.Rarities[v.key] and SMODS.Rarities[v.key].get_weight and type(SMODS.Rarities[v.key].get_weight) == "function" then
             v.weight = SMODS.Rarities[v.key]:get_weight(v.weight, SMODS.ObjectTypes[_pool_key])
         end
         v.weight = v.weight*v.mod
