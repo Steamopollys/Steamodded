@@ -913,6 +913,10 @@ function buildModtag(mod)
             tag_message = 'load_failure_i'
 			specific_vars = {mod.load_issues.version_mismatch, MODDED_VERSION:gsub('-STEAMODDED', '')}
 		end
+		if mod.load_issues.main_file_not_found then
+			tag_message = 'load_failure_m'
+			specific_vars = {mod.main_file}
+		end
 		if mod.load_issues.prefix_conflict then
 			tag_message = 'load_failure_p'
 			local name = mod.load_issues.prefix_conflict

@@ -527,7 +527,10 @@ function getDebugInfoForCrash()
                             end
                         end
                         if v.load_issues.outdated then
-                            lovely_strings = lovely_strings .. "\n        Outdated Mod"
+                            lovely_strings = lovely_strings .. "\n        Outdated Mod."
+                        end
+                        if v.load_issues.main_file_not_found then
+                            lovely_strings = lovely_strings .. "\n        Main file not found. (" .. v.main_file ..")"
                         end
                     end
                 else

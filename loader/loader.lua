@@ -183,24 +183,35 @@ function loadMods(modsDirectory)
                 table.insert(lovely_directories, directory .. "/")
             elseif filename:lower():match('%.json') and depth > 1 then
                 local json_str = NFS.read(file_path)
-                local mod = JSON.decode(json_str)
-                mod.json = true
-                mod.path = directory .. '/'
-                mod.optional_dependencies = {}
-                local valid, err = pcall(function()
-                    -- remove invalid fields and check required ones first
-                    for k, v in pairs(json_spec) do
-                        if v.type and type(mod[k]) ~= v.type then mod[k] = nil end
-                        if v.required and mod[k] == nil then error(k) end
+                local parsed, mod = pcall(JSON.decode, json_str)
+                local valid = true
+                local err
+                if not parsed then
+                    valid = false
+                    err = mod
+                else
+                    mod.json = true
+                    mod.path = directory .. '/'
+                    mod.optional_dependencies = {}
+                    local success, e = pcall(function()
+                        -- remove invalid fields and check required ones first
+                        for k, v in pairs(json_spec) do
+                            if v.type and type(mod[k]) ~= v.type then mod[k] = nil end
+                            if v.required and mod[k] == nil then error(k) end
+                        end
+                        -- perform additional checks and fill in defaults
+                        for k, v in pairs(json_spec) do
+                            if v.default then mod[k] = mod[k] or v.default end
+                            if v.check then v.check(mod, mod[k]) end
+                        end
+                    end)
+                    if not success then 
+                        valid = false
+                        err = e
                     end
-                    -- perform additional checks and fill in defaults
-                    for k, v in pairs(json_spec) do
-                        if v.default then mod[k] = mod[k] or v.default end
-                        if v.check then v.check(mod, mod[k]) end
-                    end
-                end)
+                end
                 if not valid then
-                    sendInfoMessage(('Found invalid metadata JSON file at %s, ignoring: %s'):format(file_path, err), 'Loader')
+                    sendErrorMessage(('Found invalid metadata JSON file at %s, ignoring: %s'):format(file_path, err), 'Loader')
                 else
                     sendInfoMessage('Valid JSON file found')
                     if NFS.getInfo(directory..'/.lovelyignore') then
@@ -218,7 +229,9 @@ function loadMods(modsDirectory)
                     if not NFS.getInfo(mod.path..mod.main_file) then
                         mod.can_load = false
                         mod.load_issues = {
-                            main_file_not_found = true
+                            main_file_not_found = true,
+                            dependencies = {},
+                            conflicts = {},
                         }
                         sendWarnMessage(('Unable to load Mod %s: cannot find main file'):format(mod.id), 'Loader')
                     end
@@ -503,9 +516,10 @@ function loadMods(modsDirectory)
                 end
                 SMODS.current_mod = nil
             elseif not mod.lovely_only then
-                sendTraceMessage(string.format("Mod %s was unable to load: %s%s%s", mod.id,
+                sendTraceMessage(string.format("Mod %s was unable to load: %s%s%s%s", mod.id,
                     mod.load_issues.outdated and
                     'Outdated: Steamodded versions 0.9.8 and below are no longer supported!\n' or '',
+                    mod.load_issues.main_file_not_found and "The main file could not be found.\n" or '',
                     next(mod.load_issues.dependencies) and
                     ('Missing Dependencies: ' .. inspect(mod.load_issues.dependencies) .. '\n') or '',
                     next(mod.load_issues.conflicts) and

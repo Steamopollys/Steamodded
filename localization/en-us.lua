@@ -49,6 +49,14 @@ return {
                     '({C:attention}#1#{})'
                 }
             },
+            load_failure_m = {
+                text = {
+                    '{C:attention}Main File Not Found!{}',
+                    'This mod\'s main file',
+                    'could not be found.',
+                    '({C:attention}#1#{})'
+                }
+            },
             load_disabled = {
                 text = {
                     'This mod has been',
