@@ -86,7 +86,7 @@ function loadMods(modsDirectory)
                 ['>='] = function(a,b) return a>=b end,
                 ['=='] = function(a,b) return a==b end
             }
-            for i,v in ipairs(t) do
+            for i,v in ipairs(t or {}) do
                 local parts = {}
                 parts.str = v
                 for part in v:gmatch('([^|]+)') do
@@ -120,7 +120,7 @@ function loadMods(modsDirectory)
                 ['>='] = function(a,b) return a>=b end,
                 ['=='] = function(a,b) return a==b end
             }
-            for i,v in ipairs(t) do
+            for i,v in ipairs(t or {}) do
                 v = v:gsub('%s', '')
                 local x = {}
                 x.str = v
