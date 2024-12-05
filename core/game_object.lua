@@ -754,12 +754,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             key = rarity.key, 
             weight = type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key].weight or rarity.default_weight
         }
-        local total = 0
         for _, vv in ipairs(object_type.rarities) do
-            total = total + vv.weight
-        end
-        for _, vv in ipairs(object_type.rarities) do
-            vv.weight = vv.weight / total
             local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
             if default_rarity_check[vv.key] then
                 object_type.rarity_pools[default_rarity_check[vv.key]] = {}
@@ -784,7 +779,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_weight = 0.7,
         badge_colour = HEX('009dff'),
-        pools = {["Joker"] = true},
         get_weight = function(self, weight, object_type)
             return weight
         end,
@@ -795,7 +789,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_weight = 0.25,
         badge_colour = HEX("4BC292"),
-        pools = {["Joker"] = true},
         get_weight = function(self, weight, object_type)
             return weight
         end,
@@ -806,7 +799,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_weight = 0.05,
         badge_colour = HEX('fe5f55'),
-        pools = {["Joker"] = true},
         get_weight = function(self, weight, object_type)
             return weight
         end,
@@ -817,7 +809,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_weight = 0,
         badge_colour = HEX("b26cbb"),
-        pools = {["Joker"] = true},
         get_weight = function(self, weight, object_type)
             return weight
         end,
@@ -838,25 +829,22 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         prefix_config = { key = false }, 
         inject = function(self)
             G.P_CENTER_POOLS[self.key] = G.P_CENTER_POOLS[self.key] or {}
+            local injected_rarities = {}
             if self.rarities then
                 self.rarity_pools = {}
-                local total = 0
                 for _, v in ipairs(self.rarities) do
                     if not v.weight then v.weight = SMODS.Rarities[v.key].default_weight end
-                    total = total + v.weight
-                end
-                for _, v in ipairs(self.rarities) do
-                    v.weight = v.weight / total
                     local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
                     if default_rarity_check[v.key] then
                         self.rarity_pools[default_rarity_check[v.key]] = {}
                     else
                         self.rarity_pools[v.key] = {}
                     end
+                    injected_rarities[v.key] = true
                 end
             end
             for _, v in pairs(SMODS.Rarities) do
-                if v.pools and v.pools[self.key] then SMODS.inject_rarity(self, v) end
+                if v.pools and v.pools[self.key] and not injected_rarities[v.key] then SMODS.inject_rarity(self, v) end
             end
         end,
         inject_card = function(self, center)
