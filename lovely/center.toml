@@ -263,6 +263,33 @@ for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
 	G.DISCOVER_TALLIES[v:lower()..'s'] = {tally = 0, of = 0}
 end'''
 
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = "for _, v in pairs(G.P_BLINDS) do"
+match_indent = true
+position = 'after'
+payload = 'if not v.no_collection then'
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = "for _, v in pairs(G.P_TAGS) do"
+match_indent = true
+position = 'at'
+payload = '''
+end
+for _, v in pairs(G.P_TAGS) do
+	if not v.no_collection then'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+pattern = "G.PROFILES[G.SETTINGS.profile].high_scores.collection.amt = G.DISCOVER_TALLIES.total.tally"
+match_indent = true
+position = 'before'
+payload = 'end'
+
 # create_UIBox_your_collection()
 [[patches]]
 [patches.regex]

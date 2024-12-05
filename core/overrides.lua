@@ -105,7 +105,7 @@ function create_UIBox_your_collection_blinds(exit)
 
 	local blind_tab = {}
 	for k, v in pairs(G.P_BLINDS) do
-		if not G.ACTIVE_MOD_UI or v.mod == G.ACTIVE_MOD_UI then
+		if (not G.ACTIVE_MOD_UI or v.mod == G.ACTIVE_MOD_UI) and not v.no_collection then
 			blind_tab[#blind_tab + 1] = v
 		end
 	end
@@ -299,7 +299,7 @@ function G.FUNCS.your_collection_blinds_page(args)
 	local page = args.cycle_config.current_option
 	local blind_tab = {}
 	for k, v in pairs(G.P_BLINDS) do
-		if not G.ACTIVE_MOD_UI or v.mod == G.ACTIVE_MOD_UI then
+		if (not G.ACTIVE_MOD_UI or v.mod == G.ACTIVE_MOD_UI) and not v.no_collection then
 			blind_tab[#blind_tab + 1] = v
 		end
 	end
@@ -417,7 +417,7 @@ function create_UIBox_your_collection_tags_content(page)
 	local tag_pool = {}
 	if G.ACTIVE_MOD_UI then
 		for k, v in pairs(G.P_TAGS) do
-			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then tag_pool[k] = v end
+			if (v.mod and G.ACTIVE_MOD_UI.id == v.mod.id) and not v.no_collection then tag_pool[k] = v end
 		end
 	else
 		tag_pool = G.P_TAGS
