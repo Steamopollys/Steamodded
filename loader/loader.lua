@@ -101,7 +101,7 @@ function loadMods(modsDirectory)
                 parts.str = v
                 for part in v:gmatch('([^|]+)') do
                     local x = {}
-                    x.id = part:match '(.-)%s*%(?'
+                    x.id = part:match '^([^(%s]+)'
                     local j = 1
                     for version_string in string.gmatch(part, '%((.-)%)') do
                         local operator, version = string.match(version_string, '^(..)(.*)$')
@@ -135,7 +135,7 @@ function loadMods(modsDirectory)
                 local x = {}
                 x.str = v
                 v = v:gsub('%s', '')
-                x.id = v:match '(.-)%(?'
+                x.id = v:match '^([^(%s]+)'
                 local j = 1
                 for version_string in string.gmatch(v, '%((.-)%)') do
                     local operator, version = string.match(version_string, '^(..)(.*)$')
