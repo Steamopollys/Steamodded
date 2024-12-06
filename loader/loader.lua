@@ -9,7 +9,7 @@ function loadMods(modsDirectory)
         can_load = true,
         version = require'lovely'.version,
     }
-    SMODS.MODS['Balatro'] = {
+    SMODS.Mods['Balatro'] = {
         id = 'Balatro',
         can_load = true,
         version = G.VERSION,
