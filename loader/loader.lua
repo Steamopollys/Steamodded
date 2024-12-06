@@ -4,6 +4,16 @@
 function loadMods(modsDirectory)
     SMODS.Mods = {}
     SMODS.Mods[SMODS.id] = SMODS
+    SMODS.Mods['Lovely'] = {
+        id = 'Lovely',
+        can_load = true,
+        version = require'lovely'.version,
+    }
+    SMODS.MODS['Balatro'] = {
+        id = 'Balatro',
+        can_load = true,
+        version = G.VERSION,
+    }
     SMODS.mod_priorities = {}
     SMODS.mod_list = {}
     -- for legacy header support
