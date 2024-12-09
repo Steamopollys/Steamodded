@@ -49,12 +49,13 @@ payload = '''if G.PROFILES[G.SETTINGS.profile].all_unlocked and (G.ACHIEVEMENTS 
 match_indent = true
 
 # unlock_achievement() - fix event queue leaking
+# fixed smods achievements not unlocking due to above comment's memory leak fix
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
 pattern = '''if G.F_NO_ACHIEVEMENTS then return end'''
 position = "at"
-payload = '''if G.F_NO_ACHIEVEMENTS then return true end'''
+payload = '''if G.F_NO_ACHIEVEMENTS and not G.ACHIEVEMENTS[achievement_name].mod then return true end'''
 match_indent = true
 
 [[patches]]
