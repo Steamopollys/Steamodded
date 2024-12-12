@@ -359,7 +359,7 @@ SMODS.Joker {
 
     -- Checks to see if it's end of round, and if context.game_over is false.
     -- Also, not context.repetition ensures it doesn't get called during repetitions.
-    if context.end_of_round and not context.repetition and not context.game_over and not context.blueprint then
+    if context.end_of_round and not context.repetition and context.game_over == false and not context.blueprint then
       -- Another pseudorandom thing, randomly generates a decimal between 0 and 1, so effectively a random percentage.
       if pseudorandom('gros_michel2') < G.GAME.probabilities.normal / card.ability.extra.odds then
         -- This part plays the animation.
@@ -429,7 +429,7 @@ SMODS.Joker {
         Xmult_mod = card.ability.extra.Xmult
       }
     end
-    if context.end_of_round and not context.game_over and not context.repetition and not context.blueprint then
+    if context.end_of_round and context.game_over == false and not context.repetition and not context.blueprint then
       if pseudorandom('cavendish2') < G.GAME.probabilities.normal / card.ability.extra.odds then
         G.E_MANAGER:add_event(Event({
           func = function()
