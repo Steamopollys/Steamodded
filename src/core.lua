@@ -2,7 +2,7 @@
 --- MODULE CORE
 
 SMODS = {}
-MODDED_VERSION = "1.0.0~ALPHA-1212a-STEAMODDED"
+MODDED_VERSION = require'SMODS.version'
 SMODS.id = 'Steamodded'
 SMODS.version = MODDED_VERSION:gsub('%-STEAMODDED', '')
 SMODS.can_load = true
@@ -68,14 +68,14 @@ end
 SMODS.path = find_self(SMODS.MODS_DIR, 'core.lua', '--- STEAMODDED CORE')
 
 for _, path in ipairs {
-	"core/ui.lua",
-	"core/index.lua",
-	"core/utils.lua",
-	"core/overrides.lua",
-	"core/game_object.lua",
-	"core/logging.lua",
-	"core/compat_0_9_8.lua",
-	"loader/loader.lua",
+	"src/ui.lua",
+	"src/index.lua",
+	"src/utils.lua",
+	"src/overrides.lua",
+	"src/game_object.lua",
+	"src/logging.lua",
+	"src/compat_0_9_8.lua",
+	"src/loader.lua",
 } do
 	assert(load(NFS.read(SMODS.path..path), ('=[SMODS _ "%s"]'):format(path)))()
 end
