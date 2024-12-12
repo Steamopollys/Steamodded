@@ -493,7 +493,16 @@ end
 local stackTraceAlreadyInjected = false
 
 function getDebugInfoForCrash()
-    local info = "Additional Context:\nBalatro Version: " .. (VERSION or "???") .. "\nModded Version: " ..
+    local version = VERSION
+    if not version then
+        local versionFile = love.filesystem.read("version.jkr")
+        if versionFile then
+            version = versionFile:match("[^\n]*") .. " (best guess)"
+        else 
+            version = "???"
+        end
+    end
+    local info = "Additional Context:\nBalatro Version: " .. version .. "\nModded Version: " ..
                      (MODDED_VERSION or "???")
     local major, minor, revision, codename = love.getVersion()
     info = info .. string.format("\nLove2D Version: %d.%d.%d", major, minor, revision)
@@ -508,7 +517,7 @@ function getDebugInfoForCrash()
         local i = 1
         local lovely_i = 1
         for _, v in pairs(SMODS.Mods) do
-            if (v.can_load and v ~= SMODS) or (v.lovely and not v.can_load and not v.disabled) then
+            if (v.can_load and (not v.meta_mod or v.lovely_only)) or (v.lovely and not v.can_load and not v.disabled) then
                 if v.lovely_only or (v.lovely and not v.can_load) then
                     lovely_strings = lovely_strings .. "\n    " .. lovely_i .. ": " .. v.name
                     lovely_i = lovely_i + 1

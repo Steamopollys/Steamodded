@@ -6,6 +6,7 @@ MODDED_VERSION = "1.0.0~ALPHA-1212a-STEAMODDED"
 SMODS.id = 'Steamodded'
 SMODS.version = MODDED_VERSION:gsub('%-STEAMODDED', '')
 SMODS.can_load = true
+SMODS.meta_mod = true
 
 -- Include lovely and nativefs modules
 local nativefs = require "nativefs"

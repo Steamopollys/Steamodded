@@ -346,3 +346,12 @@ elseif v.in_pool and type(v.in_pool) == 'function' then
 	then
 		eligible_bosses[k] = res and true or nil
 	end'''
+
+# G.UIDEF.challenge_description_tab
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = "local temp_blind = AnimatedSprite(0,0,1,1, G.ANIMATION_ATLAS['blind_chips'], v.pos)"
+position = 'at'
+match_indent = true
+payload = "local temp_blind = AnimatedSprite(0,0,1,1, G.ANIMATION_ATLAS[v.atlas or ''] or G.ANIMATION_ATLAS['blind_chips'], v.pos)"

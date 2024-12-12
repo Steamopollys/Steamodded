@@ -8,11 +8,13 @@ function loadMods(modsDirectory)
         id = 'Lovely',
         can_load = true,
         version = require'lovely'.version,
+        meta_mod = true,
     }
     SMODS.Mods['Balatro'] = {
         id = 'Balatro',
         can_load = true,
         version = G.VERSION,
+        meta_mod = true,
     }
     SMODS.mod_priorities = {}
     SMODS.mod_list = {}
@@ -381,6 +383,7 @@ function loadMods(modsDirectory)
                 can_load = not disabled,
                 lovely = true,
                 lovely_only = true,
+                meta_mod = true,
                 disabled = disabled,
                 load_issues = {
                     dependencies = {},
