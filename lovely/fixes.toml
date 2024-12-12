@@ -202,7 +202,15 @@ self.ability.extra_value = self.ability.extra_value or 0
 for k, v in pairs(new_ability) do
     self.ability[k] = v
 end
-for _, k in ipairs{'name', 'effect', 'set', 'extra'} do
+-- reset keys do not persist an ability change
+local reset_keys = {'name', 'effect', 'set', 'extra', 'played_this_ante'}
+for _, mod in ipairs(SMODS.mod_list) do
+    if mod.set_ability_reset_keys then
+        local keys = mod.set_ability_reset_keys()
+        for _, v in pairs(keys) do table.insert(reset_keys, v) end
+    end
+end
+for _, k in ipairs(reset_keys) do
     self.ability[k] = new_ability[k]
 end
 '''
