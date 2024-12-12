@@ -1,0 +1,16 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.module]
+source = "libs/json/json.lua"
+before = "main.lua"
+name = "json" 
+
+[[patches]]
+[patches.module]
+source = "libs/nativefs/nativefs.lua"
+before = "main.lua"
+name = "nativefs"

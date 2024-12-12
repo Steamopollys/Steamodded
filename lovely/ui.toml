@@ -431,7 +431,6 @@ payload = """_self.config.h_popup_config = (_self.T.x > G.ROOM.T.w*0.4) and
 [[patches]]
 [patches.regex]
 target = 'functions/UI_definitions.lua'
-match_indent = true
 position = 'at'
 pattern = 'colour = empty and G\.C\.CLEAR or G\.C\.UI\.BACKGROUND_WHITE'
 payload = 'colour = desc_nodes.background_colour or empty and G.C.CLEAR or G.C.UI.BACKGROUND_WHITE'
@@ -440,7 +439,6 @@ payload = 'colour = desc_nodes.background_colour or empty and G.C.CLEAR or G.C.U
 [[patches]]
 [patches.regex]
 target = 'functions/UI_definitions.lua'
-match_indent = true
 position = 'at'
 pattern = 'padding = 0\.05, colour = G\.C\.WHITE\}'
 payload = 'padding = 0.05, colour = desc_nodes.background_colour or G.C.WHITE}'
@@ -449,7 +447,6 @@ payload = 'padding = 0.05, colour = desc_nodes.background_colour or G.C.WHITE}'
 [[patches]]
 [patches.regex]
 target = 'functions/misc_functions.lua'
-match_indent = true
 position = 'after'
 pattern = '\(part\.control\.C and loc_colour\(part\.control\.C\)\)'
 payload = ' or args.text_colour'
@@ -457,7 +454,6 @@ payload = ' or args.text_colour'
 [[patches]]
 [patches.regex]
 target = 'functions/misc_functions.lua'
-match_indent = true
 position = 'at'
 pattern = 'loc_colour\(part\.control\.C or nil, args\.default_col\)'
 payload = 'not part.control.C and args.text_colour or loc_colour(part.control.C or nil, args.default_col)'
@@ -465,7 +461,6 @@ payload = 'not part.control.C and args.text_colour or loc_colour(part.control.C 
 [[patches]]
 [patches.regex]
 target = 'functions/misc_functions.lua'
-match_indent = true
 position = 'after'
 pattern = 'part\.control\.s and tonumber\(part\.control\.s\)'
 payload = ' or args.scale '
