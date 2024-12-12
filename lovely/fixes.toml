@@ -226,30 +226,8 @@ match_indent = true
 payload = "self.label = center.label or self.config.card and self.config.card.label or self.ability.set"
 
 ### Fix Matador
-[[patches]]
-[patches.regex]
-target = 'functions/state_events.lua'
-pattern = '''
-if scoring_hand\[i\]\.debuff then
-(?<indent>[\t ]*)(G\.GAME\.blind\.triggered = true)'''
-root_capture = '$2'
-position = "at"
-line_prepend = '$indent'
-payload = '''
 
-if scoring_hand[i].debuffed_by_blind then
-    G.GAME.blind.triggered = true
-end'''
-
-[[patches]]
-[patches.pattern]
-target = 'blind.lua'
-pattern = "self.triggered = false"
-position = "at"
-payload = """
-
-"""
-match_indent = false
+# These patches have been removed for altering vanilla behavior. Git blame this line to see what they were
 
 ### Fix Crimson Heart
 
@@ -321,15 +299,7 @@ end"""
 
 ## Blind:press_play()
 # Shouldn't work with Matador
-[[patches]]
-[patches.regex]
-target = 'blind.lua'
-pattern = '''
-(?<indent>[\t ]*)if G\.jokers\.cards\[1\] then
-([\t ]*self\.triggered = true)'''
-root_capture = '$2'
-position = 'at'
-payload = ""
+# yes it should
 
 ## Blind:disable()
 [[patches]]
