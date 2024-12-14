@@ -1,0 +1,12 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.regex]
+target = 'functions/misc_functions.lua'
+pattern = '''tonumber\(subpart\[1\]\)'''
+position = 'at'
+payload = '''tonumber(subpart[1]) or subpart[1]'''
+line_prepend = ''
