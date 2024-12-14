@@ -6,6 +6,14 @@ priority = 0
 [[patches]]
 [patches.regex]
 target = 'functions/misc_functions.lua'
+pattern = '''args\.vars\[(?<index>.*)\]'''
+position = 'at'
+payload = '''args.vars[$index] or args.vars.extra[$index]'''
+line_prepend = ''
+
+[[patches]]
+[patches.regex]
+target = 'functions/misc_functions.lua'
 pattern = '''tonumber\(subpart\[1\]\)'''
 position = 'at'
 payload = '''tonumber(subpart[1]) or subpart[1]'''
