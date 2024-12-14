@@ -3,6 +3,7 @@ version = "1.0.0"
 dump_lua = true
 priority = 0
 
+# Add compat for the config.extra field if the field doesn't exist in config
 [[patches]]
 [patches.regex]
 target = 'functions/misc_functions.lua'
@@ -11,6 +12,7 @@ position = 'at'
 payload = '''args.vars[$index] or (args.vars.extra and args.vars.extra[$index])'''
 line_prepend = ''
 
+# If key isn't a number just read then just use the key directly
 [[patches]]
 [patches.regex]
 target = 'functions/misc_functions.lua'
