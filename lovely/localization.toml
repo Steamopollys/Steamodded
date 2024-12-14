@@ -8,7 +8,7 @@ priority = 0
 target = 'functions/misc_functions.lua'
 pattern = '''args\.vars\[(?<index>.*)\]'''
 position = 'at'
-payload = '''args.vars[$index] or args.vars.extra[$index]'''
+payload = '''args.vars[$index] or (args.vars.extra and args.vars.extra[$index])'''
 line_prepend = ''
 
 [[patches]]
