@@ -494,7 +494,7 @@ local stackTraceAlreadyInjected = false
 
 function getDebugInfoForCrash()
     local version = VERSION
-    if not version then
+    if not version or type(version) ~= "string" then
         local versionFile = love.filesystem.read("version.jkr")
         if versionFile then
             version = versionFile:match("[^\n]*") .. " (best guess)"
@@ -502,8 +502,18 @@ function getDebugInfoForCrash()
             version = "???"
         end
     end
+    local modded_version = MODDED_VERSION
+    if not modded_version or type(modded_version) ~= "string" then
+        local moddedSuccess, reqVersion = pcall(require, "SMODS.version")
+        if moddedSuccess and type(reqVersion) == "string" then
+            modded_version = reqVersion
+        else
+            modded_version = "???"
+        end        
+    end
+    
     local info = "Additional Context:\nBalatro Version: " .. version .. "\nModded Version: " ..
-                     (MODDED_VERSION or "???")
+                     (modded_version)
     local major, minor, revision, codename = love.getVersion()
     info = info .. string.format("\nLove2D Version: %d.%d.%d", major, minor, revision)
 
