@@ -1159,6 +1159,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 desc_nodes[#desc_nodes + 1] = res.main_end
             end
             desc_nodes.background_colour = res.background_colour
+        end,
+        loc_vars = function(self, ...)
+            return {vars = (self.config or {})}
         end
     }
 
@@ -1236,9 +1239,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             SMODS.remove_pool(G.P_CENTER_POOLS['Consumeables'], self.key)
             SMODS.Consumable.super.delete(self)
         end,
-        loc_vars = function(self, info_queue)
-            return {}
-        end
     }
     
     SMODS.Tarot = SMODS.Consumable:extend {
