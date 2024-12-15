@@ -265,8 +265,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         process_loc_text = function() end,
         inject = function(self)
             self.font = self.font or 1
-            if type(self.font) == 'number' then
-                self.font = G.FONTS[self.font]
+            if type(self.font) == 'table' and not self.font.FONT and self.font.file and self.font.render_scale then
+                local data = assert(NFS.newFileData(self.mod.path .. 'assets/fonts/' .. self.font.file), ('Failed to collect file data for font of language %s'):format(self.key))
+                self.font.FONT = love.graphics.newFont(data, self.font.render_scale)
+            else 
+                self.font = G.FONTS[type(self.font) == 'number' and self.font or 1] or G.FONTS[1]
             end
             G.LANGUAGES[self.key] = self
             if self.key == G.SETTINGS.language then G.LANG = self end
