@@ -1359,6 +1359,21 @@ function create_UIBox_mods_button()
 												ref_table = SMODS.config,
 												ref_value = 'no_mod_badges',
 											},
+											create_toggle {
+												label = localize('b_seeded_unlocks'),
+												info = {localize('b_seeded_unlocks_info')},
+												ref_table = SMODS.config,
+												ref_value = 'seeded_unlocks',
+											},
+											create_option_cycle {
+												w = 4.5,
+												scale = 0.8,
+												label = localize('b_achievements'),
+												options = localize('ml_achievement_settings'),
+												opt_callback = 'update_achievement_settings',
+												current_option = SMODS.config.achievements,
+												cycle_shoulders = true,
+											}
 										}
 									}
 								end
@@ -1369,6 +1384,12 @@ function create_UIBox_mods_button()
 			}
 		}
 	}))
+end
+
+G.FUNCS.update_achievement_settings = function(e)
+	local opt = (e.cycle_config or {}).current_option or 1
+	SMODS.config.achievements = opt
+	G.F_NO_ACHIEVEMENTS = opt == 1
 end
 
 G.FUNCS.browse_search = function(e)
@@ -1433,7 +1454,7 @@ end
 
 -- Disable achievments and crash report upload
 function initGlobals()
-	G.F_NO_ACHIEVEMENTS = true
+	G.F_NO_ACHIEVEMENTS = SMODS.config.achievements == 1
 	G.F_CRASH_REPORTS = false
 end
 
