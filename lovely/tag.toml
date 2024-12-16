@@ -12,6 +12,7 @@ pattern = "function Tag:apply_to_run(_context)"
 position = 'after'
 match_indent = true
 payload = '''
+	if self.triggered then return end
 	local obj = SMODS.Tags[self.key]
 	local res
 	if obj and obj.apply and type(obj.apply) == 'function' then
