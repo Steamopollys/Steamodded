@@ -31,7 +31,7 @@ payload = '''
 	local obj = SMODS.Tags[self.key]
 	local res
 	if obj and obj.set_ability and type(obj.set_ability) == 'function' then
-		obj:set_ability()
+		obj:set_ability(self)
 	end
 '''
 
