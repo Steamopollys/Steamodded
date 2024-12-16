@@ -517,3 +517,21 @@ pattern = """G.GAME.current_round.reroll_cost = math.max(0, G.GAME.current_round
 position = 'at'
 match_indent = true
 payload = """G.GAME.current_round.reroll_cost = math.max(0, G.GAME.current_round.reroll_cost - center_table.extra)"""
+
+
+# Add h_chips as a viable hand effect
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''card_eval_status_text(G.hand.cards[i], 'h_mult', effects[ii].h_mult, percent)
+                        end'''
+position = 'after'
+match_indent = true
+payload = '''
+if effects[ii].h_chips then 
+    if effects[ii].card then juice_card(effects[ii].card) end
+    hand_chips = mod_chips(hand_chips + effects[ii].h_chips)
+    update_hand_text({delay = 0}, {chips = hand_chips})
+    card_eval_status_text(effects[ii].card, 'chips', effects[ii].h_chips, percent)
+end
+'''
