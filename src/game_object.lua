@@ -2740,26 +2740,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
     }
 
     -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.DollarRow
-    -------------------------------------------------------------------------------------------------
-
-    SMODS.DollarRows = {}
-    SMODS.DollarRow = SMODS.GameObject:extend {
-        obj_buffer = {},
-        obj_table = {},
-        set = 'Dollar Row',
-        class_prefix = 'p',
-        required_params = {
-            'key'
-        },
-        config = {},
-        above_dot_bar = false,
-        symbol_config = { character = '$', color = G.C.MONEY, needs_localize = true },
-        custom_message_config = { message = nil, color = nil, scale = nil },
-        inject = function() end,
-    }
-
-    -------------------------------------------------------------------------------------------------
     ----- API CODE GameObject.Enhancement
     -------------------------------------------------------------------------------------------------
 

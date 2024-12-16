@@ -3,103 +3,8 @@ version = "1.0.0"
 dump_lua = true
 priority = 0
 
-### Payout Arg API
-# G.FUNCS.evaluate_play()
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''(?<indent>[\t ]*)G\.E_MANAGER:add_event\(Event\(\{\n[\t ]*trigger = 'before',\n[\t ]*delay = 1\.3\*math\.min\(G\.GAME\.blind\.dollars\+2, 7\)\/2\*0\.15 \+ 0\.5,'''
-position = "before"
-line_prepend = "$indent"
-payload = '''
+### Dollar row patches (API removed)
 
-for k, v in pairs(SMODS.DollarRows) do
-    if v and v.payout and type(v.payout) == 'function' and v.above_dot_bar then
-        money_gained = v:payout()
-        add_round_eval_row({dollars = money_gained, bonus = true, name='payout_arg_'..v.key,pitch = pitch, payout_arg = v, above_dot_bar = true})
-        pitch = pitch + 0.06
-        dollars = dollars + money_gained
-    end
-end'''
-
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''(?<indent>[\t ]*)for i = 1, #G\.jokers\.cards do\n[\t ]*local ret = G\.jokers\.cards'''
-position = "before"
-line_prepend = "$indent"
-payload = '''
-
-for k, v in pairs(SMODS.DollarRows) do
-    if v and v.payout and type(v.payout) == 'function' and not v.above_dot_bar then
-        money_gained = v:payout()
-        add_round_eval_row({dollars = money_gained, bonus = true, name='payout_arg_'..v.key,pitch = pitch, payout_arg = v})
-        pitch = pitch + 0.06
-        dollars = dollars + money_gained
-    end
-end'''
-
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "add_round_eval_row({dollars = G.GAME.blind.dollars, name='blind1', pitch = pitch})"
-position = "at"
-payload = '''
-add_round_eval_row({dollars = G.GAME.blind.dollars, name='blind1', pitch = pitch, above_dot_bar = true})'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "add_round_eval_row({dollars = 0, name='blind1', pitch = pitch, saved = true})"
-position = "at"
-payload = '''
-add_round_eval_row({dollars = 0, name='blind1', pitch = pitch, saved = true, above_dot_bar = true})'''
-match_indent = true
-
-# add_round_eval_row()
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "if config.name ~= 'blind1' then"
-position = "at"
-payload = '''
-if config.above_dot_bar ~= true then'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "elseif config.name == 'interest' then"
-position = "before"
-payload = '''
---asdf
-elseif string.find(config.name, 'payout_arg') then
-    config.payout_arg:table_left_text(config, left_text, scale)'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "local dollar_row = 0"
-position = "after"
-payload = '''
---asdf
-if string.find(config.name, 'payout_arg') and config.payout_arg.custom_message_config.message then
-    G.E_MANAGER:add_event(Event({
-        trigger = 'before',delay = 0.38,func = function()
-            G.round_eval:add_child(
-                    {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
-                        {n=G.UIT.O, config={object = DynaText({string = localize(config.payout_arg.custom_message_config.message), colours = {config.payout_arg.custom_message_config.color}, shadow = true, pop_in = 0, scale = config.payout_arg.custom_message_config.scale, float = true})}}
-                    }},
-                    G.round_eval:get_UIE_by_ID('dollar_'..config.name))
-            play_sound('coin3', 0.9+0.2*math.random(), 0.7) --asdf
-            play_sound('coin6', 1.3, 0.8)
-            return true
-        end
-    }))
-else'''
-match_indent = true
 
 [[patches]]
 [patches.pattern]
@@ -108,32 +13,6 @@ pattern = "if num_dollars > 60 then"
 position = "at"
 payload = '''
 if num_dollars > 60 or num_dollars < -60 then'''
-match_indent = true
-
-[[patches]]
-[patches.regex]
-target = "functions/common_events.lua"
-pattern = '''(?<indent>[\t ]*)trigger = 'before',delay = 0.38,\n[\s\S]{16}func = function\(\)'''
-position = "after"
-line_prepend = "$indent"
-payload = '''
---asdf
-if string.find(config.name, 'payout_arg') then
-G.round_eval:add_child(
-        {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
-            {n=G.UIT.O, config={object = DynaText({string = {localize('$')..num_dollars}, colours = {config.payout_arg.symbol_config.color}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
-        }},
-        G.round_eval:get_UIE_by_ID('dollar_'..config.name))
-else'''
-
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "play_sound('coin3', 0.9+0.2*math.random(), 0.7)"
-position = "before"
-payload = '''
---asdf
-end'''
 match_indent = true
 
 [[patches]]
@@ -148,19 +27,11 @@ if num_dollars < 0 then --if negative
     G.E_MANAGER:add_event(Event({
         trigger = 'before',delay = 0.38,
         func = function()
-            if string.find(config.name, 'payout_arg') then
-                G.round_eval:add_child(
-                        {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
-                            {n=G.UIT.O, config={object = DynaText({string = {'-'..localize('$')..(num_dollars*-1)}, colours = {config.payout_arg.symbol_config.color}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
-                        }},
-                        G.round_eval:get_UIE_by_ID('dollar_'..config.name))
-            else
-                G.round_eval:add_child(
-                        {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
-                            {n=G.UIT.O, config={object = DynaText({string = {localize('$')..(num_dollars*-1)}, colours = {G.C.MONEY}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
-                        }},
-                        G.round_eval:get_UIE_by_ID('dollar_'..config.name))
-            end
+            G.round_eval:add_child(
+                {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
+                    {n=G.UIT.O, config={object = DynaText({string = {localize('$')..(num_dollars*-1)}, colours = {G.C.MONEY}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
+                }},
+                G.round_eval:get_UIE_by_ID('dollar_'..config.name))
             play_sound('coin3', 0.9+0.2*math.random(), 0.7)
             play_sound('coin6', 1.3, 0.8)
             return true
@@ -185,40 +56,6 @@ match_indent = true
 [patches.regex]
 target = "functions/common_events.lua"
 pattern = '''(?<indent>[\t ]*)else\n[\t ]*local dollars_to_loop'''
-position = "before"
-line_prepend = "$indent"
-payload = '''
---asdf
-end'''
-
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "local r = {n=G.UIT.T, config={text = localize('$'), colour = G.C.MONEY, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}"
-position = "at"
-payload = '''
-local r
-if i == 1 and num_dollars < 0 then
-    r = {n=G.UIT.T, config={text = '-', colour = config.payout_arg and config.payout_arg.symbol_config.color or G.C.RED, scale = ((num_dollars < -20 and 0.28) or (num_dollars < -9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
-    play_sound('coin3', 0.9+0.2*math.random(), 0.7 - (num_dollars < -20 and 0.2 or 0))
-else
-    if string.find(config.name, 'payout_arg') then
-        if not config.payout_arg.symbol_config.needs_localize then
-            r = {n=G.UIT.T, config={text = config.payout_arg.symbol_config.character, colour = config.payout_arg.symbol_config.color, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
-        else
-            r = {n=G.UIT.T, config={text = localize(config.payout_arg.symbol_config.character), colour = config.payout_arg.symbol_config.color, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
-        end
-    else
-        if num_dollars < 0 then r = {n=G.UIT.T, config={text = localize('$'), colour = G.C.RED, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}}
-        else r = {n=G.UIT.T, config={text = localize('$'), colour = G.C.MONEY, scale = ((num_dollars > 20 and 0.28) or (num_dollars > 9 and 0.43) or 0.58), shadow = true, hover = true, can_collide = false, juice = true}} end
-    end
-end'''
-match_indent = true
-
-[[patches]]
-[patches.regex]
-target = "functions/common_events.lua"
-pattern = '''(?<indent>[\t ]*)else\n[\t ]*delay\(0\.4\)'''
 position = "before"
 line_prepend = "$indent"
 payload = '''

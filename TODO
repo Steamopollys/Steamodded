@@ -1,16 +1,14 @@
 # Documentation
 ## To do
-- Language
 - Stake
 - Seal
 - Challenge
-
 - Sticker
-- DollarRow
+- DeckSkin
 
 ## In progress
 - Enhancement
-- Tag
+
 ## Done
 
 - Atlas
@@ -19,7 +17,9 @@
 - ConsumableType
 - UndiscoveredSprite
 - Edition
+- Language
 - Sound
 - PokerHand
 - Suit
 - Rank
+- Tag
