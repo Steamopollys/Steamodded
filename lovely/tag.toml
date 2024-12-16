@@ -81,11 +81,6 @@ payload = 'G.ASSET_ATLAS[(not self.hide_ability) and G.P_TAGS[self.key].atlas or
 [patches.pattern]
 target = "tag.lua"
 pattern = '''tag_sprite.ability_UIBox_table = generate_card_ui(G.P_TAGS[self.key], nil, loc_vars, (self.hide_ability) and 'Undiscovered' or 'Tag', nil, (self.hide_ability))'''
-position = 'before'
+position = 'at'
 match_indent = true
-payload = '''
-if G.P_TAGS[self.key].loc_vars and type(G.P_TAGS[self.key].loc_vars) == 'function' then
-	local temp_vars = G.P_TAGS[self.key]:loc_vars({}, self)
-	if temp_vars then loc_vars = temp_vars.vars end
-end
-'''
+payload = '''tag_sprite.ability_UIBox_table = generate_card_ui(G.P_TAGS[self.key], nil, loc_vars, (self.hide_ability) and 'Undiscovered' or 'Tag', nil, (self.hide_ability), nil, nil, self)'''

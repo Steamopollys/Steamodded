@@ -3,16 +3,16 @@
 - Language
 - Stake
 - Seal
-- Suit
-- Rank
 - Challenge
-- Tag
+
 - Sticker
 - DollarRow
 
 ## In progress
 - Enhancement
+- Tag
 ## Done
+
 - Atlas
 - Center (Joker, Consumable, Voucher, Back)
 - Blind
@@ -21,3 +21,5 @@
 - Edition
 - Sound
 - PokerHand
+- Suit
+- Rank
