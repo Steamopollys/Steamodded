@@ -55,7 +55,7 @@ match_indent = true
 target = "functions/common_events.lua"
 pattern = '''if G.F_NO_ACHIEVEMENTS then return end'''
 position = "at"
-payload = '''if G.F_NO_ACHIEVEMENTS and not G.ACHIEVEMENTS[achievement_name].mod then return true end'''
+payload = '''if G.F_NO_ACHIEVEMENTS and not (G.ACHIEVEMENTS[achievement_name] or {}).mod then return true end'''
 match_indent = true
 
 [[patches]]

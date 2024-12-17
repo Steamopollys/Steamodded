@@ -288,7 +288,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if type(self.font) == 'table' and not self.font.FONT and self.font.file and self.font.render_scale then
                 local data = assert(NFS.newFileData(self.mod.path .. 'assets/fonts/' .. self.font.file), ('Failed to collect file data for font of language %s'):format(self.key))
                 self.font.FONT = love.graphics.newFont(data, self.font.render_scale)
-            else 
+            elseif type(self.font) ~= 'table' then
                 self.font = G.FONTS[type(self.font) == 'number' and self.font or 1] or G.FONTS[1]
             end
             G.LANGUAGES[self.key] = self
