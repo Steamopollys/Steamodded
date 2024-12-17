@@ -533,7 +533,7 @@ function SMODS.applied_stakes_UI(i, stake_desc_rows, num_added)
 			if v ~= "white" then
 				--todo: manage this with pages
 				if num_added.val < 8 then
-					local i = G.P_STAKES["stake_" .. v].stake_level
+					local i = G.P_STAKES[v].stake_level
 					local _stake_desc = {}
 					local _stake_center = G.P_CENTER_POOLS.Stake[i]
 					localize { type = 'descriptions', key = _stake_center.key, set = _stake_center.set, nodes = _stake_desc }
@@ -550,7 +550,7 @@ function SMODS.applied_stakes_UI(i, stake_desc_rows, num_added)
 							_full_desc},}}
 				end
 				num_added.val = num_added.val + 1
-				num_added.val = SMODS.applied_stakes_UI(G.P_STAKES["stake_" .. v].stake_level, stake_desc_rows,
+				num_added.val = SMODS.applied_stakes_UI(G.P_STAKES[v].stake_level, stake_desc_rows,
 					num_added)
 			end
 		end

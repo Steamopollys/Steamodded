@@ -80,6 +80,26 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         SMODS.modify_key(obj, mod and mod.prefix, shader_cfg, 'shader')
         local card_key_cfg = obj.prefix_config.card_key
         SMODS.modify_key(obj, mod and mod.prefix, card_key_cfg, 'card_key')
+        local above_stake_cfg = obj.prefix_config.above_stake
+        if above_stake_cfg ~= false then
+            if type(above_stake_cfg) ~= 'table' then above_stake_cfg = {} end
+            SMODS.modify_key(obj, mod and mod.prefix, above_stake_cfg.mod, 'above_stake')
+            SMODS.modify_key(obj, cls.class_prefix, above_stake_cfg.class, 'above_stake') 
+        end
+        local applied_stakes_cfg = obj.prefix_config.applied_stakes
+        if applied_stakes_cfg ~= false and obj.applied_stakes then
+            if type(applied_stakes_cfg) ~= 'table' then applied_stakes_cfg = {} end
+            for k,v in pairs(obj.applied_stakes) do
+                SMODS.modify_key(obj.applied_stakes, mod and mod.prefix, (applied_stakes_cfg[k] or {}).mod or applied_stakes_cfg.mod, k)
+                SMODS.modify_key(obj.applied_stakes, cls.class_prefix, (applied_stakes_cfg[k] or {}).class or applied_stakes_cfg.class, k)
+            end
+        end
+        local unlocked_stake_cfg = obj.prefix_config.unlocked_stake
+        if unlocked_stake_cfg ~= false then
+            if type(unlocked_stake_cfg) ~= 'table' then unlocked_stake_cfg = {} end
+            SMODS.modify_key(obj, mod and mod.prefix, unlocked_stake_cfg.mod, 'unlocked_stake')
+            SMODS.modify_key(obj, cls.class_prefix, unlocked_stake_cfg.class, 'unlocked_stake') 
+        end
     end
 
     function SMODS.GameObject:check_duplicate_register()
@@ -522,8 +542,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 -- Inject stake in the correct spot
                 self.count = #G.P_CENTER_POOLS[self.set] + 1
                 self.order = self.count
-                if self.above_stake then
-                    self.order = G.P_STAKES[self.class_prefix .. "_" .. self.above_stake].order + 1
+                if self.above_stake and G.P_STAKES[self.above_stake] then
+                    self.order = G.P_STAKES[self.above_stake].order + 1
                 end
                 for _, v in pairs(G.P_STAKES) do
                     if v.order >= self.order then
@@ -571,7 +591,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             for _, v in pairs(self.applied_stakes) do
                 any_applied = true
                 applied_text = applied_text ..
-                    localize { set = self.set, key = self.class_prefix .. '_' .. v, type = 'name_text' } .. ', '
+                    localize { set = self.set, key = v, type = 'name_text' } .. ', '
             end
             applied_text = applied_text:sub(1, -3)
             if not any_applied then
@@ -596,7 +616,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             return applied
         end
         for _, s in pairs(stake.applied_stakes) do
-            SMODS.build_stake_chain(G.P_STAKES['stake_'..s], applied)
+            SMODS.build_stake_chain(G.P_STAKES[s], applied)
         end
         return applied
     end 
