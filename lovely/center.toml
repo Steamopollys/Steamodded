@@ -114,6 +114,7 @@ payload = '''
 if _c.locked_loc_vars and type(_c.locked_loc_vars) == 'function' then
 	local res = _c:locked_loc_vars(info_queue) or {}
 	loc_vars = res.vars or {}
+	specific_vars = specific_vars or {}
 	specific_vars.not_hidden = res.not_hidden or specific_vars.not_hidden
 elseif $rest'''
 
