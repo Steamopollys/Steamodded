@@ -261,13 +261,13 @@ function SMODS.eval_this(_card, effects)
         local extras = { mult = false, hand_chips = false }
         local mult, hand_chips
         if effects.mult_mod then
-            local mult = mod_mult(mult + effects.mult_mod); extras.mult = true
+            mult = mod_mult(mult + effects.mult_mod); extras.mult = true
         end
         if effects.chip_mod then
-            local hand_chips = mod_chips(hand_chips + effects.chip_mod); extras.hand_chips = true
+            hand_chips = mod_chips(hand_chips + effects.chip_mod); extras.hand_chips = true
         end
         if effects.Xmult_mod then
-            local mult = mod_mult(mult * effects.Xmult_mod); extras.mult = true
+            mult = mod_mult(mult * effects.Xmult_mod); extras.mult = true
         end
         update_hand_text({ delay = 0 }, { chips = extras.hand_chips and hand_chips, mult = extras.mult and mult })
         if effects.message then
