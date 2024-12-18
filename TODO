@@ -1,9 +1,8 @@
 # Documentation
 ## To do
-- Stake
+- Sticker
 - Seal
 - Challenge
-- Sticker
 - DeckSkin
 
 ## In progress
@@ -12,14 +11,16 @@
 ## Done
 
 - Atlas
-- Center (Joker, Consumable, Voucher, Back)
+- Center (Joker, Consumable, Voucher, Back, Booster)
 - Blind
-- ConsumableType
+- ObjectType
 - UndiscoveredSprite
 - Edition
 - Language
 - Sound
+- Stake
 - PokerHand
 - Suit
 - Rank
+- Rarity
 - Tag

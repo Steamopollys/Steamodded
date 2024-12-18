@@ -197,7 +197,7 @@ local function parse_loc_file(file_name, force)
             -- force mode is on and the value is not a table,
             -- change/add the thing
             -- brings back compatibility with language patching mods
-            if not ref_table[k] or (force and ((type(v) ~= 'table') or type(v[1]) == 'string')) then
+            if (not ref_table[k] and type(k) ~= 'number') or (force and ((type(v) ~= 'table') or type(v[1]) == 'string')) then
                 ref_table[k] = v
             else
                 recurse(v, ref_table[k])
