@@ -274,3 +274,26 @@ end
 for j = 1, #suit_map do
 	$mid			
 			(0.42 - (num_suits <= 4 and 0 or num_suits >= 8 and 0.28 or 0.07 * (num_suits - 4))) * G.CARD_H,'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '--Fill all remaining info if this is the main desc'
+position = 'before'
+match_indent = true
+payload = '''if card_type == 'Default' or card_type == 'Enhanced' and not _c.replace_base_card then
+	if not _c.no_suit then
+		local suit = SMODS.Suits[card.base.suit] or {}
+		if suit.loc_vars and type(suit.loc_vars) == 'function' then
+			suit:loc_vars(info_queue, card)
+		end
+	end
+	if not _c.no_rank then
+		local rank = SMODS.Ranks[card.base.value] or {}
+		if rank.loc_vars and type(rank.loc_vars) == 'function' then
+			rank:loc_vars(info_queue, card)
+		end
+	end
+end
+
+'''
