@@ -147,7 +147,7 @@ function loadStackTracePlus()
             end
             return ParseLine(line)
         elseif type(info.source) == "string" and info.source:sub(1, 6) == "=[love" then
-            return "(Love2D Function)"
+            return "(LÖVE Function)"
         else
             local line
             local lineNumber = 0
@@ -362,7 +362,7 @@ Stack Traceback
                     end
                     local source = table.remove(props, 1)
                     if source == "love" then
-                        dumper:add_f("(%d) main chunk of Love2D file '%s' at line %d\r\n", level_to_show,
+                        dumper:add_f("(%d) main chunk of LÖVE file '%s' at line %d\r\n", level_to_show,
                             table.concat(props, " "):sub(2, -2), info.currentline)
                     elseif source == "SMODS" then
                         local modID = table.remove(props, 1)
@@ -427,7 +427,7 @@ Stack Traceback
                     end
                     local source = table.remove(props, 1)
                     if source == "love" then
-                        dumper:add_f("(%d) Love2D %s at file '%s:%d'%s\r\n", level_to_show, function_type,
+                        dumper:add_f("(%d) LÖVE %s at file '%s:%d'%s\r\n", level_to_show, function_type,
                             table.concat(props, " "):sub(2, -2), info.currentline, was_guessed and " (best guess)" or "")
                     elseif source == "SMODS" then
                         local modID = table.remove(props, 1)
@@ -515,7 +515,7 @@ function getDebugInfoForCrash()
     local info = "Additional Context:\nBalatro Version: " .. version .. "\nModded Version: " ..
                      (modded_version)
     local major, minor, revision, codename = love.getVersion()
-    info = info .. string.format("\nLove2D Version: %d.%d.%d", major, minor, revision)
+    info = info .. string.format("\nLÖVE Version: %d.%d.%d", major, minor, revision)
 
     local lovely_success, lovely = pcall(require, "lovely")
     if lovely_success then

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Steamodded is a mod loader and injector for the game Balatro. Much like the [LÖVE2D engine](https://love2d.org/wiki/Main_Page) itself, it is built using [Lua](https://www.lua.org/). It is made with modularity and extensibility in mind, providing a large selection of APIs and other features to facilitate bringing your ideas to life.
+Steamodded is a mod loader and injector for the game Balatro. Much like the [LÖVE framework](https://love2d.org/wiki/Main_Page) itself, it is built using [Lua](https://www.lua.org/). It is made with modularity and extensibility in mind, providing a large selection of APIs and other features to facilitate bringing your ideas to life.
 
 ## Installation
 
