@@ -290,6 +290,7 @@ effects[1].edition = nil
 local extra_enhancements = SMODS.get_enhancements(scoring_hand[i], true)
 local old_ability = copy_table(scoring_hand[i].ability)
 local old_center = scoring_hand[i].config.center
+local old_center_key = scoring_hand[i].config.center_key
 for k, _ in pairs(extra_enhancements) do
     if G.P_CENTERS[k] then
         scoring_hand[i]:set_ability(G.P_CENTERS[k])
@@ -300,6 +301,7 @@ end
 effects[#effects+1] = post_effect
 scoring_hand[i].ability = old_ability
 scoring_hand[i].config.center = old_center
+scoring_hand[i].config.center_key = old_center_key
 scoring_hand[i]:set_sprites(old_center)
 '''
 match_indent = true
@@ -314,6 +316,7 @@ payload = '''
 local extra_enhancements = SMODS.get_enhancements(G.hand.cards[i], true)
 local old_ability = copy_table(G.hand.cards[i].ability)
 local old_center = G.hand.cards[i].config.center
+local old_center_key = G.hand.cards[i].config.center_key
 for k, _ in pairs(extra_enhancements) do
     if G.P_CENTERS[k] then
         G.hand.cards[i]:set_ability(G.P_CENTERS[k])
@@ -323,6 +326,7 @@ for k, _ in pairs(extra_enhancements) do
 end
 G.hand.cards[i].ability = old_ability
 G.hand.cards[i].config.center = old_center
+G.hand.cards[i].config.center_key = old_center_key
 G.hand.cards[i]:set_sprites(old_center)
 '''
 match_indent = true
@@ -337,6 +341,7 @@ payload = '''
 local extra_enhancements = SMODS.get_enhancements(G.hand.cards[i], true)
 local old_ability = copy_table(G.hand.cards[i].ability)
 local old_center = G.hand.cards[i].config.center
+local old_center_key = G.hand.cards[i].config.center_key
 for k, _ in pairs(extra_enhancements) do
     if G.P_CENTERS[k] then
         G.hand.cards[i]:set_ability(G.P_CENTERS[k])
@@ -346,6 +351,7 @@ for k, _ in pairs(extra_enhancements) do
 end
 G.hand.cards[i].ability = old_ability
 G.hand.cards[i].config.center = old_center
+G.hand.cards[i].config.center_key = old_center_key
 G.hand.cards[i]:set_sprites(old_center)
 '''
 match_indent = true
