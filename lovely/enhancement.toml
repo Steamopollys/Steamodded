@@ -370,4 +370,43 @@ position = "at"
 payload = "if SMODS.has_enhancement(vv, v.enhancement_gate) then"
 match_indent = true
 
-# Todo - glass card shattering, wild card effect
+# Glass Card shattering
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if card.ability.name == 'Glass Card' then"
+position = "at"
+payload = "if SMODS.has_enhancement(card, 'm_glass') then"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if G.hand.highlighted[i].ability.name == 'Glass Card' then"
+position = "at"
+payload = "if SMODS.has_enhancement(G.hand.highlighted[i], 'm_glass') then"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if scoring_hand[i].ability.name == 'Glass Card' and not scoring_hand[i].debuff and pseudorandom('glass') < G.GAME.probabilities.normal/scoring_hand[i].ability.extra then"
+position = "at"
+payload = "if SMODS.has_enhancement(scoring_hand[i], 'm_glass') and not scoring_hand[i].debuff and pseudorandom('glass') < G.GAME.probabilities.normal/(scoring_hand[i].ability.name == 'Glass Card' and scoring_hand[i].ability.extra or G.P_CENTERS.m_glass.config.extra) then"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if scoring_hand[i].ability.name == 'Glass Card' then"
+position = "at"
+payload = "if SMODS.has_enhancement(scoring_hand[i], 'm_glass') then"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if cards_destroyed[i].ability.name == 'Glass Card' then"
+position = "at"
+payload = "if SMODS.has_enhancement(cards_destroyed[i], 'm_glass') then"
+match_indent = true
