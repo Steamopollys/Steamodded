@@ -48,6 +48,14 @@ return {
                     '({C:attention}#1#{})'
                 }
             },
+            load_failure_m = { -- To be translated
+                text = {
+                    '{C:attention}Main File Not Found!{}',
+                    'This mod\'s main file',
+                    'could not be found.',
+                    '({C:attention}#1#{})'
+                }
+            },
             load_disabled = {
                 text = {
                     '该模组',

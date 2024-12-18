@@ -561,7 +561,7 @@ function create_UIBox_your_collection_stickers(exit)
 	local rows, cols = (#sticker_pool > 5 and 2 or 1), 5
 	local page = 0
 
-	sendInfoMessage("Creating collections")
+	sendInfoMessage("Creating collections", "CollectionUI")
 	G.your_collection = {}
 	for j = 1, rows do
 		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
@@ -912,6 +912,10 @@ function buildModtag(mod)
 		if mod.load_issues.version_mismatch then
             tag_message = 'load_failure_i'
 			specific_vars = {mod.load_issues.version_mismatch, MODDED_VERSION:gsub('-STEAMODDED', '')}
+		end
+		if mod.load_issues.main_file_not_found then
+			tag_message = 'load_failure_m'
+			specific_vars = {mod.main_file}
 		end
 		if mod.load_issues.prefix_conflict then
 			tag_message = 'load_failure_p'
@@ -1355,19 +1359,21 @@ function create_UIBox_mods_button()
 												ref_table = SMODS.config,
 												ref_value = 'no_mod_badges',
 											},
-											create_option_cycle {
-												options = {
-													"Trace",
-													"Debug",
-													"Info",
-													"Warning",
-													"Error",
-												},
-												current_option = SMODS.config.log_level or 3,
-												label = "Log Level",
-												scale = 0.8,
-												opt_callback = 'SMODS_log_level'
+											create_toggle {
+												label = localize('b_seeded_unlocks'),
+												info = {localize('b_seeded_unlocks_info')},
+												ref_table = SMODS.config,
+												ref_value = 'seeded_unlocks',
 											},
+											create_option_cycle {
+												w = 4.5,
+												scale = 0.8,
+												label = localize('b_achievements'),
+												options = localize('ml_achievement_settings'),
+												opt_callback = 'update_achievement_settings',
+												current_option = SMODS.config.achievements,
+												cycle_shoulders = true,
+											}
 										}
 									}
 								end
@@ -1380,6 +1386,12 @@ function create_UIBox_mods_button()
 	}))
 end
 
+G.FUNCS.update_achievement_settings = function(e)
+	local opt = (e.cycle_config or {}).current_option or 1
+	SMODS.config.achievements = opt
+	G.F_NO_ACHIEVEMENTS = opt == 1
+end
+
 G.FUNCS.browse_search = function(e)
 	SMODS.fetch_index()
 
@@ -1389,9 +1401,6 @@ G.FUNCS.browse_mods_page = function(args)
 	local page = args.cycle_config and args.cycle_config.current_option or 1
 end
 
-G.FUNCS.SMODS_log_level = function(args)
-	SMODS.config.log_level = args.to_key
-end
 function G.FUNCS.steamodded_github(e)
 	love.system.openURL("https://github.com/Steamopollys/Steamodded")
 end
@@ -1445,7 +1454,7 @@ end
 
 -- Disable achievments and crash report upload
 function initGlobals()
-	G.F_NO_ACHIEVEMENTS = true
+	G.F_NO_ACHIEVEMENTS = SMODS.config.achievements == 1
 	G.F_CRASH_REPORTS = false
 end
 

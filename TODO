@@ -1,23 +1,25 @@
 # Documentation
 ## To do
-- Language
 - Stake
 - Seal
-- Suit
-- Rank
 - Challenge
-- Tag
 - Sticker
-- DollarRow
-- Enhancement
+- DeckSkin
+
 ## In progress
+- Enhancement
 
 ## Done
+
 - Atlas
 - Center (Joker, Consumable, Voucher, Back)
 - Blind
 - ConsumableType
 - UndiscoveredSprite
 - Edition
+- Language
 - Sound
 - PokerHand
+- Suit
+- Rank
+- Tag

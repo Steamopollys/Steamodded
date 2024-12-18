@@ -37,8 +37,6 @@ if _front and _front.suit and G.SETTINGS.CUSTOM_DECK and G.SETTINGS.CUSTOM_DECK.
     end
 end
 '''
-match_indent = true
-
 #=======================#
 # Extend custom deck ui #
 #=======================#
@@ -67,7 +65,6 @@ local face_cards = CardArea(
     1.4*G.CARD_H, 
     {card_limit = rankCount, type = 'title', highlight_limit = 0})
 '''
-match_indent = true
 
 [[patches]]
 [patches.regex]
@@ -93,7 +90,6 @@ for i = #cards, 1, -1 do
     face_cards:emplace(cards[i])
 end
 '''
-match_indent = true
 
 [[patches]]
 [patches.regex]
@@ -130,4 +126,3 @@ function create_UIBox_customize_deck()
   return t
 end
 '''
-match_indent = true

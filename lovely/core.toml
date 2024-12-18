@@ -15,6 +15,10 @@ match_indent = true
 [patches.copy]
 target = "main.lua"
 position = "append"
-sources = [
-	"core/core.lua",
-]
+sources = ["src/core.lua"]
+
+[[patches]]
+[patches.module]
+before = "main.lua"
+source = "version.lua"
+name = "SMODS.version"

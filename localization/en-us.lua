@@ -49,6 +49,14 @@ return {
                     '({C:attention}#1#{})'
                 }
             },
+            load_failure_m = {
+                text = {
+                    '{C:attention}Main File Not Found!{}',
+                    'This mod\'s main file',
+                    'could not be found.',
+                    '({C:attention}#1#{})'
+                }
+            },
             load_disabled = {
                 text = {
                     'This mod has been',
@@ -103,6 +111,13 @@ return {
 			b_browse = 'Browse',
 			b_search_prompt = 'Search for mods',
 			b_search_button = 'Search',
+            b_seeded_unlocks = 'Seeded unlocks',
+            b_seeded_unlocks_info = 'Enable unlocks and discoveries in seeded runs',
+            ml_achievement_settings = {
+                'Disabled',
+                'Enabled',
+                'Bypass Restrictions'
+            }
 		},
 		v_dictionary = {
 			c_types = '#1# Types',

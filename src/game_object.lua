@@ -80,6 +80,26 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         SMODS.modify_key(obj, mod and mod.prefix, shader_cfg, 'shader')
         local card_key_cfg = obj.prefix_config.card_key
         SMODS.modify_key(obj, mod and mod.prefix, card_key_cfg, 'card_key')
+        local above_stake_cfg = obj.prefix_config.above_stake
+        if above_stake_cfg ~= false then
+            if type(above_stake_cfg) ~= 'table' then above_stake_cfg = {} end
+            SMODS.modify_key(obj, mod and mod.prefix, above_stake_cfg.mod, 'above_stake')
+            SMODS.modify_key(obj, cls.class_prefix, above_stake_cfg.class, 'above_stake') 
+        end
+        local applied_stakes_cfg = obj.prefix_config.applied_stakes
+        if applied_stakes_cfg ~= false and obj.applied_stakes then
+            if type(applied_stakes_cfg) ~= 'table' then applied_stakes_cfg = {} end
+            for k,v in pairs(obj.applied_stakes) do
+                SMODS.modify_key(obj.applied_stakes, mod and mod.prefix, (applied_stakes_cfg[k] or {}).mod or applied_stakes_cfg.mod, k)
+                SMODS.modify_key(obj.applied_stakes, cls.class_prefix, (applied_stakes_cfg[k] or {}).class or applied_stakes_cfg.class, k)
+            end
+        end
+        local unlocked_stake_cfg = obj.prefix_config.unlocked_stake
+        if unlocked_stake_cfg ~= false then
+            if type(unlocked_stake_cfg) ~= 'table' then unlocked_stake_cfg = {} end
+            SMODS.modify_key(obj, mod and mod.prefix, unlocked_stake_cfg.mod, 'unlocked_stake')
+            SMODS.modify_key(obj, cls.class_prefix, unlocked_stake_cfg.class, 'unlocked_stake') 
+        end
     end
 
     function SMODS.GameObject:check_duplicate_register()
@@ -163,7 +183,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
 
             -- Setup Localize text
             o:process_loc_text()
-            if SMODS.config.log_level == 1 and self.log_interval and i%(self.log_interval) == 0 then
+            if self.log_interval and i%(self.log_interval) == 0 then
                 end_time = love.timer.getTime()
                 inject_time = inject_time + end_time - start_time
                 start_time = end_time
@@ -265,8 +285,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         process_loc_text = function() end,
         inject = function(self)
             self.font = self.font or 1
-            if type(self.font) == 'number' then
-                self.font = G.FONTS[self.font]
+            if type(self.font) == 'table' and not self.font.FONT and self.font.file and self.font.render_scale then
+                local data = assert(NFS.newFileData(self.mod.path .. 'assets/fonts/' .. self.font.file), ('Failed to collect file data for font of language %s'):format(self.key))
+                self.font.FONT = love.graphics.newFont(data, self.font.render_scale)
+            elseif type(self.font) ~= 'table' then
+                self.font = G.FONTS[type(self.font) == 'number' and self.font or 1] or G.FONTS[1]
             end
             G.LANGUAGES[self.key] = self
             if self.key == G.SETTINGS.language then G.LANG = self end
@@ -519,8 +542,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 -- Inject stake in the correct spot
                 self.count = #G.P_CENTER_POOLS[self.set] + 1
                 self.order = self.count
-                if self.above_stake then
-                    self.order = G.P_STAKES[self.class_prefix .. "_" .. self.above_stake].order + 1
+                if self.above_stake and G.P_STAKES[self.above_stake] then
+                    self.order = G.P_STAKES[self.above_stake].order + 1
                 end
                 for _, v in pairs(G.P_STAKES) do
                     if v.order >= self.order then
@@ -568,7 +591,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             for _, v in pairs(self.applied_stakes) do
                 any_applied = true
                 applied_text = applied_text ..
-                    localize { set = self.set, key = self.class_prefix .. '_' .. v, type = 'name_text' } .. ', '
+                    localize { set = self.set, key = v, type = 'name_text' } .. ', '
             end
             applied_text = applied_text:sub(1, -3)
             if not any_applied then
@@ -593,7 +616,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             return applied
         end
         for _, s in pairs(stake.applied_stakes) do
-            SMODS.build_stake_chain(G.P_STAKES['stake_'..s], applied)
+            SMODS.build_stake_chain(G.P_STAKES[s], applied)
         end
         return applied
     end 
@@ -754,12 +777,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             key = rarity.key, 
             weight = type(rarity.pools[object_type.key]) == "table" and rarity.pools[object_type.key].weight or rarity.default_weight
         }
-        local total = 0
         for _, vv in ipairs(object_type.rarities) do
-            total = total + vv.weight
-        end
-        for _, vv in ipairs(object_type.rarities) do
-            vv.weight = vv.weight / total
             local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
             if default_rarity_check[vv.key] then
                 object_type.rarity_pools[default_rarity_check[vv.key]] = {}
@@ -784,7 +802,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_weight = 0.7,
         badge_colour = HEX('009dff'),
-        pools = {["Joker"] = true},
         get_weight = function(self, weight, object_type)
             return weight
         end,
@@ -795,7 +812,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_weight = 0.25,
         badge_colour = HEX("4BC292"),
-        pools = {["Joker"] = true},
         get_weight = function(self, weight, object_type)
             return weight
         end,
@@ -806,7 +822,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_weight = 0.05,
         badge_colour = HEX('fe5f55'),
-        pools = {["Joker"] = true},
         get_weight = function(self, weight, object_type)
             return weight
         end,
@@ -817,7 +832,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_txt = {},
         default_weight = 0,
         badge_colour = HEX("b26cbb"),
-        pools = {["Joker"] = true},
         get_weight = function(self, weight, object_type)
             return weight
         end,
@@ -838,37 +852,36 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         prefix_config = { key = false }, 
         inject = function(self)
             G.P_CENTER_POOLS[self.key] = G.P_CENTER_POOLS[self.key] or {}
+            local injected_rarities = {}
             if self.rarities then
                 self.rarity_pools = {}
-                local total = 0
                 for _, v in ipairs(self.rarities) do
                     if not v.weight then v.weight = SMODS.Rarities[v.key].default_weight end
-                    total = total + v.weight
-                end
-                for _, v in ipairs(self.rarities) do
-                    v.weight = v.weight / total
                     local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
                     if default_rarity_check[v.key] then
                         self.rarity_pools[default_rarity_check[v.key]] = {}
                     else
                         self.rarity_pools[v.key] = {}
                     end
+                    injected_rarities[v.key] = true
                 end
             end
             for _, v in pairs(SMODS.Rarities) do
-                if v.pools and v.pools[self.key] then SMODS.inject_rarity(self, v) end
+                if v.pools and v.pools[self.key] and not injected_rarities[v.key] then SMODS.inject_rarity(self, v) end
             end
         end,
         inject_card = function(self, center)
             if center.set ~= self.key then SMODS.insert_pool(G.P_CENTER_POOLS[self.key], center) end
-            if self.rarities and center.rarity and self.rarity_pools[center.rarity] then
-                SMODS.insert_pool(self.rarity_pools[center.rarity], center)
+            local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
+            if self.rarities and center.rarity and self.rarity_pools[default_rarity_check[center.rarity] or center.rarity] then
+                SMODS.insert_pool(self.rarity_pools[default_rarity_check[center.rarity] or center.rarity], center)
             end
         end,
         delete_card = function(self, center)
             if center.set ~= self.key then SMODS.remove_pool(G.P_CENTER_POOLS[self.key], center.key) end
-            if self.rarities and center.rarity and self.rarity_pools[center.rarity] then
-                SMODS.remove_pool(self.rarity_pools[center.rarity], center.key)
+            local default_rarity_check = {["Common"] = 1, ["Uncommon"] = 2, ["Rare"] = 3, ["Legendary"] = 4}
+            if self.rarities and center.rarity and self.rarity_pools[default_rarity_check[center.rarity] or center.rarity] then
+                SMODS.remove_pool(self.rarity_pools[default_rarity_check[center.rarity] or center.rarity], center.key)
             end
         end,
     }
@@ -1109,7 +1122,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         inject = function(self)
             G.P_CENTERS[self.key] = self
-            SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self)
+            if not self.omit then SMODS.insert_pool(G.P_CENTER_POOLS[self.set], self) end
             for k, v in pairs(SMODS.ObjectTypes) do
                 -- Should "cards" be formatted as `{[<center key>] = true}` or {<center key>}?
                 -- Changing "cards" and "pools" wouldn't be hard to do, just depends on preferred format
@@ -1295,6 +1308,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         atlas = 'centers',
         pos = { x = 0, y = 0 },
         config = {},
+        omit = false,
         unlock_condition = {},
         stake = 1,
         class_prefix = 'b',
@@ -2600,7 +2614,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
                 -- card is a dead arg here
-                res = self:loc_vars(info_queue) or {}
+                res = self:loc_vars(info_queue, card) or {}
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key
                 target.set = res.set or target.set
@@ -2743,26 +2757,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         apply = function(self, card, val)
             card[self.key] = val
         end
-    }
-
-    -------------------------------------------------------------------------------------------------
-    ----- API CODE GameObject.DollarRow
-    -------------------------------------------------------------------------------------------------
-
-    SMODS.DollarRows = {}
-    SMODS.DollarRow = SMODS.GameObject:extend {
-        obj_buffer = {},
-        obj_table = {},
-        set = 'Dollar Row',
-        class_prefix = 'p',
-        required_params = {
-            'key'
-        },
-        config = {},
-        above_dot_bar = false,
-        symbol_config = { character = '$', color = G.C.MONEY, needs_localize = true },
-        custom_message_config = { message = nil, color = nil, scale = nil },
-        inject = function() end,
     }
 
     -------------------------------------------------------------------------------------------------

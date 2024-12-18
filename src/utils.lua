@@ -504,12 +504,24 @@ function SMODS.merge_defaults(t, defaults)
 end
 V_MT = {
     __eq = function(a, b)
+        local minorWildcard = a.minor == -2 or b.minor == -2
+        local patchWildcard = a.patch == -2 or b.patch == -2
+        local betaWildcard = a.rev == '~' or b.rev == '~'
         return a.major == b.major and
-        a.minor == b.minor and
-        a.patch == b.patch and
-        a.rev == b.rev
+        (a.minor == b.minor or minorWildcard) and
+        (a.patch == b.patch or minorWildcard or patchWildcard) and
+        (a.rev == b.rev or minorWildcard or patchWildcard or betaWildcard) and
+        (betaWildcard or a.beta == b.beta)
     end,
     __le = function(a, b)
+        local b = {
+            major = b.major + (b.minor == -2 and 1 or 0),
+            minor = b.minor == -2 and 0 or (b.minor + (b.patch == -2 and 1 or 0)),
+            patch = b.patch == -2 and 0 or b.patch,
+            beta = b.beta,
+            rev = b.rev,
+        }
+        if b.beta == -1 and a.beta == 0 then return false end
         if a.major ~= b.major then return a.major < b.major end
         if a.minor ~= b.minor then return a.minor < b.minor end
         if a.patch ~= b.patch then return a.patch < b.patch end
@@ -521,11 +533,17 @@ V_MT = {
     end,
     __call = function(_, str)
         str = str or '0.0.0'
-        local _, _, major, minor, patch, rev = string.find(str, '^(%d-)%.(%d+)%.?(%d*)(.*)$')
+        local _, _, major, minorFull, minor, patchFull, patch, rev = string.find(str, '^(%d+)(%.?([%d%*]*))(%.?([%d%*]*))(.*)$')
+        local minorWildcard = string.match(minor, '%*')
+        local patchWildcard = string.match(patch, '%*')
+        if (minorFull ~= "" and minor == "") or (patchFull ~= "" and patch == "") then
+            sendWarnMessage('Trailing dot found in version "' .. str .. '".')
+            major, minor, patch = -1, 0, 0
+        end
         local t = {
             major = tonumber(major),
-            minor = tonumber(minor),
-            patch = tonumber(patch) or 0,
+            minor = minorWildcard and -2 or tonumber(minor) or 0,
+            patch = patchWildcard and -2 or tonumber(patch) or 0,
             rev = rev or '',
             beta = rev and rev:sub(1,1) == '~' and -1 or 0
         }
@@ -534,9 +552,9 @@ V_MT = {
 }
 V = setmetatable({}, V_MT)
 V_MT.__index = V
-function V.is_valid(v)
+function V.is_valid(v, allow_wildcard)
     if getmetatable(v) ~= V_MT then return false end
-    return(pcall(function() return V() <= v end))
+    return(pcall(function() return V() <= v and (allow_wildcard or (v.minor ~= -2 and v.patch ~= -2 and v.rev ~= '~')) end))
 end
 
 -- Flatten the given arrays of arrays into one, then
@@ -697,9 +715,9 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
     -- Calculate total rates of rarities
     local total_weight = 0
     for _, v in ipairs(available_rarities) do
-        v.mod = G.GAME[v.key:lower().."_mod"] or 1
+        v.mod = G.GAME[tostring(v.key):lower().."_mod"] or 1
         -- Should this fully override the v.weight calcs? 
-        if SMODS.Rarities[v.key].get_weight and type(SMODS.Rarities[v.key].get_weight) == "function" then
+        if SMODS.Rarities[v.key] and SMODS.Rarities[v.key].get_weight and type(SMODS.Rarities[v.key].get_weight) == "function" then
             v.weight = SMODS.Rarities[v.key]:get_weight(v.weight, SMODS.ObjectTypes[_pool_key])
         end
         v.weight = v.weight*v.mod
@@ -714,7 +732,7 @@ function SMODS.poll_rarity(_pool_key, _rand_key)
 	local weight_i = 0
 	for _, v in ipairs(available_rarities) do
 		weight_i = weight_i + v.weight
-		if rarity_poll > 1 - (weight_i) then
+		if rarity_poll < weight_i then
             if vanilla_rarities[v.key] then 
                 return vanilla_rarities[v.key]
             else

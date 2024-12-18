@@ -45,16 +45,17 @@ match_indent = true
 target = "functions/common_events.lua"
 pattern = '''if G.PROFILES[G.SETTINGS.profile].all_unlocked then return end'''
 position = "at"
-payload = '''if G.PROFILES[G.SETTINGS.profile].all_unlocked and (G.ACHIEVEMENTS and G.ACHIEVEMENTS[achievement_name] and not G.ACHIEVEMENTS[achievement_name].bypass_all_unlocked) then return end'''
+payload = '''if G.PROFILES[G.SETTINGS.profile].all_unlocked and (G.ACHIEVEMENTS and G.ACHIEVEMENTS[achievement_name] and not G.ACHIEVEMENTS[achievement_name].bypass_all_unlocked and SMODS.config.achievements < 3) or (SMODS.config.achievements < 3 and (G.GAME.seeded or G.GAME.challenge)) then return end'''
 match_indent = true
 
 # unlock_achievement() - fix event queue leaking
+# fixed smods achievements not unlocking due to above comment's memory leak fix
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
 pattern = '''if G.F_NO_ACHIEVEMENTS then return end'''
 position = "at"
-payload = '''if G.F_NO_ACHIEVEMENTS then return true end'''
+payload = '''if G.F_NO_ACHIEVEMENTS and not (G.ACHIEVEMENTS[achievement_name] or {}).mod then return true end'''
 match_indent = true
 
 [[patches]]
@@ -92,3 +93,25 @@ pattern = '''local t_s = Sprite(0,0,1.5*(_atlas.px/_atlas.py),1.5,_atlas, _c and
 position = "before"
 payload = '''if SMODS.Achievements[_achievement] then _c = SMODS.Achievements[_achievement]; _atlas = G.ASSET_ATLAS[_c.atlas] end'''
 match_indent = true
+
+# option to allow unlocks and discoveries in seeded runs
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = 'if G\.GAME\.seeded or G\.GAME\.challenge then return end'
+position = 'at'
+payload = 'if not SMODS.seeded_unlocks and (G.GAME.seeded or G.GAME.challenge) then return end'
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = 'if G\.GAME\.seeded then'
+position = 'at'
+payload = 'if false then'
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = 'if G\.GAME\.challenge then'
+position = 'at'
+payload = 'if false then'
