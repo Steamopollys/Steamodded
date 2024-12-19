@@ -13,14 +13,7 @@ target = "functions/UI_definitions.lua"
 pattern = '''local joker_options = {}'''
 position = "before"
 payload = '''
-local joker_pool = {}
-if G.ACTIVE_MOD_UI then
-    for _, v in ipairs(G.P_CENTER_POOLS.Joker) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then joker_pool[#joker_pool+1] = v end
-    end
-else
-    joker_pool = G.P_CENTER_POOLS.Joker
-end'''
+local joker_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Joker)'''
 match_indent = true
 
 # create_UIBox_your_collection_jokers()
@@ -61,14 +54,7 @@ target = "functions/button_callbacks.lua"
 pattern = '''for i = 1, 5 do'''
 position = "before"
 payload = '''
-local joker_pool = {}
-if G.ACTIVE_MOD_UI then
-    for _, v in ipairs(G.P_CENTER_POOLS.Joker) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then joker_pool[#joker_pool+1] = v end
-    end
-else
-    joker_pool = G.P_CENTER_POOLS.Joker
-end
+local joker_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Joker)
 '''
 match_indent = true
 
@@ -89,15 +75,7 @@ target = "functions/UI_definitions.lua"
 pattern = '''G.GAME.viewed_back = Back(G.P_CENTERS.b_red)'''
 position = "at"
 payload = '''
-local deck_pool = {}
-if G.ACTIVE_MOD_UI then
-    for _, v in ipairs(G.P_CENTER_POOLS.Back) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then deck_pool[#deck_pool+1] = v end
-    end
-else
-    deck_pool = G.P_CENTER_POOLS.Back
-end
-
+local deck_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Back)
 G.GAME.viewed_back = Back(G.ACTIVE_MOD_UI and deck_pool[1] or G.P_CENTERS.b_red)'''
 match_indent = true
 
@@ -130,14 +108,7 @@ target = "functions/button_callbacks.lua"
 pattern = '''G.GAME.viewed_back:change_to(G.P_CENTER_POOLS.Back[args.to_key])'''
 position = "at"
 payload = '''
-local deck_pool = {}
-if G.ACTIVE_MOD_UI then
-    for _, v in ipairs(G.P_CENTER_POOLS.Back) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then deck_pool[#deck_pool+1] = v end
-    end
-else
-    deck_pool = G.P_CENTER_POOLS.Back
-end
+local deck_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Back)
 G.GAME.viewed_back:change_to(deck_pool[args.to_key])'''
 match_indent = true
 
@@ -149,14 +120,7 @@ target = "functions/UI_definitions.lua"
 pattern = '''local booster_options = {}'''
 position = "before"
 payload = '''
-local booster_pool = {}
-if G.ACTIVE_MOD_UI then
-    for _, v in ipairs(G.P_CENTER_POOLS.Booster) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then booster_pool[#booster_pool+1] = v end
-    end
-else
-    booster_pool = G.P_CENTER_POOLS.Booster
-end'''
+local booster_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Booster)'''
 match_indent = true
 
 # create_UIBox_your_collection_boosters()
@@ -188,14 +152,7 @@ target = "functions/button_callbacks.lua"
 pattern = '''G.FUNCS.your_collection_booster_page = function(args)'''
 position = "after"
 payload = '''
-local booster_pool = {}
-if G.ACTIVE_MOD_UI then
-    for k, v in pairs(G.P_CENTER_POOLS.Booster) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then booster_pool[#booster_pool+1] = v end
-    end
-else
-    booster_pool = G.P_CENTER_POOLS.Booster
-end'''
+local booster_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Booster)'''
 match_indent = true
 
 # G.FUNCS.your_collection_booster_page
@@ -215,14 +172,7 @@ target = "functions/UI_definitions.lua"
 pattern = '''local voucher_options = {}'''
 position = "before"
 payload = '''
-local voucher_pool = {}
-if G.ACTIVE_MOD_UI then
-    for _, v in ipairs(G.P_CENTER_POOLS.Voucher) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then voucher_pool[#voucher_pool+1] = v end
-    end
-else
-    voucher_pool = G.P_CENTER_POOLS.Voucher
-end'''
+local voucher_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Voucher)'''
 match_indent = true
 
 # create_UIBox_your_collection_vouchers()
@@ -264,14 +214,7 @@ target = "functions/button_callbacks.lua"
 pattern = '''G.FUNCS.your_collection_voucher_page = function(args)'''
 position = "after"
 payload = '''
-local voucher_pool = {}
-if G.ACTIVE_MOD_UI then
-    for _, v in ipairs(G.P_CENTER_POOLS.Voucher) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then voucher_pool[#voucher_pool+1] = v end
-    end
-else
-    voucher_pool = G.P_CENTER_POOLS.Voucher
-end'''
+local voucher_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Voucher)'''
 match_indent = true
 
 # G.FUNCS.your_collection_voucher_page
@@ -281,56 +224,6 @@ target = "functions/button_callbacks.lua"
 pattern = '''local center = G.P_CENTER_POOLS["Voucher"][i+(j-1)*4 + (8*(args.cycle_config.current_option - 1))]'''
 position = "at"
 payload = '''local center = voucher_pool[i+(j-1)*4 + (8*(args.cycle_config.current_option - 1))]'''
-match_indent = true
-
-## Blinds Tab
-# create_UIBox_your_collection_blinds()
-[[patches]]
-[patches.regex]
-target = 'functions/UI_definitions.lua'
-pattern = '''(?<indent>[\t ]*)local blind_matrix = \{(\n.*){6}'''
-position = 'at'
-payload = '''
-local blind_matrix = {
-{},{},{}, {}, {}, {}
-}
-local blind_tab = {}
-if G.ACTIVE_MOD_UI then
-    for _, v in pairs(G.P_BLINDS) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then blind_tab[#blind_tab+1] = v end
-    end
-else
-    for k, v in pairs(G.P_BLINDS) do
-        blind_tab[#blind_tab+1] = v
-    end
-end'''
-line_prepend = '$indent'
-
-## Seal Tab
-# create_UIBox_your_collection_seals()
-[[patches]]
-[patches.pattern]
-target = "functions/UI_definitions.lua"
-pattern = '''for k, v in ipairs(G.P_CENTER_POOLS['Seal']) do'''
-position = "at"
-payload = '''
-local seal_pool = {}
-if G.ACTIVE_MOD_UI then
-    for _, v in pairs(G.P_CENTER_POOLS.Seal) do
-        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then seal_pool[#seal_pool+1] = v end
-    end
-else
-    seal_pool = G.P_CENTER_POOLS.Seal
-end
-for k, v in ipairs(seal_pool) do'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = "functions/UI_definitions.lua"
-pattern = '''local t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = exit or 'your_collection', snap_back = true, contents = {'''
-position = "at"
-payload = '''local t = create_UIBox_generic_options({ infotip = localize('ml_edition_seal_enhancement_explanation'), back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection', snap_back = true, contents = {'''
 match_indent = true
 
 # create_UIBox_your_collection()

@@ -797,3 +797,17 @@ function time(func, ...)
     local end_time = love.timer.getTime()
     return 1000*(end_time-start_time)
 end
+
+SMODS.collection_pool = function(_base_pool)
+    local pool = {}
+    if type(_base_pool) ~= 'table' then return pool end
+    local is_array = _base_pool[1]
+    local ipairs = is_array and ipairs or pairs
+    for _, v in ipairs(_base_pool) do
+        if (not G.ACTIVE_MOD_UI or v.mod == G.ACTIVE_MOD_UI) and not v.no_collection then
+            pool[#pool+1] = v
+        end
+    end
+    if not is_array then table.sort(pool, function(a,b) return a.order < b.order end) end
+    return pool
+end

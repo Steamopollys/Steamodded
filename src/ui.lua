@@ -548,20 +548,10 @@ end
 
 function create_UIBox_your_collection_stickers(exit)
 	local deck_tables = {}
-	local sticker_pool = {}
-	if G.ACTIVE_MOD_UI then
-		for _, v in pairs(SMODS.Stickers) do
-			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then sticker_pool[#sticker_pool+1] = v end
-		end
-	else
-		for _, v in pairs(SMODS.Stickers) do
-			sticker_pool[#sticker_pool+1] = v
-		end
-	end
+	local sticker_pool = SMODS.collection_pool(SMODS.Stickers)
 	local rows, cols = (#sticker_pool > 5 and 2 or 1), 5
 	local page = 0
 
-	sendInfoMessage("Creating collections", "CollectionUI")
 	G.your_collection = {}
 	for j = 1, rows do
 		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
@@ -576,8 +566,6 @@ function create_UIBox_your_collection_stickers(exit)
 				{n = G.UIT.O, config = {object = G.your_collection[j]}}}}
 		)
 	end
-
-	table.sort(sticker_pool, function(a, b) return (a.order or 100) < (b.order or 100) end)
 
 	local count = math.min(cols * rows, #sticker_pool)
 	local index = 1 + (rows * cols * page)
@@ -644,16 +632,7 @@ G.FUNCS.your_collection_stickers_page = function(args)
 	if not args or not args.cycle_config then
 		return
 	end
-	local sticker_pool = {}
-	if G.ACTIVE_MOD_UI then
-		for _, v in pairs(SMODS.Stickers) do
-			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then sticker_pool[#sticker_pool+1] = v end
-		end
-	else
-		for _, v in pairs(SMODS.Stickers) do
-			sticker_pool[#sticker_pool+1] = v
-		end
-	end
+	local sticker_pool = SMODS.collection_pool(SMODS.Stickers)
 	local rows = (#sticker_pool > 5 and 2 or 1)
 	local cols = 5
 	local page = args.cycle_config.current_option

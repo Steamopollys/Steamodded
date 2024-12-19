@@ -931,14 +931,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 )
             end
 
-            local consumable_pool = {}
-            if G.ACTIVE_MOD_UI then
-                for _, v in ipairs(G.P_CENTER_POOLS[self.key]) do
-                    if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then consumable_pool[#consumable_pool+1] = v end
-                end
-            else
-                consumable_pool = G.P_CENTER_POOLS[self.key]
-            end
+            local consumable_pool = SMODS.collection_pool(G.P_CENTER_POOLS[self.key])
 
             local sum = 0
             for j = 1, #G.your_collection do
@@ -2665,6 +2658,14 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
             SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'label')
+        end,
+        register = function(self)
+            if self.registered then
+                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+                return
+            end
+            SMODS.Sticker.super.register(self)
+            self.order = #self.obj_buffer
         end,
         inject = function(self)
             self.sticker_sprite = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)
