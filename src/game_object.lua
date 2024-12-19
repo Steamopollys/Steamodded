@@ -1707,9 +1707,14 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_vars = function(self)
             return { vars = { G.GAME.probabilities.normal } }
         end,
+        collection_loc_vars = function(self)
+            return { vars = { '1' }}
+        end,
         process_loc_text = function(self)
-            G.localization.descriptions.Blind['bl_wheel'].text[1] =
-                "#1#"..G.localization.descriptions.Blind['bl_wheel'].text[1]
+            local text = G.localization.descriptions.Blind[self.key].text[1]
+            if string.sub(text, 1, 3) ~= '#1#' then
+                G.localization.descriptions.Blind[self.key].text[1] = "#1#"..text
+            end
             SMODS.Blind.process_loc_text(self)
         end,
         get_loc_debuff_text = function() return G.GAME.blind.loc_debuff_text end,

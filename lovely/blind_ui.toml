@@ -140,3 +140,11 @@ pattern = '''
 position = 'at'
 payload = 'SMODS.juice_up_blind()'
 line_prepend = '$indent'
+
+# remove statically added 1 from The Wheel's collection description
+[[patches]]
+[patches.regex]
+target = 'functions/UI_definitions.lua'
+pattern = '''\(k ==1 and blind\.name == 'The Wheel' and '1' or ''\)\.\.'''
+position = 'at'
+payload = ''
