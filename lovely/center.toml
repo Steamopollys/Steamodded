@@ -444,3 +444,44 @@ local obj = self.config.center
 if obj.calc_dollar_bonus and type(obj.calc_dollar_bonus) == 'function' then
     return obj:calc_dollar_bonus(self)
 end'''
+
+# Card:draw()
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '--If the card has any edition/seal, add that here'
+position = 'before'
+match_indent = true
+payload = '''
+local center = self.config.center
+if center.draw and type(center.draw) == 'function' then
+	center:draw(self, layer)
+end
+if center.set == 'Default' or center.set == 'Enhanced' and not center.replace_base_card then
+	if not center.no_suit then
+		local suit = SMODS.Suits[self.base.suit] or {}
+		if suit.draw and type(suit.draw) == 'function' then
+			suit:draw(self, layer)
+		end
+	end
+	if not center.no_rank then
+		local rank = SMODS.Ranks[self.base.value] or {}
+		if rank.draw and type(rank.draw) == 'function' then
+			rank:draw(self, layer)
+		end
+	end
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = 'if self.seal then'
+position = 'at'
+match_indent = true
+payload = '''
+local seal = G.P_SEALS[self.seal or {}] or {}
+if type(seal.draw) == 'function' then
+	seal:draw(self, layer)
+elseif self.seal then
+'''
