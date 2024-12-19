@@ -63,6 +63,182 @@ payload = '''
 		if o then return unpack(o) end
 	end'''
 
+## Additonal trigger_effect contexts
+## calculate_joker
+# card.lua
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({remove_playing_cards = true, removed = destroyed_cards})
+        end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'remove_playing_cards', removed = destroyed_cards})'''
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({open_booster = true, card = self})
+            end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'open_booster', card = self})'''
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({buying_card = true, card = self})
+        end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'buying_card', card = self})'''
+
+# game.lua
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({first_hand_drawn = true})
+                    end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'first_hand_drawn'})'''
+
+# functions/button_callbacks.lua
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({using_consumeable = true, consumeable = card})
+      end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'using_consumeable', consumeable = card})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({selling_card = true, card = card})
+      end
+    end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'selling_card', card = card})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({buying_card = true, card = c1})
+          end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'buying_card', card = c1})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({ending_shop = true})
+      end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'ending_shop'})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({skipping_booster = true})
+    end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'skipping_booster'})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({skip_blind = true})
+          end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'skip_blind'})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({reroll_shop = true})
+            end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'reroll_shop'})'''
+
+# functions/state_events.lua
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.jokers.cards[i]:calculate_perishable()
+            end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'end_of_round', game_over = game_over})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.jokers.cards[i]:calculate_joker({setting_blind = true, blind = G.GAME.round_resets.blind})
+            end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'setting_blind', blind = G.GAME.round_resets.blind})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''card_eval_status_text(G.jokers.cards[j], 'jokers', nil, 1, nil, eval)
+                end
+            end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'discard', other_card =  G.hand.highlighted[i], full_hand = G.hand.highlighted})'''
+
+## eval_card
+# functions/state_events.lua
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''level_up_hand(G.jokers.cards[i], text)
+                end
+            end
+        end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'before_hand', full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''local effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true})'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'joker_main', joker =  _card, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''eval_card(G.jokers.cards[j], {cardarea = G.jokers, remove_playing_cards = true, removed = cards_destroyed})
+        end'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'remove_playing_cards', removed = cards_destroyed})'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''end
+    end
+
+    }) end
+'''
+position = 'after'
+match_indent = true
+payload = '''G.GAME.selected_back:trigger_effect({context = 'after', full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})'''
+
 ## Back:generate_UI
 
 # Localization with `unlock` field in loc_txt, same as for Jokers
