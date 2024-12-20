@@ -281,7 +281,7 @@ target = 'functions/common_events.lua'
 pattern = '--Fill all remaining info if this is the main desc'
 position = 'before'
 match_indent = true
-payload = '''if card_type == 'Default' or card_type == 'Enhanced' and not _c.replace_base_card then
+payload = '''if card_type == 'Default' or card_type == 'Enhanced' and not _c.replace_base_card and card and card.base then
 	if not _c.no_suit then
 		local suit = SMODS.Suits[card.base.suit] or {}
 		if suit.loc_vars and type(suit.loc_vars) == 'function' then
