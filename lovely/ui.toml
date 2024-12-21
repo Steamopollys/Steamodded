@@ -357,3 +357,34 @@ target = 'functions/misc_functions.lua'
 position = 'after'
 pattern = 'part\.control\.s and tonumber\(part\.control\.s\)'
 payload = ' or args.scale '
+
+# set_discover_tallies()
+# exclude no_collection objects
+[[patches]]
+[patches.pattern]
+target = 'functions/misc_functions.lua'
+match_indent = true
+position = 'at'
+pattern = "if not v.omit then"
+payload = "if not v.omit and not v.no_collection then"
+
+[[patches]]
+[patches.regex]
+target = 'functions/misc_functions.lua'
+line_prepend = '$indent'
+position = 'at'
+pattern = '(?<indent>[\t ]*)(?<start>for _, v in pairs\(G\.P_[BT].*)(?<rest>(\n.*){7})'
+payload = '''$start
+    if not v.no_collection then
+    $rest
+end
+'''
+
+#set_alerts()
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+match_indent = true
+position = 'at'
+pattern = "if v.discovered and not v.alerted then"
+payload = "if v.discovered and not v.alerted and not v.no_collection then"

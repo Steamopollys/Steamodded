@@ -843,7 +843,7 @@ function modsCollectionTally(pool, set)
 	local obj_tally = {tally = 0, of = 0}
 
 	for _, v in pairs(pool) do
-		if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then
+		if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id and not v.no_collection then
 			if set then
 				if v.set and v.set == set then
 					obj_tally.of = obj_tally.of+1
