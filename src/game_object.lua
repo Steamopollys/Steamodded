@@ -292,7 +292,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 self.font = G.FONTS[type(self.font) == 'number' and self.font or 1] or G.FONTS[1]
             end
             G.LANGUAGES[self.key] = self
-            if self.key == G.SETTINGS.language then G.LANG = self end
+            if self.key == (G.SETTINGS.real_language or G.SETTINGS.language) then G.LANG = self end
         end,
     }
 

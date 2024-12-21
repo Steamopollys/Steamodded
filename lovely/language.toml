@@ -30,6 +30,25 @@ position = 'at'
 payload = "self.localization = assert(loadstring(love.filesystem.read('localization/'..G.SETTINGS.language..'.lua') or love.filesystem.read('localization/en-us.lua')))()"
 match_indent = true
 
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = "self.LANG = self.LANGUAGES[self.SETTINGS.language] or self.LANGUAGES['en-us']"
+position = 'at'
+payload = "self.LANG = self.LANGUAGES[self.SETTINGS.real_language or self.SETTINGS.language] or self.LANGUAGES['en-us']"
+match_indent = true
+
+# G.FUNCS.change_lang
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = "G.SETTINGS.language = lang.key"
+position = 'at'
+payload = """G.SETTINGS.language = lang.loc_key or lang.key
+G.SETTINGS.real_language = lang.key"""
+match_indent = true
+
 # G.FUNCS.warn_lang (wtf)
 [[patches]]
 [patches.pattern]
