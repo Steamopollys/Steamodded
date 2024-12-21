@@ -328,7 +328,10 @@ function SMODS.create_card(t)
     if t.seal then _card:set_seal(t.seal) end
     if t.stickers then 
         for i, v in ipairs(t.stickers) do
-            if SMODS.Stickers[v]:should_apply(_card, t.area, true) then SMODS.Stickers[v]:apply(_card, true) end
+            local s = SMODS.Stickers[v]
+            if not s or type(s.should_apply) ~= 'function' or s:should_apply(_card, t.area, true) then
+                SMODS.Stickers[v]:apply(_card, true)
+            end
         end
     end
 
