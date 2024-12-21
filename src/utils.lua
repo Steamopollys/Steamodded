@@ -177,7 +177,7 @@ end
 
 function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
     local target = (type(loc_txt) == 'table') and
-    (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
+    ((G.SETTINGS.real_language and loc_txt[G.SETTINGS.real_language]) or loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
     if key and (type(target) == 'table') then target = target[key] end
     if not (type(target) == 'string' or target and next(target)) then return end
     ref_table[ref_value] = target
@@ -219,6 +219,7 @@ end
 function SMODS.handle_loc_file(path)
     local dir = path .. 'localization/'
     handle_loc_file(dir, G.SETTINGS.language, true)
+    if G.SETTINGS.real_language then handle_loc_file(dir, G.SETTINGS.real_language, true) end
     handle_loc_file(dir, 'default')
     handle_loc_file(dir, 'en-us')
 end

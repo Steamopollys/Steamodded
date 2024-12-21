@@ -349,11 +349,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
-                (self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
+                ((G.SETTINGS.real_language and self.path[G.SETTINGS.real_language]) or self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
             if file_path == 'DEFAULT' then return end
             -- language specific sprites override fully defined sprites only if that language is set
-            if self.language and not (G.SETTINGS.language == self.language) then return end
-            if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
+            if self.language and G.SETTINGS.language ~= self.language and G.SETTINGS.real_language ~= self.language then return end
+            if not self.language and (self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] or self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.real_language)]) then return end
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
             local file_data = assert(NFS.newFileData(self.full_path),
@@ -425,7 +425,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
-                (self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
+                ((G.SETTINGS.real_language and self.path[G.SETTINGS.real_language]) or self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
             if file_path == 'DEFAULT' then return end
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/sounds/' .. file_path
@@ -584,7 +584,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         process_loc_text = function(self)
             -- empty loc_txt indicates there are existing values that shouldn't be changed or it isn't necessary
             if not self.loc_txt or not next(self.loc_txt) then return end
-            local target = self.loc_txt[G.SETTINGS.language] or self.loc_txt['default'] or self.loc_txt['en-us'] or
+            local target = (G.SETTINGS.real_language and self.loc_txt[G.SETTINGS.real_language]) or self.loc_txt[G.SETTINGS.language] or self.loc_txt['default'] or self.loc_txt['en-us'] or
                 self.loc_txt
             local applied_text = "{s:0.8}" .. localize('b_applies_stakes_1')
             local any_applied
@@ -2315,12 +2315,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if G.localization.misc.collabs[self.suit] == nil then
                 G.localization.misc.collabs[self.suit] = {["1"] = 'Default'}
             end
-
-            if self.loc_txt and self.loc_txt[G.SETTINGS.language] then
-                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = self.loc_txt[G.SETTINGS.language]
-            elseif G.localization.misc.collabs[self.suit][self.suit_index .. ''] == nil then
-                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = self.key
+            if not self.loc_txt then
+                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = G.localization.misc.collabs[self.suit][self.suit_index .. ''] or self.key
+                return
             end
+            SMODS.process_loc_text(G.localization.misc.collabs[self.suit], self.suit_index..'', self.loc_txt)
         end,
         register = function (self)
             if self.registered then
