@@ -811,7 +811,9 @@ function SMODS.get_enhancements(card, extra_only)
         local eval = G.jokers.cards[i]:calculate_joker({other_card = card, check_enhancement = true})
         if eval then 
             for k, _ in pairs(eval) do
-                enhancements[k] = true
+                if G.P_CENTERS[k] then
+                    enhancements[k] = true
+                end
             end
         end
     end

@@ -50,14 +50,30 @@ target = "card.lua"
 pattern = "if context.scoring_hand[i].ability.name ~= 'Wild Card' then"
 match_indent = true
 position = "at"
-payload = "if context.scoring_hand[i].ability.name ~= 'Wild Card' and not context.scoring_hand[i].config.center.any_suit then"
+payload = '''local is_wild = false
+for k, _ in pairs(SMODS.get_enhancements(context.scoring_hand[i])) do
+  print(k)
+  if k == "m_wild" or G.P_CENTERS[k].any_suit then
+    is_wild = true
+    break
+  end
+end
+if not is_wild then'''
+
 [[patches]]
 [patches.pattern]
 target = "card.lua"
 pattern = "if context.scoring_hand[i].ability.name == 'Wild Card' then"
 match_indent = true
 position = "at"
-payload = "if context.scoring_hand[i].ability.name == 'Wild Card' or context.scoring_hand[i].config.center.any_suit then"
+payload = '''local is_wild = false
+for k, _ in pairs(SMODS.get_enhancements(context.scoring_hand[i])) do
+  if k == "m_wild" or G.P_CENTERS[k].any_suit then
+    is_wild = true
+    break
+  end
+end
+if is_wild then'''
 
 # Card:get_suit()
 [[patches]]
@@ -73,14 +89,28 @@ target = "card.lua"
 pattern = 'if self.ability.name == "Wild Card" then'
 match_indent = true
 position = "at"
-payload = "if self.ability.name == 'Wild Card' or self.config.center.any_suit then"
+payload = '''local is_wild = false
+for k, _ in pairs(SMODS.get_enhancements(self)) do
+  if k == "m_wild" or G.P_CENTERS[k].any_suit then
+    is_wild = true
+    break
+  end
+end
+if is_wild then'''
 [[patches]]
 [patches.pattern]
 target = "card.lua"
 pattern = 'if self.ability.name == "Wild Card" and not self.debuff then'
 match_indent = true
 position = "at"
-payload = "if (self.ability.name == 'Wild Card' or self.config.center.any_suit) and not self.debuff then"
+payload = '''local is_wild = false
+for k, _ in pairs(SMODS.get_enhancements(self)) do
+  if k == "m_wild" or G.P_CENTERS[k].any_suit then
+    is_wild = true
+    break
+  end
+end
+if is_wild and not self.debuff then'''
 
 # check_for_unlock
 [[patches]]
