@@ -40,8 +40,8 @@ local in_pool_func =
 			local initial_deck = args and args.starting_deck or false
 			
 			return not (
-				type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = initial_deck})
-				or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = initial_deck})
+				type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = initial_deck, suit = c.suit})
+				or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = initial_deck, rank = c.value})
 			)
 		end
 if in_pool_func then
