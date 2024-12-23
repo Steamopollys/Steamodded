@@ -554,4 +554,22 @@ match_indent = true
 position = 'before'
 pattern = '--Set up the render window and the stage for the splash screen, then enter the gameloop with :update'
 payload = '''NFS.setWorkingDirectory(cwd)
-'''
+''' 
+
+[[patches]]
+[patches.pattern]
+target = "main.lua"
+pattern = '''if os == 'OS X' or os == 'Windows' then'''
+position = "at"
+payload = '''if os == 'OS X' or os == 'Windows' or os == 'Linux' then'''
+overwrite = true
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "main.lua"
+pattern = '''if os == 'OS X' then'''
+position = "at"
+payload = '''if os == 'OS X' or os == 'Linux' then'''
+overwrite = true
+match_indent = true
