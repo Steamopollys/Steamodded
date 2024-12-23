@@ -1446,7 +1446,8 @@ function Card:set_edition(edition, immediate, silent)
 				G.consumeables.config.card_limit = G.consumeables.config.card_limit + v
 			elseif self.ability.set == 'Joker' then
 				G.jokers.config.card_limit = G.jokers.config.card_limit + v
-			elseif self.area == G.hand and not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) then
+			elseif self.area == G.hand then
+				local is_in_pack = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK)
 				G.E_MANAGER:add_event(Event({
 					trigger = 'immediate',
 					func = function()
@@ -1454,7 +1455,9 @@ function Card:set_edition(edition, immediate, silent)
 							G.hand.config.real_card_limit = G.hand.config.real_card_limit + v
 						end
 						G.hand.config.card_limit = G.hand.config.card_limit + v
-						G.FUNCS.draw_from_deck_to_hand(v)
+						if not is_in_pack then
+							G.FUNCS.draw_from_deck_to_hand(v)
+						end
 						return true
 					end
 				}))
