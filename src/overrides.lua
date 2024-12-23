@@ -103,17 +103,8 @@ function create_UIBox_your_collection_blinds(exit)
 		)
 	end
 
-	local blind_tab = {}
-	for k, v in pairs(G.P_BLINDS) do
-		if not G.ACTIVE_MOD_UI or v.mod == G.ACTIVE_MOD_UI then
-			blind_tab[#blind_tab + 1] = v
-		end
-	end
+	local blind_tab = SMODS.collection_pool(G.P_BLINDS)
 	local blinds_amt = #blind_tab
-
-	table.sort(blind_tab, function(a, b)
-		return a.order < b.order
-	end)
 
 	local this_page = {}
 	for i, v in ipairs(blind_tab) do
@@ -297,16 +288,7 @@ function G.FUNCS.your_collection_blinds_page(args)
 	local cols = 5
 	local rows = 6
 	local page = args.cycle_config.current_option
-	local blind_tab = {}
-	for k, v in pairs(G.P_BLINDS) do
-		if not G.ACTIVE_MOD_UI or v.mod == G.ACTIVE_MOD_UI then
-			blind_tab[#blind_tab + 1] = v
-		end
-	end
-
-	table.sort(blind_tab, function(a, b)
-		return a.order < b.order
-	end)
+	local blind_tab = SMODS.collection_pool(G.P_BLINDS)
 
 	local this_page = {}
 	for i, v in ipairs(blind_tab) do
@@ -413,23 +395,10 @@ function create_UIBox_your_collection_tags_content(page)
 	local tag_matrix = {}
 	local rows = 4
 	local cols = 6
-	local tag_tab = {}
-	local tag_pool = {}
-	if G.ACTIVE_MOD_UI then
-		for k, v in pairs(G.P_TAGS) do
-			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then tag_pool[k] = v end
-		end
-	else
-		tag_pool = G.P_TAGS
-	end
-	for k, v in pairs(tag_pool) do
-		tag_tab[#tag_tab + 1] = v
-	end
+	local tag_tab = SMODS.collection_pool(G.P_TAGS)
 	for i = 1, math.ceil(rows) do
 		table.insert(tag_matrix, {})
 	end
-
-	table.sort(tag_tab, function(a, b) return a.order < b.order end)
 
 	local tags_to_be_alerted = {}
 	local row, col = 1, 1
@@ -1217,14 +1186,7 @@ end
 --#region editions
 function create_UIBox_your_collection_editions(exit)
 	local deck_tables = {}
-	local edition_pool = {}
-	if G.ACTIVE_MOD_UI then
-		for _, v in pairs(G.P_CENTER_POOLS.Edition) do
-			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then edition_pool[#edition_pool+1] = v end
-		end
-	else
-		edition_pool = G.P_CENTER_POOLS.Edition
-	end
+	local edition_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Edition)
 	local rows, cols = (#edition_pool > 5 and 2 or 1), 5
 	local page = 0
 
@@ -1312,14 +1274,7 @@ G.FUNCS.your_collection_editions_page = function(args)
 	if not args or not args.cycle_config then
 		return
 	end
-	local edition_pool = {}
-	if G.ACTIVE_MOD_UI then
-		for _, v in ipairs(G.P_CENTER_POOLS.Edition) do
-			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then edition_pool[#edition_pool+1] = v end
-		end
-	else
-		edition_pool = G.P_CENTER_POOLS.Edition
-	end
+	local edition_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Edition)
 	local rows = (#edition_pool > 5 and 2 or 1)
 	local cols = 5
 	local page = args.cycle_config.current_option
@@ -1638,15 +1593,7 @@ function create_UIBox_your_collection_enhancements(exit)
 	local deck_tables = {}
 	local rows, cols = 2, 4
 	local page = 0
-	local enhancement_pool = {}
-	if G.ACTIVE_MOD_UI then
-		for _, v in ipairs(G.P_CENTER_POOLS.Enhanced) do
-			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then enhancement_pool[#enhancement_pool+1] = v end
-		end
-	else
-		enhancement_pool = G.P_CENTER_POOLS.Enhanced
-	end
-
+	local enhancement_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Enhanced)
 	G.your_collection = {}
 	for j = 1, rows do
 		G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 4.25 * G.CARD_W, 1.03 * G.CARD_H,
@@ -1733,14 +1680,7 @@ G.FUNCS.your_collection_enhancements_page = function(args)
 	local rows = 2
 	local cols = 4
 	local page = args.cycle_config.current_option
-	local enhancement_pool = {}
-	if G.ACTIVE_MOD_UI then
-		for _, v in ipairs(G.P_CENTER_POOLS.Enhanced) do
-			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then enhancement_pool[#enhancement_pool+1] = v end
-		end
-	else
-		enhancement_pool = G.P_CENTER_POOLS.Enhanced
-	end
+	local enhancement_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Enhanced)
 	if page > math.ceil(#enhancement_pool / (rows * cols)) then
 		page = page - math.ceil(#enhancement_pool / (rows * cols))
 	end
@@ -1778,14 +1718,7 @@ end
 --#region seals ui
 function create_UIBox_your_collection_seals(exit)
 	local deck_tables = {}
-	local seal_pool = {}
-	if G.ACTIVE_MOD_UI then
-		for _, v in pairs(G.P_CENTER_POOLS.Seal) do
-			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then seal_pool[#seal_pool + 1] = v end
-		end
-	else
-		seal_pool = G.P_CENTER_POOLS.Seal
-	end
+	local seal_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Seal)
 	local rows, cols = (#seal_pool > 5 and 2 or 1), 5
 	local page = 0
 
@@ -1872,14 +1805,7 @@ G.FUNCS.your_collection_seals_page = function(args)
 	if not args or not args.cycle_config then
 		return
 	end
-	local seal_pool = {}
-	if G.ACTIVE_MOD_UI then
-		for _, v in pairs(G.P_CENTER_POOLS.Seal) do
-			if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then seal_pool[#seal_pool + 1] = v end
-		end
-	else
-		seal_pool = G.P_CENTER_POOLS.Seal
-	end
+	local seal_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Seal)
 	local rows, cols = (#seal_pool > 5 and 2 or 1), 5
 	local page = args.cycle_config.current_option
 	if page > math.ceil(#seal_pool / (rows * cols)) then

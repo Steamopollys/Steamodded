@@ -31,11 +31,11 @@ match_indent = true
 overwrite = false
 
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = 'engine/controller.lua'
-pattern = 'if key == "r" and not G.SETTINGS.paused then'
+pattern = 'if key == "r"'
 position = 'at'
-match_indent = true
+line_prepend = '$indent'
 payload = '''
 if key == 'm' then
 	if self.held_key_times[key] > 1.1 then
@@ -44,5 +44,4 @@ if key == 'm' then
 	else
 		self.held_key_times[key] = self.held_key_times[key] + dt
 	end
-elseif key == "r" and not G.SETTINGS.paused then
-'''
+elseif key == "r"'''

@@ -33,12 +33,7 @@ local function set_mods_dir()
         if lovely_mod_dir:sub(1, #love_dir) == love_dir then
             -- relative path from love_dir
             SMODS.MODS_DIR = lovely_mod_dir:sub(#love_dir+2)
-            if nfs_success then
-                -- make sure NFS behaves the same as love.filesystem.
-                -- not perfect: NFS won't read from both getSaveDirectory()
-                -- and getSourceBaseDirectory()
-                NFS.setWorkingDirectory(love_dir)
-            end
+            NFS.setWorkingDirectory(love_dir)
             return
         end
     end

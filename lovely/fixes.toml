@@ -572,3 +572,69 @@ pattern = """G.GAME.current_round.reroll_cost = math.max(0, G.GAME.current_round
 position = 'at'
 match_indent = true
 payload = """G.GAME.current_round.reroll_cost = math.max(0, G.GAME.current_round.reroll_cost - center_table.extra)"""
+
+
+# Add h_chips as a viable hand effect
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''card_eval_status_text(G.hand.cards[i], 'h_mult', effects[ii].h_mult, percent)
+                        end'''
+position = 'after'
+match_indent = true
+payload = '''
+if effects[ii].h_chips then 
+    if effects[ii].card then juice_card(effects[ii].card) end
+    hand_chips = mod_chips(hand_chips + effects[ii].h_chips)
+    update_hand_text({delay = 0}, {chips = hand_chips})
+    card_eval_status_text(effects[ii].card, 'chips', effects[ii].h_chips, percent)
+end
+'''
+
+# Fixes Steam API not loading on unix
+[[patches]]
+[patches.pattern]
+target = 'main.lua'
+match_indent = true
+position = 'after'
+pattern = '--To control when steam communication happens, make sure to send updates to steam as little as possible'
+payload = '''local cwd = NFS.getWorkingDirectory()
+NFS.setWorkingDirectory(love.filesystem.getSourceBaseDirectory())
+''' 
+
+[[patches]]
+[patches.pattern]
+target = 'main.lua'
+match_indent = true
+position = 'before'
+pattern = '--Set up the render window and the stage for the splash screen, then enter the gameloop with :update'
+payload = '''NFS.setWorkingDirectory(cwd)
+''' 
+
+[[patches]]
+[patches.pattern]
+target = "main.lua"
+pattern = '''if os == 'OS X' or os == 'Windows' then'''
+position = "at"
+payload = '''if os == 'OS X' or os == 'Windows' or os == 'Linux' then'''
+overwrite = true
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "main.lua"
+pattern = '''if os == 'OS X' then'''
+position = "at"
+payload = '''if os == 'OS X' or os == 'Linux' then'''
+overwrite = true
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "main.lua"
+pattern = "st = require 'luasteam'"
+position = "at"
+payload = """local success, _st = pcall(require, 'luasteam')
+if success then st = _st end"""
+overwrite = true
+match_indent = true

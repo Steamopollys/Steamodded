@@ -98,7 +98,7 @@ payload = '''
 for k, v in pairs(SMODS.Stickers) do
     if self.ability[v.key] then
         if v and v.draw and type(v.draw) == 'function' then
-            v:draw(self)
+            v:draw(self, layer)
         else
             G.shared_stickers[v.key].role.draw_major = self
             G.shared_stickers[v.key]:draw_shader('dissolve', nil, nil, nil, self.children.center)

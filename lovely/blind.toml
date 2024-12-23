@@ -186,14 +186,14 @@ end'''
 [[patches]]
 [patches.pattern]
 target = 'blind.lua'
-pattern = 'return disp_text'
-position = 'before'
+pattern = 'function Blind:get_loc_debuff_text()'
+position = 'after'
 match_indent = true
 payload = '''
-local obj = self.config.blind
-if obj.get_loc_debuff_text and type(obj.get_loc_debuff_text) == 'function' then
-	return obj:get_loc_debuff_text()
-end'''
+	local obj = self.config.blind
+	if obj.get_loc_debuff_text and type(obj.get_loc_debuff_text) == 'function' then
+		return obj:get_loc_debuff_text()
+	end'''
 
 # Blind:set_text()
 [[patches]]

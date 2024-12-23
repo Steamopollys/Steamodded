@@ -292,7 +292,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 self.font = G.FONTS[type(self.font) == 'number' and self.font or 1] or G.FONTS[1]
             end
             G.LANGUAGES[self.key] = self
-            if self.key == G.SETTINGS.language then G.LANG = self end
+            if self.key == (G.SETTINGS.real_language or G.SETTINGS.language) then G.LANG = self end
         end,
     }
 
@@ -349,11 +349,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
-                (self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
+                ((G.SETTINGS.real_language and self.path[G.SETTINGS.real_language]) or self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
             if file_path == 'DEFAULT' then return end
             -- language specific sprites override fully defined sprites only if that language is set
-            if self.language and not (G.SETTINGS.language == self.language) then return end
-            if not self.language and self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] then return end
+            if self.language and G.SETTINGS.language ~= self.language and G.SETTINGS.real_language ~= self.language then return end
+            if not self.language and (self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.language)] or self.obj_table[('%s_%s'):format(self.key, G.SETTINGS.real_language)]) then return end
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/' .. G.SETTINGS.GRAPHICS.texture_scaling .. 'x/' .. file_path
             local file_data = assert(NFS.newFileData(self.full_path),
@@ -425,7 +425,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         inject = function(self)
             local file_path = type(self.path) == 'table' and
-                (self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
+                ((G.SETTINGS.real_language and self.path[G.SETTINGS.real_language]) or self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
             if file_path == 'DEFAULT' then return end
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/sounds/' .. file_path
@@ -584,7 +584,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         process_loc_text = function(self)
             -- empty loc_txt indicates there are existing values that shouldn't be changed or it isn't necessary
             if not self.loc_txt or not next(self.loc_txt) then return end
-            local target = self.loc_txt[G.SETTINGS.language] or self.loc_txt['default'] or self.loc_txt['en-us'] or
+            local target = (G.SETTINGS.real_language and self.loc_txt[G.SETTINGS.real_language]) or self.loc_txt[G.SETTINGS.language] or self.loc_txt['default'] or self.loc_txt['en-us'] or
                 self.loc_txt
             local applied_text = "{s:0.8}" .. localize('b_applies_stakes_1')
             local any_applied
@@ -931,14 +931,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 )
             end
 
-            local consumable_pool = {}
-            if G.ACTIVE_MOD_UI then
-                for _, v in ipairs(G.P_CENTER_POOLS[self.key]) do
-                    if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then consumable_pool[#consumable_pool+1] = v end
-                end
-            else
-                consumable_pool = G.P_CENTER_POOLS[self.key]
-            end
+            local consumable_pool = SMODS.collection_pool(G.P_CENTER_POOLS[self.key])
 
             local sum = 0
             for j = 1, #G.your_collection do
@@ -1166,8 +1159,8 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 target.text_colour = res.text_colour
             end
             if desc_nodes == full_UI_table.main and not full_UI_table.name then
-                full_UI_table.name = localize { type = 'name', set = target.set, key = target.key, nodes = full_UI_table.name }
-            elseif desc_nodes ~= full_UI_table.main and not desc_nodes.name then
+                full_UI_table.name = self.set == 'Enhanced' and 'temp_value' or localize { type = 'name', set = target.set, key = target.key, nodes = full_UI_table.name }
+            elseif desc_nodes ~= full_UI_table.main and not desc_nodes.name and self.set ~= 'Enhanced' then
                 desc_nodes.name = localize{type = 'name_text', key = target.key, set = target.set } 
             end
             if specific_vars and specific_vars.debuffed and not res.replace_debuff then
@@ -1707,9 +1700,14 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         loc_vars = function(self)
             return { vars = { G.GAME.probabilities.normal } }
         end,
+        collection_loc_vars = function(self)
+            return { vars = { '1' }}
+        end,
         process_loc_text = function(self)
-            G.localization.descriptions.Blind['bl_wheel'].text[1] =
-                "#1#"..G.localization.descriptions.Blind['bl_wheel'].text[1]
+            local text = G.localization.descriptions.Blind[self.key].text[1]
+            if string.sub(text, 1, 3) ~= '#1#' then
+                G.localization.descriptions.Blind[self.key].text[1] = "#1#"..text
+            end
             SMODS.Blind.process_loc_text(self)
         end,
         get_loc_debuff_text = function() return G.GAME.blind.loc_debuff_text end,
@@ -2317,12 +2315,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if G.localization.misc.collabs[self.suit] == nil then
                 G.localization.misc.collabs[self.suit] = {["1"] = 'Default'}
             end
-
-            if self.loc_txt and self.loc_txt[G.SETTINGS.language] then
-                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = self.loc_txt[G.SETTINGS.language]
-            elseif G.localization.misc.collabs[self.suit][self.suit_index .. ''] == nil then
-                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = self.key
+            if not self.loc_txt then
+                G.localization.misc.collabs[self.suit][self.suit_index .. ''] = G.localization.misc.collabs[self.suit][self.suit_index .. ''] or self.key
+                return
             end
+            SMODS.process_loc_text(G.localization.misc.collabs[self.suit], self.suit_index..'', self.loc_txt)
         end,
         register = function (self)
             if self.registered then
@@ -2660,6 +2657,14 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         process_loc_text = function(self)
             SMODS.process_loc_text(G.localization.descriptions.Other, self.key, self.loc_txt)
             SMODS.process_loc_text(G.localization.misc.labels, self.key, self.loc_txt, 'label')
+        end,
+        register = function(self)
+            if self.registered then
+                sendWarnMessage(('Detected duplicate register call on object %s'):format(self.key), self.set)
+                return
+            end
+            SMODS.Sticker.super.register(self)
+            self.order = #self.obj_buffer
         end,
         inject = function(self)
             self.sticker_sprite = Sprite(0, 0, G.CARD_W, G.CARD_H, G.ASSET_ATLAS[self.atlas], self.pos)

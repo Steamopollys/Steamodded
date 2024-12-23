@@ -177,7 +177,7 @@ end
 
 function SMODS.process_loc_text(ref_table, ref_value, loc_txt, key)
     local target = (type(loc_txt) == 'table') and
-    (loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
+    ((G.SETTINGS.real_language and loc_txt[G.SETTINGS.real_language]) or loc_txt[G.SETTINGS.language] or loc_txt['default'] or loc_txt['en-us']) or loc_txt
     if key and (type(target) == 'table') then target = target[key] end
     if not (type(target) == 'string' or target and next(target)) then return end
     ref_table[ref_value] = target
@@ -197,7 +197,7 @@ local function parse_loc_file(file_name, force)
             -- force mode is on and the value is not a table,
             -- change/add the thing
             -- brings back compatibility with language patching mods
-            if not ref_table[k] or (force and ((type(v) ~= 'table') or type(v[1]) == 'string')) then
+            if (not ref_table[k] and type(k) ~= 'number') or (force and ((type(v) ~= 'table') or type(v[1]) == 'string')) then
                 ref_table[k] = v
             else
                 recurse(v, ref_table[k])
@@ -219,6 +219,7 @@ end
 function SMODS.handle_loc_file(path)
     local dir = path .. 'localization/'
     handle_loc_file(dir, G.SETTINGS.language, true)
+    if G.SETTINGS.real_language then handle_loc_file(dir, G.SETTINGS.real_language, true) end
     handle_loc_file(dir, 'default')
     handle_loc_file(dir, 'en-us')
 end
@@ -327,7 +328,10 @@ function SMODS.create_card(t)
     if t.seal then _card:set_seal(t.seal) end
     if t.stickers then 
         for i, v in ipairs(t.stickers) do
-            if SMODS.Stickers[v]:should_apply(_card, t.area, true) then SMODS.Stickers[v]:apply(_card, true) end
+            local s = SMODS.Stickers[v]
+            if not s or type(s.should_apply) ~= 'function' or s:should_apply(_card, t.area, true) then
+                SMODS.Stickers[v]:apply(_card, true)
+            end
         end
     end
 
@@ -824,4 +828,18 @@ function SMODS.has_enhancement(card, key)
         if eval and type(eval) == 'table' and eval[key] then return true end
     end
     return false
+end
+
+SMODS.collection_pool = function(_base_pool)
+    local pool = {}
+    if type(_base_pool) ~= 'table' then return pool end
+    local is_array = _base_pool[1]
+    local ipairs = is_array and ipairs or pairs
+    for _, v in ipairs(_base_pool) do
+        if (not G.ACTIVE_MOD_UI or v.mod == G.ACTIVE_MOD_UI) and not v.no_collection then
+            pool[#pool+1] = v
+        end
+    end
+    if not is_array then table.sort(pool, function(a,b) return a.order < b.order end) end
+    return pool
 end
