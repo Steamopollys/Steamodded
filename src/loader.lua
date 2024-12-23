@@ -18,6 +18,7 @@ function loadMods(modsDirectory)
     }
     SMODS.mod_priorities = {}
     SMODS.mod_list = {}
+    SMODS.provided_mods = {}
     -- for legacy header support
     local header_components = {
         name          = { pattern = '%-%-%- MOD_NAME: ([^\n]+)\n', required = true },
@@ -159,7 +160,19 @@ function loadMods(modsDirectory)
         __ = { check = function(mod)
             if SMODS.Mods[mod.id] then error('dupe') end
         end},
-        provides = { type = 'table' }
+        provides = { type = 'table', check = function(mod, t)
+            t = t or {}
+            for _,v in pairs(t) do
+                v = v:gsub('%s', '')
+                local id = v:match '^([^(%s]+)'
+                local ver = v:match '%((.-)%)'
+                ver = (ver and V(ver):is_valid()) and ver or mod.version
+                if id and ver then 
+                    SMODS.provided_mods[id] = SMODS.provided_mods[id] or {}
+                    table.insert(SMODS.provided_mods[id], { version = ver, mod = mod })
+                end
+            end
+        end}
         
     }
     
@@ -251,9 +264,6 @@ function loadMods(modsDirectory)
                         SMODS.dump_loc = {
                             path = mod.path,
                         }
-                    end
-                    for _,v in ipairs(mod.provides or {}) do
-                        SMODS.Mods[v] = SMODS.Mods[v] or mod
                     end
                     SMODS.Mods[mod.id] = mod
                     SMODS.mod_priorities[mod.priority] = SMODS.mod_priorities[mod.priority] or {}
@@ -458,6 +468,19 @@ function loadMods(modsDirectory)
                             end
                         end
                         if fulfilled then y.fulfilled = true end
+                    else
+                        for _, provided in ipairs(SMODS.provided_mods[id] or {}) do
+                            if provided.mod ~= mod and check_dependencies(provided.mod, seen) then
+                                fulfilled = true
+                                local dep_ver = V(provided.version)
+                                for _, v in ipairs(y) do
+                                    if not v.op(dep_ver, v.ver) then
+                                        fulfilled = false
+                                    end
+                                end
+                                if fulfilled then y.fulfilled = true; y.provided = provided end
+                            end
+                        end
                     end
                 end
                 if not fulfilled then
@@ -477,6 +500,19 @@ function loadMods(modsDirectory)
                             break
                         end
                     end
+                else
+                    for _, provided in ipairs(SMODS.provided_mods[id] or {}) do
+                        if provided.mod ~= mod and check_dependencies(provided.mod, seen) then
+                            conflict = true
+                            local dep_ver = V(provided.version)
+                            for _, v in ipairs(y) do
+                                if not v.op(dep_ver, v.ver) then
+                                    conflict = false
+                                    break
+                                end
+                            end
+                        end
+                    end
                 end
                 if conflict then
                     can_load = false
@@ -494,7 +530,13 @@ function loadMods(modsDirectory)
         end
         for _, x in ipairs(mod.dependencies or {}) do
             for _, y in ipairs(x) do
-                if y.fulfilled then SMODS.Mods[y.id].can_load = true end
+                if y.fulfilled then 
+                    if y.provided then
+                        y.provided.mod.can_load = true
+                    else
+                        SMODS.Mods[y.id].can_load = true 
+                    end
+                end
             end 
         end
         return true

@@ -815,3 +815,13 @@ SMODS.collection_pool = function(_base_pool)
     if not is_array then table.sort(pool, function(a,b) return a.order < b.order end) end
     return pool
 end
+
+SMODS.find_mod = function(id)
+    local ret = {}
+    local mod = SMODS.Mods[id] or {}
+    if mod.can_load then ret[#ret+1] = mod end
+    for _,v in ipairs(SMODS.provided_mods[id] or {}) do
+        if v.mod.can_load then ret[#ret+1] = v.mod end
+    end
+    return ret
+end
