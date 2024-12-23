@@ -573,3 +573,13 @@ position = "at"
 payload = '''if os == 'OS X' or os == 'Linux' then'''
 overwrite = true
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "main.lua"
+pattern = "st = require 'luasteam'"
+position = "at"
+payload = """local success, _st = pcall(require, 'luasteam')
+if success then st = _st end"""
+overwrite = true
+match_indent = true
