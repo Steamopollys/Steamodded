@@ -535,3 +535,23 @@ if effects[ii].h_chips then
     card_eval_status_text(effects[ii].card, 'chips', effects[ii].h_chips, percent)
 end
 '''
+
+# Fixes Steam API not loading on unix
+[[patches]]
+[patches.pattern]
+target = 'main.lua'
+match_indent = true
+position = 'after'
+pattern = '--To control when steam communication happens, make sure to send updates to steam as little as possible'
+payload = '''local cwd = NFS.getWorkingDirectory()
+NFS.setWorkingDirectory(love.filesystem.getSourceBaseDirectory())
+''' 
+
+[[patches]]
+[patches.pattern]
+target = 'main.lua'
+match_indent = true
+position = 'before'
+pattern = '--Set up the render window and the stage for the splash screen, then enter the gameloop with :update'
+payload = '''NFS.setWorkingDirectory(cwd)
+'''

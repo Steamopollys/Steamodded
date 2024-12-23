@@ -19,8 +19,8 @@ NFS = nativefs
 -- respects symlink/.. combos
 NFS.setWorkingDirectory(lovely_mod_dir)
 lovely_mod_dir = NFS.getWorkingDirectory()
--- ! Changing the CWD here causes the Steam API to fail on some UNIX platforms (#345)
--- NFS.setWorkingDirectory(love.filesystem.getSaveDirectory())
+-- make sure NFS behaves the same as love.filesystem
+NFS.setWorkingDirectory(love.filesystem.getSaveDirectory())
 
 JSON = json
 
@@ -33,6 +33,7 @@ local function set_mods_dir()
         if lovely_mod_dir:sub(1, #love_dir) == love_dir then
             -- relative path from love_dir
             SMODS.MODS_DIR = lovely_mod_dir:sub(#love_dir+2)
+            NFS.setWorkingDirectory(love_dir)
             return
         end
     end
