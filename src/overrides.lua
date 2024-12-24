@@ -684,7 +684,22 @@ function G.UIDEF.deck_preview(args)
 		or nil,
 		stones and {n = G.UIT.T, config = {text = '' .. stones, colour = (stones > 0 and G.C.WHITE or G.C.UI.TRANSPARENT_LIGHT), scale = 0.4, shadow = true}}
 		or nil,}}
-
+	local hidden_ranks = {}
+	for _, rank in ipairs(rank_name_mapping) do
+		local count = 0
+		for _, suit in ipairs(suit_map) do
+			count = count + #SUITS[suit][rank]
+		end
+		if count == 0 and SMODS.Ranks[rank].in_pool and not SMODS.Ranks[rank]:in_pool({suit=''}) then
+			hidden_ranks[rank] = true
+		end
+	end
+	local hidden_suits = {}
+	for _, suit in ipairs(suit_map) do
+		if suit_counts[suit] == 0 and SMODS.Suits[suit].in_pool and not SMODS.Suits[suit]:in_pool({rank=''}) then
+			hidden_suits[suit] = true
+		end
+	end
 	local _row = {}
 	local _bg_col = G.C.JOKER_GREY
 	for k, v in ipairs(rank_name_mapping) do
@@ -699,12 +714,12 @@ function G.UIDEF.deck_preview(args)
 					{n = G.UIT.T, config = {text = '' .. SMODS.Ranks[v].shorthand, colour = _colour, scale = 1.6 * _tscale } },}},
 				{n = G.UIT.R, config = {align = "cm", minw = _minw + 0.04, minh = _minh, colour = G.C.L_BLACK, r = 0.1 }, nodes = {
 					{n = G.UIT.T, config = {text = '' .. (rank_counts[v] or 0), colour = flip_col, scale = _tscale, shadow = true } }}}}}}}
-		table.insert(_row, _col)
+		if not hidden_ranks[v] then table.insert(_row, _col) end
 	end
 	table.insert(deck_tables, {n = G.UIT.R, config = {align = "cm", padding = 0.04 }, nodes = _row })
 
 	for _, suit in ipairs(suit_map) do
-		if not (suit_counts[suit] == 0 and SMODS.Suits[suit].in_pool and not SMODS.Suits[suit]:in_pool({rank=''})) then
+		if not hidden_suits[suit] then
 			_row = {}
 			_bg_col = mix_colours(G.C.SUITS[suit], G.C.L_BLACK, 0.7)
 			for _, rank in ipairs(rank_name_mapping) do
@@ -713,7 +728,7 @@ function G.UIDEF.deck_preview(args)
 
 				local _col = {n = G.UIT.C, config = {align = "cm", padding = 0.05, minw = _minw + 0.098, minh = _minh }, nodes = {
 					{n = G.UIT.T, config = {text = '' .. #SUITS[suit][rank], colour = _colour, scale = _tscale, shadow = true, lang = G.LANGUAGES['en-us'] } },}}
-				table.insert(_row, _col)
+				if not hidden_ranks[rank] then table.insert(_row, _col) end
 			end
 			table.insert(deck_tables,
 				{n = G.UIT.R, config = {align = "cm", r = 0.1, padding = 0.04, minh = 0.4, colour = _bg_col }, nodes =
@@ -722,7 +737,7 @@ function G.UIDEF.deck_preview(args)
 	end
 
 	for k, v in ipairs(suit_map) do
-		if not (SMODS.Suits[v].hidden and suit_counts[v] == 0) then
+		if not hidden_suits[v] then
 			local t_s = Sprite(0, 0, 0.3, 0.3,
 				G.ASSET_ATLAS[SMODS.Suits[v][G.SETTINGS.colourblind_option and "hc_ui_atlas" or "lc_ui_atlas"]] or
 				G.ASSET_ATLAS[("ui_" .. (G.SETTINGS.colourblind_option and "2" or "1"))], SMODS.Suits[v].ui_pos)
@@ -926,10 +941,16 @@ function G.UIDEF.view_deck(unplayed_only)
 		}},
 	}
 	-- add suit tallies
+	local hidden_suits = {}
+	for _, suit in ipairs(suit_map) do
+		if suit_tallies[suit] == 0 and SMODS.Suits[suit].in_pool and not SMODS.Suits[suit]:in_pool({rank=''}) then
+			hidden_suits[suit] = true
+		end
+	end
 	local i = 1
 	local num_suits_shown = 0
 	for i = 1, #suit_map do
-		if not (SMODS.Suits[suit_map[i]].hidden and suit_tallies[suit_map[i]] == 0) then
+		if not hidden_suits[suit_map[i]] then
 			num_suits_shown = num_suits_shown+1
 		end
 	end
@@ -937,7 +958,7 @@ function G.UIDEF.view_deck(unplayed_only)
 	local n_nodes = {}
 	while i <= #suit_map do
 		while #n_nodes < suits_per_row and i <= #suit_map do
-			if not (suit_tallies[suit_map[i]] == 0 and SMODS.Suits[suit_map[i]].in_pool and not SMODS.Suits[suit_map[i]]:in_pool({rank=''})) then
+			if not hidden_suits[suit_map[i]] then
 				table.insert(n_nodes, tally_sprite(
 					SMODS.Suits[suit_map[i]].ui_pos,
 					{
