@@ -304,7 +304,7 @@ pattern = "local loc_target = localize{type = 'raw_descriptions', key = blind_ch
 match_indent = true
 position = 'at'
 payload = '''
-local target = {type = 'raw_descriptions', key = self.config.blind.key, set = 'Blind', vars = loc_vars or self.config.blind.vars}
+local target = {type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = {}}
 if blind_choice.config.name == 'The Ox' then
    	target.vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
 end
