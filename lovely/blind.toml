@@ -324,12 +324,13 @@ pattern = '''local loc_target = localize{type = 'raw_descriptions', key = blind.
 match_indent = true
 position = 'at'
 payload = '''
-local loc_vars = nil
+local target = {type = 'raw_descriptions', key = blind.key, set = 'Blind', vars = vars or blind.vars}
 if blind.collection_loc_vars and type(blind.collection_loc_vars) == 'function' then
 	local res = blind:collection_loc_vars() or {}
-	loc_vars = res.vars
+	target.vars = res.vars or target.vars
+	target.key = res.key or target.key
 end
-local loc_target = localize{type = 'raw_descriptions', key = blind.key, set = 'Blind', vars = loc_vars or vars or blind.vars}'''
+local loc_target = localize(target)'''
 
 # get_new_boss()
 [[patches]]
