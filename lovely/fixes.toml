@@ -536,6 +536,17 @@ if effects[ii].h_chips then
 end
 '''
 
+# Fix booster skip issues maybe?
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "if G.pack_cards and (G.pack_cards.cards[1]) and"
+position = "at"
+payload = '''
+if G.pack_cards and (not (G.GAME.STOP_USE and G.GAME.STOP_USE > 0)) and
+'''
+match_indent = true
+
 # Fixes Steam API not loading on unix
 [[patches]]
 [patches.pattern]
