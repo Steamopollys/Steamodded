@@ -200,14 +200,17 @@ payload = '''
 [patches.pattern]
 target = 'blind.lua'
 pattern = "local loc_target = localize{type = 'raw_descriptions', key = self.config.blind.key, set = 'Blind', vars = loc_vars or self.config.blind.vars}"
-position = 'before'
+position = 'at'
 match_indent = true
 payload = '''
+local target = {type = 'raw_descriptions', key = self.config.blind.key, set = 'Blind', vars = loc_vars or self.config.blind.vars}
 local obj = self.config.blind
 if obj.loc_vars and type(obj.loc_vars) == 'function' then
 	local res = obj:loc_vars() or {}
-	loc_vars = res.vars or {}
-end'''
+	target.vars = res.vars or target.vars
+	target.key = res.key or target.key
+end
+local loc_target = localize(target)'''
 
 # Blind:load()
 [[patches]]
@@ -301,16 +304,17 @@ pattern = "local loc_target = localize{type = 'raw_descriptions', key = blind_ch
 match_indent = true
 position = 'at'
 payload = '''
-local loc_vars = nil
+local target = {type = 'raw_descriptions', key = self.config.blind.key, set = 'Blind', vars = loc_vars or self.config.blind.vars}
 if blind_choice.config.name == 'The Ox' then
-   	loc_vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
+   	target.vars = {localize(G.GAME.current_round.most_played_poker_hand, 'poker_hands')}
 end
 local obj = blind_choice.config
 if obj.loc_vars and _G['type'](obj.loc_vars) == 'function' then
 	local res = obj:loc_vars() or {}
-	loc_vars = res.vars or {}
+	target.vars = res.vars or target.vars
+	target.key = res.key or target.key
 end
-local loc_target = localize{type = 'raw_descriptions', key = blind_choice.config.key, set = 'Blind', vars = loc_vars or blind_choice.config.vars}'''
+local loc_target = localize(target)'''
 
 # create_UIBox_blind_popup()
 [[patches]]

@@ -157,6 +157,7 @@ if seal and seal.generate_ui ~= 0 then
 		local res = seal:loc_vars(info_queue, card) or {}
 		t.vars = res.vars
 		t.key = res.key or t.key
+        t.set = res.set or t.set
 	end
 else'''
 [[patches]]

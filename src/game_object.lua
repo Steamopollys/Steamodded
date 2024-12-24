@@ -2610,7 +2610,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             }
             local res = {}
             if self.loc_vars and type(self.loc_vars) == 'function' then
-                -- card is a dead arg here
+                -- card is actually a `Tag` here
                 res = self:loc_vars(info_queue, card) or {}
                 target.vars = res.vars or target.vars
                 target.key = res.key or target.key

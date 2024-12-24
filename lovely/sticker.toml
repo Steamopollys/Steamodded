@@ -35,6 +35,7 @@ if sticker then
         res = sticker:loc_vars(info_queue, card) or {}
         t.vars = res.vars or {}
         t.key = res.key or t.key
+        t.set = res.set or t.set
     end
     info_queue[#info_queue+1] = t
 else'''

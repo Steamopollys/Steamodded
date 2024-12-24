@@ -111,8 +111,9 @@ pattern = "(?<indent>[\t ]+)if (?<rest>_c.name == 'Golden Ticket' then)"
 line_prepend = '$indent'
 position = 'at'
 payload = '''
+local res = {}
 if _c.locked_loc_vars and type(_c.locked_loc_vars) == 'function' then
-	local res = _c:locked_loc_vars(info_queue) or {}
+	res = _c:locked_loc_vars(info_queue) or {}
 	loc_vars = res.vars or {}
 	specific_vars = specific_vars or {}
 	specific_vars.not_hidden = res.not_hidden or specific_vars.not_hidden
@@ -123,8 +124,26 @@ elseif $rest'''
 target = 'functions/common_events.lua'
 position = 'at'
 match_indent = true
+pattern = "localize{type = 'unlocks', key = 'joker_locked_legendary', set = 'Other', nodes = desc_nodes, vars = loc_vars}"
+payload = "localize{type = 'unlocks', key = res.key or 'joker_locked_legendary', set = res.set or 'Other', nodes = desc_nodes, vars = loc_vars, text_colour = res.text_colour, scale = res.scale}"
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+position = 'at'
+match_indent = true
+pattern = "localize{type = 'unlocks', key = _c.key, set = _c.set, nodes = desc_nodes, vars = loc_vars}"
+payload = "localize{type = 'unlocks', key = res.key or _c.key, set = res.set or _c.set, nodes = desc_nodes, vars = loc_vars, text_colour = res.text_colour, scale = res.scale}"
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+position = 'at'
+match_indent = true
 pattern = 'elseif desc_nodes ~= full_UI_table.main then'
 payload = 'elseif desc_nodes ~= full_UI_table.main and not desc_nodes.name then'
+
+
 
 # check_for_unlock()
 [[patches]]
