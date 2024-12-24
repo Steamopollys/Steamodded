@@ -704,7 +704,7 @@ function G.UIDEF.deck_preview(args)
 	table.insert(deck_tables, {n = G.UIT.R, config = {align = "cm", padding = 0.04 }, nodes = _row })
 
 	for _, suit in ipairs(suit_map) do
-		if not (SMODS.Suits[suit].hidden and suit_counts[suit] == 0) then
+		if not (suit_counts[suit] == 0 and SMODS.Suits[suit].in_pool and not SMODS.Suits[suit]:in_pool({rank=''})) then
 			_row = {}
 			_bg_col = mix_colours(G.C.SUITS[suit], G.C.L_BLACK, 0.7)
 			for _, rank in ipairs(rank_name_mapping) do
@@ -937,7 +937,7 @@ function G.UIDEF.view_deck(unplayed_only)
 	local n_nodes = {}
 	while i <= #suit_map do
 		while #n_nodes < suits_per_row and i <= #suit_map do
-			if not (SMODS.Suits[suit_map[i]].hidden and suit_tallies[suit_map[i]] == 0) then
+			if not (suit_tallies[suit_map[i]] == 0 and SMODS.Suits[suit_map[i]].in_pool and not SMODS.Suits[suit_map[i]]:in_pool({rank=''})) then
 				table.insert(n_nodes, tally_sprite(
 					SMODS.Suits[suit_map[i]].ui_pos,
 					{
