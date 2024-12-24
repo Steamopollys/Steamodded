@@ -498,6 +498,61 @@ position = "at"
 payload = '''
 if true then'''
 
+## Make vanilla enhancement jokers work with extra enhancements
+
+# Steel Joker
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = "if v.config.center == G.P_CENTERS.m_steel then self.ability.steel_tally = self.ability.steel_tally+1 end"
+position = "at"
+payload = "if SMODS.has_enhancement(v, 'm_steel') then self.ability.steel_tally = self.ability.steel_tally+1 end"
+
+# Stone Joker
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = "if v.config.center == G.P_CENTERS.m_stone then self.ability.stone_tally = self.ability.stone_tally+1 end"
+position = "at"
+payload = "if SMODS.has_enhancement(v, 'm_stone') then self.ability.stone_tally = self.ability.stone_tally+1 end"
+
+# Golden Ticket
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = "context.other_card.ability.name == 'Gold Card' then"
+position = "at"
+payload = "SMODS.has_enhancement(context.other_card, 'm_gold') then"
+
+# Golden Ticket Unlock
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+match_indent = true
+pattern = "if args.cards[j].ability.name == 'Gold Card' then"
+position = "at"
+payload = "if SMODS.has_enhancement(args.cards[j], 'm_gold') then"
+
+# Glass Joker
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = "if val.ability.name == 'Glass Card' then shattered_glass = shattered_glass + 1 end"
+position = "at"
+payload = "if SMODS.has_enhancement(val, 'm_glass') then shattered_glass = shattered_glass + 1 end"
+
+# Driver's License
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = "if v.config.center ~= G.P_CENTERS.c_base then self.ability.driver_tally = self.ability.driver_tally+1 end"
+position = "at"
+payload = "if next(SMODS.get_enhancements(v)) then self.ability.driver_tally = self.ability.driver_tally+1 end"
 # Basegame fix for the reroll vouchers redeem function when only the center but no card object exists
 
 # Card:apply_to_run

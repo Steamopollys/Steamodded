@@ -462,7 +462,7 @@ pattern = "if context.cardarea == G.jokers or context.card == G.consumeables the
 match_indent = true
 position = "before"
 payload = """
-if card.edition and card.edition.key then
+if not card.ability.extra_enhancement and card.edition and card.edition.key then
     local ed = SMODS.Centers[card.edition.key]
     if ed.calculate and type(ed.calculate) == 'function' then
         context.from_playing_card = true
