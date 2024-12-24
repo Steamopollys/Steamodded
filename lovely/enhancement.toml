@@ -12,7 +12,14 @@ target = "card.lua"
 pattern = "if self.ability.effect == 'Stone Card' and not self.vampired then"
 match_indent = true
 position = "at"
-payload = "if (self.ability.effect == 'Stone Card' or self.config.center.no_rank) and not self.vampired then"
+payload = '''local is_stone = false
+for k, _ in pairs(SMODS.get_enhancements(self)) do
+  if k == "m_stone" or G.P_CENTERS[k].no_rank then
+    is_stone = true
+    break
+  end
+end
+if is_stone and not self.vampired then'''
 
 # Card:get_chip_bonus()
 [[patches]]
@@ -38,7 +45,14 @@ pattern = "if temp_ID >= G.hand.cards[i].base.id and G.hand.cards[i].ability.eff
 match_indent = true
 position = "at"
 payload = """
-if temp_ID >= G.hand.cards[i].base.id and (G.hand.cards[i].ability.effect ~= 'Stone Card' and not G.hand.cards[i].config.center.no_rank) then 
+local is_stone = false
+for k, _ in pairs(SMODS.get_enhancements(G.hand.cards[i])) do
+  if k == "m_stone" or G.P_CENTERS[k].no_rank then
+    is_stone = true
+    break
+  end
+end
+if temp_ID >= G.hand.cards[i].base.id and not is_stone then 
     temp_Mult = G.hand.cards[i].base.nominal
     temp_ID = G.hand.cards[i].base.id
     raised_card = G.hand.cards[i]
@@ -52,7 +66,6 @@ match_indent = true
 position = "at"
 payload = '''local is_wild = false
 for k, _ in pairs(SMODS.get_enhancements(context.scoring_hand[i])) do
-  print(k)
   if k == "m_wild" or G.P_CENTERS[k].any_suit then
     is_wild = true
     break
@@ -82,7 +95,17 @@ target = "card.lua"
 pattern = '''(?<indent>[\t ]*)if self\.ability\.effect == 'Stone Card' then'''
 line_prepend = '$indent'
 position = "at"
-payload = "if self.ability.effect == 'Stone Card' or self.config.center.no_suit then"
+payload = '''local is_stone = false
+local is_wild = false
+for k, _ in pairs(SMODS.get_enhancements(self)) do
+  if k == 'm_stone' or G.P_CENTERS[k].no_suit then
+    is_stone = true
+  end
+  if k == 'm_wild' or G.P_CENTERS[k].any_suit then
+    is_wild = true
+  end
+end
+if is_stone and not is_wild then'''
 [[patches]]
 [patches.pattern]
 target = "card.lua"
@@ -128,8 +151,21 @@ target = "functions/common_events.lua"
 pattern = "valid_idol_cards[#valid_idol_cards+1] = v"
 match_indent = true
 position = "at"
-payload = """
-if (not v.config.center.no_suit) and (not v.config.center.no_rank) then
+payload = """local is_stone = false
+local is_stone_rank = false
+local is_wild = false
+for k, _ in pairs(SMODS.get_enhancements(v)) do
+  if k == 'm_stone' or G.P_CENTERS[k].no_suit then
+    is_stone = true
+  end
+  if k == 'm_stone' or G.P_CENTERS[k].no_rank then
+    is_stone_rank = true
+  end
+  if k == 'm_wild' or G.P_CENTERS[k].any_suit then
+    is_wild = true
+  end
+end
+if (not is_stone or is_wild) and (not is_stone_rank) then
     valid_idol_cards[#valid_idol_cards+1] = v
 end"""
 
@@ -141,7 +177,14 @@ pattern = "valid_mail_cards[#valid_mail_cards+1] = v"
 match_indent = true
 position = "at"
 payload = """
-if not v.config.center.no_rank then
+local is_stone = false
+for k, _ in pairs(SMODS.get_enhancements(v)) do
+  if G.P_CENTERS[k].no_rank then
+    is_stone = true
+    break
+  end
+end
+if not is_stone then
     valid_mail_cards[#valid_mail_cards+1] = v
 end"""
 
@@ -153,7 +196,17 @@ pattern = "valid_castle_cards[#valid_castle_cards+1] = v"
 match_indent = true
 position = "at"
 payload = """
-if not v.config.center.no_suit then
+local is_stone = false
+local is_wild = false
+for k, _ in pairs(SMODS.get_enhancements(v)) do
+  if k == 'm_stone' or G.P_CENTERS[k].no_suit then
+    is_stone = true
+  end
+  if k == 'm_wild' or G.P_CENTERS[k].any_suit then
+    is_wild = true
+  end
+end
+if not is_stone or is_wild then
     valid_castle_cards[#valid_castle_cards+1] = v
 end"""
 
@@ -164,14 +217,30 @@ target = "functions/state_events.lua"
 pattern = "if G.play.cards[i].ability.effect == 'Stone Card' then"
 match_indent = true
 position = "at"
-payload = "if G.play.cards[i].ability.effect == 'Stone Card' or G.play.cards[i].config.center.always_scores then"
+payload = '''
+local is_stone = false
+for k, _ in pairs(SMODS.get_enhancements(G.play.cards[i])) do
+  if k == 'm_stone' or G.P_CENTERS[k].always_scores then
+    is_stone = true
+    break
+  end
+end
+if is_stone then'''
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua"
 pattern = "if scoring_hand[i].ability.effect ~= 'Stone Card' then"
 match_indent = true
 position = "at"
-payload = "if scoring_hand[i].ability.effect ~= 'Stone Card' and not scoring_hand[i].config.center.no_rank then"
+payload = '''
+local is_stone = false
+for k, _ in pairs(SMODS.get_enhancements(scoring_hand[i])) do
+  if k == 'm_stone' or G.P_CENTERS[k].no_rank then
+    is_stone = true
+    break
+  end
+end
+if not is_stone then'''
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua"
@@ -179,7 +248,17 @@ pattern = "G.GAME.cards_played[scoring_hand[i].base.value].suits[scoring_hand[i]
 match_indent = true
 position = "at"
 payload = """
-if not scoring_hand[i].config.center.no_suit then
+local is_stone = false
+local is_wild = false
+for k, _ in pairs(SMODS.get_enhancements(scoring_hand[i])) do
+  if k == 'm_stone' or G.P_CENTERS[k].no_suit then
+    is_stone = true
+  end
+  if k == 'm_wild' or G.P_CENTERS[k].any_suit then
+    is_wild = true
+  end
+end
+if not is_stone or is_wild then
     G.GAME.cards_played[scoring_hand[i].base.value].suits[scoring_hand[i].base.suit] = true
 end"""
 
