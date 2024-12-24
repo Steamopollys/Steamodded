@@ -1447,7 +1447,7 @@ function Card:set_edition(edition, immediate, silent)
 			elseif self.ability.set == 'Joker' then
 				G.jokers.config.card_limit = G.jokers.config.card_limit + v
 			elseif self.area == G.hand then
-				local is_in_pack = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK)
+				local is_in_pack = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or (G.STATE == G.STATES.SMODS_BOOSTER_OPENED and SMODS.OPENED_BOOSTER.config.center.draw_hand))
 				G.E_MANAGER:add_event(Event({
 					trigger = 'immediate',
 					func = function()
