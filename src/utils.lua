@@ -338,6 +338,14 @@ function SMODS.create_card(t)
     return _card
 end
 
+function SMODS.add_card(t)
+    local card = SMODS.create_card(t)
+    card:add_to_deck()
+    local area = t.area or G.jokers
+    area:emplace(card)
+    return card
+end
+
 function SMODS.debuff_card(card, debuff, source)
     debuff = debuff or nil
     source = source and tostring(source) or nil
