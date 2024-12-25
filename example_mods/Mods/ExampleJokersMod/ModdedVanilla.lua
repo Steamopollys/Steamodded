@@ -1,27 +1,17 @@
---- STEAMODDED HEADER
---- MOD_NAME: Vanilla SMODS
---- MOD_ID: VSMODS
---- MOD_AUTHOR: [someone23832]
---- MOD_DESCRIPTION: Turns some vanilla jokers into an SMODS format, and changes them to give some examples of what you can do.
---- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0812d]
---- BADGE_COLOR: c7638f
---- PREFIX: mvan
-----------------------------------------------
-------------MOD CODE -------------------------
-
 --[[
 ------------------------------Basic Table of Contents------------------------------
-Line 27, Atlas ---------------- Explains the parts of the atlas.
-Line 39, Joker 2 -------------- Explains the basic structure of a joker
-Line 98, Runner 2 ------------ Uses a bit more complex contexts, and shows how to scale a value.
-Line 147, Golden Joker 2 ------ Shows off a specific function that's used to add money at the end of a round.
-Line 173, Merry Andy 2 -------- Shows how to use add_to_deck and remove_from_deck.
-Line 217, Sock and Buskin 2 --- Shows how you can retrigger cards and check for faces
-Line 250, Perkeo 2 ------------ Shows how to use the event manager, eval_status_text, randomness, and soul_pos.
-Line 295, Walkie Talkie 2 ----- Shows how to look for multiple specific ranks, and explains returning multiple values
-Line 329, Gros Michel 2 ------- Shows the no_pool_flag, sets a pool flag, another way to use randomness, and end of round stuff.
-Line 403, Cavendish 2 --------- Shows yes_pool_flag, has X Mult, mainly to go with Gros Michel 2.
-]]
+Line 17, Atlas ---------------- Explains the parts of the atlas.
+Line 29, Joker 2 -------------- Explains the basic structure of a joker
+Line 88, Runner 2 ------------- Uses a bit more complex contexts, and shows how to scale a value.
+Line 127, Golden Joker 2 ------ Shows off a specific function that's used to add money at the end of a round.
+Line 163, Merry Andy 2 -------- Shows how to use add_to_deck and remove_from_deck.
+Line 207, Sock and Buskin 2 --- Shows how you can retrigger cards and check for faces
+Line 240, Perkeo 2 ------------ Shows how to use the event manager, eval_status_text, randomness, and soul_pos.
+Line 285, Walkie Talkie 2 ----- Shows how to look for multiple specific ranks, and explains returning multiple values
+Line 319, Gros Michel 2 ------- Shows the no_pool_flag, sets a pool flag, another way to use randomness, and end of round stuff.
+Line 393, Cavendish 2 --------- Shows yes_pool_flag, has X Mult, mainly to go with Gros Michel 2.
+Line 457, Castle 2 ------------ Shows the use of reset_game_globals and colour variables in loc_vars.
+--]]
 
 --Creates an atlas for cards to use
 SMODS.Atlas {
@@ -463,6 +453,79 @@ SMODS.Joker {
     end
   end
 }
+
+SMODS.Joker {
+  key = 'castle2',
+  loc_txt = {
+    name = 'Castle 2',
+    text = {
+      "This Joker gains {C:chips}+#1#{} Chips",
+      "per discarded {V:1}#2#{} card,",
+      "suit changes every round",
+      "{C:inactive}(Currently {C:chips}+#3#{C:inactive} Chips)",
+    }
+  },
+  blueprint_compat = true,
+  perishable_compat = false,
+  eternal_compat = true,
+  rarity = 2,
+  cost = 6,
+  config = { extra = { chips = 0, chip_mod = 3 }},
+  atlas = 'ModdedVanilla',
+  pos = { x = 5, y = 0 },
+  loc_vars = function(self, info_queue, card)
+    return { vars = { 
+      card.ability.extra.chip_mod, 
+      localize(G.GAME.current_round.castle2_card.suit, 'suits_singular'), -- gets the localized name of the suit 
+      card.ability.extra.chips,
+      colours = {G.C.SUITS[G.GAME.current_round.castle2_card.suit]} -- sets the colour of the text affected by `{V:1}`
+    }}
+  end,
+  calculate = function(self, card, context)
+    if 
+      context.discard and 
+      not context.other_card.debuff and 
+      context.other_card:is_suit(G.GAME.current_round.castle2_card.suit) and 
+      not context.blueprint
+    then
+      card.ability.extra.chips = card.ability.extra.chips + card.ability.extra.chip_mod
+      return {
+        message = localize('k_upgrade_ex'),
+        colour = G.C.CHIPS,
+        card = card
+      }
+    end
+    if context.joker_main and card.ability.extra.chips > 0 then
+      return {
+        message = localize{type='variable',key='a_chips',vars={card.ability.extra.chips}},
+        chip_mod = card.ability.extra.chips, 
+        colour = G.C.CHIPS
+    }
+    end
+  end
+}
+
+local igo = Game.init_game_object
+function Game:init_game_object()
+  local ret = igo(self)
+  ret.current_round.castle2_card = { suit = 'Spades' } 
+  return ret
+end
+
+function SMODS.current_mod.reset_game_globals(run_start)
+  -- The suit changes every round, so we use reset_game_globals to choose a suit.
+  G.GAME.current_round.castle2_card = { suit = 'Spades' }
+  local valid_castle_cards = {}
+  for _, v in ipairs(G.playing_cards) do
+    if not SMODS.has_no_suit(v) then -- Abstracted enhancement check for jokers being able to give cards additional enhancements
+        valid_castle_cards[#valid_castle_cards+1] = v
+    end
+  end
+  if valid_castle_cards[1] then 
+      local castle_card = pseudorandom_element(valid_castle_cards, pseudoseed('2cas'..G.GAME.round_resets.ante))
+      G.GAME.current_round.castle2_card.suit = castle_card.base.suit
+  end
+end
 
 
 -- TODO

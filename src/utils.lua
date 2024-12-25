@@ -832,6 +832,31 @@ function SMODS.has_enhancement(card, key)
     return false
 end
 
+function SMODS.has_no_suit(card)
+    local is_stone = false
+    local is_wild = false
+    for k, _ in pairs(SMODS.get_enhancements(card)) do
+        if k == 'm_stone' or G.P_CENTERS[k].no_suit then is_stone = true end
+        if k == 'm_wild' or G.P_CENTERS[k].any_suit then is_wild = true end
+    end
+    return is_stone and not is_wild
+end
+function SMODS.has_any_suit(card)
+    for k, _ in pairs(SMODS.get_enhancements(card)) do
+        if k == 'm_wild' or G.P_CENTERS[k].any_suit then return true end
+    end
+end
+function SMODS.has_no_rank(card)
+    for k, _ in pairs(SMODS.get_enhancements(card)) do
+        if k == 'm_stone' or G.P_CENTERS[k].no_rank then return true end
+    end
+end
+function SMODS.always_scores(card)
+    for k, _ in pairs(SMODS.get_enhancements(card)) do
+        if k == 'm_stone' or G.P_CENTERS[k].always_scores then return true end
+    end
+end
+
 SMODS.collection_pool = function(_base_pool)
     local pool = {}
     if type(_base_pool) ~= 'table' then return pool end

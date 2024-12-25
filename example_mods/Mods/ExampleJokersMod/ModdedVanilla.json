@@ -1,0 +1,13 @@
+{
+    "id": "VSMODS",
+    "name": "Vanilla SMODS",
+    "author": ["someone23832"],
+    "description": "Turns some vanilla jokers into an SMODS format, and changes them to give some examples of what you can do.",
+    "prefix": "mvan",
+    "main_file": "ModdedVanilla.lua",
+    "badge_colour": "c7638f",
+    "dependencies": [
+        "Steamodded (>=1.0.0~ALPHA-1225a)"
+    ],
+    "version": "1.0.0"
+}
