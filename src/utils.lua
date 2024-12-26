@@ -810,6 +810,15 @@ function time(func, ...)
     return 1000*(end_time-start_time)
 end
 
+function Card:calculate_enhancement(context)
+    if self.debuff or self.ability.set ~= 'Enhanced' then return nil end
+    local center = self.config.center
+    if center.calculate and type(center.calculate) == 'function' then
+        local o = center:calculate(self, context)
+        if o then return o end
+    end
+end
+
 function SMODS.get_enhancements(card, extra_only)
     local enhancements = {}
     if card.config.center.key ~= "c_base" and not extra_only then
