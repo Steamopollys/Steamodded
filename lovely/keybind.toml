@@ -37,8 +37,11 @@ pattern = 'if key == "r"'
 position = 'at'
 line_prepend = '$indent'
 payload = '''
-if key == '[' then
+if key == 'm' then
+	if self.held_key_times[key] > 1.1 then
 		SMODS.save_all_config()
 		SMODS.restart_game()
-elseif key == "r"
-'''
+	else
+		self.held_key_times[key] = self.held_key_times[key] + dt
+	end
+elseif key == "r"'''
