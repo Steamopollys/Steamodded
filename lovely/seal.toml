@@ -80,53 +80,53 @@ end'''
 
 # G.FUNCS.evaluate_play()
 # Allow seals to return mult, chips and xmult like jokers.
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "--If x_mult added, do mult add event and mult the mult to the total"
-match_indent = true
-position = "before"
-payload = '''
-if effects[ii].seals then
-    if effects[ii].seals.chips then 
-        if effects[ii].card then juice_card(effects[ii].card) end
-        hand_chips = mod_chips(hand_chips + effects[ii].seals.chips)
-        update_hand_text({delay = 0}, {chips = hand_chips})
-        card_eval_status_text(scoring_hand[i], 'chips', effects[ii].seals.chips, percent)
-    end
+# [[patches]]
+# [patches.pattern]
+# target = "functions/state_events.lua"
+# pattern = "--If x_mult added, do mult add event and mult the mult to the total"
+# match_indent = true
+# position = "before"
+# payload = '''
+# if effects[ii].seals then
+#     if effects[ii].seals.chips then 
+#         if effects[ii].card then juice_card(effects[ii].card) end
+#         hand_chips = mod_chips(hand_chips + effects[ii].seals.chips)
+#         update_hand_text({delay = 0}, {chips = hand_chips})
+#         card_eval_status_text(scoring_hand[i], 'chips', effects[ii].seals.chips, percent)
+#     end
     
-    if effects[ii].seals.mult then 
-        if effects[ii].card then juice_card(effects[ii].card) end
-        mult = mod_mult(mult + effects[ii].seals.mult)
-        update_hand_text({delay = 0}, {mult = mult})
-        card_eval_status_text(scoring_hand[i], 'mult', effects[ii].seals.mult, percent)
-    end
+#     if effects[ii].seals.mult then 
+#         if effects[ii].card then juice_card(effects[ii].card) end
+#         mult = mod_mult(mult + effects[ii].seals.mult)
+#         update_hand_text({delay = 0}, {mult = mult})
+#         card_eval_status_text(scoring_hand[i], 'mult', effects[ii].seals.mult, percent)
+#     end
     
-    if effects[ii].seals.p_dollars then 
-        if effects[ii].card then juice_card(effects[ii].card) end
-        ease_dollars(effects[ii].seals.p_dollars)
-        card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].seals.p_dollars, percent)
-    end
+#     if effects[ii].seals.p_dollars then 
+#         if effects[ii].card then juice_card(effects[ii].card) end
+#         ease_dollars(effects[ii].seals.p_dollars)
+#         card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].seals.p_dollars, percent)
+#     end
     
-    if effects[ii].seals.dollars then 
-        if effects[ii].card then juice_card(effects[ii].card) end
-        ease_dollars(effects[ii].seals.dollars)
-        card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].seals.dollars, percent)
-    end
+#     if effects[ii].seals.dollars then 
+#         if effects[ii].card then juice_card(effects[ii].card) end
+#         ease_dollars(effects[ii].seals.dollars)
+#         card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].seals.dollars, percent)
+#     end
     
-    if effects[ii].seals.x_mult then 
-        if effects[ii].card then juice_card(effects[ii].card) end
-        mult = mod_mult(mult*effects[ii].seals.x_mult)
-        update_hand_text({delay = 0}, {mult = mult})
-        card_eval_status_text(scoring_hand[i], 'x_mult', effects[ii].seals.x_mult, percent)
-    end
+#     if effects[ii].seals.x_mult then 
+#         if effects[ii].card then juice_card(effects[ii].card) end
+#         mult = mod_mult(mult*effects[ii].seals.x_mult)
+#         update_hand_text({delay = 0}, {mult = mult})
+#         card_eval_status_text(scoring_hand[i], 'x_mult', effects[ii].seals.x_mult, percent)
+#     end
 
-    if effects[ii].seals.func then
-        effects[ii].seals.func()
-    end
-end
+#     if effects[ii].seals.func then
+#         effects[ii].seals.func()
+#     end
+# end
 
-'''
+# '''
 
 # Card:get_p_dollars()
 [[patches]]

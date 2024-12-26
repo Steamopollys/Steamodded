@@ -178,57 +178,6 @@ match_indent = true
 position = "at"
 payload = "elseif specific_vars.playing_card then"
 
-# eval_card()
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "function eval_card(card, context)"
-match_indent = true
-position = "after"
-payload = """
-    local enhancement_calculated = false
-    local center = card.config.center"""
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "local jokers = card:calculate_joker(context)"
-match_indent = true
-position = "before"
-payload = """
-if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then
-    center:calculate(card, context, ret)
-    enhancement_calculated = true
-end"""
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "local seals = card:calculate_seal(context)"
-match_indent = true
-position = "before"
-payload = """
-if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
-    center:calculate(card, context, ret)
-    enhancement_calculated = true
-end"""
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
-match_indent = true
-position = "before"
-payload = """
-if not enhancement_calculated and card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
-    center:calculate(card, context, ret)
-    enhancement_calculated = true
-end
-local seals = not card.ability.extra_enhancement and card:calculate_seal(context)
-if seals then
-    ret.seals = seals
-end"""
-
-
-## Add additional eval_card() calls
-
 # Game:update_draw_to_hand()
 
 [[patches]]
@@ -415,6 +364,8 @@ match_indent = true
 
 ## Enhancement Unscuffing Here We Go
 
+# G.FUNCS.evaluate_play()
+# handle repetitions
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'
@@ -423,6 +374,7 @@ if next(eval) then
     for h = 1, eval.seals.repetitions do
         reps[#reps+1] = eval
     end
+end
 '''
 position = 'at'
 match_indent = true
@@ -430,10 +382,28 @@ payload = '''
 for key, value in pairs(eval) do
     if value.repetitions then
         reps[#reps+1] = {key = value}
-        print('add rep')
     end
+end
 '''
-
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+if next(eval) and (next(effects[1]) or #effects > 1) then 
+    for h  = 1, eval.seals.repetitions do
+        reps[#reps+1] = eval
+    end
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+for key, value in pairs(eval) do
+    if value.repetitions then
+        reps[#reps+1] = {key = value}
+    end
+end
+'''
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'
@@ -470,3 +440,131 @@ local seals = not card.ability.extra_enhancement and card:calculate_seal(context
 if seals then
     ret.seals = seals
 end"""
+
+# G.FUNCS.evaluate_play()
+# handle scoring
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''--If x_mult added, do mult add event and mult the mult to the total'''
+match_indent = true
+position = "before"
+payload = '''
+for key, effect in pairs(effects[ii]) do
+    if type(effect) == 'table' then
+        if effect.chips then 
+            if effect.card then juice_card(effect.card) end
+            hand_chips = mod_chips(hand_chips + effect.chips)
+            update_hand_text({delay = 0}, {chips = hand_chips})
+            if not effect.remove_default_message then card_eval_status_text(scoring_hand[i], 'chips', effect.chips, percent) end
+        end
+        
+        if effect.mult then 
+            if effect.card then juice_card(effect.card) end
+            mult = mod_mult(mult + effect.mult)
+            update_hand_text({delay = 0}, {mult = mult})
+            if not effect.remove_default_message then card_eval_status_text(scoring_hand[i], 'mult', effect.mult, percent) end
+        end
+        
+        if effect.p_dollars then 
+            if effect.card then juice_card(effect.card) end
+            ease_dollars(effect.p_dollars)
+            if not effect.remove_default_message then card_eval_status_text(scoring_hand[i], 'dollars', effect.p_dollars, percent) end
+        end
+        
+        if effect.dollars then 
+            if effect.card then juice_card(effect.card) end
+            ease_dollars(effect.dollars)
+            if not effect.remove_default_message then card_eval_status_text(scoring_hand[i], 'dollars', effect.dollars, percent) end
+        end
+        
+        if effect.x_mult then 
+            if effect.card then juice_card(effect.card) end
+            mult = mod_mult(mult * effect.x_mult)
+            update_hand_text({delay = 0}, {mult = mult})
+            if not effect.remove_default_message then card_eval_status_text(scoring_hand[i], 'x_mult', effect.x_mult, percent) end
+        end
+
+        if effect.message then
+            card_eval_status_text(effect.card or scoring_hand[i], 'extra', nil, percent, effect)
+        end
+
+        if effect.func then
+            effect.func()
+        end
+    end
+end
+'''
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''--If hold mult added, do hold mult add event and add the mult to the total'''
+match_indent = true
+position = "before"
+payload = '''
+for key, effect in pairs(effects[ii]) do
+    if type(effect) == 'table' then
+        if effect.chips then 
+            if effect.card then juice_card(effect.card) end
+            hand_chips = mod_chips(hand_chips + effect.chips)
+            update_hand_text({delay = 0}, {chips = hand_chips})
+            if not effect.remove_default_message then card_eval_status_text(G.hand.cards[i], 'chips', effect.chips, percent) end
+        end
+        
+        if effect.mult then 
+            if effect.card then juice_card(effect.card) end
+            mult = mod_mult(mult + effect.mult)
+            update_hand_text({delay = 0}, {mult = mult})
+            if not effect.remove_default_message then  card_eval_status_text(G.hand.cards[i], 'mult', effect.mult, percent) end
+        end
+        
+        if effect.p_dollars then 
+            if effect.card then juice_card(effect.card) end
+            ease_dollars(effect.p_dollars)
+            if not effect.remove_default_message then card_eval_status_text(G.hand.cards[i], 'dollars', effect.p_dollars, percent) end
+        end
+        
+        if effect.dollars then 
+            if effect.card then juice_card(effect.card) end
+            ease_dollars(effect.dollars)
+            if not effect.remove_default_message then card_eval_status_text(G.hand.cards[i], 'dollars', effect.dollars, percent) end
+        end
+        
+        if effect.x_mult then 
+            if effect.card then juice_card(effect.card) end
+            mult = mod_mult(mult * effect.x_mult)
+            update_hand_text({delay = 0}, {mult = mult})
+            if not effect.remove_default_message then card_eval_status_text(G.hand.cards[i], 'x_mult', effect.x_mult, percent) end
+        end
+
+        if effect.message then
+            card_eval_status_text(effect.card or G.hand.cards[i], 'extra', nil, percent, nil, effect)
+        end
+
+        if effect.func then
+            effect.func()
+        end
+    end
+end
+'''
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''j = j +1'''
+match_indent = true
+position = "at"
+payload = '''
+j = j + (next(effects[1]) and 1 or #reps)
+'''
+
+
+# Destroying calculation
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''if destroyed then '''
+match_indent = true
+position = "before"
+payload = '''
+destroyed = next(eval_card(scoring_hand[i], {destroying_card = scoring_hand[i], full_hand = G.play.cards, callback = function(card, ret) if ret then destroyed=true end end}))
+'''
