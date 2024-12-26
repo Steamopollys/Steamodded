@@ -413,6 +413,8 @@ match_indent = true
 payload = '''
 local _, eff = next(reps[j])
 card_eval_status_text(eff.card, 'jokers', nil, nil, nil, eff)'''
+
+# eval_card()
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
