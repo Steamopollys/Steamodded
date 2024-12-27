@@ -13,6 +13,30 @@ pattern = "if not _RELEASE_MODE then"
 position = "before"
 payload = '''
 for _, keybind in pairs(SMODS.Keybinds) do
+    if keybind.action and keybind.key_pressed == key and keybind.event == 'pressed' then
+        local execute = true
+        for _, other_key in pairs(keybind.held_keys) do
+            if not self.held_keys[other_key] then
+                execute = false
+                break
+            end
+        end
+        if execute then
+            keybind:action()
+        end
+    end
+end
+'''
+match_indent = true
+
+# Controller:key_release_update
+[[patches]]
+[patches.pattern]
+target = 'engine/controller.lua'
+pattern = "function Controller:key_release_update(key, dt)"
+position = "after"
+payload = '''
+for _, keybind in pairs(SMODS.Keybinds) do
     if keybind.action and keybind.key_pressed == key then
         local execute = true
         for _, other_key in pairs(keybind.held_keys) do
@@ -22,26 +46,61 @@ for _, keybind in pairs(SMODS.Keybinds) do
             end
         end
         if execute then
-            keybind.action(self)
+            keybind:action()
         end
     end
 end
 '''
 match_indent = true
-overwrite = false
 
 [[patches]]
 [patches.regex]
 target = 'engine/controller.lua'
 pattern = 'if key == "r"'
-position = 'at'
+position = 'before'
 line_prepend = '$indent'
 payload = '''
-if key == 'm' then
-	if self.held_key_times[key] > 1.1 then
-		SMODS.save_all_config()
-		SMODS.restart_game()
-	else
-		self.held_key_times[key] = self.held_key_times[key] + dt
-	end
-elseif key == "r"'''
+for _, keybind in pairs(SMODS.Keybinds) do
+    if keybind.key_pressed == key and keybind.event == 'held' and keybind.held_duration then
+        if self.held_key_times[key] > keybind.held_duration then
+            local execute = true
+            for _, other_key in pairs(keybind.held_keys) do
+                if not self.held_keys[other_key] then
+                    execute = false
+                    break
+                end
+            end
+            if execute then
+                keybind:action()
+                self.held_key_times[key] = nil
+            end
+        else
+            self.held_key_times[key] = self.held_key_times[key] + dt
+        end
+    end
+end
+'''
+
+# Controller:key_release_update
+[[patches]]
+[patches.pattern]
+target = 'engine/controller.lua'
+pattern = "function Controller:key_release_update(key, dt)"
+position = "after"
+payload = '''
+for _, keybind in pairs(SMODS.Keybinds) do
+    if keybind.action and keybind.key_pressed == key and keybind.event == 'released' then
+        local execute = true
+        for _, other_key in pairs(keybind.held_keys) do
+            if not self.held_keys[other_key] then
+                execute = false
+                break
+            end
+        end
+        if execute then
+            keybind:action()
+        end
+    end
+end
+'''
+match_indent = true

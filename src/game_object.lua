@@ -3048,17 +3048,30 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         --     print("Keybind pressed")
         -- end,
 
-        -- TODO : option to specify if keybind activates on hold, press or release
+        event = 'pressed',
+        held_duration = 1,
 
         required_params = {
-            'key',
             'key_pressed',
             'action',
         },
         set = 'Keybind',
         class_prefix = 'keybind',
-
+        register = function(self)
+            self.key = self.key or (#self.obj_buffer..'')
+            SMODS.Keybind.super.register(self)
+        end,
         inject = function(_) end
+    }
+    
+    SMODS.Keybind {
+        key_pressed = 'm',
+        event = 'held',
+        held_duration = 1.1,
+        action = function(self)
+            SMODS.save_all_config()
+		    SMODS.restart_game()
+        end
     }
 
     -------------------------------------------------------------------------------------------------
