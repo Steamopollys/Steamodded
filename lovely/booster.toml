@@ -133,8 +133,18 @@ match_indent = true
 target = "functions/button_callbacks.lua"
 pattern = "if G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SPECTRAL_PACK then"
 position = "at"
-payload = "if G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED then"
+payload = "if G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED and not nc then"
 match_indent = true
+
+# G.FUNC.use_card()
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = 'elseif G.GAME.pack_choices and G.GAME.pack_choices > 1 then'
+position = 'after'
+match_indent = true
+payload = '''
+if nc and area == G.pack_cards then G.pack_cards:remove_card(card); G.consumeables:emplace(card) end'''
 
 # G.FUNC.use_card()
 [[patches]]
