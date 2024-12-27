@@ -230,8 +230,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             orig_o.dependencies = orig_o.dependencies or {}
             if not silent then table.insert(orig_o.dependencies, SMODS.current_mod.id) end
         else
-            orig_o.mod = SMODS.current_mod
-            if silent then orig_o.no_main_mod_badge = true end
+            if not silent then orig_o.mod = SMODS.current_mod end
             orig_o.rarity_original = orig_o.rarity
         end
         if orig_o._saved_d_u then
