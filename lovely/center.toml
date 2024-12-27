@@ -14,7 +14,7 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj.set_ability and type(obj.set_ability) == 'function' then
-	obj:set_ability(self, initial, delay_sprites)
+    obj:set_ability(self, initial, delay_sprites)
 end
 
 '''
@@ -26,13 +26,13 @@ pattern = "self.ability.bonus = (self.ability.bonus or 0) + (center.config.bonus
 position = "after"
 payload = """
 for k, v in pairs(center.config) do
-	if k ~= 'bonus' then
-		if type(v) == 'table' then
-			self.ability[k] = copy_table(v)
-		else
-			self.ability[k] = v
-		end
-	end
+    if k ~= 'bonus' then
+        if type(v) == 'table' then
+            self.ability[k] = copy_table(v)
+        else
+            self.ability[k] = v
+        end
+    end
 end"""
 match_indent = true
 
@@ -45,8 +45,8 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if self.ability.set ~= "Enhanced" and obj.calculate and type(obj.calculate) == 'function' then
-	local o, t = obj:calculate(self, context)
-	if o or t then return o, t end
+    local o, t = obj:calculate(self, context)
+    if o or t then return o, t end
 end'''
 match_indent = true
 
@@ -60,7 +60,7 @@ match_indent = true
 payload = '''
 local obj = self.config.center
 if obj.update and type(obj.update) == 'function' then
-	obj:update(self, dt)
+    obj:update(self, dt)
 end'''
 
 # Card:generate_UIBox_ability_table()
@@ -89,7 +89,7 @@ position = 'at'
 match_indent = true
 payload = '''
 if not _c.generate_ui or type(_c.generate_ui) ~= 'function' then
-	full_UI_table.name = localize{type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name}
+    full_UI_table.name = localize{type = 'name', set = _c.set, key = _c.key, nodes = full_UI_table.name}
 end'''
 
 [[patches]]
@@ -100,8 +100,8 @@ position = 'before'
 match_indent = true
 payload = '''
 elseif _c.generate_ui and type(_c.generate_ui) == 'function' then
-	_c:generate_ui(info_queue, card, desc_nodes, specific_vars, full_UI_table)
-	if specific_vars and specific_vars.pinned then info_queue[#info_queue+1] = {key = 'pinned_left', set = 'Other'} end
+    _c:generate_ui(info_queue, card, desc_nodes, specific_vars, full_UI_table)
+    if specific_vars and specific_vars.pinned then info_queue[#info_queue+1] = {key = 'pinned_left', set = 'Other'} end
     if specific_vars and specific_vars.sticker then info_queue[#info_queue+1] = {key = string.lower(specific_vars.sticker)..'_sticker', set = 'Other'} end'''
 
 [[patches]]
@@ -113,10 +113,10 @@ position = 'at'
 payload = '''
 local res = {}
 if _c.locked_loc_vars and type(_c.locked_loc_vars) == 'function' then
-	res = _c:locked_loc_vars(info_queue) or {}
-	loc_vars = res.vars or {}
-	specific_vars = specific_vars or {}
-	specific_vars.not_hidden = res.not_hidden or specific_vars.not_hidden
+    res = _c:locked_loc_vars(info_queue) or {}
+    loc_vars = res.vars or {}
+    specific_vars = specific_vars or {}
+    specific_vars.not_hidden = res.not_hidden or specific_vars.not_hidden
 elseif $rest'''
 
 [[patches]]
@@ -156,9 +156,9 @@ payload = '''
 
 local custom_check
 if not card.unlocked and card.check_for_unlock and type(card.check_for_unlock) == 'function' then
-	ret = card:check_for_unlock(args)
-	if ret then unlock_card(card) end
-	custom_check = true
+    ret = card:check_for_unlock(args)
+    if ret then unlock_card(card) end
+    custom_check = true
 end'''
 
 [[patches]]
@@ -187,8 +187,8 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj.use and type(obj.use) == 'function' then
-	obj:use(self, area, copier)
-	return
+    obj:use(self, area, copier)
+    return
 end'''
 
 # Card:can_use_consumable()
@@ -201,7 +201,7 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj.can_use and type(obj.can_use) == 'function' then
-	return obj:can_use(self)
+    return obj:can_use(self)
 end'''
 
 # G.UIDEF.card_h_popup()
@@ -214,19 +214,19 @@ position = 'at'
 payload = '''
 local obj = card.config.center
 $if
-	if obj and (obj.set_card_type_badge or obj.type and obj.type.set_card_type_badge) then
-		if obj.type and type(obj.type.set_card_type_badge) == 'function' then
-			obj.type:set_card_type_badge(obj, card, badges)
-		end
-		if type(obj.set_card_type_badge) == 'function' then
-			obj:set_card_type_badge(card, badges)
-		end
-	else
-		$rest
-	end
+    if obj and (obj.set_card_type_badge or obj.type and obj.type.set_card_type_badge) then
+        if obj.type and type(obj.type.set_card_type_badge) == 'function' then
+            obj.type:set_card_type_badge(obj, card, badges)
+        end
+        if type(obj.set_card_type_badge) == 'function' then
+            obj:set_card_type_badge(card, badges)
+        end
+    else
+        $rest
+    end
 end
 if obj and obj.set_badges and type(obj.set_badges) == 'function' then
-	obj:set_badges(card, badges)
+    obj:set_badges(card, badges)
 end'''
 
 [[patches]]
@@ -237,15 +237,15 @@ line_prepend = '$indent'
 position = 'after'
 payload = '''
 if AUT.card_type ~= 'Locked' and AUT.card_type ~= 'Undiscovered' then
-	SMODS.create_mod_badges(card.config.center, badges)
-	if card.base then
-		SMODS.create_mod_badges(SMODS.Ranks[card.base.value], badges)
-		SMODS.create_mod_badges(SMODS.Suits[card.base.suit], badges)
-	end
-	if card.config and card.config.tag then
-		SMODS.create_mod_badges(SMODS.Tags[card.config.tag.key], badges)
-	end
-	badges.mod_set = nil
+    SMODS.create_mod_badges(card.config.center, badges)
+    if card.base then
+        SMODS.create_mod_badges(SMODS.Ranks[card.base.value], badges)
+        SMODS.create_mod_badges(SMODS.Suits[card.base.suit], badges)
+    end
+    if card.config and card.config.tag then
+        SMODS.create_mod_badges(SMODS.Tags[card.config.tag.key], badges)
+    end
+    badges.mod_set = nil
 end'''
 
 # set_discover_tallies()
@@ -258,10 +258,10 @@ position = 'at'
 payload = '''
 local tally = G.DISCOVER_TALLIES[v.set:lower()..'s']
 if tally then
-	tally.of = tally.of + 1
-	if v.discovered then
-		tally.tally = tally.tally + 1
-	end
+    tally.of = tally.of + 1
+    if v.discovered then
+        tally.tally = tally.tally + 1
+    end
 end'''
 
 [[patches]]
@@ -280,7 +280,7 @@ line_prepend = '$indent'
 position = 'before'
 payload = '''
 for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
-	G.DISCOVER_TALLIES[v:lower()..'s'] = {tally = 0, of = 0}
+    G.DISCOVER_TALLIES[v:lower()..'s'] = {tally = 0, of = 0}
 end'''
 
 # create_UIBox_your_collection()
@@ -293,12 +293,12 @@ position = 'before'
 payload = '''
 local consumable_nodes = {}
 if #SMODS.ConsumableType.ctype_buffer <= 3 then
-	for _, key in ipairs(SMODS.ConsumableType.ctype_buffer) do
-		local id = 'your_collection_'..key:lower()..'s'
-		consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
-	end
+    for _, key in ipairs(SMODS.ConsumableType.ctype_buffer) do
+        local id = 'your_collection_'..key:lower()..'s'
+        consumable_nodes[#consumable_nodes+1] = UIBox_button({button = id, label = {localize('b_'..key:lower()..'_cards')}, count = G.DISCOVER_TALLIES[key:lower()..'s'], minw = 4, id = id, colour = G.C.SECONDARY_SET[key]})
+    end
 else
-	consumable_nodes[#consumable_nodes+1] = UIBox_button({ button = 'your_collection_consumables', label = {localize('b_stat_consumables'), localize{ type = 'variable', key = 'c_types', vars = {#SMODS.ConsumableType.ctype_buffer} } }, count = G.DISCOVER_TALLIES['consumeables'], minw = 4, minh = 4, id = 'your_collection_consumables', colour = G.C.FILTER })
+    consumable_nodes[#consumable_nodes+1] = UIBox_button({ button = 'your_collection_consumables', label = {localize('b_stat_consumables'), localize{ type = 'variable', key = 'c_types', vars = {#SMODS.ConsumableType.ctype_buffer} } }, count = G.DISCOVER_TALLIES['consumeables'], minw = 4, minh = 4, id = 'your_collection_consumables', colour = G.C.FILTER })
 end
 '''
 
@@ -320,8 +320,8 @@ position = 'before'
 payload = '''
 local obj = center or self.config.center
 if obj.redeem and type(obj.redeem) == 'function' then
-	obj:redeem(self)
-	return
+    obj:redeem(self)
+    return
 end'''
 
 # create_card_for_shop()
@@ -334,7 +334,7 @@ position = 'at'
 payload = '''
 local total_rate = G.GAME.joker_rate + G.GAME.playing_card_rate
 for _,v in ipairs(SMODS.ConsumableType.ctype_buffer) do
-	total_rate = total_rate + G.GAME[v:lower()..'_rate']
+    total_rate = total_rate + G.GAME[v:lower()..'_rate']
 end'''
 
 [[patches]]
@@ -347,9 +347,9 @@ payload = '''
 -- need to preserve order to leave RNG unchanged
 local rates = $li
 for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
-	if not (v == 'Tarot' or v == 'Planet' or v == 'Spectral') then
-		table.insert(rates, { type = v, val = G.GAME[v:lower()..'_rate'] })
-	end
+    if not (v == 'Tarot' or v == 'Planet' or v == 'Spectral') then
+        table.insert(rates, { type = v, val = G.GAME[v:lower()..'_rate'] })
+    end
 end
 for _, v in ipairs(rates) do'''
 
@@ -361,13 +361,13 @@ pattern = "if not forced_key and soulable and (not G.GAME.banned_keys['c_soul'])
 match_indent = true
 position = 'after'
 payload = '''
-	for _, v in ipairs(SMODS.Consumable.legendaries) do
-		if (_type == v.type.key or _type == v.soul_set) and not (G.GAME.used_jokers[v.key] and not next(find_joker("Showman")) and not v.can_repeat_soul) and (not v.in_pool or (type(v.in_pool) ~= "function") or v:in_pool()) then
-			if pseudorandom('soul_'..v.key.._type..G.GAME.round_resets.ante) > (1 - v.soul_rate) then
-				forced_key = v.key
-			end
-		end
-	end'''
+    for _, v in ipairs(SMODS.Consumable.legendaries) do
+        if (_type == v.type.key or _type == v.soul_set) and not (G.GAME.used_jokers[v.key] and not next(find_joker("Showman")) and not v.can_repeat_soul) and (not v.in_pool or (type(v.in_pool) ~= "function") or v:in_pool()) then
+            if pseudorandom('soul_'..v.key.._type..G.GAME.round_resets.ante) > (1 - v.soul_rate) then
+                forced_key = v.key
+            end
+        end
+    end'''
 
 # Card:add_to_deck()
 [[patches]]
@@ -379,7 +379,7 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj and obj.add_to_deck and type(obj.add_to_deck) == 'function' then
-	obj:add_to_deck(self, from_debuff)
+    obj:add_to_deck(self, from_debuff)
 end'''
 
 # Card:remove_from_deck()
@@ -392,7 +392,7 @@ position = 'before'
 payload = '''
 local obj = self.config.center
 if obj and obj.remove_from_deck and type(obj.remove_from_deck) == 'function' then
-	obj:remove_from_deck(self, from_debuff)
+    obj:remove_from_deck(self, from_debuff)
 end'''
 
 # G.FUNCS.use_card()
@@ -406,9 +406,9 @@ payload = '''
 local nc
 if card.ability.consumeable then
     local obj = card.config.center
-	if obj.keep_on_use and type(obj.keep_on_use) == 'function' then
-		nc = obj:keep_on_use(card)
-	end
+    if obj.keep_on_use and type(obj.keep_on_use) == 'function' then
+        nc = obj:keep_on_use(card)
+    end
 end
 if not nc and card.area then card.area:remove_card(card) end'''
 
@@ -433,7 +433,7 @@ match_indent = true
 position = 'at'
 payload = '''
 if _center.set_sprites and type(_center.set_sprites) == 'function' then
-	_center:set_sprites(self, _front)
+    _center:set_sprites(self, _front)
 end
 if true then'''
 
@@ -447,7 +447,7 @@ position = 'at'
 payload = '''
 local obj = self.config.center
 if obj.load and type(obj.load) == 'function' then
-	obj:load(self, cardTable, other_card)
+    obj:load(self, cardTable, other_card)
 elseif self.config.center.name == "Half Joker" then'''
 
 # Card:calculate_dollar_bonus()
@@ -474,21 +474,21 @@ match_indent = true
 payload = '''
 local center = self.config.center
 if center.draw and type(center.draw) == 'function' then
-	center:draw(self, layer)
+    center:draw(self, layer)
 end
 if center.set == 'Default' or center.set == 'Enhanced' and not center.replace_base_card then
-	if not center.no_suit then
-		local suit = SMODS.Suits[self.base.suit] or {}
-		if suit.draw and type(suit.draw) == 'function' then
-			suit:draw(self, layer)
-		end
-	end
-	if not center.no_rank then
-		local rank = SMODS.Ranks[self.base.value] or {}
-		if rank.draw and type(rank.draw) == 'function' then
-			rank:draw(self, layer)
-		end
-	end
+    if not center.no_suit then
+        local suit = SMODS.Suits[self.base.suit] or {}
+        if suit.draw and type(suit.draw) == 'function' then
+            suit:draw(self, layer)
+        end
+    end
+    if not center.no_rank then
+        local rank = SMODS.Ranks[self.base.value] or {}
+        if rank.draw and type(rank.draw) == 'function' then
+            rank:draw(self, layer)
+        end
+    end
 end
 '''
 
@@ -501,6 +501,6 @@ match_indent = true
 payload = '''
 local seal = G.P_SEALS[self.seal or {}] or {}
 if type(seal.draw) == 'function' then
-	seal:draw(self, layer)
+    seal:draw(self, layer)
 elseif self.seal then
 '''

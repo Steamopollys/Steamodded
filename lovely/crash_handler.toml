@@ -16,5 +16,5 @@ match_indent = true
 target = "main.lua"
 position = "prepend"
 sources = [
-	"src/crash_handler.lua",
+    "src/crash_handler.lua",
 ]
