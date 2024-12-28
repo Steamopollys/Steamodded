@@ -913,75 +913,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         prefix_config = { key = false },
         collection_rows = { 6, 6 },
         create_UIBox_your_collection = function(self)
-            local deck_tables = {}
-
-            G.your_collection = {}
-            for j = 1, #self.collection_rows do
-                G.your_collection[j] = CardArea(
-                    G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h,
-                    (self.collection_rows[j] + 0.25) * G.CARD_W,
-                    1 * G.CARD_H,
-                    { card_limit = self.collection_rows[j], type = 'title', highlight_limit = 0, collection = true })
-                table.insert(deck_tables,
-                    {
-                        n = G.UIT.R,
-                        config = { align = "cm", padding = 0, no_fill = true },
-                        nodes = {
-                            { n = G.UIT.O, config = { object = G.your_collection[j] } }
-                        }
-                    }
-                )
-            end
-
-            local consumable_pool = SMODS.collection_pool(G.P_CENTER_POOLS[self.key])
-
-            local sum = 0
-            for j = 1, #G.your_collection do
-                for i = 1, self.collection_rows[j] do
-                    sum = sum + 1
-                    local center = consumable_pool[sum]
-                    if not center then break end
-                    local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                        G.CARD_W, G.CARD_H, nil, center)
-                    card:start_materialize(nil, i > 1 or j > 1)
-                    G.your_collection[j]:emplace(card)
-                end
-            end
-
-            local center_options = {}
-            for i = 1, math.ceil(#consumable_pool / sum) do
-                table.insert(center_options,
-                    localize('k_page') ..
-                    ' ' .. tostring(i) .. '/' .. tostring(math.ceil(#consumable_pool / sum)))
-            end
-
-            INIT_COLLECTION_CARD_ALERTS()
-            local option_nodes = { create_option_cycle({
-                options = center_options,
-                w = 4.5,
-                cycle_shoulders = true,
-                opt_callback = 'your_collection_' .. string.lower(self.key) .. '_page',
-                focus_args = { snap_to = true, nav = 'wide' },
-                current_option = 1,
-                colour = G.C.RED,
-                no_pips = true
-            }) }
             local type_buf = {}
-            if G.ACTIVE_MOD_UI then
-                for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
-                    if modsCollectionTally(G.P_CENTER_POOLS[v]).of > 0 then type_buf[#type_buf + 1] = v end
-                end
-            else
-                type_buf = SMODS.ConsumableType.ctype_buffer
+            for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
+                if not v.no_collection and (not G.ACTIVE_MOD_UI or modsCollectionTally(G.P_CENTER_POOLS[v]).of > 0) then type_buf[#type_buf + 1] = v end
             end
-            local t = create_UIBox_generic_options({
-                back_func = #type_buf>3 and 'your_collection_consumables' or G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection',
-                contents = {
-                    { n = G.UIT.R, config = { align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05 }, nodes = deck_tables },
-                    { n = G.UIT.R, config = { align = "cm", padding = 0 },                                                           nodes = option_nodes },
-                }
-            })
-            return t
+            return SMODS.card_collection_UIBox(G.P_CENTER_POOLS[self.key], self.collection_rows, { back_func = #type_buf>3 and 'your_collection_consumables' or nil })
         end,
         register = function(self)
             SMODS.ConsumableType.super.register(self)
@@ -1000,44 +936,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 G.FUNCS.overlay_menu {
                     definition = self:create_UIBox_your_collection(),
                 }
-            end
-            G.FUNCS['your_collection_' .. string.lower(self.key) .. '_page'] = function(args)
-                if not args or not args.cycle_config then return end
-                for j = 1, #G.your_collection do
-                    for i = #G.your_collection[j].cards, 1, -1 do
-                        local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
-                        c:remove()
-                        c = nil
-                    end
-                end
-                local sum = 0
-                for j = 1, #G.your_collection do
-                    sum = sum + self.collection_rows[j]
-                end
-
-                local consumable_pool = {}
-                if G.ACTIVE_MOD_UI then
-                    for _, v in ipairs(G.P_CENTER_POOLS[self.key]) do
-                        if v.mod and G.ACTIVE_MOD_UI.id == v.mod.id then consumable_pool[#consumable_pool+1] = v end
-                    end
-                else
-                    consumable_pool = G.P_CENTER_POOLS[self.key]
-                end
-
-                sum = sum * (args.cycle_config.current_option - 1)
-                for j = 1, #G.your_collection do
-                    for i = 1, self.collection_rows[j] do
-                        sum = sum + 1
-                        local center = consumable_pool[sum]
-                        if not center then break end
-                        local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2,
-                            G.your_collection[j].T.y, G
-                            .CARD_W, G.CARD_H, G.P_CARDS.empty, center)
-                        card:start_materialize(nil, i > 1 or j > 1)
-                        G.your_collection[j]:emplace(card)
-                    end
-                end
-                INIT_COLLECTION_CARD_ALERTS()
             end
         end,
         process_loc_text = function(self)

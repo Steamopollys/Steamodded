@@ -539,136 +539,129 @@ G.UIDEF.consumable_collection_page = function(page)
     return t
 end
 
-G.FUNCS.your_collection_stickers = function(e)
-    G.SETTINGS.paused = true
-    G.FUNCS.overlay_menu{
-      definition = create_UIBox_your_collection_stickers(),
-    }
-end
+-- function create_UIBox_your_collection_stickers(exit)
+--     local deck_tables = {}
+--     local sticker_pool = SMODS.collection_pool(SMODS.Stickers)
+--     local rows, cols = (#sticker_pool > 5 and 2 or 1), 5
+--     local page = 0
 
-function create_UIBox_your_collection_stickers(exit)
-    local deck_tables = {}
-    local sticker_pool = SMODS.collection_pool(SMODS.Stickers)
-    local rows, cols = (#sticker_pool > 5 and 2 or 1), 5
-    local page = 0
+--     G.your_collection = {}
+--     for j = 1, rows do
+--         G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
+--             {
+--                 card_limit = cols,
+--                 type = 'title',
+--                 highlight_limit = 0,
+--                 collection = true
+--             })
+--         table.insert(deck_tables,
+--             {n = G.UIT.R, config = {align = "cm", padding = 0, no_fill = true}, nodes = {
+--                 {n = G.UIT.O, config = {object = G.your_collection[j]}}}}
+--         )
+--     end
 
-    G.your_collection = {}
-    for j = 1, rows do
-        G.your_collection[j] = CardArea(G.ROOM.T.x + 0.2 * G.ROOM.T.w / 2, G.ROOM.T.h, 5.3 * G.CARD_W, 1.03 * G.CARD_H,
-            {
-                card_limit = cols,
-                type = 'title',
-                highlight_limit = 0,
-                collection = true
-            })
-        table.insert(deck_tables,
-            {n = G.UIT.R, config = {align = "cm", padding = 0, no_fill = true}, nodes = {
-                {n = G.UIT.O, config = {object = G.your_collection[j]}}}}
-        )
-    end
+--     local count = math.min(cols * rows, #sticker_pool)
+--     local index = 1 + (rows * cols * page)
+--     for j = 1, rows do
+--         for i = 1, cols do
+--             local center = sticker_pool[index]
 
-    local count = math.min(cols * rows, #sticker_pool)
-    local index = 1 + (rows * cols * page)
-    for j = 1, rows do
-        for i = 1, cols do
-            local center = sticker_pool[index]
+--             if not center then
+--                 break
+--             end
+--             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+--                 G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
+--             card.ignore_pinned = true -- Scuffed solution to ignoring the effect of pinned, I'll figure out something better later
+--             center:apply(card, true)
+--             G.your_collection[j]:emplace(card)
+--             index = index + 1
+--         end
+--         if index > count then
+--             break
+--         end
+--     end
 
-            if not center then
-                break
-            end
-            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
-            card.ignore_pinned = true -- Scuffed solution to ignoring the effect of pinned, I'll figure out something better later
-            center:apply(card, true)
-            G.your_collection[j]:emplace(card)
-            index = index + 1
-        end
-        if index > count then
-            break
-        end
-    end
+--     local edition_options = {}
 
-    local edition_options = {}
+--     local t = create_UIBox_generic_options({
+--         back_func = "your_collection_other_gameobjects",
+--         snap_back = true,
+--         contents = { 
+--             {n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+--                 deck_tables}}
+--     })
 
-    local t = create_UIBox_generic_options({
-        back_func = "your_collection_other_gameobjects",
-        snap_back = true,
-        contents = { 
-            {n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
-                deck_tables}}
-    })
+--     if #sticker_pool > rows * cols then
+--         for i = 1, math.ceil(#sticker_pool / (rows * cols)) do
+--             table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
+--                 tostring(math.ceil(#sticker_pool / (rows * cols))))
+--         end
+--         t = create_UIBox_generic_options({
+--             back_func = "your_collection_other_gameobjects",
+--             snap_back = true,
+--             contents = {
+--                 {n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
+--                     deck_tables},
+--                 {n = G.UIT.R, config = {align = "cm"}, nodes = { 
+--                     create_option_cycle({
+--                         options = edition_options,
+--                         w = 4.5,
+--                         cycle_shoulders = true,
+--                         opt_callback = 'your_collection_stickers_page',
+--                         focus_args = { snap_to = true, nav = 'wide' },
+--                         current_option = 1,
+--                         r = rows,
+--                         c = cols,
+--                         colour = G.C.RED,
+--                         no_pips = true
+--                     })}}
+--             }
+--         })
+--     end
+--     return t
+-- end
 
-    if #sticker_pool > rows * cols then
-        for i = 1, math.ceil(#sticker_pool / (rows * cols)) do
-            table.insert(edition_options, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
-                tostring(math.ceil(#sticker_pool / (rows * cols))))
-        end
-        t = create_UIBox_generic_options({
-            back_func = "your_collection_other_gameobjects",
-            snap_back = true,
-            contents = {
-                {n = G.UIT.R, config = {align = "cm", minw = 2.5, padding = 0.1, r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes = 
-                    deck_tables},
-                {n = G.UIT.R, config = {align = "cm"}, nodes = { 
-                    create_option_cycle({
-                        options = edition_options,
-                        w = 4.5,
-                        cycle_shoulders = true,
-                        opt_callback = 'your_collection_stickers_page',
-                        focus_args = { snap_to = true, nav = 'wide' },
-                        current_option = 1,
-                        r = rows,
-                        c = cols,
-                        colour = G.C.RED,
-                        no_pips = true
-                    })}}
-            }
-        })
-    end
-    return t
-end
+-- G.FUNCS.your_collection_stickers_page = function(args)
+--     if not args or not args.cycle_config then
+--         return
+--     end
+--     local sticker_pool = SMODS.collection_pool(SMODS.Stickers)
+--     local rows = (#sticker_pool > 5 and 2 or 1)
+--     local cols = 5
+--     local page = args.cycle_config.current_option
+--     if page > math.ceil(#sticker_pool / (rows * cols)) then
+--         page = page - math.ceil(#sticker_pool / (rows * cols))
+--     end
+--     local count = rows * cols
+--     local offset = (rows * cols) * (page - 1)
 
-G.FUNCS.your_collection_stickers_page = function(args)
-    if not args or not args.cycle_config then
-        return
-    end
-    local sticker_pool = SMODS.collection_pool(SMODS.Stickers)
-    local rows = (#sticker_pool > 5 and 2 or 1)
-    local cols = 5
-    local page = args.cycle_config.current_option
-    if page > math.ceil(#sticker_pool / (rows * cols)) then
-        page = page - math.ceil(#sticker_pool / (rows * cols))
-    end
-    local count = rows * cols
-    local offset = (rows * cols) * (page - 1)
+--     for j = 1, #G.your_collection do
+--         for i = #G.your_collection[j].cards, 1, -1 do
+--             if G.your_collection[j] ~= nil then
+--                 local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+--                 c:remove()
+--                 c = nil
+--             end
+--         end
+--     end
 
-    for j = 1, #G.your_collection do
-        for i = #G.your_collection[j].cards, 1, -1 do
-            if G.your_collection[j] ~= nil then
-                local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
-                c:remove()
-                c = nil
-            end
-        end
-    end
-
-    for j = 1, rows do
-        for i = 1, cols do
-            if count % rows > 0 and i <= count % rows and j == cols then
-                offset = offset - 1
-                break
-            end
-            local idx = i + (j - 1) * cols + offset
-            if idx > #sticker_pool then return end
-            local center = sticker_pool[idx]
-            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
-                G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
-            card.ignore_pinned = true -- Scuffed solution to ignoring the effect of pinned, I'll figure out something better later
-            center:apply(card, true)
-            G.your_collection[j]:emplace(card)
-        end
-    end
-end
+--     for j = 1, rows do
+--         for i = 1, cols do
+--             if count % rows > 0 and i <= count % rows and j == cols then
+--                 offset = offset - 1
+--                 break
+--             end
+--             local idx = i + (j - 1) * cols + offset
+--             if idx > #sticker_pool then return end
+--             local center = sticker_pool[idx]
+--             local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w / 2, G.your_collection[j].T.y,
+--                 G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS["c_base"])
+--             card.ignore_pinned = true -- Scuffed solution to ignoring the effect of pinned, I'll figure out something better later
+--             center:apply(card, true)
+--             G.your_collection[j]:emplace(card)
+--         end
+--     end
+-- end
 
 function buildAchievementsTab(mod, current_page)
     current_page = current_page or 1
@@ -1794,4 +1787,152 @@ G.FUNCS.SMODS_change_mipmap = function(args)
     SMODS.config.graphics_mipmap_level = args.to_key
     G:set_render_settings()
     SMODS:save_mod_config()
+end
+
+SMODS.card_collection_UIBox = function(_pool, rows, args)
+    args = args or {}
+    args.w_mod = args.w_mod or 1
+    args.h_mod = args.h_mod or 1
+    args.card_scale = args.card_scale or 1
+    local deck_tables = {}
+    local pool = SMODS.collection_pool(_pool)
+
+    G.your_collection = {}
+    local cards_per_page = 0
+    local row_totals = {}
+    for j = 1, #rows do
+        if cards_per_page >= #pool and args.collapse_single_page then
+            rows[j] = nil
+        else
+            row_totals[j] = cards_per_page
+            cards_per_page = cards_per_page + rows[j]
+            G.your_collection[j] = CardArea(
+                G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
+                (args.w_mod*rows[j]+0.25)*G.CARD_W,
+                args.h_mod*G.CARD_H, 
+                {card_limit = rows[j], type = args.area_type or 'title', highlight_limit = 0, collection = true}
+            )
+            table.insert(deck_tables, 
+            {n=G.UIT.R, config={align = "cm", padding = 0.07, no_fill = true}, nodes={
+                {n=G.UIT.O, config={object = G.your_collection[j]}}
+            }})
+        end
+    end
+
+    local options = {}
+    for i = 1, math.ceil(#pool/cards_per_page) do
+        table.insert(options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#pool/cards_per_page)))
+    end
+
+    G.FUNCS.SMODS_card_collection_page = function(e)
+        if not e or not e.cycle_config then return end
+        for j = 1, #G.your_collection do
+            for i = #G.your_collection[j].cards, 1, -1 do
+            local c = G.your_collection[j]:remove_card(G.your_collection[j].cards[i])
+            c:remove()
+            c = nil
+            end
+        end
+        for j = 1, #rows do
+            for i = 1, rows[j] do
+            local center = pool[i+row_totals[j] + (cards_per_page*(e.cycle_config.current_option - 1))]
+            if not center then break end
+            local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W*args.card_scale, G.CARD_H*args.card_scale, G.P_CARDS.empty, (args.center and G.P_CENTERS[args.center]) or center)
+            if args.modify_card then args.modify_card(card, center, i, j) end
+            if not args.no_materialize then card:start_materialize(nil, i>1 or j>1) end
+            G.your_collection[j]:emplace(card)
+            end
+        end
+        INIT_COLLECTION_CARD_ALERTS()
+    end
+
+    G.FUNCS.SMODS_card_collection_page{ cycle_config = { current_option = 1 }}
+    
+    local t =  create_UIBox_generic_options({ back_func = (args and args.back_func) or G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', snap_back = args.snap_back, infotip = args.infotip, contents = {
+          {n=G.UIT.R, config={align = "cm", r = 0.1, colour = G.C.BLACK, emboss = 0.05}, nodes=deck_tables}, 
+          (not args.hide_single_page or cards_per_page < #pool) and {n=G.UIT.R, config={align = "cm"}, nodes={
+            create_option_cycle({options = options, w = 4.5, cycle_shoulders = true, opt_callback = 'SMODS_card_collection_page', current_option = 1, colour = G.C.RED, no_pips = true, focus_args = {snap_to = true, nav = 'wide'}})
+          }} or nil,
+      }})
+    return t
+end
+
+create_UIBox_your_collection_jokers = function() 
+    return SMODS.card_collection_UIBox(G.P_CENTER_POOLS.Joker, {5,5,5}, {
+        no_materialize = true, 
+        modify_card = function(card, center) card.sticker = get_joker_win_sticker(center) end,
+        h_mod = 0.95,
+    })
+end
+create_UIBox_your_collection_boosters = function()
+    return SMODS.card_collection_UIBox(G.P_CENTER_POOLS.Booster, {4,4}, {
+        h_mod = 1.3,
+        w_mod = 1.25, 
+        card_scale = 1.27,
+    })
+end
+create_UIBox_your_collection_vouchers = function()
+    return SMODS.card_collection_UIBox(G.P_CENTER_POOLS.Voucher, {4,4}, {
+        area_type = 'voucher',
+        modify_card = function(card, center, i, j)
+            card.ability.order = i+(j-1)*4
+        end,
+    })
+end
+create_UIBox_your_collection_enhancements = function()
+    return SMODS.card_collection_UIBox(G.P_CENTER_POOLS.Enhanced, {4,4}, {
+        no_materialize = true,
+        snap_back = true,
+        h_mod = 1.03,
+        infotip = localize('ml_edition_seal_enhancement_explanation'),
+        hide_single_page = true,
+    })
+end 
+create_UIBox_your_collection_editions = function()
+    return SMODS.card_collection_UIBox(G.P_CENTER_POOLS.Edition, {5,5}, {
+        snap_back = true,
+        h_mod = 1.03,
+        infotip = localize('ml_edition_seal_enhancement_explanation'),
+        hide_single_page = true,
+        collapse_single_page = true,
+        modify_card = function(card, center)
+            if center.discovered then card:set_edition(center.key, true, true) end
+        end,
+    })
+end
+
+create_UIBox_your_collection_seals = function()
+    return SMODS.card_collection_UIBox(G.P_CENTER_POOLS.Seal, {5,5}, {
+        snap_back = true,
+        infotip = localize('ml_edition_seal_enhancement_explanation'),
+        hide_single_page = true,
+        collapse_single_page = true,
+        center = 'c_base',
+        h_mod = 1.03,
+        modify_card = function(card, center)
+            card:set_seal(center.key, true)
+        end,
+    })
+end
+
+G.FUNCS.your_collection_stickers = function(e)
+    G.SETTINGS.paused = true
+    G.FUNCS.overlay_menu{
+      definition = create_UIBox_your_collection_stickers(),
+    }
+end
+
+create_UIBox_your_collection_stickers = function()
+    return SMODS.card_collection_UIBox(SMODS.Stickers, {5,5}, {
+        snap_back = true,
+        hide_single_page = true,
+        collapse_single_page = true,
+        center = 'c_base',
+        h_mod = 1.03,
+        back_func = 'your_collection_other_gameobjects',
+        modify_card = function(card, center)
+            card.ignore_pinned = true
+            center:apply(card, true)
+        end,
+    })
 end
