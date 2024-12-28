@@ -895,7 +895,7 @@ end
 
 --find a needle in a haystack, infinite depth, get every needle, recreate the path to that needle
 SMODS.deepfind = function(tbl, val, seen, collector, tree)
-    seen = seen or {}
+    seen = seen or {[tbl]=true}
     collector = collector or {}
     tree = tree or {}
     for i, v in pairs(tbl) do
