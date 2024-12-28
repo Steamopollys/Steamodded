@@ -1601,6 +1601,7 @@ end
 
 local cge = Card.get_edition
 function Card:get_edition()
+	if self.ability.extra_enhancement then return end
 	local ret = cge(self)
 	if self.edition and self.edition.key then
 		local ed = SMODS.Centers[self.edition.key]
@@ -2117,5 +2118,12 @@ function Card:get_chip_bonus()
     end
     if self.debuff then return 0 end
     return self.ability.bonus + (self.ability.perma_bonus or 0)
+end
+
+-- prevent quantum enhacements from applying seal effects
+local ccs = Card.calculate_seal
+function Card:calculate_seal(context)
+	if self.ability.extra_enhancement then return end
+	return ccs(self, context)
 end
 --#endregion

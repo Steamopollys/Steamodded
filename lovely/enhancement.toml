@@ -412,3 +412,12 @@ pattern = "if cards_destroyed[i].ability.name == 'Glass Card' then"
 position = "at"
 payload = "if SMODS.has_enhancement(cards_destroyed[i], 'm_glass') then"
 match_indent = true
+
+# Prevent blue seals from applying on quantum enhancement calc
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.seal == 'Blue' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then"
+position = "at"
+payload = "if self.seal == 'Blue' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit and not self.ability.extra_enhancement then"
+match_indent = true
