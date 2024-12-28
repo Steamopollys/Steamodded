@@ -16,8 +16,10 @@ local destroyed_calc = eval_card(G.hand.cards[1], {destroying_card = G.hand.card
 if next(destroyed_calc) == 'destroyed' then destroyed = destroyed_calc end
 '''
 
-# G.FUNCS.evaluate_play()
-# handle repetitions
+
+## G.FUNCS.evaluate_play()
+
+ # Handle repetitions from playing cards
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'
@@ -60,6 +62,8 @@ for key, value in pairs(eval) do
     end
 end
 '''
+
+# Handle retrigger messages
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'
@@ -70,7 +74,82 @@ payload = '''
 local _, eff = next(reps[j])
 card_eval_status_text(eff.card, 'jokers', nil, nil, nil, eff)'''
 
-# eval_card()
+## eval_card()
+# built in config values
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''local chips = card:get_chip_bonus()
+if chips > 0 then 
+    ret.chips = chips
+end
+
+local mult = card:get_chip_mult()
+if mult > 0 then 
+    ret.mult = mult
+end
+
+local x_mult = card:get_chip_x_mult(context)
+if x_mult > 0 then 
+    ret.x_mult = x_mult
+end
+
+local p_dollars = card:get_p_dollars()
+if p_dollars > 0 then 
+    ret.p_dollars = p_dollars
+end'''
+match_indent = true
+position = "at"
+payload = """
+ret.card = {card = card}
+local chips = card:get_chip_bonus()
+if chips > 0 then 
+    ret.card.chips = chips
+end
+
+local mult = card:get_chip_mult()
+if mult > 0 then 
+    ret.card.mult = mult
+end
+
+local x_mult = card:get_chip_x_mult(context)
+if x_mult > 0 then 
+    ret.card.x_mult = x_mult
+end
+
+local p_dollars = card:get_p_dollars()
+if p_dollars > 0 then 
+    ret.card.p_dollars = p_dollars
+end
+"""
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''
+local h_mult = card:get_chip_h_mult()
+if h_mult > 0 then 
+    ret.h_mult = h_mult
+end
+
+local h_x_mult = card:get_chip_h_x_mult()
+if h_x_mult > 0 then 
+    ret.x_mult = h_x_mult
+end
+'''
+match_indent = true
+position = "at"
+payload = """
+ret.card = {card = card}
+local h_mult = card:get_chip_h_mult()
+if h_mult > 0 then 
+    ret.card.h_mult = h_mult
+end
+
+local h_x_mult = card:get_chip_h_x_mult()
+if h_x_mult > 0 then 
+    ret.card.x_mult = h_x_mult
+end
+"""
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
@@ -130,23 +209,11 @@ position = "before"
 payload = '''
 for key, effect in pairs(effects[ii]) do
     if type(effect) == 'table' then
-        SMODS.calculate_effect(effect, scoring_hand[i])
+        SMODS.calculate_effect(effect, scoring_hand[i], percent)
     end
 end
 '''
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = '''--If hold mult added, do hold mult add event and add the mult to the total'''
-match_indent = true
-position = "before"
-payload = '''
-for key, effect in pairs(effects[ii]) do
-    if type(effect) == 'table' then
-        SMODS.calculate_effect(effect, G.hand.cards[i])
-    end
-end
-'''
+
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua"
@@ -156,6 +223,7 @@ position = "at"
 payload = '''
 j = j + (next(effects[1]) and 1 or #reps)
 '''
+
 # Joker repetition evaluation wrapper
 [[patches]]
 [patches.pattern]
@@ -201,3 +269,96 @@ for key, value in pairs(eval) do
 end
 '''
 
+
+## Remove base game calculations
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+--If chips added, do chip add event and add the chips to the total
+if effects[ii].chips then 
+    if effects[ii].card then juice_card(effects[ii].card) end
+    hand_chips = mod_chips(hand_chips + effects[ii].chips)
+    update_hand_text({delay = 0}, {chips = hand_chips})
+    card_eval_status_text(scoring_hand[i], 'chips', effects[ii].chips, percent)
+end
+
+--If mult added, do mult add event and add the mult to the total
+if effects[ii].mult then 
+    if effects[ii].card then juice_card(effects[ii].card) end
+    mult = mod_mult(mult + effects[ii].mult)
+    update_hand_text({delay = 0}, {mult = mult})
+    card_eval_status_text(scoring_hand[i], 'mult', effects[ii].mult, percent)
+end
+
+--If play dollars added, add dollars to total
+if effects[ii].p_dollars then 
+    if effects[ii].card then juice_card(effects[ii].card) end
+    ease_dollars(effects[ii].p_dollars)
+    card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].p_dollars, percent)
+end
+
+--If dollars added, add dollars to total
+if effects[ii].dollars then 
+    if effects[ii].card then juice_card(effects[ii].card) end
+    ease_dollars(effects[ii].dollars)
+    card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].dollars, percent)
+end
+'''
+match_indent = true
+position = "at"
+payload = '''
+-- Base game calculation removed
+'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+--if this effect came from a joker
+if effects[ii].card then
+    mod_percent = true
+    G.E_MANAGER:add_event(Event({
+        trigger = 'immediate',
+        func = (function() effects[ii].card:juice_up(0.7);return true end)
+    }))
+end
+
+--If hold mult added, do hold mult add event and add the mult to the total
+
+--If dollars added, add dollars to total
+if effects[ii].dollars then 
+    ease_dollars(effects[ii].dollars)
+    card_eval_status_text(G.hand.cards[i], 'dollars', effects[ii].dollars, percent)
+end
+
+if effects[ii].h_mult then
+    mod_percent = true
+    mult = mod_mult(mult + effects[ii].h_mult)
+    update_hand_text({delay = 0}, {mult = mult})
+    card_eval_status_text(G.hand.cards[i], 'h_mult', effects[ii].h_mult, percent)
+end
+
+if effects[ii].x_mult then
+    mod_percent = true
+    mult = mod_mult(mult*effects[ii].x_mult)
+    update_hand_text({delay = 0}, {mult = mult})
+    card_eval_status_text(G.hand.cards[i], 'x_mult', effects[ii].x_mult, percent)
+end
+
+if effects[ii].message then
+    mod_percent = true
+    update_hand_text({delay = 0}, {mult = mult})
+    card_eval_status_text(G.hand.cards[i], 'extra', nil, percent, nil, effects[ii])
+end
+'''
+match_indent = true
+position = "at"
+payload = '''
+-- Base game calculation removed 2
+for key, effect in pairs(effects[ii]) do
+    if type(effect) == 'table' then
+        SMODS.calculate_effect(effect, G.hand.cards[i], percent)
+    end
+end
+'''

@@ -919,19 +919,33 @@ end
 
 -- This function handles the calculation of each effect returned to evaluate play.
 -- Can easily be hooked to add more calculation effects ala Talisman
-SMODS.calculate_effect = function(effect, scored_card)
+SMODS.calculate_effect = function(effect, scored_card, percent)
     if effect.chips then 
         if effect.card then juice_card(effect.card) end
         hand_chips = mod_chips(hand_chips + effect.chips)
         update_hand_text({delay = 0}, {chips = hand_chips})
         if not effect.remove_default_message then card_eval_status_text(scored_card, 'chips', effect.chips, percent) end
     end
-    
+
+    if effect.h_chips then
+        mod_percent = true
+        mult = mod_mult(hand_chips + effect.h_chips)
+        update_hand_text({delay = 0}, {chips = hand_chips})
+        if not effect.remove_default_message then card_eval_status_text(scored_card, 'chips', effect.h_chips, percent) end
+    end
+
     if effect.mult then 
         if effect.card then juice_card(effect.card) end
         mult = mod_mult(mult + effect.mult)
         update_hand_text({delay = 0}, {mult = mult})
         if not effect.remove_default_message then card_eval_status_text(scored_card, 'mult', effect.mult, percent) end
+    end
+
+    if effect.h_mult then
+        mod_percent = true
+        mult = mod_mult(mult + effect.h_mult)
+        update_hand_text({delay = 0}, {mult = mult})
+        if not effect.remove_default_message then card_eval_status_text(scored_card, 'h_mult', effect.h_mult, percent) end
     end
     
     if effect.p_dollars then 
