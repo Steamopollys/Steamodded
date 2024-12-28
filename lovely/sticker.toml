@@ -162,6 +162,13 @@ payload = 'eval_card(G.jokers.cards[j], '
 [[patches]]
 [patches.regex]
 target = 'functions/state_events.lua'
+pattern = 'G\.jokers\.cards\[k\]:calculate_joker\('
+position = 'at'
+payload = 'eval_card(G.jokers.cards[k], '
+
+[[patches]]
+[patches.regex]
+target = 'functions/state_events.lua'
 pattern = 'v:calculate_joker\('
 position = 'at'
 payload = 'eval_card(v, '
