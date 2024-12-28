@@ -13,10 +13,10 @@ pattern = 'function Game:init_game_object()'
 position = 'after'
 match_indent = true
 payload = '''
-	local cards_played = {}
-	for _,v in ipairs(SMODS.Rank.obj_buffer) do
-		cards_played[v] = { suits = {}, total = 0 }
-	end'''
+    local cards_played = {}
+    for _,v in ipairs(SMODS.Rank.obj_buffer) do
+        cards_played[v] = { suits = {}, total = 0 }
+    end'''
 
 [[patches]]
 [patches.regex]
@@ -25,9 +25,9 @@ pattern = '(?<indent>[\t ]*)cards_played = \{\n(.*\n){13}[\t ]*\},'
 position = 'at'
 line_prepend = '$indent'
 payload = '''
-	cards_played = cards_played,
-	disabled_suits = {},
-	disabled_ranks = {},'''
+    cards_played = cards_played,
+    disabled_suits = {},
+    disabled_ranks = {},'''
 
 # Game:start_run()
 [[patches]]
@@ -39,7 +39,7 @@ match_indent = true
 payload = '''
 if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true, suit = v.suit})
 or type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true, rank = v.value}) then
-	goto continue
+    goto continue
 end'''
 
 [[patches]]
@@ -85,15 +85,15 @@ pattern = 'return G.ARGS.LOC_COLOURS[_c] or _default or G.C.UI.TEXT_DARK'
 position = 'before'
 match_indent = true
 payload = '''
-	for _, v in ipairs(SMODS.Rarity.obj_buffer) do
-		G.ARGS.LOC_COLOURS[v:lower()] = G.C.RARITY[v]
-	end
-	for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
-		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SECONDARY_SET[v] 
-	end
-	for _, v in ipairs(SMODS.Suit.obj_buffer) do
-		G.ARGS.LOC_COLOURS[v:lower()] = G.C.SUITS[v]
-	end'''
+    for _, v in ipairs(SMODS.Rarity.obj_buffer) do
+        G.ARGS.LOC_COLOURS[v:lower()] = G.C.RARITY[v]
+    end
+    for _, v in ipairs(SMODS.ConsumableType.ctype_buffer) do
+        G.ARGS.LOC_COLOURS[v:lower()] = G.C.SECONDARY_SET[v] 
+    end
+    for _, v in ipairs(SMODS.Suit.obj_buffer) do
+        G.ARGS.LOC_COLOURS[v:lower()] = G.C.SUITS[v]
+    end'''
 
 # get_flush()
 [[patches]]
@@ -116,7 +116,7 @@ match_indent = true
 payload = '''
 local vals = {}
 for i = 1, SMODS.Rank.max_id.value do
-	vals[i] = {}
+    vals[i] = {}
 end'''
 
 [[patches]]
@@ -143,17 +143,17 @@ pattern = 'function Card:get_nominal\(mod\)\n([\t ]+.*\n)*end'
 position = 'at'
 payload = '''
 function Card:get_nominal(mod)
-	local mult = 1
-	local rank_mult = 1
-	if mod == 'suit' then mult = 10000 end
-	if self.ability.effect == 'Stone Card' or (self.config.center.no_suit and self.config.center.no_rank) then 
-		mult = -10000
-	elseif self.config.center.no_suit then
-		mult = 0
-	elseif self.config.center.no_rank then
-		rank_mult = 0
-	end
-	return 10*self.base.nominal*rank_mult + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal*rank_mult + 0.000001*self.unique_val
+    local mult = 1
+    local rank_mult = 1
+    if mod == 'suit' then mult = 10000 end
+    if self.ability.effect == 'Stone Card' or (self.config.center.no_suit and self.config.center.no_rank) then 
+        mult = -10000
+    elseif self.config.center.no_suit then
+        mult = 0
+    elseif self.config.center.no_rank then
+        rank_mult = 0
+    end
+    return 10*self.base.nominal*rank_mult + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + 10*self.base.face_nominal*rank_mult + 0.000001*self.unique_val
 end'''
 
 # Card:set_base()
@@ -232,9 +232,9 @@ payload = '''
 local SUITS = {}
 local suit_map = {}
 for i = #SMODS.Suit.obj_buffer, 1, -1 do
-	local suit = SMODS.Suits[SMODS.Suit.obj_buffer[i]]
-	SUITS[suit.card_key] = {}
-	suit_map[#suit_map+1] = suit.card_key
+    local suit = SMODS.Suits[SMODS.Suit.obj_buffer[i]]
+    SUITS[suit.card_key] = {}
+    suit_map[#suit_map+1] = suit.card_key
 end'''
 
 [[patches]]
@@ -254,10 +254,10 @@ position = 'after'
 match_indent = true
 payload = '''
 if type(SMODS.Ranks[v.value].in_pool) == 'function' and not SMODS.Ranks[v.value]:in_pool({initial_deck = true, suit = v.suit}) then
-	keep = false
+    keep = false
 end
 if type(SMODS.Suits[v.suit].in_pool) == 'function' and not SMODS.Suits[v.suit]:in_pool({initial_deck = true, rank = v.value}) then
-	keep = false
+    keep = false
 end'''
 
 [[patches]]
@@ -269,11 +269,11 @@ line_prepend = '$indent'
 payload = '''
 local num_suits = 0
 for j = 1, #suit_map do
-	if SUITS[suit_map[j]][1] then num_suits = num_suits + 1 end
+    if SUITS[suit_map[j]][1] then num_suits = num_suits + 1 end
 end
 for j = 1, #suit_map do
-	$mid			
-			(0.42 - (num_suits <= 4 and 0 or num_suits >= 8 and 0.28 or 0.07 * (num_suits - 4))) * G.CARD_H,'''
+    $mid			
+            (0.42 - (num_suits <= 4 and 0 or num_suits >= 8 and 0.28 or 0.07 * (num_suits - 4))) * G.CARD_H,'''
 
 [[patches]]
 [patches.pattern]
@@ -282,18 +282,18 @@ pattern = '--Fill all remaining info if this is the main desc'
 position = 'before'
 match_indent = true
 payload = '''if card_type == 'Default' or card_type == 'Enhanced' and not _c.replace_base_card and card and card.base then
-	if not _c.no_suit then
-		local suit = SMODS.Suits[card.base.suit] or {}
-		if suit.loc_vars and type(suit.loc_vars) == 'function' then
-			suit:loc_vars(info_queue, card)
-		end
-	end
-	if not _c.no_rank then
-		local rank = SMODS.Ranks[card.base.value] or {}
-		if rank.loc_vars and type(rank.loc_vars) == 'function' then
-			rank:loc_vars(info_queue, card)
-		end
-	end
+    if not _c.no_suit then
+        local suit = SMODS.Suits[card.base.suit] or {}
+        if suit.loc_vars and type(suit.loc_vars) == 'function' then
+            suit:loc_vars(info_queue, card)
+        end
+    end
+    if not _c.no_rank then
+        local rank = SMODS.Ranks[card.base.value] or {}
+        if rank.loc_vars and type(rank.loc_vars) == 'function' then
+            rank:loc_vars(info_queue, card)
+        end
+    end
 end
 
 '''

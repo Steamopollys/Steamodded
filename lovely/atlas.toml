@@ -20,8 +20,8 @@ pattern = 'G.ASSET_ATLAS\[_center.atlas or _center.set\]'
 position = 'at'
 payload = '''
 G.ASSET_ATLAS[(_center.undiscovered and (_center.undiscovered[G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or _center.undiscovered.atlas))
-	or (SMODS.UndiscoveredSprites[_center.set] and (SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas))
-	or _center.set] or G.ASSET_ATLAS["Joker"]'''
+    or (SMODS.UndiscoveredSprites[_center.set] and (SMODS.UndiscoveredSprites[_center.set][G.SETTINGS.colourblind_option and 'hc_atlas' or 'lc_atlas'] or SMODS.UndiscoveredSprites[_center.set].atlas))
+    or _center.set] or G.ASSET_ATLAS["Joker"]'''
 
 [[patches]]
 [patches.regex]
@@ -82,10 +82,10 @@ pattern = 'G.ASSET_ATLAS["icons"]'
 position = 'after'
 match_indent = false
 payload = '''
-	local _smods_atlas = _c and ((G.SETTINGS.colourblind_option and _c.hc_atlas or _c.lc_atlas) or _c.atlas)
-	if _smods_atlas then
-		_atlas = G.ASSET_ATLAS[_smods_atlas] or _atlas
-	end'''
+    local _smods_atlas = _c and ((G.SETTINGS.colourblind_option and _c.hc_atlas or _c.lc_atlas) or _c.atlas)
+    if _smods_atlas then
+        _atlas = G.ASSET_ATLAS[_smods_atlas] or _atlas
+    end'''
 
 ## Hide floating ? from undiscovered types
 # Card:draw()

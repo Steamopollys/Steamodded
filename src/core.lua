@@ -42,35 +42,35 @@ end
 set_mods_dir()
 
 local function find_self(directory, target_filename, target_line, depth)
-	depth = depth or 1
-	if depth > 3 then return end
-	for _, filename in ipairs(NFS.getDirectoryItems(directory)) do
-		local file_path = directory .. "/" .. filename
-		local file_type = NFS.getInfo(file_path).type
-		if file_type == 'directory' or file_type == 'symlink' then
-			local f = find_self(file_path, target_filename, target_line, depth+1)
-			if f then return f end
-		elseif filename == target_filename then
-			local first_line = NFS.read(file_path):match('^(.-)\n')
-			if first_line == target_line then
-				-- use parent directory
-				return directory:match('^(.+/)')
-			end
-		end
-	end
+    depth = depth or 1
+    if depth > 3 then return end
+    for _, filename in ipairs(NFS.getDirectoryItems(directory)) do
+        local file_path = directory .. "/" .. filename
+        local file_type = NFS.getInfo(file_path).type
+        if file_type == 'directory' or file_type == 'symlink' then
+            local f = find_self(file_path, target_filename, target_line, depth+1)
+            if f then return f end
+        elseif filename == target_filename then
+            local first_line = NFS.read(file_path):match('^(.-)\n')
+            if first_line == target_line then
+                -- use parent directory
+                return directory:match('^(.+/)')
+            end
+        end
+    end
 end
 
 SMODS.path = find_self(SMODS.MODS_DIR, 'core.lua', '--- STEAMODDED CORE')
 
 for _, path in ipairs {
-	"src/ui.lua",
-	"src/index.lua",
-	"src/utils.lua",
-	"src/overrides.lua",
-	"src/game_object.lua",
-	"src/logging.lua",
-	"src/compat_0_9_8.lua",
-	"src/loader.lua",
+    "src/ui.lua",
+    "src/index.lua",
+    "src/utils.lua",
+    "src/overrides.lua",
+    "src/game_object.lua",
+    "src/logging.lua",
+    "src/compat_0_9_8.lua",
+    "src/loader.lua",
 } do
-	assert(load(NFS.read(SMODS.path..path), ('=[SMODS _ "%s"]'):format(path)))()
+    assert(load(NFS.read(SMODS.path..path), ('=[SMODS _ "%s"]'):format(path)))()
 end

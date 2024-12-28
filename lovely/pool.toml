@@ -14,14 +14,14 @@ pattern = "function pseudorandom_element(_t, seed)"
 position = "at"
 payload = """function pseudorandom_element(_t, seed, args)
     -- TODO special cases for now
-	-- Preserves reverse nominal order for Suits, nominal+face_nominal order for Ranks
-	-- for vanilla RNG
-	if _t == SMODS.Suits then
-		_t = SMODS.Suit:obj_list(true)
-	end
-	if _t == SMODS.Ranks then
-		_t = SMODS.Rank:obj_list()
-	end
+    -- Preserves reverse nominal order for Suits, nominal+face_nominal order for Ranks
+    -- for vanilla RNG
+    if _t == SMODS.Suits then
+        _t = SMODS.Suit:obj_list(true)
+    end
+    if _t == SMODS.Ranks then
+        _t = SMODS.Rank:obj_list()
+    end
 """
 match_indent = true
 
@@ -33,17 +33,17 @@ position = "at"
 payload = """
 local keep = true
 local in_pool_func = 
-	args and args.in_pool
-	or type(v) == 'table' and type(v.in_pool) == 'function' and v.in_pool
-	or _t == G.P_CARDS and function(c)
-			--Handles special case for Erratic Deck
-			local initial_deck = args and args.starting_deck or false
-			
-			return not (
-				type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = initial_deck, suit = c.suit})
-				or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = initial_deck, rank = c.value})
-			)
-		end
+    args and args.in_pool
+    or type(v) == 'table' and type(v.in_pool) == 'function' and v.in_pool
+    or _t == G.P_CARDS and function(c)
+            --Handles special case for Erratic Deck
+            local initial_deck = args and args.starting_deck or false
+            
+            return not (
+                type(SMODS.Ranks[c.value].in_pool) == 'function' and not SMODS.Ranks[c.value]:in_pool({initial_deck = initial_deck, suit = c.suit})
+                or type(SMODS.Suits[c.suit].in_pool) == 'function' and not SMODS.Suits[c.suit]:in_pool({initial_deck = initial_deck, rank = c.value})
+            )
+        end
 if in_pool_func then
     keep = in_pool_func(v, args)
 end
@@ -74,14 +74,14 @@ match_indent = true
 position = 'before'
 payload = '''
 elseif SMODS.ObjectTypes[_type] and SMODS.ObjectTypes[_type].rarities then
-	local rarities = SMODS.ObjectTypes[_type].rarities
-	local rarity
-	if _legendary and rarities.legendary then
-		rarity = rarities.legendary.key
-	else
-		rarity = _rarity or SMODS.poll_rarity(_type, 'rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
-	end
-	_starting_pool, _pool_key = SMODS.ObjectTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')'''
+    local rarities = SMODS.ObjectTypes[_type].rarities
+    local rarity
+    if _legendary and rarities.legendary then
+        rarity = rarities.legendary.key
+    else
+        rarity = _rarity or SMODS.poll_rarity(_type, 'rarity_'.._type..G.GAME.round_resets.ante..(_append or ''))
+    end
+    _starting_pool, _pool_key = SMODS.ObjectTypes[_type].rarity_pools[rarity], _type..rarity..(_append or '')'''
 
 [[patches]]
 [patches.pattern]
@@ -91,7 +91,7 @@ match_indent = true
 position = 'at'
 payload = '''
 if SMODS.ObjectTypes[_type] and SMODS.ObjectTypes[_type].default and G.P_CENTERS[SMODS.ObjectTypes[_type].default] then
-	_pool[#_pool+1] = SMODS.ObjectTypes[_type].default
+    _pool[#_pool+1] = SMODS.ObjectTypes[_type].default
 elseif _type == 'Tarot' or _type == 'Tarot_Planet' then _pool[#_pool + 1] = "c_strength"'''
 
 [[patches]]
@@ -111,7 +111,7 @@ position = 'before'
 payload = '''
 local in_pool, pool_opts
 if v.in_pool and type(v.in_pool) == 'function' then
-	in_pool, pool_opts = v:in_pool({ source = _append })
+    in_pool, pool_opts = v:in_pool({ source = _append })
 end
 pool_opts = pool_opts or {}
 '''
@@ -132,7 +132,7 @@ match_indent = true
 position = 'before'
 payload = '''
 if v.in_pool and type(v.in_pool) == 'function' then
-	add = in_pool and (add or pool_opts.override_base_checks)
+    add = in_pool and (add or pool_opts.override_base_checks)
 end
 '''
 
@@ -161,7 +161,7 @@ pattern = '''
 position = "at"
 payload = '''
 if self.config.center.key then
-	G.GAME.used_jokers[self.config.center.key] = true
+    G.GAME.used_jokers[self.config.center.key] = true
 end
 '''
 line_prepend = "$indent"

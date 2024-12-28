@@ -230,8 +230,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             orig_o.dependencies = orig_o.dependencies or {}
             if not silent then table.insert(orig_o.dependencies, SMODS.current_mod.id) end
         else
-            orig_o.mod = SMODS.current_mod
-            if silent then orig_o.no_main_mod_badge = true end
+            if not silent then orig_o.mod = SMODS.current_mod end
             orig_o.rarity_original = orig_o.rarity
         end
         if orig_o._saved_d_u then
@@ -427,12 +426,15 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             local file_path = type(self.path) == 'table' and
                 ((G.SETTINGS.real_language and self.path[G.SETTINGS.real_language]) or self.path[G.SETTINGS.language] or self.path['default'] or self.path['en-us']) or self.path
             if file_path == 'DEFAULT' then return end
+            local prev_path = self.full_path
             self.full_path = (self.mod and self.mod.path or SMODS.path) ..
                 'assets/sounds/' .. file_path
+            if prev_path == self.full_path then return end
             self.data = NFS.read('data', self.full_path)
             self.decoder = love.sound.newDecoder(self.data)
             self.should_stream = string.find(self.key, 'music') or string.find(self.key, 'stream') or string.find(self.key, 'ambient')
             self.sound = love.audio.newSource(self.decoder, self.should_stream and 'stream' or 'static')
+            if prev_path then G.SOUND_MANAGER.channel:push({ type = 'stop' }) end
             G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, data = self.data, should_stream = self.should_stream, per = self.pitch, vol = self.volume })
         end,
         register_global = function(self)
@@ -1385,7 +1387,7 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         --]]
         update_pack = function(self, dt)
-            if G.buttons then self.buttons:remove(); G.buttons = nil end
+            if G.buttons then G.buttons:remove(); G.buttons = nil end
             if G.shop then G.shop.alignment.offset.y = G.ROOM.T.y+11 end
         
             if not G.STATE_COMPLETE then
@@ -3048,17 +3050,30 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         --     print("Keybind pressed")
         -- end,
 
-        -- TODO : option to specify if keybind activates on hold, press or release
+        event = 'pressed',
+        held_duration = 1,
 
         required_params = {
-            'key',
             'key_pressed',
             'action',
         },
         set = 'Keybind',
         class_prefix = 'keybind',
-
+        register = function(self)
+            self.key = self.key or (#self.obj_buffer..'')
+            SMODS.Keybind.super.register(self)
+        end,
         inject = function(_) end
+    }
+    
+    SMODS.Keybind {
+        key_pressed = 'm',
+        event = 'held',
+        held_duration = 1.1,
+        action = function(self)
+            SMODS.save_all_config()
+		    SMODS.restart_game()
+        end
     }
 
     -------------------------------------------------------------------------------------------------

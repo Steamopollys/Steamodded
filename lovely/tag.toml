@@ -12,13 +12,13 @@ pattern = "function Tag:apply_to_run(_context)"
 position = 'after'
 match_indent = true
 payload = '''
-	if self.triggered then return end
-	local obj = SMODS.Tags[self.key]
-	local res
-	if obj and obj.apply and type(obj.apply) == 'function' then
-		res = obj:apply(self, _context)
-	end
-	if res then return res end
+    if self.triggered then return end
+    local obj = SMODS.Tags[self.key]
+    local res
+    if obj and obj.apply and type(obj.apply) == 'function' then
+        res = obj:apply(self, _context)
+    end
+    if res then return res end
 '''
 
 # Tag:set_ability()
@@ -29,11 +29,11 @@ pattern = "function Tag:set_ability()"
 position = 'after'
 match_indent = true
 payload = '''
-	local obj = SMODS.Tags[self.key]
-	local res
-	if obj and obj.set_ability and type(obj.set_ability) == 'function' then
-		obj:set_ability(self)
-	end
+    local obj = SMODS.Tags[self.key]
+    local res
+    if obj and obj.set_ability and type(obj.set_ability) == 'function' then
+        obj:set_ability(self)
+    end
 '''
 
 # create_UIBox_your_collection_tags()
@@ -56,11 +56,11 @@ else
     tag_pool = G.P_TAGS
 end
 for k, v in pairs(tag_pool) do
-	counter = counter + 1
-	tag_tab[#tag_tab+1] = v
+    counter = counter + 1
+    tag_tab[#tag_tab+1] = v
 end
 for i = 1, math.ceil(counter / 6) do
-	table.insert(tag_matrix, {})
+    table.insert(tag_matrix, {})
 end'''
 
 [[patches]]
@@ -72,7 +72,7 @@ line_prepend = '$indent'
 payload = '''
 local table_nodes = {}
 for i = 1, math.ceil(counter / 6) do
-	table.insert(table_nodes, {n=G.UIT.R, config={align = "cm"}, nodes=tag_matrix[i]})
+    table.insert(table_nodes, {n=G.UIT.R, config={align = "cm"}, nodes=tag_matrix[i]})
 end'''
 
 [[patches]]
