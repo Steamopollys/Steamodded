@@ -351,7 +351,7 @@ match_indent = true
 target = "functions/state_events.lua"
 pattern = "if scoring_hand[i].ability.name == 'Glass Card' then"
 position = "at"
-payload = "if SMODS.has_enhancement(scoring_hand[i], 'm_glass') then"
+payload = "if SMODS.shatters(scoring_hand[i]) then"
 match_indent = true
 
 [[patches]]

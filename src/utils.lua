@@ -860,6 +860,13 @@ function SMODS.has_enhancement(card, key)
     return false
 end
 
+function SMODS.shatters(card)
+    local enhancements = SMODS.get_enhancements(card)
+    for key, _ in pairs(enhancements) do
+        if G.P_CENTERS[key].shatters or key == 'm_glass' then return true end
+    end
+end
+
 function SMODS.has_no_suit(card)
     local is_stone = false
     local is_wild = false
@@ -907,4 +914,50 @@ SMODS.find_mod = function(id)
         if v.mod.can_load then ret[#ret+1] = v.mod end
     end
     return ret
+end
+
+
+-- This function handles the calculation of each effect returned to evaluate play.
+-- Can easily be hooked to add more calculation effects ala Talisman
+SMODS.calculate_effect = function(effect, scored_card)
+    if effect.chips then 
+        if effect.card then juice_card(effect.card) end
+        hand_chips = mod_chips(hand_chips + effect.chips)
+        update_hand_text({delay = 0}, {chips = hand_chips})
+        if not effect.remove_default_message then card_eval_status_text(scored_card, 'chips', effect.chips, percent) end
+    end
+    
+    if effect.mult then 
+        if effect.card then juice_card(effect.card) end
+        mult = mod_mult(mult + effect.mult)
+        update_hand_text({delay = 0}, {mult = mult})
+        if not effect.remove_default_message then card_eval_status_text(scored_card, 'mult', effect.mult, percent) end
+    end
+    
+    if effect.p_dollars then 
+        if effect.card then juice_card(effect.card) end
+        ease_dollars(effect.p_dollars)
+        if not effect.remove_default_message then card_eval_status_text(scored_card, 'dollars', effect.p_dollars, percent) end
+    end
+    
+    if effect.dollars then 
+        if effect.card then juice_card(effect.card) end
+        ease_dollars(effect.dollars)
+        if not effect.remove_default_message then card_eval_status_text(scored_card, 'dollars', effect.dollars, percent) end
+    end
+    
+    if effect.x_mult then 
+        if effect.card then juice_card(effect.card) end
+        mult = mod_mult(mult * effect.x_mult)
+        update_hand_text({delay = 0}, {mult = mult})
+        if not effect.remove_default_message then card_eval_status_text(scored_card, 'x_mult', effect.x_mult, percent) end
+    end
+
+    if effect.message then
+        card_eval_status_text(effect.card or scored_card, 'extra', nil, percent, effect)
+    end
+
+    if effect.func then
+        effect.func()
+    end
 end
