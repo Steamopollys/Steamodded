@@ -37,7 +37,7 @@ pattern = "function Controller:key_release_update(key, dt)"
 position = "after"
 payload = '''
 for _, keybind in pairs(SMODS.Keybinds) do
-    if keybind.action and keybind.key_pressed == key then
+    if keybind.action and keybind.key_pressed == key and keybind.event == 'released' then
         local execute = true
         for _, other_key in pairs(keybind.held_keys) do
             if not self.held_keys[other_key] then
@@ -80,27 +80,3 @@ for _, keybind in pairs(SMODS.Keybinds) do
     end
 end
 '''
-
-# Controller:key_release_update
-[[patches]]
-[patches.pattern]
-target = 'engine/controller.lua'
-pattern = "function Controller:key_release_update(key, dt)"
-position = "after"
-payload = '''
-for _, keybind in pairs(SMODS.Keybinds) do
-    if keybind.action and keybind.key_pressed == key and keybind.event == 'released' then
-        local execute = true
-        for _, other_key in pairs(keybind.held_keys) do
-            if not self.held_keys[other_key] then
-                execute = false
-                break
-            end
-        end
-        if execute then
-            keybind:action()
-        end
-    end
-end
-'''
-match_indent = true
