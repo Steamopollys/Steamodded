@@ -101,25 +101,25 @@ end'''
 match_indent = true
 position = "at"
 payload = """
-ret.card = {card = card}
+ret.playing_card = {}
 local chips = card:get_chip_bonus()
 if chips > 0 then 
-    ret.card.chips = chips
+    ret.playing_card.chips = chips
 end
 
 local mult = card:get_chip_mult()
 if mult > 0 then 
-    ret.card.mult = mult
+    ret.playing_card.mult = mult
 end
 
 local x_mult = card:get_chip_x_mult(context)
 if x_mult > 0 then 
-    ret.card.x_mult = x_mult
+    ret.playing_card.x_mult = x_mult
 end
 
 local p_dollars = card:get_p_dollars()
 if p_dollars > 0 then 
-    ret.card.p_dollars = p_dollars
+    ret.playing_card.p_dollars = p_dollars
 end
 """
 [[patches]]
@@ -139,15 +139,15 @@ end
 match_indent = true
 position = "at"
 payload = """
-ret.card = {card = card}
+ret.playing_card = {}
 local h_mult = card:get_chip_h_mult()
 if h_mult > 0 then 
-    ret.card.h_mult = h_mult
+    ret.playing_card.h_mult = h_mult
 end
 
 local h_x_mult = card:get_chip_h_x_mult()
 if h_x_mult > 0 then 
-    ret.card.x_mult = h_x_mult
+    ret.playing_card.x_mult = h_x_mult
 end
 """
 [[patches]]
@@ -188,7 +188,7 @@ end"""
 [patches.regex]
 target = 'functions/common_events.lua'
 position = 'after'
-pattern = '( ){4}if context\.cardarea == G\.jokers or context\.card == G\.consumeables then(\n.*)*?\n( ){4}end'
+pattern = '( ){4}if context\.cardarea == G\.jokers or context\.card == G\.consumeables then(\n.*)*?\n( ){4}end\n'
 payload = '''
     for k,v in pairs(SMODS.Stickers) do
         local sticker = card:calculate_sticker(context, k)
@@ -196,6 +196,7 @@ payload = '''
             ret[v] = sticker
         end
     end
+
 '''
 
 # G.FUNCS.evaluate_play()
@@ -221,7 +222,7 @@ pattern = '''j = j +1'''
 match_indent = true
 position = "at"
 payload = '''
-j = j + (next(effects[1]) and 1 or #reps)
+j = j + (effects.calculated and 1 or #reps)
 '''
 
 # Joker repetition evaluation wrapper
@@ -358,7 +359,8 @@ payload = '''
 -- Base game calculation removed 2
 for key, effect in pairs(effects[ii]) do
     if type(effect) == 'table' then
-        SMODS.calculate_effect(effect, G.hand.cards[i], percent)
+        local calculated = SMODS.calculate_effect(effect, G.hand.cards[i], percent)
+        if calculated then effects.calculated = true end
     end
 end
 '''
