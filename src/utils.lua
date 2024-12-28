@@ -810,6 +810,13 @@ function time(func, ...)
     return 1000*(end_time-start_time)
 end
 
+function Card:calculate_sticker(context, key)
+    local sticker = SMODS.Stickers[key]
+    if self.ability[key] and type(sticker.calculate) == 'function' then
+        return sticker:calculate(self, context)
+    end
+end
+
 function Card:calculate_enhancement(context)
     if self.debuff or self.ability.set ~= 'Enhanced' then return nil end
     local center = self.config.center
