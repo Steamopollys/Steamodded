@@ -919,70 +919,108 @@ end
 
 -- This function handles the calculation of each effect returned to evaluate play.
 -- Can easily be hooked to add more calculation effects ala Talisman
+SMODS.calculate_individual_effect = function(effect, scored_card, percent, type, amount)
+    if type == 'chips' or type == 'h_chips' or type == 'chip_mod' then 
+        if effect.card then juice_card(effect.card) end
+        hand_chips = mod_chips(hand_chips + amount)
+        update_hand_text({delay = 0}, {chips = hand_chips})
+        if not effect.remove_default_message then card_eval_status_text(scored_card, 'chips', amount, percent) end
+        return true
+    end
+
+    if type == 'mult' or type == 'h_mult' or type == 'mult_mod' then 
+        if effect.card then juice_card(effect.card) end
+        mult = mod_mult(mult + amount)
+        update_hand_text({delay = 0}, {mult = mult})
+        if not effect.remove_default_message then card_eval_status_text(scored_card, type, amount, percent) end
+        return true
+    end
+    
+    if type == 'p_dollars' or type == 'dollars' then 
+        if effect.card then juice_card(effect.card) end
+        ease_dollars(amount)
+        if not effect.remove_default_message then card_eval_status_text(scored_card, 'dollars', amount, percent) end
+        return true
+    end
+    
+    if type == 'x_mult' then 
+        if effect.card then juice_card(effect.card) end
+        mult = mod_mult(mult * amount)
+        update_hand_text({delay = 0}, {mult = mult})
+        if not effect.remove_default_message then card_eval_status_text(scored_card, 'x_mult', amount, percent) end
+        return true
+    end
+
+    if type == 'message' then
+        card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect)
+        return true
+    end
+
+    if type == 'func' then
+        effect.func()
+        return true
+    end
+
+    if type == 'swap' then 
+        local old_mult = mult
+        mult = mod_mult(hand_chips)
+        hand_chips = mod_chips(old_mult)
+        update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+        return true
+    end
+
+    if type == 'extra' then
+        local extra_calc = false
+        for type_ex, amount_ex in pairs(amount) do
+            extra_calc = SMODS.calculate_individual_effect(amount, scored_card, percent, type_ex, amount_ex)
+        end
+        return extra_calc
+    end
+end
+
 SMODS.calculate_effect = function(effect, scored_card, percent)
     local calculated = false
-    if effect.chips then 
-        if effect.card then juice_card(effect.card) end
-        hand_chips = mod_chips(hand_chips + effect.chips)
-        update_hand_text({delay = 0}, {chips = hand_chips})
-        if not effect.remove_default_message then card_eval_status_text(scored_card, 'chips', effect.chips, percent) end
-        calculated = true
+    for type, amount in pairs(effect) do
+        calculated = SMODS.calculate_individual_effect(effect, scored_card, percent, type, amount)
     end
 
-    if effect.h_chips then
-        mod_percent = true
-        mult = mod_mult(hand_chips + effect.h_chips)
-        update_hand_text({delay = 0}, {chips = hand_chips})
-        if not effect.remove_default_message then card_eval_status_text(scored_card, 'chips', effect.h_chips, percent) end
-        calculated = true
-    end
-
-    if effect.mult then 
-        if effect.card then juice_card(effect.card) end
-        mult = mod_mult(mult + effect.mult)
-        update_hand_text({delay = 0}, {mult = mult})
-        if not effect.remove_default_message then card_eval_status_text(scored_card, 'mult', effect.mult, percent) end
-        calculated = true
-    end
-
-    if effect.h_mult then
-        mod_percent = true
-        mult = mod_mult(mult + effect.h_mult)
-        update_hand_text({delay = 0}, {mult = mult})
-        if not effect.remove_default_message then card_eval_status_text(scored_card, 'h_mult', effect.h_mult, percent) end
-        calculated = true
-    end
-    
-    if effect.p_dollars then 
-        if effect.card then juice_card(effect.card) end
-        ease_dollars(effect.p_dollars)
-        if not effect.remove_default_message then card_eval_status_text(scored_card, 'dollars', effect.p_dollars, percent) end
-        calculated = true
-    end
-    
-    if effect.dollars then 
-        if effect.card then juice_card(effect.card) end
-        ease_dollars(effect.dollars)
-        if not effect.remove_default_message then card_eval_status_text(scored_card, 'dollars', effect.dollars, percent) end
-        calculated = true
-    end
-    
-    if effect.x_mult then 
-        if effect.card then juice_card(effect.card) end
-        mult = mod_mult(mult * effect.x_mult)
-        update_hand_text({delay = 0}, {mult = mult})
-        if not effect.remove_default_message then card_eval_status_text(scored_card, 'x_mult', effect.x_mult, percent) end
-        calculated = true
-    end
-
-    if effect.message then
-        card_eval_status_text(effect.card or scored_card, 'extra', nil, percent, effect)
-        calculated = true
-    end
-
-    if effect.func then
-        effect.func()
-        calculated = true
-    end
     return calculated
+end
+
+SMODS.calculate_repetitions = function(card, area, scoring_hand, text, poker_hands, effects)
+    local reps = {1}
+    --From Red seal
+    local eval = eval_card(card, {repetition_only = true, cardarea = area, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true, card_effects = effects})
+    for key, value in pairs(eval) do
+        if value.repetitions then
+            for h=1, value.repetitions do
+                reps[#reps+1] = {key = value}
+            end
+        end
+    end
+    --From jokers
+    for j=1, #G.jokers.cards do
+        --calculate the joker effects
+        local eval = eval_card(G.jokers.cards[j], {cardarea = area, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = card, repetition = true, card_effects = effects})
+        for key, value in pairs(eval) do
+            if value.repetitions then
+                for h=1, value.repetitions do
+                    reps[#reps+1] = {key = value}
+                end
+            end
+        end
+    end
+
+    for i=1, #G.hand.cards do
+        local eval = eval_card(G.hand.cards[i], {cardarea = area, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = card, repetition = true, card_effects = effects})
+        for key, value in pairs(eval) do
+            if value.repetitions then
+                for h=1, value.repetitions do
+                    reps[#reps+1] = {key = value}
+                end
+            end
+        end
+    end
+
+    return reps
 end

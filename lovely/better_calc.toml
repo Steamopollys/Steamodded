@@ -24,43 +24,60 @@ if next(destroyed_calc) == 'destroyed' then destroyed = destroyed_calc end
 [patches.pattern]
 target = 'functions/state_events.lua'
 pattern = '''
+local reps = {1}
+
+--From Red seal
+local eval = eval_card(scoring_hand[i], {repetition_only = true,cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true})
 if next(eval) then
     for h = 1, eval.seals.repetitions do
         reps[#reps+1] = eval
     end
 end
+--From jokers
+for j=1, #G.jokers.cards do
+    --calculate the joker effects
+    local eval = eval_card(G.jokers.cards[j], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true})
+    if next(eval) and eval.jokers then 
+        for h = 1, eval.jokers.repetitions do
+            reps[#reps+1] = eval
+        end
+    end
+end
 '''
 position = 'at'
 match_indent = true
 payload = '''
-for key, value in pairs(eval) do
-    if value.repetitions then
-        for h=1, value.repetitions do
-            reps[#reps+1] = {key = value}
-        end
-    end
-end
+local reps = SMODS.calculate_repetitions(scoring_hand[i], G.play, scoring_hand, text, poker_hands)
 '''
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'
 pattern = '''
+--Check for hand doubling
+
+--From Red seal
+local eval = eval_card(G.hand.cards[i], {repetition_only = true,cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true, card_effects = effects})
 if next(eval) and (next(effects[1]) or #effects > 1) then 
     for h  = 1, eval.seals.repetitions do
         reps[#reps+1] = eval
+    end
+end
+
+--From Joker
+for j=1, #G.jokers.cards do
+    --calculate the joker effects
+    local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects})
+    if next(eval) then 
+        for h  = 1, eval.jokers.repetitions do
+            reps[#reps+1] = eval
+        end
     end
 end
 '''
 position = 'at'
 match_indent = true
 payload = '''
-for key, value in pairs(eval) do
-    if value.repetitions then
-        for h=1, value.repetitions do
-            reps[#reps+1] = {key = value}
-        end
-    end
-end
+reps = SMODS.calculate_repetitions(G.hand.cards[i], G.hand, scoring_hand, text, poker_hands, effects)
 '''
 
 # Handle retrigger messages
@@ -200,21 +217,6 @@ payload = '''
 '''
 
 # G.FUNCS.evaluate_play()
-# handle scoring
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = '''--If x_mult added, do mult add event and mult the mult to the total'''
-match_indent = true
-position = "before"
-payload = '''
-for key, effect in pairs(effects[ii]) do
-    if type(effect) == 'table' then
-        SMODS.calculate_effect(effect, scoring_hand[i], percent)
-    end
-end
-'''
-
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua"
@@ -224,52 +226,6 @@ position = "at"
 payload = '''
 j = j + (effects.calculated and 1 or #reps)
 '''
-
-# Joker repetition evaluation wrapper
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = '''
-if next(eval) then 
-    for h  = 1, eval.jokers.repetitions do
-        reps[#reps+1] = eval
-    end
-end
-'''
-match_indent = true
-position = "at"
-payload = '''
-for key, value in pairs(eval) do
-    if value.repetitions then
-        for h=1, value.repetitions do
-            reps[#reps+1] = {key = value}
-        end
-    end
-end
-'''
-# Joker repetition evaluation wrapper
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = '''
-if next(eval) and eval.jokers then 
-    for h = 1, eval.jokers.repetitions do
-        reps[#reps+1] = eval
-    end
-end
-'''
-match_indent = true
-position = "at"
-payload = '''
-for key, value in pairs(eval) do
-    if value.repetitions then
-        for h=1, value.repetitions do
-            reps[#reps+1] = {key = value}
-        end
-    end
-end
-'''
-
 
 ## Remove base game calculations
 [[patches]]
@@ -305,11 +261,41 @@ if effects[ii].dollars then
     ease_dollars(effects[ii].dollars)
     card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].dollars, percent)
 end
+
+--Any extra effects
+if effects[ii].extra then 
+    if effects[ii].card then juice_card(effects[ii].card) end
+    local extras = {mult = false, hand_chips = false}
+    if effects[ii].extra.mult_mod then mult =mod_mult( mult + effects[ii].extra.mult_mod);extras.mult = true end
+    if effects[ii].extra.chip_mod then hand_chips = mod_chips(hand_chips + effects[ii].extra.chip_mod);extras.hand_chips = true end
+    if effects[ii].extra.swap then 
+        local old_mult = mult
+        mult = mod_mult(hand_chips)
+        hand_chips = mod_chips(old_mult)
+        extras.hand_chips = true; extras.mult = true
+    end
+    if effects[ii].extra.func then effects[ii].extra.func() end
+    update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult})
+    card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, effects[ii].extra)
+end
+
+--If x_mult added, do mult add event and mult the mult to the total
+if effects[ii].x_mult then 
+    if effects[ii].card then juice_card(effects[ii].card) end
+    mult = mod_mult(mult*effects[ii].x_mult)
+    update_hand_text({delay = 0}, {mult = mult})
+    card_eval_status_text(scoring_hand[i], 'x_mult', effects[ii].x_mult, percent)
+end
 '''
 match_indent = true
 position = "at"
 payload = '''
 -- Base game calculation removed
+for key, effect in pairs(effects[ii]) do
+    if type(effect) == 'table' then
+        SMODS.calculate_effect(effect, scoring_hand[i], percent)
+    end
+end
 '''
 
 [[patches]]
