@@ -426,6 +426,12 @@ local enhancement = card:calculate_enhancement(context)
 if enhancement then
     ret.enhancement = enhancement
 end
+for k,v in pairs(SMODS.Stickers) do
+    local sticker = card:calculate_sticker(context, k)
+    if sticker then
+        ret[v] = sticker
+    end
+end
 """
 [[patches]]
 [patches.pattern]
@@ -442,6 +448,20 @@ local seals = not card.ability.extra_enhancement and card:calculate_seal(context
 if seals then
     ret.seals = seals
 end"""
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+position = 'after'
+pattern = '( ){4}if context\.cardarea == G\.jokers or context\.card == G\.consumeables then(\n.*)*?\n( ){4}end'
+payload = '''
+    for k,v in pairs(SMODS.Stickers) do
+        local sticker = card:calculate_sticker(context, k)
+        if sticker then
+            ret[v] = sticker
+        end
+    end
+'''
 
 # G.FUNCS.evaluate_play()
 # handle scoring

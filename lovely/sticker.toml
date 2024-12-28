@@ -109,22 +109,18 @@ for k, v in pairs(SMODS.Stickers) do
 end
 '''
 
-# Card:calculate_joker()
+# end_round()
 [[patches]]
 [patches.pattern]
-target = "card.lua"
-pattern = "function Card:calculate_joker(context)"
-position = 'after'
-payload = '''
-for k, v in pairs(SMODS.Stickers) do
-    if self.ability[v.key] then
-        if v.calculate and type(v.calculate) == 'function' then
-            local override_card = v:calculate(self, context)
-            if override_card then return override_card end
-        end
-    end
-end'''
+target = 'functions/state_events.lua'
 match_indent = true
+position = 'before'
+pattern = "if G.GAME.round_resets.ante == G.GAME.win_ante and G.GAME.blind:get_type() == 'Boss' then"
+payload = '''
+for i, v in ipairs(G.hand.cards) do
+    eval_card(G.hand.cards[i], {cardarea = G.hand, end_of_round = true, game_over = game_over })
+end
+'''
 
 # get_badge_colour()
 [[patches]]
@@ -147,3 +143,76 @@ pattern = '''table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100
 position = 'at'
 match_indent = true
 payload = '''table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*((a.pinned and not a.ignore_pinned) and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*((b.pinned and not b.ignore_pinned) and b.sort_id or 0) end)'''
+
+
+[[patches]]
+[patches.regex]
+target = 'functions/state_events.lua'
+pattern = 'G\.jokers\.cards\[i\]:calculate_joker\('
+position = 'at'
+payload = 'eval_card(G.jokers.cards[i], '
+
+[[patches]]
+[patches.regex]
+target = 'functions/state_events.lua'
+pattern = 'G\.jokers\.cards\[j\]:calculate_joker\('
+position = 'at'
+payload = 'eval_card(G.jokers.cards[j], '
+
+[[patches]]
+[patches.regex]
+target = 'functions/state_events.lua'
+pattern = 'v:calculate_joker\('
+position = 'at'
+payload = 'eval_card(v, '
+
+[[patches]]
+[patches.regex]
+target = 'card.lua'
+pattern = 'G\.jokers\.cards\[i\]:calculate_joker\('
+position = 'at'
+payload = 'eval_card(G.jokers.cards[i], '
+
+[[patches]]
+[patches.regex]
+target = 'functions/misc_functions.lua'
+pattern = 'G\.jokers\.cards\[i\]:calculate_joker\('
+position = 'at'
+payload = 'eval_card(G.jokers.cards[i], '
+
+[[patches]]
+[patches.regex]
+target = 'functions/button_callbacks.lua'
+pattern = 'G\.jokers\.cards\[i\]:calculate_joker\('
+position = 'at'
+payload = 'eval_card(G.jokers.cards[i], '
+
+[[patches]]
+[patches.regex]
+target = 'functions/button_callbacks.lua'
+pattern = 'c1:calculate_joker\(\{buying_card = true, card = c1\}\)'
+position = 'at'
+payload = 'eval_card(c1, {buying_card = true, card = c1})'
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = 'self:calculate_joker{selling_self = true}'
+position = 'at'
+match_indent = true
+payload = 'eval_card(self, {selling_self = true})'
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
+match_indent = true
+position = "at"
+payload = "if card.ability.set == 'Joker' or card.ability.consumeable then"
+
+[[patches]]
+[patches.regex]
+target = 'game.lua'
+pattern = 'G\.jokers\.cards\[i\]:calculate_joker\('
+position = 'at'
+payload = 'eval_card(G.jokers.cards[i], '
