@@ -1,0 +1,203 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+## Calculation Contexts
+# Destroying calculation on scoring_hand cards
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''if destroyed then '''
+match_indent = true
+position = "before"
+payload = '''
+local destroyed_calc = eval_card(G.hand.cards[1], {destroying_card = G.hand.cards[1], full_hand = G.hand.cards})
+if next(destroyed_calc) == 'destroyed' then destroyed = destroyed_calc end
+'''
+
+# G.FUNCS.evaluate_play()
+# handle repetitions
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+if next(eval) then
+    for h = 1, eval.seals.repetitions do
+        reps[#reps+1] = eval
+    end
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+for key, value in pairs(eval) do
+    if value.repetitions then
+        for h=1, value.repetitions do
+            reps[#reps+1] = {key = value}
+        end
+    end
+end
+'''
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+if next(eval) and (next(effects[1]) or #effects > 1) then 
+    for h  = 1, eval.seals.repetitions do
+        reps[#reps+1] = eval
+    end
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+for key, value in pairs(eval) do
+    if value.repetitions then
+        for h=1, value.repetitions do
+            reps[#reps+1] = {key = value}
+        end
+    end
+end
+'''
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''card_eval_status_text((reps[j].jokers or reps[j].seals).card, 'jokers', nil, nil, nil, (reps[j].jokers or reps[j].seals))'''
+position = 'at'
+match_indent = true
+payload = '''
+local _, eff = next(reps[j])
+card_eval_status_text(eff.card, 'jokers', nil, nil, nil, eff)'''
+
+# eval_card()
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "local seals = card:calculate_seal(context)"
+match_indent = true
+position = "before"
+payload = """
+local enhancement = card:calculate_enhancement(context)
+if enhancement then
+    ret.enhancement = enhancement
+end
+for k,v in pairs(SMODS.Stickers) do
+    local sticker = card:calculate_sticker(context, k)
+    if sticker then
+        ret[v] = sticker
+    end
+end
+"""
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
+match_indent = true
+position = "before"
+payload = """
+local enhancement = card:calculate_enhancement(context)
+if enhancement then
+    ret.enhancement = enhancement
+end
+local seals = not card.ability.extra_enhancement and card:calculate_seal(context)
+if seals then
+    ret.seals = seals
+end"""
+
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+position = 'after'
+pattern = '( ){4}if context\.cardarea == G\.jokers or context\.card == G\.consumeables then(\n.*)*?\n( ){4}end'
+payload = '''
+    for k,v in pairs(SMODS.Stickers) do
+        local sticker = card:calculate_sticker(context, k)
+        if sticker then
+            ret[v] = sticker
+        end
+    end
+'''
+
+# G.FUNCS.evaluate_play()
+# handle scoring
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''--If x_mult added, do mult add event and mult the mult to the total'''
+match_indent = true
+position = "before"
+payload = '''
+for key, effect in pairs(effects[ii]) do
+    if type(effect) == 'table' then
+        SMODS.calculate_effect(effect, scoring_hand[i])
+    end
+end
+'''
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''--If hold mult added, do hold mult add event and add the mult to the total'''
+match_indent = true
+position = "before"
+payload = '''
+for key, effect in pairs(effects[ii]) do
+    if type(effect) == 'table' then
+        SMODS.calculate_effect(effect, G.hand.cards[i])
+    end
+end
+'''
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''j = j +1'''
+match_indent = true
+position = "at"
+payload = '''
+j = j + (next(effects[1]) and 1 or #reps)
+'''
+# Joker repetition evaluation wrapper
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+if next(eval) then 
+    for h  = 1, eval.jokers.repetitions do
+        reps[#reps+1] = eval
+    end
+end
+'''
+match_indent = true
+position = "at"
+payload = '''
+for key, value in pairs(eval) do
+    if value.repetitions then
+        for h=1, value.repetitions do
+            reps[#reps+1] = {key = value}
+        end
+    end
+end
+'''
+# Joker repetition evaluation wrapper
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+if next(eval) and eval.jokers then 
+    for h = 1, eval.jokers.repetitions do
+        reps[#reps+1] = eval
+    end
+end
+'''
+match_indent = true
+position = "at"
+payload = '''
+for key, value in pairs(eval) do
+    if value.repetitions then
+        for h=1, value.repetitions do
+            reps[#reps+1] = {key = value}
+        end
+    end
+end
+'''
+
