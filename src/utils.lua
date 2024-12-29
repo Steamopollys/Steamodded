@@ -817,7 +817,7 @@ function SMODS.get_enhancements(card, extra_only)
     end
     if G.jokers and G.jokers.cards then
         for i=1, #G.jokers.cards do
-            local eval = G.jokers.cards[i]:calculate_joker({other_card = card, check_enhancement = true})
+            local eval = G.jokers.cards[i]:calculate_joker({other_card = card, check_enhancement = true, no_blueprint = true })
             if eval then 
                 for k, _ in pairs(eval) do
                     if G.P_CENTERS[k] then
@@ -837,7 +837,7 @@ function SMODS.has_enhancement(card, key)
     if card.config.center.key == key then return true end
     if G.jokers and G.jokers.cards then
         for i=1, #G.jokers.cards do
-            local eval = G.jokers.cards[i]:calculate_joker({other_card = card, check_enhancement = true})
+            local eval = G.jokers.cards[i]:calculate_joker({other_card = card, check_enhancement = true, no_blueprint = true })
             if eval and type(eval) == 'table' and eval[key] then return true end
         end
     end
@@ -891,4 +891,14 @@ SMODS.find_mod = function(id)
         if v.mod.can_load then ret[#ret+1] = v.mod end
     end
     return ret
+end
+
+-- this is for debugging
+SMODS.debug_calculation = function()
+    G.contexts = {}
+    local cj = Card.calculate_joker
+    function Card:calculate_joker(context)
+        for k,v in pairs(context) do G.contexts[k] = (G.contexts[k] or 0) + 1 end
+        return cj(self, context)
+    end
 end

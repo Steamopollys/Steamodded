@@ -431,9 +431,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
                 'assets/sounds/' .. file_path
             if prev_path == self.full_path then return end
             self.data = NFS.read('data', self.full_path)
-            self.decoder = love.sound.newDecoder(self.data)
+            --self.decoder = love.sound.newDecoder(self.data)
             self.should_stream = string.find(self.key, 'music') or string.find(self.key, 'stream') or string.find(self.key, 'ambient')
-            self.sound = love.audio.newSource(self.decoder, self.should_stream and 'stream' or 'static')
+            --self.sound = love.audio.newSource(self.decoder, self.should_stream and 'stream' or 'static')
             if prev_path then G.SOUND_MANAGER.channel:push({ type = 'stop' }) end
             G.SOUND_MANAGER.channel:push({ type = 'sound_source', sound_code = self.sound_code, data = self.data, should_stream = self.should_stream, per = self.pitch, vol = self.volume })
         end,
