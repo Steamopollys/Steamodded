@@ -2976,6 +2976,13 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         loc_vars = function(self)
             return { vars = { self.config.chips } }
+        end,
+        calculate = function(self, card, context)
+            if context.joker_main or (context.main_scoring and context.cardarea == G.play) then
+                return {
+                    chips = card.edition.chips
+                }     
+            end
         end
     })
     SMODS.Edition:take_ownership('holo', {
@@ -3000,6 +3007,13 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         loc_vars = function(self)
             return { vars = { self.config.mult } }
+        end,
+        calculate = function(self, card, context)
+            if context.joker_main or (context.main_scoring and context.cardarea == G.play) then
+                return {
+                    mult = card.edition.mult
+                }     
+            end
         end
     })
     SMODS.Edition:take_ownership('polychrome', {
@@ -3024,6 +3038,13 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         end,
         loc_vars = function(self)
             return { vars = { self.config.x_mult } }
+        end,
+        calculate = function(self, card, context)
+            if context.joker_main or (context.main_scoring and context.cardarea == G.play) then
+                return {
+                    x_mult = card.edition.x_mult
+                }     
+            end
         end
     })
     SMODS.Edition:take_ownership('negative', {

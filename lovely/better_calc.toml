@@ -17,6 +17,8 @@ if next(destroyed_calc) == 'destroyed' then destroyed = destroyed_calc end
 '''
 
 
+
+
 ## G.FUNCS.evaluate_play()
 
  # Handle repetitions from playing cards
@@ -92,81 +94,118 @@ local _, eff = next(reps[j])
 card_eval_status_text(eff.card, 'jokers', nil, nil, nil, eff)'''
 
 ## eval_card()
+# handle debuffed playing cards
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''
+function eval_card(card, context)
+'''
+position = 'after'
+match_indent = true
+payload = '''
+    if card.ability.set ~= 'Joker' and card.debuff then return {} end
+'''
+
 # built in config values
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
-pattern = '''local chips = card:get_chip_bonus()
-if chips > 0 then 
-    ret.chips = chips
-end
+pattern = '''
+if context.cardarea == G.play then
+    local chips = card:get_chip_bonus()
+    if chips > 0 then 
+        ret.chips = chips
+    end
 
-local mult = card:get_chip_mult()
-if mult > 0 then 
-    ret.mult = mult
-end
+    local mult = card:get_chip_mult()
+    if mult > 0 then 
+        ret.mult = mult
+    end
 
-local x_mult = card:get_chip_x_mult(context)
-if x_mult > 0 then 
-    ret.x_mult = x_mult
-end
+    local x_mult = card:get_chip_x_mult(context)
+    if x_mult > 0 then 
+        ret.x_mult = x_mult
+    end
 
-local p_dollars = card:get_p_dollars()
-if p_dollars > 0 then 
-    ret.p_dollars = p_dollars
-end'''
+    local p_dollars = card:get_p_dollars()
+    if p_dollars > 0 then 
+        ret.p_dollars = p_dollars
+    end
+'''
 match_indent = true
 position = "at"
 payload = """
-ret.playing_card = {}
-local chips = card:get_chip_bonus()
-if chips > 0 then 
-    ret.playing_card.chips = chips
-end
+if context.cardarea == G.play and context.main_scoring then
+    ret.playing_card = {}
+    local chips = card:get_chip_bonus()
+    if chips > 0 then 
+        ret.playing_card.chips = chips
+    end
 
-local mult = card:get_chip_mult()
-if mult > 0 then 
-    ret.playing_card.mult = mult
-end
+    local mult = card:get_chip_mult()
+    if mult > 0 then 
+        ret.playing_card.mult = mult
+    end
 
-local x_mult = card:get_chip_x_mult(context)
-if x_mult > 0 then 
-    ret.playing_card.x_mult = x_mult
-end
+    local x_mult = card:get_chip_x_mult(context)
+    if x_mult > 0 then 
+        ret.playing_card.x_mult = x_mult
+    end
 
-local p_dollars = card:get_p_dollars()
-if p_dollars > 0 then 
-    ret.playing_card.p_dollars = p_dollars
-end
+    local p_dollars = card:get_p_dollars()
+    if p_dollars > 0 then 
+        ret.playing_card.p_dollars = p_dollars
+    end
 """
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
 pattern = '''
-local h_mult = card:get_chip_h_mult()
-if h_mult > 0 then 
-    ret.h_mult = h_mult
-end
+if context.cardarea == G.hand then
+    local h_mult = card:get_chip_h_mult()
+    if h_mult > 0 then 
+        ret.h_mult = h_mult
+    end
 
-local h_x_mult = card:get_chip_h_x_mult()
-if h_x_mult > 0 then 
-    ret.x_mult = h_x_mult
-end
+    local h_x_mult = card:get_chip_h_x_mult()
+    if h_x_mult > 0 then 
+        ret.x_mult = h_x_mult
+    end
 '''
 match_indent = true
 position = "at"
 payload = """
-ret.playing_card = {}
-local h_mult = card:get_chip_h_mult()
-if h_mult > 0 then 
-    ret.playing_card.h_mult = h_mult
-end
+if context.cardarea == G.hand and context.main_scoring then
+    ret.playing_card = {}
+    local h_mult = card:get_chip_h_mult()
+    if h_mult > 0 then 
+        ret.playing_card.h_mult = h_mult
+    end
 
-local h_x_mult = card:get_chip_h_x_mult()
-if h_x_mult > 0 then 
-    ret.playing_card.x_mult = h_x_mult
-end
+    local h_x_mult = card:get_chip_h_x_mult()
+    if h_x_mult > 0 then 
+        ret.playing_card.x_mult = h_x_mult
+    end
 """
+
+# Add context.main_scoring to G.play and G.hand
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = {eval_card(scoring_hand[i], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, poker_hand = text})}"
+match_indent = true
+position = "at"
+payload = "local effects = {eval_card(scoring_hand[i], {main_scoring = true, cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, poker_hand = text})}"
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = {eval_card(G.hand.cards[i], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})}"
+match_indent = true
+position = "at"
+payload = "local effects = {eval_card(G.hand.cards[i], {main_scoring = true, cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})}"
+
+
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
@@ -178,13 +217,16 @@ local enhancement = card:calculate_enhancement(context)
 if enhancement then
     ret.enhancement = enhancement
 end
+local edition = card:calculate_edition(context)
+if edition then
+    ret.edition = edition
+end
 for k,v in pairs(SMODS.Stickers) do
     local sticker = card:calculate_sticker(context, k)
     if sticker then
         ret[v] = sticker
     end
-end
-"""
+end"""
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
@@ -196,10 +238,16 @@ local enhancement = card:calculate_enhancement(context)
 if enhancement then
     ret.enhancement = enhancement
 end
+local edition = card:calculate_edition(context)
+if edition then
+    ret.edition = edition
+end
 local seals = not card.ability.extra_enhancement and card:calculate_seal(context)
 if seals then
     ret.seals = seals
 end"""
+
+
 
 [[patches]]
 [patches.regex]
@@ -213,7 +261,6 @@ payload = '''
             ret[v] = sticker
         end
     end
-
 '''
 
 # G.FUNCS.evaluate_play()
@@ -223,9 +270,36 @@ target = "functions/state_events.lua"
 pattern = '''j = j +1'''
 match_indent = true
 position = "at"
-payload = '''
-j = j + (effects.calculated and 1 or #reps)
+payload = '''j = j + (effects.calculated and 1 or #reps)'''
+
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+--calculate the card edition effects
+if effects[ii].edition then
+    hand_chips = mod_chips(hand_chips + (effects[ii].edition.chip_mod or 0))
+    mult = mult + (effects[ii].edition.mult_mod or 0)
+    mult = mod_mult(mult*(effects[ii].edition.x_mult_mod or 1))
+    update_hand_text({delay = 0}, {
+        chips = effects[ii].edition.chip_mod and hand_chips or nil,
+        mult = (effects[ii].edition.mult_mod or effects[ii].edition.x_mult_mod) and mult or nil,
+    })
+    card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
+        message = (effects[ii].edition.chip_mod and localize{type='variable',key='a_chips',vars={effects[ii].edition.chip_mod}}) or
+                (effects[ii].edition.mult_mod and localize{type='variable',key='a_mult',vars={effects[ii].edition.mult_mod}}) or
+                (effects[ii].edition.x_mult_mod and localize{type='variable',key='a_xmult',vars={effects[ii].edition.x_mult_mod}}),
+        chip_mod =  effects[ii].edition.chip_mod,
+        mult_mod =  effects[ii].edition.mult_mod,
+        x_mult_mod =  effects[ii].edition.x_mult_mod,
+        colour = G.C.DARK_EDITION,
+        edition = true})
+end
 '''
+match_indent = true
+position = "at"
+payload = ''
 
 ## Remove base game calculations
 [[patches]]
@@ -286,6 +360,7 @@ if effects[ii].x_mult then
     update_hand_text({delay = 0}, {mult = mult})
     card_eval_status_text(scoring_hand[i], 'x_mult', effects[ii].x_mult, percent)
 end
+
 '''
 match_indent = true
 position = "at"
@@ -295,8 +370,7 @@ for key, effect in pairs(effects[ii]) do
     if type(effect) == 'table' then
         SMODS.calculate_effect(effect, scoring_hand[i], percent)
     end
-end
-'''
+end'''
 
 [[patches]]
 [patches.pattern]
@@ -348,5 +422,66 @@ for key, effect in pairs(effects[ii]) do
         local calculated = SMODS.calculate_effect(effect, G.hand.cards[i], percent)
         if calculated then effects.calculated = true end
     end
+end'''
+
+
+
+## Fix other evaluations
+# Discarding cards
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+if eval then
+    if eval.remove then removed = true end
+    card_eval_status_text(G.jokers.cards[j], 'jokers', nil, 1, nil, eval)
+end'''
+match_indent = true
+position = "at"
+payload = '''
+for type, effect in pairs(eval) do
+    if effect.remove then removed = true end
+    SMODS.calculate_effect(effect, G.jokers.cards[j], 1)   
+end'''
+
+# context.before
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+for i=1, #G.jokers.cards do
+    --calculate the joker effects
+    local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})
+    if effects.jokers then
+        card_eval_status_text(G.jokers.cards[i], 'jokers', nil, percent, nil, effects.jokers)
+        percent = percent + percent_delta
+        if effects.jokers.level_up then
+            level_up_hand(G.jokers.cards[i], text)
+        end
+    end
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- context.before calculations
+for i=1, #G.jokers.cards do
+    --calculate the joker effects
+    local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})
+    for type, effect in pairs(effects) do
+        SMODS.calculate_effect(effect, G.jokers.cards[i], percent)
+    end
 end
-'''
+for i=1, #scoring_hand do
+    --calculate the played card effects
+    local effects = eval_card(scoring_hand[i], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})
+    for type, effect in pairs(effects) do
+        SMODS.calculate_effect(effect, scoring_hand[i], percent)
+    end
+end
+for i=1, #G.hand.cards do
+    --calculate the held card effects
+    local effects = eval_card(G.hand.cards[i], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})
+    for type, effect in pairs(effects) do
+        SMODS.calculate_effect(effect, G.hand.cards[i], percent)
+    end
+end'''
