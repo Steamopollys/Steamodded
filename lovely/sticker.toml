@@ -209,13 +209,13 @@ position = 'at'
 match_indent = true
 payload = 'eval_card(self, {selling_self = true})'
 
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
-match_indent = true
-position = "at"
-payload = "if card.ability.set == 'Joker' or card.ability.consumeable then"
+# [[patches]]
+# [patches.pattern]
+# target = "functions/common_events.lua"
+# pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
+# match_indent = true
+# position = "at"
+# payload = "if card.ability.set == 'Joker' or card.ability.consumeable then"
 
 [[patches]]
 [patches.regex]

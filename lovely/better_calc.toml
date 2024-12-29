@@ -246,7 +246,36 @@ local seals = not card.ability.extra_enhancement and card:calculate_seal(context
 if seals then
     ret.seals = seals
 end"""
-
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''
+if context.cardarea == G.jokers or context.card == G.consumeables then
+    local jokers = nil
+    if context.edition then
+        jokers = card:get_edition(context)
+    elseif context.other_joker then
+        jokers = context.other_joker:calculate_joker(context)
+    else
+        jokers = card:calculate_joker(context)
+    end
+    if jokers then 
+        ret.jokers = jokers
+    end'''
+match_indent = true
+position = "at"
+payload = """
+if card.ability.set == 'Joker' or card.ability.consumeable then
+    local jokers = nil
+    if context.other_joker then
+        jokers = context.other_joker:calculate_joker(context)
+    else
+        jokers = card:calculate_joker(context)
+    end
+    if jokers then 
+        ret.jokers = jokers
+    end
+"""
 
 
 [[patches]]
@@ -423,8 +452,95 @@ for key, effect in pairs(effects[ii]) do
         if calculated then effects.calculated = true end
     end
 end'''
+# Joker Effects
+# Edition effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+--calculate the joker edition effects
+local edition_effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, edition = true})
+if edition_effects.jokers then
+    edition_effects.jokers.edition = true
+    if edition_effects.jokers.chip_mod then
+        hand_chips = mod_chips(hand_chips + edition_effects.jokers.chip_mod)
+        update_hand_text({delay = 0}, {chips = hand_chips})
+        card_eval_status_text(_card, 'jokers', nil, percent, nil, {
+            message = localize{type='variable',key='a_chips',vars={edition_effects.jokers.chip_mod}},
+            chip_mod =  edition_effects.jokers.chip_mod,
+            colour =  G.C.EDITION,
+            edition = true})
+    end
+    if edition_effects.jokers.mult_mod then
+        mult = mod_mult(mult + edition_effects.jokers.mult_mod)
+        update_hand_text({delay = 0}, {mult = mult})
+        card_eval_status_text(_card, 'jokers', nil, percent, nil, {
+            message = localize{type='variable',key='a_mult',vars={edition_effects.jokers.mult_mod}},
+            mult_mod =  edition_effects.jokers.mult_mod,
+            colour = G.C.DARK_EDITION,
+            edition = true})
+    end
+    percent = percent+percent_delta
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- remove base game joker edition calc
+local edition_eval = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, edition = true})
+for type, effect in pairs(edition_eval) do
+    if type == 'edition' then SMODS.calculate_effect(effect, _card, 1, true, true) end
+end'''
+# Edition mult effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+if edition_effects.jokers then
+    if edition_effects.jokers.x_mult_mod then
+        mult = mod_mult(mult*edition_effects.jokers.x_mult_mod)
+        update_hand_text({delay = 0}, {mult = mult})
+        card_eval_status_text(_card, 'jokers', nil, percent, nil, {
+            message = localize{type='variable',key='a_xmult',vars={edition_effects.jokers.x_mult_mod}},
+            x_mult_mod =  edition_effects.jokers.x_mult_mod,
+            colour =  G.C.EDITION,
+            edition = true})
+    end
+    percent = percent+percent_delta
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- calculate edition multipliers
+for type, effect in pairs(edition_eval) do
+    if type == 'edition' then SMODS.calculate_effect(effect, _card, 1, true, false) end
+end'''
+# Joker effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+--calculate the joker effects
+local effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true})
+G.GAME.selected_back:trigger_effect({context = 'joker_main', joker =  _card, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})
 
-
+--Any Joker effects
+if effects.jokers then 
+    local extras = {mult = false, hand_chips = false}
+    if effects.jokers.mult_mod then mult = mod_mult(mult + effects.jokers.mult_mod);extras.mult = true end
+    if effects.jokers.chip_mod then hand_chips = mod_chips(hand_chips + effects.jokers.chip_mod);extras.hand_chips = true end
+    if effects.jokers.Xmult_mod then mult = mod_mult(mult*effects.jokers.Xmult_mod);extras.mult = true  end
+    update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult})
+    card_eval_status_text(_card, 'jokers', nil, percent, nil, effects.jokers)
+    percent = percent+percent_delta
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- Calculate context.joker_main
+local effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true})
+for type, effect in pairs(effects) do
+    if type ~= 'edition' then SMODS.calculate_effect(effect, _card, 1) end
+end'''
 
 ## Fix other evaluations
 # Discarding cards

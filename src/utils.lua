@@ -919,49 +919,81 @@ end
 
 -- This function handles the calculation of each effect returned to evaluate play.
 -- Can easily be hooked to add more calculation effects ala Talisman
-SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, amount)
-    if key == 'chips' or key == 'h_chips' or key == 'chip_mod' and amount then 
+SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, amount, from_edition, no_x)
+    if (key == 'chips' or key == 'h_chips' or key == 'chip_mod') and amount and (not from_edition or no_x) then 
         if effect.card then juice_card(effect.card) end
         hand_chips = mod_chips(hand_chips + amount)
-        update_hand_text({delay = 0}, {chips = hand_chips})
-        if not effect.remove_default_message then card_eval_status_text(scored_card, 'chips', amount, percent) end
+        update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+        if not effect.remove_default_message then
+            if from_edition then
+                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {
+                    message = localize{type = 'variable', key = 'a_chips', vars = {amount}},
+                    chip_mod = amount,
+                    colour = G.C.EDITION,
+                    edition = true
+                })
+            else
+                if key ~= 'chip_mod' then card_eval_status_text(scored_card, 'chips', amount, percent) end
+            end
+        end
         return true
     end
 
-    if key == 'mult' or key == 'h_mult' or key == 'mult_mod' and amount then 
+    if (key == 'mult' or key == 'h_mult' or key == 'mult_mod') and amount and (not from_edition or no_x) then 
         if effect.card then juice_card(effect.card) end
         mult = mod_mult(mult + amount)
-        update_hand_text({delay = 0}, {mult = mult})
-        if not effect.remove_default_message then card_eval_status_text(scored_card, key, amount, percent) end
+        update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+        if not effect.remove_default_message then
+            if from_edition then
+                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {
+                    message = localize{type = 'variable', key = 'a_mult', vars = {amount}},
+                    mult_mod = amount,
+                    colour = G.C.DARK_EDITION,
+                    edition = true
+                })
+            else
+                if key ~= 'mult_mod' then card_eval_status_text(scored_card, key, amount, percent) end
+            end
+        end
         return true
     end
     
-    if key == 'p_dollars' or key == 'dollars' and amount then 
+    if (key == 'p_dollars' or key == 'dollars') and amount and (not from_edition or no_x) then 
         if effect.card then juice_card(effect.card) end
         ease_dollars(amount)
         if not effect.remove_default_message then card_eval_status_text(scored_card, 'dollars', amount, percent) end
         return true
     end
     
-    if key == 'x_mult' or key == 'xmult' and amount ~= 1 then 
+    if (key == 'x_mult' or key == 'xmult' or key == 'x_mult_mod' or key == 'Xmult_mod') and amount ~= 1 and (not from_edition or not no_x) then 
         if effect.card then juice_card(effect.card) end
         mult = mod_mult(mult * amount)
-        update_hand_text({delay = 0}, {mult = mult})
-        if not effect.remove_default_message then card_eval_status_text(scored_card, 'x_mult', amount, percent) end
+        update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+        if not effect.remove_default_message then
+            if from_edition then
+                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {
+                    message = localize{type='variable',key='a_xmult',vars={amount}},
+                    x_mult_mod =  amount,
+                    colour =  G.C.EDITION,
+                    edition = true})
+            else
+                if key ~= 'Xmult_mod' then card_eval_status_text(scored_card, 'x_mult', amount, percent) end
+            end
+        end
         return true
     end
 
-    if key == 'message' then
+    if key == 'message' and (not from_edition or no_x) then
         card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect)
         return true
     end
 
-    if key == 'func' then
+    if key == 'func' and (not from_edition or no_x) then
         effect.func()
         return true
     end
 
-    if key == 'swap' then 
+    if key == 'swap' and (not from_edition or no_x) then 
         local old_mult = mult
         mult = mod_mult(hand_chips)
         hand_chips = mod_chips(old_mult)
@@ -969,11 +1001,11 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
         return true
     end
 
-    if key == 'level_up' then
+    if key == 'level_up' and (not from_edition or no_x) then
         level_up_hand(scored_card, G.GAME.last_hand_played, effect.instant, type(amount) == 'number' and amount or 1)
     end
 
-    if key == 'extra' then
+    if key == 'extra' and (not from_edition or no_x) then
         local extra_calc = false
         for key_ex, amount_ex in pairs(amount) do
             extra_calc = SMODS.calculate_individual_effect(amount, scored_card, percent, key_ex, amount_ex)
@@ -982,11 +1014,18 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
     end
 end
 
-SMODS.calculate_effect = function(effect, scored_card, percent)
+SMODS.calculate_effect = function(effect, scored_card, percent, from_edition, no_x)
     local calculated = false
+    local message = false
     for key, amount in pairs(effect) do
-        calculated = SMODS.calculate_individual_effect(effect, scored_card, percent, key, amount)
+        if key == 'message' then
+            message = true
+        else
+            calculated = SMODS.calculate_individual_effect(effect, scored_card, percent, key, amount, from_edition, no_x)
+            percent = percent+0.08
+        end
     end
+    if message then calculated = SMODS.calculate_individual_effect(effect, scored_card, percent, 'message', effect.message, from_edition, no_x) end
 
     return calculated
 end
@@ -1026,26 +1065,5 @@ function Card:calculate_edition(context)
             local o = edition:calculate(self, context)
             if o then return o end
         end
-    end
-end
-
-
-function Card:get_edition()
-    
-    if self.edition then
-        local ret = {card = self}
-        if self.edition.p_dollars then
-            ret.p_dollars_mod = self.edition.p_dollars
-        end
-        if self.edition.x_mult then 
-            ret.x_mult_mod = self.edition.x_mult
-        end
-        if self.edition.mult then 
-            ret.mult_mod = self.edition.mult
-        end
-        if self.edition.chips then 
-            ret.chip_mod = self.edition.chips
-        end
-        return ret
     end
 end
