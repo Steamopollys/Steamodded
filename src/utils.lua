@@ -931,3 +931,42 @@ SMODS.deepfind = function(tbl, val, seen, collector, tree)
     ]]
     return collector
 end
+
+--by index. i use this for tmj
+SMODS.deepfindbyindex = function(tbl, val, seen, collector, tree)
+    seen = seen or {[tbl]=true}
+    collector = collector or {}
+    tree = tree or {}
+    for i, v in pairs(tbl) do
+        if i == val then
+            --such that we can get the index of the value from its parent table
+            table.insert(tree, i)
+            --insert the table into our master collector. include the table in which the needle is, the index of said needle in said table, and the tree from the original table to get to that needle
+            table.insert(collector, {table=tbl, index=i, tree=tree})
+        elseif type(v) == "table" and not seen[v] then --make sure we dont infinite recur
+            --one-length copying is enough. we dont nest anything here. we cant use the original tree object since it'll need to be unique for each individual branch
+            local nexttree = copy_table(tree)
+            --insert the index of the table in this tree
+            table.insert(nexttree, i)
+            --never look at this specific table again
+            seen[v] = true
+            --recur in the new table
+            SMODS.deepfind(v, val, seen, collector, nexttree)
+        end
+    end
+    --[[ return collector. itll look like this:
+        {
+            [1] = {
+                table = {k1=3, k2=5},
+                index = "k1",
+                tree = {"thisTable", 3, "thatTable", "k2"}
+            },
+            [2] = {
+                table = {k3 = 5},
+                index = "k3",
+                tree = {"thisTable", 2, "k3"}
+            }
+        }
+    ]]
+    return collector
+end
