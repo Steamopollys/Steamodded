@@ -1067,3 +1067,37 @@ function Card:calculate_edition(context)
         end
     end
 end
+
+-- Hook this function to add different areas to MOST calculations
+function SMODS.calculate_context(context, percent)
+    context.cardarea = G.jokers
+    for i=1, #G.jokers.cards do
+        --calculate the joker effects
+        local effects = eval_card(G.jokers.cards[i], context)
+        for type, effect in pairs(effects) do
+            SMODS.calculate_effect(effect, G.jokers.cards[i], percent)
+        end
+    end
+    context.cardarea = G.play
+    for i=1, #context.scoring_hand do
+        --calculate the played card effects
+        local effects = eval_card(context.scoring_hand[i], context)
+        for type, effect in pairs(effects) do
+            SMODS.calculate_effect(effect, context.scoring_hand[i], percent)
+        end
+    end
+    context.cardarea = G.hand
+    for i=1, #G.hand.cards do
+        --calculate the held card effects
+        local effects = eval_card(G.hand.cards[i], context)
+        for type, effect in pairs(effects) do
+            SMODS.calculate_effect(effect, G.hand.cards[i], percent)
+        end
+    end
+    local effect = G.GAME.selected_back:trigger_effect(context)
+    if effect then SMODS.calculate_effect(effect, G.deck.cards[1], percent) end
+end
+
+SMODS.CalculationAreas = {
+    {area = 'jokers'}, {area = 'hand'}
+}
