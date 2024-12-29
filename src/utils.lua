@@ -951,7 +951,7 @@ SMODS.deepfindbyindex = function(tbl, val, seen, collector, tree)
             --never look at this specific table again
             seen[v] = true
             --recur in the new table
-            SMODS.deepfind(v, val, seen, collector, nexttree)
+            SMODS.deepfindbyindex(v, val, seen, collector, nexttree)
         end
     end
     --[[ return collector. itll look like this:
