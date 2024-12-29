@@ -905,7 +905,7 @@ SMODS.deepfind = function(tbl, val, seen, collector, tree, objtree)
             table.insert(tree, i)
             table.insert(objtree, v)
             --insert the table into our master collector. include the table in which the needle is, the index of said needle in said table, and the tree from the original table to get to that needle
-            table.insert(collector, {table=tbl, index=i, tree=tree})
+            table.insert(collector, {table=tbl, index=i, tree=tree, objtree=objtree})
         elseif type(v) == "table" and not seen[v] then --make sure we dont infinite recur
             --one-length copying is enough. we dont nest anything here. we cant use the original tree object since it'll need to be unique for each individual branch
             local nexttree = copy_table(tree)
