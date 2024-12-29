@@ -1599,18 +1599,18 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 	return nil
 end
 
-local cge = Card.get_edition
-function Card:get_edition()
-	if self.ability.extra_enhancement then return end
-	local ret = cge(self)
-	if self.edition and self.edition.key then
-		local ed = SMODS.Centers[self.edition.key]
-		if ed.calculate and type(ed.calculate) == 'function' then
-			ed:calculate(self, {edition_main = true, edition_val = ret})
-		end
-	end
-	return ret
-end
+-- local cge = Card.get_edition
+-- function Card:get_edition()
+-- 	if self.ability.extra_enhancement then return end
+-- 	local ret = cge(self)
+-- 	if self.edition and self.edition.key then
+-- 		local ed = SMODS.Centers[self.edition.key]
+-- 		if ed.calculate and type(ed.calculate) == 'function' then
+-- 			ed:calculate(self, {edition_main = true, edition_val = ret})
+-- 		end
+-- 	end
+-- 	return ret
+-- end
 
 --#endregion
 --#region enhancements UI
