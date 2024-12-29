@@ -602,6 +602,16 @@ if G.pack_cards and (not (G.GAME.STOP_USE and G.GAME.STOP_USE > 0)) and
 '''
 match_indent = true
 
+# Due to STOP_USE being used we can remove this dumb check
+# could probably remove the rest of it since it serves no purpose otherwise, but whatever
+[[patches]]
+[patches.regex]
+target = "functions/button_callbacks.lua"
+pattern = '''and \(G\.hand\.cards\[1\] or \(G\.hand\.config\.card_limit <= 0\)\)'''
+position = "at"
+payload = ''' '''
+match_indent = true
+
 # Fixes Steam API not loading on unix
 [[patches]]
 [patches.pattern]
