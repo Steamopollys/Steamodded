@@ -949,7 +949,7 @@ local flat_copy_table = function(tbl)
 end
 --rewrite without recursion because i couldnt TCO the old one
 --this allows you to search through any size table, even the entire global space
-SMODS.deepfind = function(tbl, val)
+SMODS.deepfind = function(tbl, val, immediate)
     local seen = {[tbl] = true}
     local collector = {}
     local stack = { {tbl = tbl, path = {}, objpath = {}} }
@@ -975,6 +975,9 @@ SMODS.deepfind = function(tbl, val)
                 table.insert(newPath, i)
                 table.insert(newObjPath, v)
                 table.insert(collector, {table = currentTbl, index = i, tree = newPath, objtree = newObjPath})
+                if immediate then
+                    return collector
+                end
                 --otherwise, if its a traversable table we havent seen yet
             elseif type(v) == "table" and not seen[v] then
                 --make sure we dont see it again
@@ -1037,7 +1040,7 @@ end
 ]===]
 --rewrite without recursion because i couldnt TCO the old one
 --this allows you to search through any size table, even the entire global space
-SMODS.deepfindbyindex = function(tbl, val)
+SMODS.deepfindbyindex = function(tbl, val, immediate)
     local seen = {[tbl] = true}
     local collector = {}
     local stack = { {tbl = tbl, path = {}, objpath = {}} }
@@ -1063,6 +1066,9 @@ SMODS.deepfindbyindex = function(tbl, val)
                 table.insert(newPath, i)
                 table.insert(newObjPath, v)
                 table.insert(collector, {table = currentTbl, index = i, tree = newPath, objtree = newObjPath})
+                if immediate then
+                    return collector
+                end
                 --otherwise, if its a traversable table we havent seen yet
             elseif type(v) == "table" and not seen[v] then
                 --make sure we dont see it again
