@@ -361,6 +361,21 @@ function SMODS.recalc_debuff(card)
 end
 
 function SMODS.restart_game()
+    if ((G or {}).SOUND_MANAGER or {}).channel then
+        G.SOUND_MANAGER.channel:push({
+            type = "kill",
+        })
+    end
+    if ((G or {}).SAVE_MANAGER or {}).channel then
+        G.SAVE_MANAGER.channel:push({
+            type = "kill",
+        })
+    end
+    if ((G or {}).HTTP_MANAGER or {}).channel then
+        G.HTTP_MANAGER.channel:push({
+            type = "kill",
+        })
+    end
     if love.system.getOS() ~= 'OS X' then
         love.thread.newThread("os.execute(...)\n"):start('"' .. arg[-2] .. '" ' .. table.concat(arg, " "))
     else
