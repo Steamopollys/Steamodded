@@ -1014,15 +1014,40 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
     end
 end
 
+SMODS.trigger_effects = function(effects, card, percent)
+    for i, effect_table in ipairs(effects) do
+        if effect_table.retriggers and effect_table.retriggers.calculated then SMODS.calculate_effect(effect_table.retriggers, card, percent); effect_table.retriggers = nil end
+        for key, effect in pairs(effect_table) do
+            if key ~= 'smods' then
+                if key == 'retriggers' and not effect.calculated then 
+                    for rt = 1, #effect do
+                        effect_table.smods.context.retrigger_check = true
+                        local eval = eval_card(effect_table.smods.card, effect_table.smods.context)
+                        if eval then
+                            eval.retriggers = effect[rt]
+                            eval.retriggers.calculated = true
+                            table.insert(effects, eval)
+                        end
+                    end
+                end
+                if type(effect) == 'table' then
+                    SMODS.calculate_effect(effect, card, percent)
+                end
+            end
+        end
+    end
+end
+
 SMODS.calculate_effect = function(effect, scored_card, percent, from_edition, no_x)
     local calculated = false
     local message = false
     for key, amount in pairs(effect) do
         if key == 'message' then
             message = true
+        elseif key == 'retrigger' then
         else
             calculated = SMODS.calculate_individual_effect(effect, scored_card, percent, key, amount, from_edition, no_x)
-            percent = percent+0.08
+            percent = (percent or 0)+0.08
         end
     end
     if message then calculated = SMODS.calculate_individual_effect(effect, scored_card, percent, 'message', effect.message, from_edition, no_x) end
@@ -1055,6 +1080,21 @@ SMODS.calculate_repetitions = function(card, area, scoring_hand, text, poker_han
     end
 
     return reps
+end
+
+SMODS.calculate_retriggers = function(card, context, _ret)
+    local retriggers = {}
+    for i=1, #G.jokers.cards do
+        local eval = eval_card(G.jokers.cards[i],{retrigger_joker_check = true, other_card = card, other_context = context, other_ret = _ret})
+        for key, value in pairs(eval) do
+            if value.repetitions then
+                for h=1, value.repetitions do
+                    retriggers[#retriggers + 1] = value
+                end
+            end
+        end
+    end
+    return retriggers
 end
 
 function Card:calculate_edition(context)
