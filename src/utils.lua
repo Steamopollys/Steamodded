@@ -937,6 +937,15 @@ SMODS.deepfind = function(tbl, val, seen, collector, tree, objtree)
 end
 ]===]
 
+--betmma overrides copy_table to be recursive for some dumbass reason so im doing this instead
+--(why would you do that ??)
+local flat_copy_table = function(tbl)
+    local new = {}
+    for i, v in pairs(tbl) do
+        new[i] = v
+    end
+    return new
+end
 --rewrite without recursion because i couldnt TCO the old one
 --this allows you to search through any size table, even the entire global space
 SMODS.deepfind = function(tbl, val)
@@ -960,8 +969,8 @@ SMODS.deepfind = function(tbl, val)
             --if the value matches
             if v == val then
                 --copy our values and store it in the collector
-                local newPath = copy_table(currentPath)
-                local newObjPath = copy_table(currentObjPath)
+                local newPath = flat_copy_table(currentPath)
+                local newObjPath = flat_copy_table(currentObjPath)
                 table.insert(newPath, i)
                 table.insert(newObjPath, v)
                 table.insert(collector, {table = currentTbl, index = i, tree = newPath, objtree = newObjPath})
@@ -970,8 +979,8 @@ SMODS.deepfind = function(tbl, val)
                 --make sure we dont see it again
                 seen[v] = true
                 --and then place it on the top of the stack
-                local newPath = copy_table(currentPath)
-                local newObjPath = copy_table(currentObjPath)
+                local newPath = flat_copy_table(currentPath)
+                local newObjPath = flat_copy_table(currentObjPath)
                 table.insert(newPath, i)
                 table.insert(newObjPath, v)
                 table.insert(stack, {tbl = v, path = newPath, objpath = newObjPath})
@@ -1048,8 +1057,8 @@ SMODS.deepfindbyindex = function(tbl, val)
             --if the value matches
             if i == val then
                 --copy our values and store it in the collector
-                local newPath = copy_table(currentPath)
-                local newObjPath = copy_table(currentObjPath)
+                local newPath = flat_copy_table(currentPath)
+                local newObjPath = flat_copy_table(currentObjPath)
                 table.insert(newPath, i)
                 table.insert(newObjPath, v)
                 table.insert(collector, {table = currentTbl, index = i, tree = newPath, objtree = newObjPath})
@@ -1058,8 +1067,8 @@ SMODS.deepfindbyindex = function(tbl, val)
                 --make sure we dont see it again
                 seen[v] = true
                 --and then place it on the top of the stack
-                local newPath = copy_table(currentPath)
-                local newObjPath = copy_table(currentObjPath)
+                local newPath = flat_copy_table(currentPath)
+                local newObjPath = flat_copy_table(currentObjPath)
                 table.insert(newPath, i)
                 table.insert(newObjPath, v)
                 table.insert(stack, {tbl = v, path = newPath, objpath = newObjPath})
