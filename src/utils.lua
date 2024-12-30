@@ -956,7 +956,7 @@ SMODS.deepfind = function(tbl, val, immediate)
 
     --while there are any elements to traverse
     while #stack > 0 do
-        --pull the bottom out of the stack and start traversing it (by default this will be the first element of the earliest traversed table found in pairs)
+        --pull the top off of the stack and start traversing it (by default this will be the last element of the last traversed table found in pairs)
         local current = table.remove(stack)
         --the current table we wish to traverse
         local currentTbl = current.tbl
@@ -1047,7 +1047,7 @@ SMODS.deepfindbyindex = function(tbl, val, immediate)
 
     --while there are any elements to traverse
     while #stack > 0 do
-        --pull the bottom out of the stack and start traversing it (by default this will be the first element of the earliest traversed table found in pairs)
+        --pull the top off of the stack and start traversing it (by default this will be the last element of the last traversed table found in pairs)
         local current = table.remove(stack)
         --the current table we wish to traverse
         local currentTbl = current.tbl
