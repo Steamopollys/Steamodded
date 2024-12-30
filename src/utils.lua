@@ -937,8 +937,9 @@ SMODS.deepfind = function(tbl, val, seen, collector, tree, objtree)
 end
 ]===]
 
---betmma overrides copy_table to be recursive for some dumbass reason so im doing this instead
---(why would you do that ??)
+--apparently copy_table was recursive
+--i didnt know this
+--so we do this now
 local flat_copy_table = function(tbl)
     local new = {}
     for i, v in pairs(tbl) do
