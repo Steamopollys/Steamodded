@@ -892,7 +892,7 @@ SMODS.find_mod = function(id)
     end
     return ret
 end
-
+--[===[
 --find a needle in a haystack, infinite depth, get every needle, recreate the path to that needle
 SMODS.deepfind = function(tbl, val, seen, collector, tree, objtree)
     seen = seen or {[tbl]=true}
@@ -935,8 +935,53 @@ SMODS.deepfind = function(tbl, val, seen, collector, tree, objtree)
     ]]
     return collector
 end
+]===]
 
+--rewrite without recursion because i couldnt TCO the old one
+--this allows you to search through any size table, even the entire global space
+SMODS.deepfind = function(tbl, val)
+    local seen = {[tbl] = true}
+    local collector = {}
+    local stack = { {tbl = tbl, path = {}, objpath = {}} }
 
+    --while there are any elements to traverse
+    while #stack > 0 do
+        --pull the top off of the stack and start traversing it (by default this will be the last element of the last traversed table found in pairs)
+        local current = table.remove(stack)
+        --the current table we wish to traverse
+        local currentTbl = current.tbl
+        --the current path
+        local currentPath = current.path
+        --the current object path
+        local currentObjPath = current.objpath
+
+        --for every table that we have
+        for i, v in pairs(currentTbl) do
+            --if the value matches
+            if v == val then
+                --copy our values and store it in the collector
+                local newPath = copy_table(currentPath)
+                local newObjPath = copy_table(currentObjPath)
+                table.insert(newPath, i)
+                table.insert(newObjPath, v)
+                table.insert(collector, {table = currentTbl, index = i, tree = newPath, objtree = newObjPath})
+                --otherwise, if its a traversable table we havent seen yet
+            elseif type(v) == "table" and not seen[v] then
+                --make sure we dont see it again
+                seen[v] = true
+                --and then place it on the top of the stack
+                local newPath = copy_table(currentPath)
+                local newObjPath = copy_table(currentObjPath)
+                table.insert(newPath, i)
+                table.insert(newObjPath, v)
+                table.insert(stack, {tbl = v, path = newPath, objpath = newObjPath})
+            end
+        end
+    end
+
+    return collector
+end
+--[===[
 --by index. i use this for tmj
 SMODS.deepfindbyindex = function(tbl, val, seen, collector, tree, objtree)
     seen = seen or {[tbl]=true}
@@ -977,5 +1022,50 @@ SMODS.deepfindbyindex = function(tbl, val, seen, collector, tree, objtree)
             }
         }
     ]]
+    return collector
+end
+]===]
+--rewrite without recursion because i couldnt TCO the old one
+--this allows you to search through any size table, even the entire global space
+SMODS.deepfindbyindex = function(tbl, val)
+    local seen = {[tbl] = true}
+    local collector = {}
+    local stack = { {tbl = tbl, path = {}, objpath = {}} }
+
+    --while there are any elements to traverse
+    while #stack > 0 do
+        --pull the top off of the stack and start traversing it (by default this will be the last element of the last traversed table found in pairs)
+        local current = table.remove(stack)
+        --the current table we wish to traverse
+        local currentTbl = current.tbl
+        --the current path
+        local currentPath = current.path
+        --the current object path
+        local currentObjPath = current.objpath
+
+        --for every table that we have
+        for i, v in pairs(currentTbl) do
+            --if the value matches
+            if i == val then
+                --copy our values and store it in the collector
+                local newPath = copy_table(currentPath)
+                local newObjPath = copy_table(currentObjPath)
+                table.insert(newPath, i)
+                table.insert(newObjPath, v)
+                table.insert(collector, {table = currentTbl, index = i, tree = newPath, objtree = newObjPath})
+                --otherwise, if its a traversable table we havent seen yet
+            elseif type(v) == "table" and not seen[v] then
+                --make sure we dont see it again
+                seen[v] = true
+                --and then place it on the top of the stack
+                local newPath = copy_table(currentPath)
+                local newObjPath = copy_table(currentObjPath)
+                table.insert(newPath, i)
+                table.insert(newObjPath, v)
+                table.insert(stack, {tbl = v, path = newPath, objpath = newObjPath})
+            end
+        end
+    end
+
     return collector
 end
