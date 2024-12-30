@@ -868,15 +868,23 @@ local function createClickableModBox(modInfo, scale)
         config.colour = mix_colours(invert(col), G.C.UI.TEXT_INACTIVE, 0.8)
         config.scale = scale * .8
     end
-    if modInfo.version ~= '0.0.0' then
+    if modInfo.version and modInfo.version ~= '0.0.0' then
         table.insert(but.nodes[1].nodes[1].nodes, {
             n = G.UIT.T,
             config = {
-                text = ('(%s)'):format(modInfo.version),
+                text = ('(%s) '):format(modInfo.version),
                 scale = scale*0.8,
                 colour = mix_colours(invert(col), G.C.UI.TEXT_INACTIVE, 0.8),
                 shadow = true,
             },
+        })
+    end 
+    if modInfo.config_tab then
+        table.insert(but.nodes[1].nodes[1].nodes, {
+            n = G.UIT.O,
+            config = {
+                object = Sprite(0,0,0.4,0.4, G.ASSET_ATLAS['mod_tags'], {x=2,y=0})
+            }
         })
     end
     return {
@@ -923,11 +931,7 @@ local function createClickableModBox(modInfo, scale)
 end
 
 function G.FUNCS.openModsDirectory(options)
-    if not love.filesystem.exists("Mods") then
-        love.filesystem.createDirectory("Mods")
-    end
-
-    love.system.openURL("file://"..love.filesystem.getSaveDirectory().."/Mods")
+    love.system.openURL(SMODS.MODS_DIR)
 end
 
 function G.FUNCS.mods_buttons_page(options)
@@ -1513,15 +1517,15 @@ function SMODS.GUI.staticModListContent()
                                     align = "cm"
                                 },
                                 nodes = {
-                                    {
-                                        n = G.UIT.T,
-                                        config = {
-                                            text = localize('b_mod_list'),
-                                            shadow = true,
-                                            scale = scale * 0.6,
-                                            colour = G.C.UI.TEXT_LIGHT
-                                        }
-                                    }
+                                    UIBox_button({
+                                        label = { localize('b_mod_list') },
+                                        shadow = true,
+                                        scale = scale*0.85,
+                                        colour = G.C.BOOSTER,
+                                        button = "openModsDirectory",
+                                        minh = scale,
+                                        minw = 9
+                                    }),
                                 }
                             },
 
@@ -1606,24 +1610,6 @@ function SMODS.GUI.dynamicModListContent(page)
                         colour = G.C.UI.TEXT_DARK
                     }
                 }
-            }
-        })
-        table.insert(modNodes, {
-            n = G.UIT.R,
-            config = {
-                padding = 0,
-                align = "cm",
-            },
-            nodes = {
-                UIBox_button({
-                    label = { localize('b_open_mods_dir') },
-                    shadow = true,
-                    scale = scale,
-                    colour = G.C.BOOSTER,
-                    button = "openModsDirectory",
-                    minh = 0.8,
-                    minw = 8
-                })
             }
         })
     else
