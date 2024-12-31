@@ -64,11 +64,7 @@ end
 '''
 position = 'at'
 match_indent = true
-payload = '''
-if reps[j] == 1 and next(effects) then
-    reps = SMODS.calculate_repetitions(G.hand.cards[i], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects}, {})
-end
-'''
+payload = ''''''
 
 # Handle retrigger messages
 [[patches]]
@@ -127,7 +123,10 @@ if next(effects) then
         local eval = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})
         if next(eval) then 
             mod_percent = true
-            table.insert(effects, eval)
+            for rt = 1, ((eval.retriggers and #eval.retriggers or 0) + 1) do
+                table.insert(effects, eval)
+            end
+           -- if eval.jokers then print('Added '..((eval.retriggers and #eval.retriggers or 0) + 1)..' retriggers for '.._card.config.center_key) end
         end
     end
 end
@@ -330,7 +329,7 @@ if card.ability.set == 'Joker' or card.ability.consumeable then
     if jokers then 
         ret.jokers = jokers
         if not context.retrigger_joker_check then
-            local retriggers = SMODS.calculate_retriggers(card, context)
+            local retriggers = SMODS.calculate_retriggers(card, context, ret)
             if next(retriggers) then
                 ret.retriggers = retriggers
             end
@@ -503,7 +502,12 @@ match_indent = true
 position = "at"
 payload = '''
 -- Base game calculation removed 2
-SMODS.trigger_effects(effects, G.hand.cards[i], percent)'''
+SMODS.trigger_effects(effects, G.hand.cards[i], percent)
+
+if reps[j] == 1 and effects.calculated then
+    SMODS.calculate_repetitions(G.hand.cards[i], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects}, reps)
+end
+'''
 # Joker Effects
 # Edition effects
 [[patches]]

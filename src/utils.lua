@@ -1039,20 +1039,8 @@ end
 
 SMODS.trigger_effects = function(effects, card, percent)
     for i, effect_table in ipairs(effects) do
-        if effect_table.retriggers and effect_table.retriggers.calculated then SMODS.calculate_effect(effect_table.retriggers, card, percent); effect_table.retriggers = nil end
         for key, effect in pairs(effect_table) do
             if key ~= 'smods' then
-                if key == 'retriggers' and not effect.calculated then 
-                    for rt = 1, #effect do
-                        effect_table.smods.context.retrigger_check = true
-                        local eval = eval_card(effect_table.smods.card, effect_table.smods.context)
-                        if eval then
-                            eval.retriggers = effect[rt]
-                            eval.retriggers.calculated = true
-                            table.insert(effects, eval)
-                        end
-                    end
-                end
                 if type(effect) == 'table' then
                     local calc = SMODS.calculate_effect(effect, card, percent, effect_table.smods and effect_table.smods.edition, effect_table.smods and effect_table.smods.no_x)
                     if calc then effects.calculated = true end
@@ -1083,14 +1071,11 @@ SMODS.calculate_repetitions = function(card, context, reps)
     --From Red seal
     context.repetition_only = true
     local eval = eval_card(card, context)
-    local retriggers = eval and eval.retriggers and #eval.retriggers or 1
     for key, value in pairs(eval) do
         if value.repetitions then
             for h=1, value.repetitions do
                 value.card = value.card or card
-                for i=1, retriggers do
-                    reps[#reps+1] = {key = value}
-                end
+                reps[#reps+1] = {key = value}
             end
         end
     end
@@ -1100,14 +1085,16 @@ SMODS.calculate_repetitions = function(card, context, reps)
         local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
         --calculate the joker effects
         local eval = eval_card(_card, context)
-        local retriggers = eval and eval.retriggers and #eval.retriggers or 1
+        local rt = (eval and eval.retriggers and #eval.retriggers or 0) + 1
         for key, value in pairs(eval) do
-            if value.repetitions then
+            if value.repetitions and key ~= 'retriggers' then
+
                 for h=1, value.repetitions do
                     value.card = value.card or _card
-                    for i=1, retriggers do
+                    for i=1, rt do
                         reps[#reps+1] = {key = value}
                     end
+                    -- print('Added '..rt..' repetitions from '.._card.config.center_key)
                 end
             end
         end
@@ -1119,8 +1106,7 @@ SMODS.calculate_retriggers = function(card, context, _ret)
     local retriggers = {}
     for k=1, #G.jokers.cards + #G.consumeables.cards do
         local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
-        context.retrigger_joker_check = true
-        local eval = eval_card(_card, context)
+        local eval = eval_card(_card, {retrigger_joker_check = true, other_card = card, other_context = context, other_ret = _ret})
         for key, value in pairs(eval) do
             if value.repetitions then
                 for h=1, value.repetitions do
