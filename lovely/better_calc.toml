@@ -33,29 +33,31 @@ end
 position = 'at'
 match_indent = true
 payload = '''
-local reps = SMODS.calculate_repetitions(scoring_hand[i], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true, card_effects = effects})
+local reps = SMODS.calculate_repetitions(scoring_hand[i], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true, card_effects = effects}, {1})
 '''
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'
 pattern = '''
---Check for hand doubling
+if reps[j] == 1 then
+    --Check for hand doubling
 
---From Red seal
-local eval = eval_card(G.hand.cards[i], {repetition_only = true,cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true, card_effects = effects})
-if next(eval) and (next(effects[1]) or #effects > 1) then 
-    for h  = 1, eval.seals.repetitions do
-        reps[#reps+1] = eval
-    end
-end
-
---From Joker
-for j=1, #G.jokers.cards do
-    --calculate the joker effects
-    local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects})
-    if next(eval) then 
-        for h  = 1, eval.jokers.repetitions do
+    --From Red seal
+    local eval = eval_card(G.hand.cards[i], {repetition_only = true,cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true, card_effects = effects})
+    if next(eval) and (next(effects[1]) or #effects > 1) then 
+        for h  = 1, eval.seals.repetitions do
             reps[#reps+1] = eval
+        end
+    end
+
+    --From Joker
+    for j=1, #G.jokers.cards do
+        --calculate the joker effects
+        local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects})
+        if next(eval) then 
+            for h  = 1, eval.jokers.repetitions do
+                reps[#reps+1] = eval
+            end
         end
     end
 end
@@ -63,7 +65,9 @@ end
 position = 'at'
 match_indent = true
 payload = '''
-reps = SMODS.calculate_repetitions(G.hand.cards[i], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects})
+if reps[j] == 1 and next(effects) then
+    reps = SMODS.calculate_repetitions(G.hand.cards[i], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects}, {})
+end
 '''
 
 # Handle retrigger messages
@@ -111,18 +115,22 @@ for k=1, #G.jokers.cards do
         mod_percent = true
         table.insert(effects, eval)
     end
+end
 '''
 position = 'at'
 match_indent = true
 payload = '''
-for k=1, #G.jokers.cards + #G.consumeables.cards do
-    local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
-    --calculate the joker individual card effects
-    local eval = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})
-    if next(eval) then 
-        mod_percent = true
-        table.insert(effects, eval)
+if next(effects) then
+    for k=1, #G.jokers.cards + #G.consumeables.cards do
+        local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
+        --calculate the joker individual card effects
+        local eval = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})
+        if next(eval) then 
+            mod_percent = true
+            table.insert(effects, eval)
+        end
     end
+end
 '''
 ## eval_card()
 # handle debuffed playing cards
@@ -965,7 +973,7 @@ for k=1, #G.jokers.cards + #G.consumeables.cards do
 end
 
 if reps[j] == 1 then 
-    reps = SMODS.calculate_repetitions(G.hand.cards[i], {cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, end_of_round = true, card_effects = effects})
+    reps = SMODS.calculate_repetitions(G.hand.cards[i], {cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, end_of_round = true, card_effects = effects}, {})
 end
 
 SMODS.trigger_effects(effects, G.hand.cards[i], percent)

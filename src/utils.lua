@@ -998,6 +998,7 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
                 if key ~= 'Xmult_mod' then card_eval_status_text(scored_card, 'x_mult', amount, percent) end
             end
         end
+        xmult_triggers = xmult_triggers + 1
         return true
     end
 
@@ -1078,16 +1079,18 @@ SMODS.calculate_effect = function(effect, scored_card, percent, from_edition, no
     return calculated
 end
 
-SMODS.calculate_repetitions = function(card, context)
-    local reps = {1}
+SMODS.calculate_repetitions = function(card, context, reps)
     --From Red seal
     context.repetition_only = true
     local eval = eval_card(card, context)
+    local retriggers = eval and eval.retriggers and #eval.retriggers or 1
     for key, value in pairs(eval) do
         if value.repetitions then
             for h=1, value.repetitions do
                 value.card = value.card or card
-                reps[#reps+1] = {key = value}
+                for i=1, retriggers do
+                    reps[#reps+1] = {key = value}
+                end
             end
         end
     end
@@ -1097,11 +1100,14 @@ SMODS.calculate_repetitions = function(card, context)
         local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
         --calculate the joker effects
         local eval = eval_card(_card, context)
+        local retriggers = eval and eval.retriggers and #eval.retriggers or 1
         for key, value in pairs(eval) do
             if value.repetitions then
                 for h=1, value.repetitions do
                     value.card = value.card or _card
-                    reps[#reps+1] = {key = value}
+                    for i=1, retriggers do
+                        reps[#reps+1] = {key = value}
+                    end
                 end
             end
         end
