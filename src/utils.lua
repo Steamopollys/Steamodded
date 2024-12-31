@@ -1053,7 +1053,8 @@ SMODS.trigger_effects = function(effects, card, percent)
                     end
                 end
                 if type(effect) == 'table' then
-                    SMODS.calculate_effect(effect, card, percent, effect_table.smods and effect_table.smods.edition, effect_table.smods and effect_table.smods.no_x)
+                    local calc = SMODS.calculate_effect(effect, card, percent, effect_table.smods and effect_table.smods.edition, effect_table.smods and effect_table.smods.no_x)
+                    if calc then effects.calculated = true end
                 end
             end
         end
@@ -1105,7 +1106,6 @@ SMODS.calculate_repetitions = function(card, context)
             end
         end
     end
-
     return reps
 end
 
