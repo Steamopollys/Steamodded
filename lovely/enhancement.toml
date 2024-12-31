@@ -193,32 +193,8 @@ end"""
 
 # G.FUNCS.discard_cards_from_highlighted()
 
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "inc_career_stat('c_cards_discarded', highlighted_count)"
-match_indent = true
-position = "after"
-payload = """
-for i = 1, #G.hand.cards do
-    eval_card(G.hand.cards[i], {pre_discard = true, full_hand = G.hand.highlighted, hook = hook})
-end"""
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''
-(?<indent>[\t ]*)G\.hand\.highlighted\[i\]:calculate_seal\(\{discard = true\}\)
-[\t ]*local removed = false'''
-line_prepend = '$indent'
-position = "at"
-payload = """
-local removed = false
-local eval = nil
-eval = eval_card(G.hand.highlighted[i], {discard = true, full_hand = G.hand.highlighted})
-if eval and eval.remove then
-    removed = true
-    card_eval_status_text(G.hand.highlighted[i], 'jokers', nil, 1, nil, eval)
-end"""
+
+
 
 ## Allow cards to function as multiple enhancements (e.g. from jokers)
 

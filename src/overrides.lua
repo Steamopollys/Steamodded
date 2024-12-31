@@ -2127,3 +2127,7 @@ function Card:calculate_seal(context)
 	return ccs(self, context)
 end
 --#endregion
+
+function playing_card_joker_effects(cards)
+	SMODS.calculate_context({playing_card_added = true, cards = cards})
+end

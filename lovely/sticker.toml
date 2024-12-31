@@ -110,17 +110,17 @@ end
 '''
 
 # end_round()
-[[patches]]
-[patches.pattern]
-target = 'functions/state_events.lua'
-match_indent = true
-position = 'before'
-pattern = "if G.GAME.round_resets.ante == G.GAME.win_ante and G.GAME.blind:get_type() == 'Boss' then"
-payload = '''
-for i, v in ipairs(G.hand.cards) do
-    eval_card(G.hand.cards[i], {cardarea = G.hand, end_of_round = true, game_over = game_over })
-end
-'''
+# [[patches]]
+# [patches.pattern]
+# target = 'functions/state_events.lua'
+# match_indent = true
+# position = 'before'
+# pattern = "if G.GAME.round_resets.ante == G.GAME.win_ante and G.GAME.blind:get_type() == 'Boss' then"
+# payload = '''
+# for i, v in ipairs(G.hand.cards) do
+#     eval_card(G.hand.cards[i], {cardarea = G.hand, end_of_round = true, game_over = game_over })
+# end
+# '''
 
 # get_badge_colour()
 [[patches]]
@@ -145,19 +145,19 @@ match_indent = true
 payload = '''table.sort(self.cards, function (a, b) return a.T.x + a.T.w/2 - 100*((a.pinned and not a.ignore_pinned) and a.sort_id or 0) < b.T.x + b.T.w/2 - 100*((b.pinned and not b.ignore_pinned) and b.sort_id or 0) end)'''
 
 
-[[patches]]
-[patches.regex]
-target = 'functions/state_events.lua'
-pattern = 'G\.jokers\.cards\[i\]:calculate_joker\('
-position = 'at'
-payload = 'eval_card(G.jokers.cards[i], '
+# [[patches]]
+# [patches.regex]
+# target = 'functions/state_events.lua'
+# pattern = 'G\.jokers\.cards\[i\]:calculate_joker\('
+# position = 'at'
+# payload = 'eval_card(G.jokers.cards[i], '
 
-[[patches]]
-[patches.regex]
-target = 'functions/state_events.lua'
-pattern = 'G\.jokers\.cards\[j\]:calculate_joker\('
-position = 'at'
-payload = 'eval_card(G.jokers.cards[j], '
+# [[patches]]
+# [patches.regex]
+# target = 'functions/state_events.lua'
+# pattern = 'G\.jokers\.cards\[j\]:calculate_joker\('
+# position = 'at'
+# payload = 'eval_card(G.jokers.cards[j], '
 
 # [[patches]]
 # [patches.regex]
