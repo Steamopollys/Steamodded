@@ -4,7 +4,6 @@ dump_lua = true
 priority = 0
 
 ## G.FUNCS.evaluate_play()
-
  # Handle repetitions from playing cards
 [[patches]]
 [patches.pattern]
@@ -1241,3 +1240,18 @@ payload = '''
 SMODS.calculate_context({reroll_shop = true})
 '''
 
+# percent is global for use in SMODS.eval_this
+[[patches]]
+[patches.regex]
+target = 'functions/state_events.lua'
+pattern = '''local percent ='''
+position = 'at'
+payload = '''percent ='''
+
+# custom sounds in card_eval_status_text
+[[patches]]
+[patches.regex]
+target = 'functions/common_events.lua'
+pattern = '''if extra.edition then '''
+position = 'before'
+payload = '''sound = extra.sound or sound'''

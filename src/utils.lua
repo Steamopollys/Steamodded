@@ -273,6 +273,7 @@ function SMODS.eval_this(_card, effects)
         if effects.message then
             card_eval_status_text(_card, 'jokers', nil, nil, nil, effects)
         end
+        percent = percent + 0.08
     end
 end
 
@@ -944,12 +945,7 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
         update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
         if not effect.remove_default_message then
             if from_edition then
-                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {
-                    message = localize{type = 'variable', key = 'a_chips', vars = {amount}},
-                    chip_mod = amount,
-                    colour = G.C.EDITION,
-                    edition = true
-                })
+                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = localize{type = 'variable', key = 'a_chips', vars = {amount}}, chip_mod = amount, colour = G.C.EDITION, edition = true})
             else
                 if key ~= 'chip_mod' then card_eval_status_text(scored_card, 'chips', amount, percent) end
             end
@@ -963,12 +959,7 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
         update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
         if not effect.remove_default_message then
             if from_edition then
-                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {
-                    message = localize{type = 'variable', key = 'a_mult', vars = {amount}},
-                    mult_mod = amount,
-                    colour = G.C.DARK_EDITION,
-                    edition = true
-                })
+                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = localize{type = 'variable', key = 'a_mult', vars = {amount}}, mult_mod = amount, colour = G.C.DARK_EDITION, edition = true})
             else
                 if key ~= 'mult_mod' then card_eval_status_text(scored_card, key, amount, percent) end
             end
@@ -989,16 +980,11 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
         update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
         if not effect.remove_default_message then
             if from_edition then
-                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {
-                    message = localize{type='variable',key='a_xmult',vars={amount}},
-                    x_mult_mod =  amount,
-                    colour =  G.C.EDITION,
-                    edition = true})
+                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = localize{type='variable',key='a_xmult',vars={amount}}, x_mult_mod =  amount, colour =  G.C.EDITION, edition = true})
             else
                 if key ~= 'Xmult_mod' then card_eval_status_text(scored_card, 'x_mult', amount, percent) end
             end
         end
-        xmult_triggers = xmult_triggers + 1
         return true
     end
 
@@ -1037,6 +1023,7 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
     end
 end
 
+-- Used to calculate a table of effects generated in evaluate_play
 SMODS.trigger_effects = function(effects, card, percent)
     for i, effect_table in ipairs(effects) do
         for key, effect in pairs(effect_table) do
@@ -1063,12 +1050,11 @@ SMODS.calculate_effect = function(effect, scored_card, percent, from_edition, no
         end
     end
     if message then calculated = SMODS.calculate_individual_effect(effect, scored_card, percent, 'message', effect.message, from_edition, no_x) end
-
     return calculated
 end
 
 SMODS.calculate_repetitions = function(card, context, reps)
-    --From Red seal
+    -- From the card
     context.repetition_only = true
     local eval = eval_card(card, context)
     for key, value in pairs(eval) do
@@ -1094,7 +1080,6 @@ SMODS.calculate_repetitions = function(card, context, reps)
                     for i=1, rt do
                         reps[#reps+1] = {key = value}
                     end
-                    -- print('Added '..rt..' repetitions from '.._card.config.center_key)
                 end
             end
         end
@@ -1129,6 +1114,7 @@ function Card:calculate_edition(context)
     end
 end
 
+-- Used to calculate contexts across G.jokers, scoring_hand (if present), G.play and G.GAME.selected_back
 -- Hook this function to add different areas to MOST calculations
 function SMODS.calculate_context(context, percent, return_table)
     context.cardarea = G.jokers
@@ -1172,7 +1158,3 @@ function SMODS.calculate_context(context, percent, return_table)
     local effect = G.GAME.selected_back:trigger_effect(context)
     if effect then SMODS.calculate_effect(effect, G.deck.cards[1], percent) end
 end
-
-SMODS.CalculationAreas = {
-    {area = 'jokers'}, {area = 'hand'}
-}
