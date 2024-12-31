@@ -1113,7 +1113,8 @@ SMODS.calculate_retriggers = function(card, context, _ret)
     local retriggers = {}
     for k=1, #G.jokers.cards + #G.consumeables.cards do
         local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
-        local eval = eval_card(_card,{retrigger_joker_check = true, other_card = card, other_context = context, other_ret = _ret})
+        context.retrigger_joker_check = true
+        local eval = eval_card(_card, context)
         for key, value in pairs(eval) do
             if value.repetitions then
                 for h=1, value.repetitions do
