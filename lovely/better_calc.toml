@@ -199,7 +199,7 @@ if context.cardarea == G.play and context.main_scoring then
     end
 
     local x_mult = card:get_chip_x_mult(context)
-    if x_mult then 
+    if x_mult > 0 then 
         ret.playing_card.x_mult = x_mult
     end
 
@@ -234,7 +234,7 @@ if context.cardarea == G.hand and context.main_scoring then
     end
 
     local h_x_mult = card:get_chip_h_x_mult()
-    if h_x_mult then 
+    if h_x_mult > 0 then 
         ret.playing_card.x_mult = h_x_mult
     end
 """
