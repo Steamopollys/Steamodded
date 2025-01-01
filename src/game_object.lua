@@ -2651,11 +2651,6 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             if context.end_of_round and not context.repetition and not context.individual then
                 card:calculate_rental()
             end
-            if context.skipping_booster then
-                ease_dollars(G.GAME.rental_rate)
-                card_eval_status_text(card, 'dollars', G.GAME.rental_rate)
-            end
-            if context.joker_main then return { mult_mod = 10 } end
         end
     }
 
