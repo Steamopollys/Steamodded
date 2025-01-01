@@ -212,7 +212,7 @@ if context.cardarea == G.play and context.main_scoring then
     end
 
     local p_dollars = card:get_p_dollars()
-    if p_dollars then 
+    if p_dollars > 0 then 
         ret.playing_card.p_dollars = p_dollars
     end
 """
