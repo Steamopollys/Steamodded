@@ -96,7 +96,14 @@ for k=1, #G.jokers.cards + #G.consumeables.cards do
     --calculate the joker individual card effects
     local eval = eval_card(_card, {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true})
     if next(eval) then 
-        table.insert(effects, eval) 
+        table.insert(effects, eval)
+        if eval.retriggers then
+            for rt = 1, #eval.retriggers do
+                local rt_eval = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, retrigger_joker_check = true})
+                table.insert(effects, rt_eval)
+                table.insert(effects, {eval.retriggers[rt]})
+            end
+        end
     end
 '''
 [[patches]]
@@ -122,13 +129,14 @@ if next(effects) then
         local eval = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})
         if next(eval) then 
             mod_percent = true
+            table.insert(effects, eval)
             if eval.retriggers then
                 for rt = 1, #eval.retriggers do
-                    table.insert(effects, eval)
+                    local rt_eval = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, retrigger_joker_check = true})
+                    table.insert(effects, rt_eval)
                     table.insert(effects, {eval.retriggers[rt]})
                 end
             end
-            table.insert(effects, eval)
         end
     end
 end

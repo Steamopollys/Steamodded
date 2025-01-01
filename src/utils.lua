@@ -1087,14 +1087,16 @@ SMODS.calculate_repetitions = function(card, context, reps)
         local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
         --calculate the joker effects
         local eval = eval_card(_card, context)
-        local rt = (eval and eval.retriggers and #eval.retriggers or 0) + 1
+        local rt = eval and eval.retriggers and #eval.retriggers or 0
         for key, value in pairs(eval) do
             if value.repetitions and key ~= 'retriggers' then
 
                 for h=1, value.repetitions do
                     value.card = value.card or _card
+                    reps[#reps+1] = {key = value}
                     for i=1, rt do
-                        reps[#reps+1] = {key = value}
+                        local rt_eval = eval_card(_card, context)
+                        reps[#reps+1] = {key = rt_eval}
                     end
                 end
             end
@@ -1137,13 +1139,20 @@ function SMODS.calculate_context(context, percent, return_table)
     for k=1, #G.jokers.cards + #G.consumeables.cards do
         local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
         --calculate the joker effects
-        local effects = eval_card(_card, context)
-        if return_table then 
-            return_table[#return_table+1] = effects    
-        else
-            for type, effect in pairs(effects) do
-                SMODS.calculate_effect(effect, _card, percent)
+        local effects = {eval_card(_card, context)}
+        if effects[1].retriggers then
+            context.retrigger_joker_check = true
+            for rt = 1, #effects[1].retriggers do
+                local rt_eval = eval_card(_card, context)
+                table.insert(effects, rt_eval)
+                table.insert(effects, {effects[1].retriggers[rt]})
             end
+            context.retrigger_joker_check = false
+        end
+        if return_table then 
+            SMODS.merge_lists(return_table, effects)  
+        else
+            SMODS.trigger_effects(effects, _card, percent)
         end
     end
     if context.scoring_hand then
@@ -1156,7 +1165,20 @@ function SMODS.calculate_context(context, percent, return_table)
             else
                 local effects = {eval_card(context.scoring_hand[i], context)}
                 SMODS.calculate_quantum_enhancements(context.scoring_hand[i], effects, context)
-                SMODS.trigger_effects(effects, context.scoring_hand[i], percent)
+                if effects[1].retriggers then
+                    context.retrigger_joker_check = true
+                    for rt = 1, #effects[1].retriggers do
+                        local rt_eval = eval_card(context.scoring_hand[i], context)
+                        table.insert(effects, rt_eval)
+                        table.insert(effects, {effects[1].retriggers[rt]})
+                    end
+                    context.retrigger_joker_check = false
+                end
+                if return_table then 
+                    SMODS.merge_lists(return_table, effects)  
+                else
+                    SMODS.trigger_effects(effects, context.scoring_hand[i], percent)
+                end
             end
         end
     end
@@ -1168,7 +1190,20 @@ function SMODS.calculate_context(context, percent, return_table)
         else
             local effects = {eval_card(G.hand.cards[i], context)}
             SMODS.calculate_quantum_enhancements(G.hand.cards[i], effects, context)
-            SMODS.trigger_effects(effects, G.hand.cards[i], percent)
+            if effects[1].retriggers then
+                context.retrigger_joker_check = true
+                for rt = 1, #effects[1].retriggers do
+                    local rt_eval = eval_card(G.hand.cards[i], context)
+                    table.insert(effects, rt_eval)
+                    table.insert(effects, {effects[1].retriggers[rt]})
+                end
+                context.retrigger_joker_check = false
+            end
+            if return_table then 
+                SMODS.merge_lists(return_table, effects)  
+            else
+                SMODS.trigger_effects(effects, G.hand.cards[i], percent)
+            end
         end
     end
     local effect = G.GAME.selected_back:trigger_effect(context)
