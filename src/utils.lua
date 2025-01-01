@@ -951,6 +951,7 @@ SMODS.find_mod = function(id)
 end
 
 
+
 -- This function handles the calculation of each effect returned to evaluate play.
 -- Can easily be hooked to add more calculation effects ala Talisman
 SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, amount, from_edition, no_x)
@@ -1174,6 +1175,7 @@ function SMODS.calculate_context(context, percent, return_table)
     local effect = G.GAME.selected_back:trigger_effect(context)
     if effect then SMODS.calculate_effect(effect, G.deck.cards[1], percent) end
 end
+
 -- this is for debugging
 SMODS.debug_calculation = function()
     G.contexts = {}
