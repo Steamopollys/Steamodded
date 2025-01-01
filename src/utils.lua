@@ -1144,8 +1144,8 @@ function SMODS.calculate_context(context, percent, return_table)
             context.retrigger_joker_check = true
             for rt = 1, #effects[1].retriggers do
                 local rt_eval = eval_card(_card, context)
-                table.insert(effects, rt_eval)
                 table.insert(effects, {effects[1].retriggers[rt]})
+                table.insert(effects, rt_eval)
             end
             context.retrigger_joker_check = false
         end
