@@ -122,10 +122,13 @@ if next(effects) then
         local eval = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})
         if next(eval) then 
             mod_percent = true
-            for rt = 1, ((eval.retriggers and #eval.retriggers or 0) + 1) do
-                table.insert(effects, eval)
+            if eval.retriggers then
+                for rt = 1, #eval.retriggers do
+                    table.insert(effects, eval)
+                    table.insert(effects, {eval.retriggers[rt]})
+                end
             end
-           -- if eval.jokers then print('Added '..((eval.retriggers and #eval.retriggers or 0) + 1)..' retriggers for '.._card.config.center_key) end
+            table.insert(effects, eval)
         end
     end
 end

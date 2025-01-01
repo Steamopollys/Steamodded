@@ -985,6 +985,7 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
                 if key ~= 'Xmult_mod' then card_eval_status_text(scored_card, 'x_mult', amount, percent) end
             end
         end
+        xmult_triggers = xmult_triggers + 1
         return true
     end
 
