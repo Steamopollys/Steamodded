@@ -362,6 +362,21 @@ function SMODS.recalc_debuff(card)
 end
 
 function SMODS.restart_game()
+    if ((G or {}).SOUND_MANAGER or {}).channel then
+        G.SOUND_MANAGER.channel:push({
+            type = "kill",
+        })
+    end
+    if ((G or {}).SAVE_MANAGER or {}).channel then
+        G.SAVE_MANAGER.channel:push({
+            type = "kill",
+        })
+    end
+    if ((G or {}).HTTP_MANAGER or {}).channel then
+        G.HTTP_MANAGER.channel:push({
+            type = "kill",
+        })
+    end
     if love.system.getOS() ~= 'OS X' then
         love.thread.newThread("os.execute(...)\n"):start('"' .. arg[-2] .. '" ' .. table.concat(arg, " "))
     else
@@ -833,7 +848,7 @@ function SMODS.get_enhancements(card, extra_only)
         enhancements[card.config.center.key] = true
     end
     local calc_return = {}
-    SMODS.calculate_context({other_card = card, check_enhancement = true}, nil, calc_return)
+    SMODS.calculate_context({other_card = card, check_enhancement = true, no_blueprint = true}, nil, calc_return)
     for _, eval in pairs(calc_return) do
         for key, eval2 in pairs(eval) do
             if type(eval2) == 'table' then
@@ -1158,4 +1173,13 @@ function SMODS.calculate_context(context, percent, return_table)
     end
     local effect = G.GAME.selected_back:trigger_effect(context)
     if effect then SMODS.calculate_effect(effect, G.deck.cards[1], percent) end
+end
+-- this is for debugging
+SMODS.debug_calculation = function()
+    G.contexts = {}
+    local cj = Card.calculate_joker
+    function Card:calculate_joker(context)
+        for k,v in pairs(context) do G.contexts[k] = (G.contexts[k] or 0) + 1 end
+        return cj(self, context)
+    end
 end

@@ -6,11 +6,11 @@
 --- MOD_DESCRIPTION: A standalone mod that replaces the in-game music with Lobotomy Corporation themes.
 --- DEPENDENCIES: [Steamodded>=1.0.0~ALPHA-0909a]
 --- CONFLICTS: [LobotomyCorp>=0.9.0]
---- That's that, and this is this.
 
+-- For "pitch = 0.7", speed up the sound files by 10/7 for them to sound normal in-game.
 SMODS.Sound({
     vol = 0.6,
-    pitch = 1,
+    pitch = 0.7,
     key = "music_story1",
     path = "Story1.ogg",
     select_music_track = function()
@@ -20,7 +20,7 @@ SMODS.Sound({
 
 SMODS.Sound({
     vol = 0.6,
-    pitch = 1,
+    pitch = 0.7,
     key = "music_neutral1",
     path = "Neutral1.ogg",
     select_music_track = function()
@@ -36,7 +36,7 @@ SMODS.Sound({
 
 SMODS.Sound({
     vol = 0.6,
-    pitch = 1,
+    pitch = 0.7,
     key = "music_neutral2",
     path = "Neutral2.ogg",
     select_music_track = function()
@@ -52,7 +52,7 @@ SMODS.Sound({
 
 SMODS.Sound({
     vol = 0.6,
-    pitch = 1,
+    pitch = 0.7,
     key = "music_neutral3",
     path = "Neutral3.ogg",
     select_music_track = function()
@@ -68,7 +68,7 @@ SMODS.Sound({
 
 SMODS.Sound({
     vol = 0.6,
-    pitch = 1,
+    pitch = 0.7,
     key = "music_neutral4",
     path = "Neutral4.ogg",
     select_music_track = function()
@@ -84,7 +84,7 @@ SMODS.Sound({
 
 SMODS.Sound({
     vol = 0.6,
-    pitch = 1,
+    pitch = 0.7,
     key = "music_first_warning",
     path = "Emergency1.ogg",
     select_music_track = function()
@@ -94,7 +94,7 @@ SMODS.Sound({
 
 SMODS.Sound({
     vol = 0.6,
-    pitch = 1,
+    pitch = 0.7,
     key = "music_second_warning",
     path = "Emergency2.ogg",
     select_music_track = function()

@@ -5,68 +5,6 @@ priority = 0
 
 ### Addition Tab
 
-## Jokers tab
-# create_UIBox_your_collection_jokers()
-[[patches]]
-[patches.pattern]
-target = "functions/UI_definitions.lua"
-pattern = '''local joker_options = {}'''
-position = "before"
-payload = '''
-local joker_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Joker)'''
-match_indent = true
-
-# create_UIBox_your_collection_jokers()
-[[patches]]
-[patches.regex]
-target = 'functions/UI_definitions.lua'
-pattern = '''(?<indent>[\t ]*)for i = 1, math\.ceil\(#G\.P_CENTER_POOLS\.Joker\/\(5\*#G\.your_collection\)\) do\n[\s\S]{4}table\.insert\(joker_options, localize\('k_page'\)..' '..tostring\(i\)..'\/'..tostring\(math\.ceil\(#G\.P_CENTER_POOLS\.Joker\/\(5\*#G\.your_collection\)\)\)\)'''
-position = 'at'
-payload = '''
-for i = 1, math.ceil(#joker_pool/(5*#G.your_collection)) do
-    table.insert(joker_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#joker_pool/(5*#G.your_collection))))'''
-line_prepend = '$indent'
-
-# create_UIBox_your_collection_jokers()
-[[patches]]
-[patches.pattern]
-target = "functions/UI_definitions.lua"
-pattern = '''local center = G.P_CENTER_POOLS["Joker"][i+(j-1)*5]'''
-position = "at"
-payload = '''
-local center = joker_pool[i+(j-1)*5]
-if not center then break end'''
-match_indent = true
-
-# create_UIBox_your_collection_jokers()
-[[patches]]
-[patches.pattern]
-target = "functions/UI_definitions.lua"
-pattern = '''local t =  create_UIBox_generic_options({ back_func = 'your_collection', contents = {'''
-position = "at"
-payload = '''local t =  create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or 'your_collection', contents = {'''
-match_indent = true
-
-# G.FUNCS.your_collections_joker_page
-[[patches]]
-[patches.pattern]
-target = "functions/button_callbacks.lua"
-pattern = '''for i = 1, 5 do'''
-position = "before"
-payload = '''
-local joker_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Joker)
-'''
-match_indent = true
-
-# G.FUNCS.your_collection_joker_page
-[[patches]]
-[patches.pattern]
-target = "functions/button_callbacks.lua"
-pattern = '''local center = G.P_CENTER_POOLS["Joker"][i+(j-1)*5 + (5*#G.your_collection*(args.cycle_config.current_option - 1))]'''
-position = "at"
-payload = '''local center = joker_pool[i+(j-1)*5 + (5*#G.your_collection*(args.cycle_config.current_option - 1))]'''
-match_indent = true
-
 ## Decks tab
 # create_UIBox_your_collection_decks()
 [[patches]]
@@ -91,8 +29,7 @@ for k, v in ipairs(deck_pool) do
 end'''
 line_prepend = '$indent'
 
-## Note: This covers Decks, Boosters, and Tags
-# create_UIBox_your_collection_decks() and create_UIBox_your_collection_boosters() and create_UIBox_your_collection_tags()
+# create_UIBox_your_collection_decks()
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"
@@ -110,120 +47,6 @@ position = "at"
 payload = '''
 local deck_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Back)
 G.GAME.viewed_back:change_to(deck_pool[args.to_key])'''
-match_indent = true
-
-## Boosters Page
-# create_UIBox_your_collection_boosters()
-[[patches]]
-[patches.pattern]
-target = "functions/UI_definitions.lua"
-pattern = '''local booster_options = {}'''
-position = "before"
-payload = '''
-local booster_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Booster)'''
-match_indent = true
-
-# create_UIBox_your_collection_boosters()
-[[patches]]
-[patches.regex]
-target = 'functions/UI_definitions.lua'
-pattern = '''(?<indent>[\t ]*)for i = 1, math\.ceil\(#G\.P_CENTER_POOLS\.Booster\/8\) do\n[\s\S]{4}table\.insert\(booster_options, localize\('k_page'\)..' '..tostring\(i\)..'\/'..tostring\(math\.ceil\(#G\.P_CENTER_POOLS\.Booster\/8\)\)\)'''
-position = 'at'
-payload = '''
-for i = 1, math.ceil(#booster_pool/8) do
-    table.insert(booster_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#booster_pool/8)))'''
-line_prepend = '$indent'
-
-# create_UIBox_your_collection_boosters()
-[[patches]]
-[patches.pattern]
-target = 'functions/UI_definitions.lua'
-pattern = '''local center = G.P_CENTER_POOLS["Booster"][i+(j-1)*4]'''
-position = 'at'
-payload = '''
-local center = booster_pool[i+(j-1)*4]
-if not center then break end'''
-match_indent = true
-
-# G.FUNCS.your_collection_booster_page
-[[patches]]
-[patches.pattern]
-target = "functions/button_callbacks.lua"
-pattern = '''G.FUNCS.your_collection_booster_page = function(args)'''
-position = "after"
-payload = '''
-local booster_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Booster)'''
-match_indent = true
-
-# G.FUNCS.your_collection_booster_page
-[[patches]]
-[patches.pattern]
-target = "functions/button_callbacks.lua"
-pattern = '''local center = G.P_CENTER_POOLS["Booster"][i+(j-1)*4 + (8*(args.cycle_config.current_option - 1))]'''
-position = "at"
-payload = '''local center = booster_pool[i+(j-1)*4 + (8*(args.cycle_config.current_option - 1))]'''
-match_indent = true
-
-## Voucher Tabs
-# create_UIBox_your_collection_vouchers()
-[[patches]]
-[patches.pattern]
-target = "functions/UI_definitions.lua"
-pattern = '''local voucher_options = {}'''
-position = "before"
-payload = '''
-local voucher_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Voucher)'''
-match_indent = true
-
-# create_UIBox_your_collection_vouchers()
-[[patches]]
-[patches.regex]
-target = 'functions/UI_definitions.lua'
-pattern = '''(?<indent>[\t ]*)for i = 1, math\.ceil\(#G\.P_CENTER_POOLS\.Voucher\/\(4\*#G\.your_collection\)\) do\n[\s\S]{4}table\.insert\(voucher_options, localize\('k_page'\)..' '..tostring\(i\)..'\/'..tostring\(math\.ceil\(#G\.P_CENTER_POOLS\.Voucher\/\(4\*#G\.your_collection\)\)\)\)'''
-position = 'at'
-payload = '''
-  for i = 1, math.ceil(#voucher_pool/(4*#G.your_collection)) do
-    table.insert(voucher_options, localize('k_page')..' '..tostring(i)..'/'..tostring(math.ceil(#voucher_pool/(4*#G.your_collection))))'''
-line_prepend = '$indent'
-
-# create_UIBox_your_collection_boosters()
-[[patches]]
-[patches.pattern]
-target = 'functions/UI_definitions.lua'
-pattern = '''local center = G.P_CENTER_POOLS["Voucher"][i+(j-1)*4]'''
-position = 'at'
-payload = '''
-local center = voucher_pool[i+(j-1)*4]
-if not center then break end'''
-match_indent = true
-
-## Note: This covers Blinds and Vouchers
-# create_UIBox_your_collection_vouchers() and create_UIBox_your_collection_blinds()
-[[patches]]
-[patches.pattern]
-target = "functions/UI_definitions.lua"
-pattern = '''local t = create_UIBox_generic_options({ back_func = exit or 'your_collection', contents = {'''
-position = "at"
-payload = '''local t = create_UIBox_generic_options({ back_func = G.ACTIVE_MOD_UI and "openModUI_"..G.ACTIVE_MOD_UI.id or exit or 'your_collection', contents = {'''
-match_indent = true
-
-# G.FUNCS.your_collection_voucher_page
-[[patches]]
-[patches.pattern]
-target = "functions/button_callbacks.lua"
-pattern = '''G.FUNCS.your_collection_voucher_page = function(args)'''
-position = "after"
-payload = '''
-local voucher_pool = SMODS.collection_pool(G.P_CENTER_POOLS.Voucher)'''
-match_indent = true
-
-# G.FUNCS.your_collection_voucher_page
-[[patches]]
-[patches.pattern]
-target = "functions/button_callbacks.lua"
-pattern = '''local center = G.P_CENTER_POOLS["Voucher"][i+(j-1)*4 + (8*(args.cycle_config.current_option - 1))]'''
-position = "at"
-payload = '''local center = voucher_pool[i+(j-1)*4 + (8*(args.cycle_config.current_option - 1))]'''
 match_indent = true
 
 # create_UIBox_your_collection()

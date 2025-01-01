@@ -48,7 +48,7 @@ pattern = "for i = 1, num_dollars or 1 do"
 position = "at"
 payload = '''
 local dollars_to_loop
-if num_dollars < 0 then dollars_to_loop = num_dollars*-1 else dollars_to_loop = num_dollars end
+if num_dollars < 0 then dollars_to_loop = (num_dollars*-1)+1 else dollars_to_loop = num_dollars end
 for i = 1, dollars_to_loop do'''
 match_indent = true
 

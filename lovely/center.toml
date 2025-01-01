@@ -504,3 +504,12 @@ if type(seal.draw) == 'function' then
     seal:draw(self, layer)
 elseif self.seal then
 '''
+
+# no_blueprint check
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+match_indent = true
+position = 'at'
+pattern = 'if other_joker and other_joker ~= self then'
+payload = 'if other_joker and other_joker ~= self and not context.no_blueprint then'
