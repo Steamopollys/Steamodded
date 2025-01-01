@@ -189,22 +189,22 @@ payload = """
 if context.cardarea == G.play and context.main_scoring then
     ret.playing_card = {}
     local chips = card:get_chip_bonus()
-    if chips > 0 then 
+    if chips then 
         ret.playing_card.chips = chips
     end
 
     local mult = card:get_chip_mult()
-    if mult > 0 then 
+    if mult then 
         ret.playing_card.mult = mult
     end
 
     local x_mult = card:get_chip_x_mult(context)
-    if x_mult > 0 then 
+    if x_mult then 
         ret.playing_card.x_mult = x_mult
     end
 
     local p_dollars = card:get_p_dollars()
-    if p_dollars > 0 then 
+    if p_dollars then 
         ret.playing_card.p_dollars = p_dollars
     end
 """
@@ -229,12 +229,12 @@ payload = """
 if context.cardarea == G.hand and context.main_scoring then
     ret.playing_card = {}
     local h_mult = card:get_chip_h_mult()
-    if h_mult > 0 then 
+    if h_mult then 
         ret.playing_card.h_mult = h_mult
     end
 
     local h_x_mult = card:get_chip_h_x_mult()
-    if h_x_mult > 0 then 
+    if h_x_mult then 
         ret.playing_card.x_mult = h_x_mult
     end
 """
