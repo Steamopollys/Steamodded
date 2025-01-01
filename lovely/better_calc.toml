@@ -99,7 +99,7 @@ for k=1, #G.jokers.cards + #G.consumeables.cards do
         table.insert(effects, eval)
         if eval.retriggers then
             for rt = 1, #eval.retriggers do
-                local rt_eval = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, retrigger_joker_check = true})
+                local rt_eval = eval_card(_card, {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true, retrigger_joker_check = true})
                 table.insert(effects, rt_eval)
                 table.insert(effects, {eval.retriggers[rt]})
             end
@@ -620,7 +620,14 @@ payload = '''
 local joker_eval = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true})
 if next(joker_eval) then
     if joker_eval.edition then joker_eval.edition = {} end
-    effects[#effects+1] = joker_eval
+    table.insert(effects, joker_eval)
+    if joker_eval.retriggers then
+        for rt = 1, #joker_eval.retriggers do
+            local rt_eval = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true, retrigger_joker_check = true})
+            table.insert(effects, rt_eval)
+            table.insert(effects, {joker_eval.retriggers[rt]})
+        end
+    end
 end'''
 # Joker on Joker effects
 [[patches]]
@@ -648,7 +655,14 @@ for _, _joker in ipairs(G.jokers.cards) do
     local joker_eval = eval_card(_joker, {full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card})
     if next(joker_eval) then
         if joker_eval.edition then joker_eval.edition = {} end
-        effects[#effects+1] = joker_eval
+        table.insert(effects, joker_eval)
+        if joker_eval.retriggers then
+            for rt = 1, #joker_eval.retriggers do
+                local rt_eval = eval_card(_card, {full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card, retrigger_joker_check = true})
+                table.insert(effects, rt_eval)
+                table.insert(effects, {joker_eval.retriggers[rt]})
+            end
+        end
     end
 end'''
 
