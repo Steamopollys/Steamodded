@@ -1,7 +1,7 @@
 [manifest]
 version = "1.0.0"
 dump_lua = true
-priority = 0
+priority = -5
 
 # Check all registered keybinds
 # inserted inside Controller:key_press_update
