@@ -92,7 +92,7 @@ payload = '''if G.GAME.modifiers.enable_rentals_in_shop and pseudorandom((area =
 [[patches]]
 [patches.pattern]
 target = "card.lua"
-pattern = '''elseif self.sprite_facing == 'back' then'''
+pattern = '''if self.ability.name == 'The Soul' and (self.config.center.discovered or self.bypass_discovery_center) then'''
 match_indent = true
 position = "before"
 payload = '''
