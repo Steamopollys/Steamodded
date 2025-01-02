@@ -182,3 +182,38 @@ pattern = '''play_sound('gold_seal', 1.2, 0.4)'''
 position = 'at'
 match_indent = true
 payload = '''play_sound(sound.sound, sound.per, sound.vol)'''
+## Populate Seal Ability Table
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''self.seal = _seal'''
+position = 'after'
+match_indent = true
+payload = '''
+self.ability.seal = {}
+for k, v in pairs(G.P_SEALS[_seal].config or {}) do
+    if type(v) == 'table' then
+        self.ability.seal[k] = copy_table(v)
+    else
+        self.ability.seal[k] = v
+    end
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''new_card:set_seal(other.seal, true)'''
+position = 'after'
+match_indent = true
+payload = '''
+if other.seal then
+    for k, v in pairs(other.ability.seal or {}) do
+        if type(v) == 'table' then
+            new_card.ability.seal[k] = copy_table(v)
+        else
+            new_card.ability.seal[k] = v
+        end
+    end
+end
+'''
