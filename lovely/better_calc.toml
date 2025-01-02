@@ -94,14 +94,16 @@ payload = '''
 for k=1, #G.jokers.cards + #G.consumeables.cards do
     local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
     --calculate the joker individual card effects
-    local eval = eval_card(_card, {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true})
+    local eval, post = eval_card(_card, {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true})
     if next(eval) then 
         table.insert(effects, eval)
+        if next(post) then table.insert(effects, eval) end
         if eval.retriggers then
             for rt = 1, #eval.retriggers do
-                local rt_eval = eval_card(_card, {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true, retrigger_joker_check = true})
+                local rt_eval, rt_post = eval_card(_card, {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true, retrigger_joker_check = true})
                 table.insert(effects, {eval.retriggers[rt]})
                 table.insert(effects, rt_eval)
+                if next(rt_post) then table.insert(effects, rt_eval) end
             end
         end
     end
@@ -126,15 +128,17 @@ if next(effects) then
     for k=1, #G.jokers.cards + #G.consumeables.cards do
         local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
         --calculate the joker individual card effects
-        local eval = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})
+        local eval, post = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})
         if next(eval) then 
             mod_percent = true
             table.insert(effects, eval)
+            if next(post) then table.insert(effects, post) end
             if eval.retriggers then
                 for rt = 1, #eval.retriggers do
-                    local rt_eval = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, retrigger_joker_check = true})
+                    local rt_eval, rt_post = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, retrigger_joker_check = true})
                     table.insert(effects, {eval.retriggers[rt]})
                     table.insert(effects, rt_eval)
+                    if next(rt_post) then table.insert(effects, rt_post) end
                 end
             end
         end
@@ -157,12 +161,7 @@ payload = '''
 function eval_card(card, context)
     if card.ability.set ~= 'Joker' and card.debuff then return {} end
     context = context or {}
-    local ret = {
-        smods = {
-            card = card,
-            context = context
-        }
-    }
+    local ret = {}
 '''
 
 # built in config values
@@ -215,6 +214,8 @@ if context.cardarea == G.play and context.main_scoring then
     if p_dollars > 0 then 
         ret.playing_card.p_dollars = p_dollars
     end
+
+    -- TARGET: main scoring on played cards
 """
 [[patches]]
 [patches.pattern]
@@ -245,6 +246,8 @@ if context.cardarea == G.hand and context.main_scoring then
     if h_x_mult > 0 then 
         ret.playing_card.x_mult = h_x_mult
     end
+
+    -- TARGET: main scoring on held cards
 """
 
 # Add context.main_scoring to G.play and G.hand
@@ -289,7 +292,10 @@ for k,v in pairs(SMODS.Stickers) do
     if sticker then
         ret[v] = sticker
     end
-end"""
+end
+
+-- TARGET: evaluate your own repetition effects
+"""
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
@@ -314,7 +320,10 @@ for k,v in pairs(SMODS.Stickers) do
     if sticker then
         ret[v] = sticker
     end
-end"""
+end
+
+-- TARGET: evaluate your own general effects
+"""
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
@@ -330,10 +339,14 @@ if context.cardarea == G.jokers or context.card == G.consumeables then
     end
     if jokers then 
         ret.jokers = jokers
-    end'''
+    end
+end
+
+return ret'''
 match_indent = true
 position = "at"
 payload = """
+local post_trig = {}
 if card.ability.set == 'Joker' or card.ability.consumeable then
     local jokers = card:calculate_joker(context)
     if jokers then 
@@ -344,7 +357,13 @@ if card.ability.set == 'Joker' or card.ability.consumeable then
                 ret.retriggers = retriggers
             end
         end
+        if not context.post_trigger and not context.retrigger_joker_check then
+            SMODS.calculate_context({blueprint_card = context.blueprint_card, post_trigger = true, other_joker = card, other_context = context, other_ret = ret}, percent, post_trig)
+        end
     end
+end
+
+return ret, post_trig
 """
 # patch card_eval_status_text to allow G.deck usage
 [[patches]]
@@ -556,12 +575,11 @@ local effects = {}
 local eval = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, edition = true})
 for key, effect in pairs(eval) do
     if key == 'edition' then 
-        eval.smods = eval.smods or {}
-        eval.smods.edition = true
-        eval.smods.no_x = true
+        eval.smods = {edition = true, no_x = true}
         effects[#effects+1] = eval
     end
-end'''
+end
+'''
 # Edition mult effects
 [[patches]]
 [patches.pattern]
@@ -583,16 +601,12 @@ match_indent = true
 position = "at"
 payload = '''
 -- calculate edition multipliers
-local eval = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, edition = true})
 for key, effect in pairs(eval) do
     if key == 'edition' then
-        eval.smods = eval.smods or {}
-        eval.smods.edition = true
-        eval.smods.no_x = false
+        eval.smods = {edition = true}
         effects[#effects+1] = eval
     end
 end
-
 SMODS.trigger_effects(effects, _card, percent)'''
 # Joker effects
 [[patches]]
@@ -617,15 +631,17 @@ match_indent = true
 position = "at"
 payload = '''
 -- Calculate context.joker_main
-local joker_eval = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true})
+local joker_eval, post = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true})
 if next(joker_eval) then
     if joker_eval.edition then joker_eval.edition = {} end
     table.insert(effects, joker_eval)
+    if next(post) then table.insert(effects, post) end
     if joker_eval.retriggers then
         for rt = 1, #joker_eval.retriggers do
-            local rt_eval = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true, retrigger_joker_check = true})
+            local rt_eval, rt_post = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true, retrigger_joker_check = true})
             table.insert(effects, {joker_eval.retriggers[rt]})
             table.insert(effects, rt_eval)
+            if next(rt_post) then table.insert(effects, rt_post) end
         end
     end
 end'''
@@ -652,15 +668,17 @@ position = "at"
 payload = '''
 -- Calculate context.other_joker effects
 for _, _joker in ipairs(G.jokers.cards) do
-    local joker_eval = eval_card(_joker, {full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card})
+    local joker_eval,post = eval_card(_joker, {full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card})
     if next(joker_eval) then
         if joker_eval.edition then joker_eval.edition = {} end
         table.insert(effects, joker_eval)
+        if next(post) then table.insert(effects, post) end
         if joker_eval.retriggers then
             for rt = 1, #joker_eval.retriggers do
-                local rt_eval = eval_card(_card, {full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card, retrigger_joker_check = true})
+                local rt_eval, rt_post = eval_card(_card, {full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card, retrigger_joker_check = true})
                 table.insert(effects, {joker_eval.retriggers[rt]})
                 table.insert(effects, rt_eval)
+                if next(rt_post) then table.insert(effects, rt_post) end
             end
         end
     end
@@ -748,19 +766,22 @@ position = "at"
 payload = '''
 -- context.destroying_card calculations
 for j = 1, #G.jokers.cards do
-    local eval = eval_card(G.jokers.cards[j], {destroying_card = scoring_hand[i], full_hand = G.play.cards})
+    local eval, post = eval_card(G.jokers.cards[j], {destroying_card = scoring_hand[i], full_hand = G.play.cards})
+    SMODS.trigger_effects({eval, post}, scoring_hand[i], percent)
     if eval.jokers then destroyed = true end
+
 end
 
 if SMODS.has_enhancement(scoring_hand[i], 'm_glass') and not scoring_hand[i].debuff and pseudorandom('glass') < G.GAME.probabilities.normal/(scoring_hand[i].ability.name == 'Glass Card' and scoring_hand[i].ability.extra or G.P_CENTERS.m_glass.config.extra) then
     destroyed = true
 end
 
-local eval = eval_card(scoring_hand[i], {destroying_card = scoring_hand[i], full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})
+local eval, post = eval_card(scoring_hand[i], {destroying_card = scoring_hand[i], full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})
 local self_destroy = false
 for key, effect in pairs(eval) do
     self_destroy = SMODS.calculate_effect(effect, scoring_hand[i], percent)
 end
+SMODS.trigger_effects({post}, scoring_hand[i], percent)
 if self_destroy then destroyed = true end
 
 -- TARGET: card destroyed when played
@@ -782,7 +803,7 @@ for i=1, #G.hand.cards do
 
     -- context.destroying_card calculations
     for j = 1, #G.jokers.cards do
-        local eval = eval_card(G.jokers.cards[j], {destroying_card_hand = G.hand.cards[i], full_hand = G.play.cards})
+        local eval, post = eval_card(G.jokers.cards[j], {destroying_card_hand = G.hand.cards[i], full_hand = G.play.cards})
         local self_destroy = false
         for key, effect in pairs(eval) do
             if type(effect) == 'table' then
@@ -791,14 +812,16 @@ for i=1, #G.hand.cards do
                 self_destroy = effect
             end
         end
+        SMODS.trigger_effects({post}, G.hand.cards[i], percent)
         if self_destroy then destroyed = true end
     end
     
-    local eval = eval_card(G.hand.cards[i], {destroying_card_hand = G.hand.cards[i], full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})
+    local eval, post = eval_card(G.hand.cards[i], {destroying_card_hand = G.hand.cards[i], full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})
     local self_destroy = false
     for key, effect in pairs(eval) do
         self_destroy = SMODS.calculate_effect(effect, G.hand.cards[i], percent)
     end
+    SMODS.trigger_effects({post}, G.hand.cards[i], percent)
     if self_destroy then destroyed = true end
     
     -- TARGET: card held destroyed when hand played
@@ -994,10 +1017,11 @@ payload = '''
 for k=1, #G.jokers.cards + #G.consumeables.cards do
     local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
     --calculate the joker individual card effects
-    local eval = eval_card(_card, {cardarea = G.hand, other_card = G.hand.cards[i], individual = true, end_of_round = true})
+    local eval, post = eval_card(_card, {cardarea = G.hand, other_card = G.hand.cards[i], individual = true, end_of_round = true})
     if next(eval) then 
         table.insert(effects, eval)
     end
+    if next(post) then table.insert(effects, post) end
 end
 
 if reps[j] == 1 then 
@@ -1086,10 +1110,8 @@ eval_card(self, {selling_self = true})
 position = 'at'
 match_indent = true
 payload = '''
-local eval = eval_card(self, {selling_self = true})
-for key, effect in pairs(eval) do
-    SMODS.calculate_effect(effect, self, percent)
-end
+local eval, post = eval_card(self, {selling_self = true})
+SMODS.trigger_effects({eval, post}, self, percent)
 '''
 
 # context.open_booster
@@ -1183,10 +1205,8 @@ position = 'at'
 match_indent = true
 payload = '''
 G.E_MANAGER:add_event(Event({func = function()
-    local eval = eval_card(c1, {buying_card = true, card = c1})
-    for key, effect in pairs(eval) do
-        SMODS.calculate_effect(effect, self, percent)
-    end
+    local eval, post = eval_card(c1, {buying_card = true, card = c1})
+    SMODS.trigger_effects({eval, post}, c1, percent)
     return true
     end}))
 '''

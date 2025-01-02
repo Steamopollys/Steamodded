@@ -1096,6 +1096,7 @@ SMODS.calculate_repetitions = function(card, context, reps)
                     reps[#reps+1] = {key = value}
                     for i=1, rt do
                         local rt_eval = eval_card(_card, context)
+                        rt_eval.card = rt_eval.card or _card
                         reps[#reps+1] = {key = rt_eval}
                     end
                 end
@@ -1113,6 +1114,7 @@ SMODS.calculate_retriggers = function(card, context, _ret)
         for key, value in pairs(eval) do
             if value.repetitions then
                 for h=1, value.repetitions do
+                    value.retrigger_card = _card
                     retriggers[#retriggers + 1] = value
                 end
             end
@@ -1143,6 +1145,7 @@ function SMODS.calculate_context(context, percent, return_table)
         if effects[1].retriggers then
             context.retrigger_joker_check = true
             for rt = 1, #effects[1].retriggers do
+                context.retrigger_joker = effects[1].retriggers[rt].retrigger_card
                 local rt_eval = eval_card(_card, context)
                 table.insert(effects, {effects[1].retriggers[rt]})
                 table.insert(effects, rt_eval)
