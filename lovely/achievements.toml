@@ -100,7 +100,7 @@ match_indent = true
 target = 'functions/common_events.lua'
 pattern = 'if G\.GAME\.seeded or G\.GAME\.challenge then return end'
 position = 'at'
-payload = 'if not SMODS.seeded_unlocks and (G.GAME.seeded or G.GAME.challenge) then return end'
+payload = 'if not SMODS.config.seeded_unlocks and (G.GAME.seeded or G.GAME.challenge) then return end'
 
 [[patches]]
 [patches.regex]
