@@ -221,6 +221,9 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
             -- Setting generate_ui to this sentinel value
             -- makes vanilla localization code run instead of SMODS's code
             orig_o.generate_ui = 0
+		else
+			 -- reset the value if otherwise, in case when the object was taken over before and this value was already set
+			orig_o.generate_ui = nil
         end
         -- TODO
         -- it's unclear how much we should modify `obj` on a failed take_ownership call.
