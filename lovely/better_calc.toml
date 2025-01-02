@@ -97,13 +97,13 @@ for k=1, #G.jokers.cards + #G.consumeables.cards do
     local eval, post = eval_card(_card, {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true})
     if next(eval) then 
         table.insert(effects, eval)
-        if next(post) then table.insert(effects, eval) end
+        if next(post) then table.insert(effects, post) end
         if eval.retriggers then
             for rt = 1, #eval.retriggers do
                 local rt_eval, rt_post = eval_card(_card, {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true, retrigger_joker = true})
                 table.insert(effects, {eval.retriggers[rt]})
                 table.insert(effects, rt_eval)
-                if next(rt_post) then table.insert(effects, rt_eval) end
+                if next(rt_post) then table.insert(effects, rt_post) end
             end
         end
     end
@@ -132,7 +132,7 @@ if next(effects) then
         if next(eval) then 
             mod_percent = true
             table.insert(effects, eval)
-            if next(post) then for pt = 1, #post do table.insert(effects, post[1]) end end
+            if next(post) then table.insert(effects, post) end
             if eval.retriggers then
                 for rt = 1, #eval.retriggers do
                     local rt_eval, rt_post = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, retrigger_joker = true})
@@ -635,7 +635,7 @@ local joker_eval, post = eval_card(_card, {cardarea = G.jokers, full_hand = G.pl
 if next(joker_eval) then
     if joker_eval.edition then joker_eval.edition = {} end
     table.insert(effects, joker_eval)
-    if next(post) then for pt = 1, #post do table.insert(effects, post[1]) end end
+    if next(post) then table.insert(effects, post) end
     if joker_eval.retriggers then
         for rt = 1, #joker_eval.retriggers do
             local rt_eval, rt_post = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true, retrigger_joker = true})
@@ -672,7 +672,7 @@ for _, _joker in ipairs(G.jokers.cards) do
     if next(joker_eval) then
         if joker_eval.edition then joker_eval.edition = {} end
         table.insert(effects, joker_eval)
-        if next(post) then for pt = 1, #post do table.insert(effects, post[1]) end end
+        if next(post) then table.insert(effects, post) end
         if joker_eval.retriggers then
             for rt = 1, #joker_eval.retriggers do
                 local rt_eval, rt_post = eval_card(_card, {full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card, retrigger_joker = true})
@@ -1021,7 +1021,7 @@ for k=1, #G.jokers.cards + #G.consumeables.cards do
     if next(eval) then 
         table.insert(effects, eval)
     end
-    if next(post) then for pt = 1, #post do table.insert(effects, post[1]) end end
+    if next(post) then table.insert(effects, post) end
 end
 
 if reps[j] == 1 then 
