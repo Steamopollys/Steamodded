@@ -108,8 +108,7 @@ if not self.disabled and obj.recalc_debuff and type(obj.recalc_debuff) == 'funct
     return
 elseif not self.disabled and obj.debuff_card and type(obj.debuff_card) == 'function' then
     sendWarnMessage(("Blind object %s has debuff_card function, recalc_debuff is preferred"):format(obj.key), obj.set)
-    if obj:debuf
-    f_card(card, from_blind) then 
+    if obj:debuff_card(card, from_blind) then 
         card:set_debuff(true)
         if card.debuff then card.debuffed_by_blind = true end
     else
