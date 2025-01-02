@@ -1086,7 +1086,8 @@ SMODS.calculate_repetitions = function(card, context, reps)
     for k=1, #G.jokers.cards + #G.consumeables.cards do
         local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
         --calculate the joker effects
-        local eval = eval_card(_card, context)
+        local eval, post = eval_card(_card, context)
+        SMODS.trigger_effects({post}, card, percent)
         local rt = eval and eval.retriggers and #eval.retriggers or 0
         for key, value in pairs(eval) do
             if value.repetitions and key ~= 'retriggers' then
@@ -1095,9 +1096,10 @@ SMODS.calculate_repetitions = function(card, context, reps)
                     value.card = value.card or _card
                     reps[#reps+1] = {key = value}
                     for i=1, rt do
-                        local rt_eval = eval_card(_card, context)
+                        local rt_eval, rt_post = eval_card(_card, context)
+                        SMODS.trigger_effects({rt_post}, card, percent)
                         rt_eval.card = rt_eval.card or _card
-                        reps[#reps+1] = {key = rt_eval}
+                        reps[#reps+1] = {key = value}
                     end
                 end
             end
@@ -1110,7 +1112,8 @@ SMODS.calculate_retriggers = function(card, context, _ret)
     local retriggers = {}
     for k=1, #G.jokers.cards + #G.consumeables.cards do
         local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
-        local eval = eval_card(_card, {retrigger_joker_check = true, other_card = card, other_context = context, other_ret = _ret})
+        local eval, post = eval_card(_card, {retrigger_joker_check = true, other_card = card, other_context = context, other_ret = _ret})
+        if next(post) then SMODS.calculate_effect(post, _card, percent) end
         for key, value in pairs(eval) do
             if value.repetitions then
                 for h=1, value.repetitions do
@@ -1143,14 +1146,14 @@ function SMODS.calculate_context(context, percent, return_table)
         --calculate the joker effects
         local effects = {eval_card(_card, context)}
         if effects[1].retriggers then
-            context.retrigger_joker_check = true
+            context.retrigger_joker = true
             for rt = 1, #effects[1].retriggers do
                 context.retrigger_joker = effects[1].retriggers[rt].retrigger_card
                 local rt_eval = eval_card(_card, context)
                 table.insert(effects, {effects[1].retriggers[rt]})
                 table.insert(effects, rt_eval)
             end
-            context.retrigger_joker_check = false
+            context.retrigger_joker = false
         end
         if return_table then 
             SMODS.merge_lists(return_table, effects)  
