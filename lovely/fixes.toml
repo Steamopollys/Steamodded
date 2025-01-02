@@ -656,6 +656,6 @@ target = "main.lua"
 pattern = "st = require 'luasteam'"
 position = "at"
 payload = """local success, _st = pcall(require, 'luasteam')
-if success then st = _st end"""
+if success then st = _st else sendWarnMessage(_st); st = {} end"""
 overwrite = true
 match_indent = true
