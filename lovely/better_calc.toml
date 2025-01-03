@@ -1295,8 +1295,9 @@ payload = '''percent ='''
 
 # custom sounds in card_eval_status_text
 [[patches]]
-[patches.regex]
+[patches.pattern]
 target = 'functions/common_events.lua'
 pattern = '''if extra.edition then '''
 position = 'before'
+match_indent = true
 payload = '''sound = extra.sound or sound'''
