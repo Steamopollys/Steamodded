@@ -907,6 +907,108 @@ SMODS.find_mod = function(id)
     return ret
 end
 
+local flat_copy_table = function(tbl)
+    local new = {}
+    for i, v in pairs(tbl) do
+        new[i] = v
+    end
+    return new
+end
+
+---Seatch for val anywhere deep in tbl. Return a table of finds, or the first found if immediate is provided.
+SMODS.deepfind = function(tbl, val, immediate)
+    local seen = {[tbl] = true}
+    local collector = {}
+    local stack = { {tbl = tbl, path = {}, objpath = {}} }
+
+    --while there are any elements to traverse
+    while #stack > 0 do
+        --pull the top off of the stack and start traversing it (by default this will be the last element of the last traversed table found in pairs)
+        local current = table.remove(stack)
+        --the current table we wish to traverse
+        local currentTbl = current.tbl
+        --the current path
+        local currentPath = current.path
+        --the current object path
+        local currentObjPath = current.objpath
+
+        --for every table that we have
+        for i, v in pairs(currentTbl) do
+            --if the value matches
+            if v == val then
+                --copy our values and store it in the collector
+                local newPath = flat_copy_table(currentPath)
+                local newObjPath = flat_copy_table(currentObjPath)
+                table.insert(newPath, i)
+                table.insert(newObjPath, v)
+                table.insert(collector, {table = currentTbl, index = i, tree = newPath, objtree = newObjPath})
+                if immediate then
+                    return collector
+                end
+                --otherwise, if its a traversable table we havent seen yet
+            elseif type(v) == "table" and not seen[v] then
+                --make sure we dont see it again
+                seen[v] = true
+                --and then place it on the top of the stack
+                local newPath = flat_copy_table(currentPath)
+                local newObjPath = flat_copy_table(currentObjPath)
+                table.insert(newPath, i)
+                table.insert(newObjPath, v)
+                table.insert(stack, {tbl = v, path = newPath, objpath = newObjPath})
+            end
+        end
+    end
+
+    return collector
+end
+
+--Seatch for val as an index anywhere deep in tbl. Return a table of finds, or the first found if immediate is provided.
+SMODS.deepfindbyindex = function(tbl, val, immediate)
+    local seen = {[tbl] = true}
+    local collector = {}
+    local stack = { {tbl = tbl, path = {}, objpath = {}} }
+
+    --while there are any elements to traverse
+    while #stack > 0 do
+        --pull the top off of the stack and start traversing it (by default this will be the last element of the last traversed table found in pairs)
+        local current = table.remove(stack)
+        --the current table we wish to traverse
+        local currentTbl = current.tbl
+        --the current path
+        local currentPath = current.path
+        --the current object path
+        local currentObjPath = current.objpath
+
+        --for every table that we have
+        for i, v in pairs(currentTbl) do
+            --if the value matches
+            if i == val then
+                --copy our values and store it in the collector
+                local newPath = flat_copy_table(currentPath)
+                local newObjPath = flat_copy_table(currentObjPath)
+                table.insert(newPath, i)
+                table.insert(newObjPath, v)
+                table.insert(collector, {table = currentTbl, index = i, tree = newPath, objtree = newObjPath})
+                if immediate then
+                    return collector
+                end
+                --otherwise, if its a traversable table we havent seen yet
+            elseif type(v) == "table" and not seen[v] then
+                --make sure we dont see it again
+                seen[v] = true
+                --and then place it on the top of the stack
+                local newPath = flat_copy_table(currentPath)
+                local newObjPath = flat_copy_table(currentObjPath)
+                table.insert(newPath, i)
+                table.insert(newObjPath, v)
+                table.insert(stack, {tbl = v, path = newPath, objpath = newObjPath})
+            end
+        end
+    end
+
+    return collector
+end
+
 -- this is for debugging
 SMODS.debug_calculation = function()
     G.contexts = {}
