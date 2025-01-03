@@ -23,7 +23,7 @@ local description = 'In-game name of texture in selection menu' -- English-langu
 -----------------------------------------------------------
 
 SMODS.Atlas{  
-    key = atlas_key,
+    key = atlas_key..'_lc',
     px = 71,
     py = 95,
     path = atlas_path,
@@ -45,8 +45,8 @@ for _, suit in ipairs(suits) do
         key = suit.."_skin",
         suit = suit:gsub("^%l", string.upper),
         ranks = ranks,
-        lc_atlas = atlas_key,
-        hc_atlas = (atlas_path_hc and atlas_key..'_hc') or atlas_key,
+        lc_atlas = atlas_key..'_lc',
+        hc_atlas = (atlas_path_hc and atlas_key..'_hc') or atlas_key..'_lc',
         loc_txt = {
             ['en-us'] = description
         },
