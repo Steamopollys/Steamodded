@@ -32,6 +32,7 @@ end
 position = 'at'
 match_indent = true
 payload = '''
+scoring_hand[i].extra_enhancements = nil
 local reps = SMODS.calculate_repetitions(scoring_hand[i], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true, card_effects = effects}, {1})
 '''
 [[patches]]
@@ -275,17 +276,32 @@ SMODS.calculate_quantum_enhancements(G.hand.cards[i], effects, {main_scoring = t
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
-pattern = "local seals = card:calculate_seal(context)"
-match_indent = true
-position = "before"
-payload = """
-local enhancement = card:calculate_enhancement(context)
-if enhancement then
-    ret.enhancement = enhancement
+pattern = '''
+local seals = card:calculate_seal(context)
+if seals then
+    ret.seals = seals
 end
-local edition = card:calculate_edition(context)
-if edition then
-    ret.edition = edition
+'''
+match_indent = true
+position = "at"
+payload = """
+if card.ability.set == 'Enhanced' then 
+    local enhancement = card:calculate_enhancement(context)
+    if enhancement then
+        ret.enhancement = enhancement
+    end
+end
+if card.edition then
+    local edition = card:calculate_edition(context)
+    if edition then
+        ret.edition = edition
+    end
+end
+if card.seal then
+    local seals = card:calculate_seal(context)
+    if seals then
+        ret.seals = seals
+    end
 end
 for k,v in pairs(SMODS.Stickers) do
     local sticker = card:calculate_sticker(context, k)
@@ -303,17 +319,23 @@ pattern = "if context.cardarea == G.jokers or context.card == G.consumeables the
 match_indent = true
 position = "before"
 payload = """
-local enhancement = card:calculate_enhancement(context)
-if enhancement then
-    ret.enhancement = enhancement
+if card.ability.set == 'Enhanced' then 
+    local enhancement = card:calculate_enhancement(context)
+    if enhancement then
+        ret.enhancement = enhancement
+    end
 end
-local edition = card:calculate_edition(context)
-if edition then
-    ret.edition = edition
+if card.edition then
+    local edition = card:calculate_edition(context)
+    if edition then
+        ret.edition = edition
+    end
 end
-local seals = not card.ability.extra_enhancement and card:calculate_seal(context)
-if seals then
-    ret.seals = seals
+if card.seal and not card.ability.extra_enhancement then
+    local seals = card:calculate_seal(context)
+    if seals then
+        ret.seals = seals
+    end
 end
 for k,v in pairs(SMODS.Stickers) do
     local sticker = card:calculate_sticker(context, k)
@@ -380,10 +402,14 @@ elseif card.area == G.hand or card.area == G.deck then
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua"
-pattern = '''j = j +1'''
+pattern = '''
+    j = j +1
+end'''
 match_indent = true
 position = "at"
-payload = '''j = j + (effects.calculated and 1 or #reps)'''
+payload = '''   j = j + (effects.calculated and 1 or #reps)
+end
+G.hand.cards[i].extra_enhancements = nil'''
 
 
 [[patches]]
@@ -419,70 +445,76 @@ payload = ''
 [patches.pattern]
 target = "functions/state_events.lua"
 pattern = '''
-for ii = 1, #effects do
---If chips added, do chip add event and add the chips to the total
-if effects[ii].chips then 
-    if effects[ii].card then juice_card(effects[ii].card) end
-    hand_chips = mod_chips(hand_chips + effects[ii].chips)
-    update_hand_text({delay = 0}, {chips = hand_chips})
-    card_eval_status_text(scoring_hand[i], 'chips', effects[ii].chips, percent)
-end
+        for ii = 1, #effects do
+        --If chips added, do chip add event and add the chips to the total
+        if effects[ii].chips then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            hand_chips = mod_chips(hand_chips + effects[ii].chips)
+            update_hand_text({delay = 0}, {chips = hand_chips})
+            card_eval_status_text(scoring_hand[i], 'chips', effects[ii].chips, percent)
+        end
 
---If mult added, do mult add event and add the mult to the total
-if effects[ii].mult then 
-    if effects[ii].card then juice_card(effects[ii].card) end
-    mult = mod_mult(mult + effects[ii].mult)
-    update_hand_text({delay = 0}, {mult = mult})
-    card_eval_status_text(scoring_hand[i], 'mult', effects[ii].mult, percent)
-end
+        --If mult added, do mult add event and add the mult to the total
+        if effects[ii].mult then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            mult = mod_mult(mult + effects[ii].mult)
+            update_hand_text({delay = 0}, {mult = mult})
+            card_eval_status_text(scoring_hand[i], 'mult', effects[ii].mult, percent)
+        end
 
---If play dollars added, add dollars to total
-if effects[ii].p_dollars then 
-    if effects[ii].card then juice_card(effects[ii].card) end
-    ease_dollars(effects[ii].p_dollars)
-    card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].p_dollars, percent)
-end
+        --If play dollars added, add dollars to total
+        if effects[ii].p_dollars then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            ease_dollars(effects[ii].p_dollars)
+            card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].p_dollars, percent)
+        end
 
---If dollars added, add dollars to total
-if effects[ii].dollars then 
-    if effects[ii].card then juice_card(effects[ii].card) end
-    ease_dollars(effects[ii].dollars)
-    card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].dollars, percent)
-end
+        --If dollars added, add dollars to total
+        if effects[ii].dollars then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            ease_dollars(effects[ii].dollars)
+            card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].dollars, percent)
+        end
 
---Any extra effects
-if effects[ii].extra then 
-    if effects[ii].card then juice_card(effects[ii].card) end
-    local extras = {mult = false, hand_chips = false}
-    if effects[ii].extra.mult_mod then mult =mod_mult( mult + effects[ii].extra.mult_mod);extras.mult = true end
-    if effects[ii].extra.chip_mod then hand_chips = mod_chips(hand_chips + effects[ii].extra.chip_mod);extras.hand_chips = true end
-    if effects[ii].extra.swap then 
-        local old_mult = mult
-        mult = mod_mult(hand_chips)
-        hand_chips = mod_chips(old_mult)
-        extras.hand_chips = true; extras.mult = true
+        --Any extra effects
+        if effects[ii].extra then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            local extras = {mult = false, hand_chips = false}
+            if effects[ii].extra.mult_mod then mult =mod_mult( mult + effects[ii].extra.mult_mod);extras.mult = true end
+            if effects[ii].extra.chip_mod then hand_chips = mod_chips(hand_chips + effects[ii].extra.chip_mod);extras.hand_chips = true end
+            if effects[ii].extra.swap then 
+                local old_mult = mult
+                mult = mod_mult(hand_chips)
+                hand_chips = mod_chips(old_mult)
+                extras.hand_chips = true; extras.mult = true
+            end
+            if effects[ii].extra.func then effects[ii].extra.func() end
+            update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult})
+            card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, effects[ii].extra)
+        end
+
+        --If x_mult added, do mult add event and mult the mult to the total
+        if effects[ii].x_mult then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            mult = mod_mult(mult*effects[ii].x_mult)
+            update_hand_text({delay = 0}, {mult = mult})
+            card_eval_status_text(scoring_hand[i], 'x_mult', effects[ii].x_mult, percent)
+        end
+
+
+        end
     end
-    if effects[ii].extra.func then effects[ii].extra.func() end
-    update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult})
-    card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, effects[ii].extra)
-end
-
---If x_mult added, do mult add event and mult the mult to the total
-if effects[ii].x_mult then 
-    if effects[ii].card then juice_card(effects[ii].card) end
-    mult = mod_mult(mult*effects[ii].x_mult)
-    update_hand_text({delay = 0}, {mult = mult})
-    card_eval_status_text(scoring_hand[i], 'x_mult', effects[ii].x_mult, percent)
-end
-
-
 end
 '''
 match_indent = true
 position = "at"
 payload = '''
--- Base game calculation removed
-SMODS.trigger_effects(effects, scoring_hand[i], percent)'''
+        -- Base game calculation removed
+        SMODS.trigger_effects(effects, scoring_hand[i], percent)
+    end
+    scoring_hand[i].extra_enhancements = nil
+end
+'''
 
 [[patches]]
 [patches.pattern]

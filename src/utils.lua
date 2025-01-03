@@ -843,6 +843,7 @@ function Card:calculate_enhancement(context)
 end
 
 function SMODS.get_enhancements(card, extra_only)
+    if card.extra_enhancements then return card.extra_enhancements end
     local enhancements = {}
     if card.config.center.key ~= "c_base" and not extra_only then
         enhancements[card.config.center.key] = true
@@ -864,6 +865,7 @@ function SMODS.get_enhancements(card, extra_only)
     if extra_only and enhancements[card.config.center.key] then
         enhancements[card.config.center.key] = nil
     end
+    card.extra_enhancements = enhancements
     return enhancements
 end
 
@@ -891,7 +893,8 @@ function SMODS.calculate_quantum_enhancements(card, effects, context)
         if G.P_CENTERS[k] then
             card:set_ability(G.P_CENTERS[k])
             card.ability.extra_enhancement = k
-            table.insert(effects, 1, eval_card(card, context))
+            local eval = eval_card(card, context)
+            table.insert(effects, 1, eval)
         end
     end
     card.ability = old_ability
@@ -963,7 +966,13 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
             if from_edition then
                 card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = localize{type = 'variable', key = 'a_chips', vars = {amount}}, chip_mod = amount, colour = G.C.EDITION, edition = true})
             else
-                if key ~= 'chip_mod' then card_eval_status_text(scored_card, 'chips', amount, percent) end
+                if key ~= 'chip_mod' then
+                    if effect.chip_message then
+                        card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect.chip_message)
+                    else
+                        card_eval_status_text(scored_card, 'chips', amount, percent)
+                    end
+                end
             end
         end
         return true
@@ -977,7 +986,13 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
             if from_edition then
                 card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = localize{type = 'variable', key = 'a_mult', vars = {amount}}, mult_mod = amount, colour = G.C.DARK_EDITION, edition = true})
             else
-                if key ~= 'mult_mod' then card_eval_status_text(scored_card, key, amount, percent) end
+                if key ~= 'mult_mod' then 
+                    if effect.mult_message then
+                        card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect.mult_message)
+                    else
+                        card_eval_status_text(scored_card, 'mult', amount, percent)
+                    end
+                end
             end
         end
         return true
@@ -986,7 +1001,13 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
     if (key == 'p_dollars' or key == 'dollars') and amount and (not from_edition or no_x) then 
         if effect.card then juice_card(effect.card) end
         ease_dollars(amount)
-        if not effect.remove_default_message then card_eval_status_text(scored_card, 'dollars', amount, percent) end
+        if not effect.remove_default_message then
+            if effect.dollar_message then
+                card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect.dollar_message)
+            else
+                card_eval_status_text(scored_card, 'dollars', amount, percent)
+            end
+        end
         return true
     end
     
@@ -998,7 +1019,13 @@ SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, 
             if from_edition then
                 card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = localize{type='variable',key='a_xmult',vars={amount}}, x_mult_mod =  amount, colour =  G.C.EDITION, edition = true})
             else
-                if key ~= 'Xmult_mod' then card_eval_status_text(scored_card, 'x_mult', amount, percent) end
+                if key ~= 'Xmult_mod' then
+                    if effect.xmult_message then
+                        card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect.xmult_message)
+                    else
+                        card_eval_status_text(scored_card, 'x_mult', amount, percent)
+                    end
+                end
             end
         end
         return true
