@@ -548,7 +548,6 @@ V_MT = {
             beta = b.beta,
             rev = b.rev,
         }
-        if b.beta == -1 and a.beta == 0 then return false end
         if a.major ~= b.major then return a.major < b.major end
         if a.minor ~= b.minor then return a.minor < b.minor end
         if a.patch ~= b.patch then return a.patch < b.patch end
