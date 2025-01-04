@@ -178,57 +178,6 @@ match_indent = true
 position = "at"
 payload = "elseif specific_vars.playing_card then"
 
-# eval_card()
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "function eval_card(card, context)"
-match_indent = true
-position = "after"
-payload = """
-    local enhancement_calculated = false
-    local center = card.config.center"""
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "local jokers = card:calculate_joker(context)"
-match_indent = true
-position = "before"
-payload = """
-if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then
-    center:calculate(card, context, ret)
-    enhancement_calculated = true
-end"""
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "local seals = card:calculate_seal(context)"
-match_indent = true
-position = "before"
-payload = """
-if card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
-    center:calculate(card, context, ret)
-    enhancement_calculated = true
-end"""
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
-match_indent = true
-position = "before"
-payload = """
-if not enhancement_calculated and card.ability.set == 'Enhanced' and center.calculate and type(center.calculate) == 'function' then 
-    center:calculate(card, context, ret)
-    enhancement_calculated = true
-end
-local seals = not card.ability.extra_enhancement and card:calculate_seal(context)
-if seals then
-    ret.seals = seals
-end"""
-
-
-## Add additional eval_card() calls
-
 # Game:update_draw_to_hand()
 
 [[patches]]
@@ -244,32 +193,8 @@ end"""
 
 # G.FUNCS.discard_cards_from_highlighted()
 
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "inc_career_stat('c_cards_discarded', highlighted_count)"
-match_indent = true
-position = "after"
-payload = """
-for i = 1, #G.hand.cards do
-    eval_card(G.hand.cards[i], {pre_discard = true, full_hand = G.hand.highlighted, hook = hook})
-end"""
-[[patches]]
-[patches.regex]
-target = "functions/state_events.lua"
-pattern = '''
-(?<indent>[\t ]*)G\.hand\.highlighted\[i\]:calculate_seal\(\{discard = true\}\)
-[\t ]*local removed = false'''
-line_prepend = '$indent'
-position = "at"
-payload = """
-local removed = false
-local eval = nil
-eval = eval_card(G.hand.highlighted[i], {discard = true, full_hand = G.hand.highlighted})
-if eval and eval.remove then
-    removed = true
-    card_eval_status_text(G.hand.highlighted[i], 'jokers', nil, 1, nil, eval)
-end"""
+
+
 
 ## Allow cards to function as multiple enhancements (e.g. from jokers)
 
@@ -392,17 +317,9 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua"
-pattern = "if scoring_hand[i].ability.name == 'Glass Card' and not scoring_hand[i].debuff and pseudorandom('glass') < G.GAME.probabilities.normal/scoring_hand[i].ability.extra then"
-position = "at"
-payload = "if SMODS.has_enhancement(scoring_hand[i], 'm_glass') and not scoring_hand[i].debuff and pseudorandom('glass') < G.GAME.probabilities.normal/(scoring_hand[i].ability.name == 'Glass Card' and scoring_hand[i].ability.extra or G.P_CENTERS.m_glass.config.extra) then"
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
 pattern = "if scoring_hand[i].ability.name == 'Glass Card' then"
 position = "at"
-payload = "if SMODS.has_enhancement(scoring_hand[i], 'm_glass') then"
+payload = "if SMODS.shatters(scoring_hand[i]) then"
 match_indent = true
 
 [[patches]]
@@ -421,3 +338,4 @@ pattern = "if self.seal == 'Blue' and #G.consumeables.cards + G.GAME.consumeable
 position = "at"
 payload = "if self.seal == 'Blue' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit and not self.ability.extra_enhancement then"
 match_indent = true
+

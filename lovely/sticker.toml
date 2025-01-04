@@ -109,23 +109,6 @@ for k, v in pairs(SMODS.Stickers) do
 end
 '''
 
-# Card:calculate_joker()
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = "function Card:calculate_joker(context)"
-position = 'after'
-payload = '''
-for k, v in pairs(SMODS.Stickers) do
-    if self.ability[v.key] then
-        if v.calculate and type(v.calculate) == 'function' then
-            local override_card = v:calculate(self, context)
-            if override_card then return override_card end
-        end
-    end
-end'''
-match_indent = true
-
 # get_badge_colour()
 [[patches]]
 [patches.pattern]

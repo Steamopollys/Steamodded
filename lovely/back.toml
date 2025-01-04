@@ -168,16 +168,6 @@ position = 'after'
 match_indent = true
 payload = '''G.GAME.selected_back:trigger_effect({context = 'reroll_shop'})'''
 
-# functions/state_events.lua
-[[patches]]
-[patches.pattern]
-target = 'functions/state_events.lua'
-pattern = '''G.jokers.cards[i]:calculate_perishable()
-            end'''
-position = 'after'
-match_indent = true
-payload = '''G.GAME.selected_back:trigger_effect({context = 'end_of_round', game_over = game_over})'''
-
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'

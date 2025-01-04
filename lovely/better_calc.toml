@@ -1,0 +1,1335 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+## G.FUNCS.evaluate_play()
+ # Handle repetitions from playing cards
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+local reps = {1}
+
+--From Red seal
+local eval = eval_card(scoring_hand[i], {repetition_only = true,cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true})
+if next(eval) then
+    for h = 1, eval.seals.repetitions do
+        reps[#reps+1] = eval
+    end
+end
+--From jokers
+for j=1, #G.jokers.cards do
+    --calculate the joker effects
+    local eval = eval_card(G.jokers.cards[j], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true})
+    if next(eval) and eval.jokers then 
+        for h = 1, eval.jokers.repetitions do
+            reps[#reps+1] = eval
+        end
+    end
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+scoring_hand[i].extra_enhancements = nil
+local reps = SMODS.calculate_repetitions(scoring_hand[i], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], repetition = true, card_effects = effects}, {1})
+'''
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+if reps[j] == 1 then
+    --Check for hand doubling
+
+    --From Red seal
+    local eval = eval_card(G.hand.cards[i], {repetition_only = true,cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true, card_effects = effects})
+    if next(eval) and (next(effects[1]) or #effects > 1) then 
+        for h  = 1, eval.seals.repetitions do
+            reps[#reps+1] = eval
+        end
+    end
+
+    --From Joker
+    for j=1, #G.jokers.cards do
+        --calculate the joker effects
+        local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects})
+        if next(eval) then 
+            for h  = 1, eval.jokers.repetitions do
+                reps[#reps+1] = eval
+            end
+        end
+    end
+end
+'''
+position = 'at'
+match_indent = true
+payload = ''''''
+
+# Handle retrigger messages
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''card_eval_status_text((reps[j].jokers or reps[j].seals).card, 'jokers', nil, nil, nil, (reps[j].jokers or reps[j].seals))'''
+position = 'at'
+match_indent = true
+payload = '''
+local _, eff = next(reps[j])
+card_eval_status_text(eff.card, 'jokers', nil, nil, nil, eff)'''
+
+# Retrigger API rework
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+for k=1, #G.jokers.cards do
+    --calculate the joker individual card effects
+    local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true})
+    if eval then 
+        table.insert(effects, eval)
+    end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+for k=1, #G.jokers.cards + #G.consumeables.cards do
+    local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
+    --calculate the joker individual card effects
+    local eval, post = eval_card(_card, {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true})
+    if next(eval) then 
+        table.insert(effects, eval)
+        if next(post) then table.insert(effects, post) end
+        if eval.retriggers then
+            for rt = 1, #eval.retriggers do
+                local rt_eval, rt_post = eval_card(_card, {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = scoring_hand[i], individual = true, retrigger_joker = true})
+                table.insert(effects, {eval.retriggers[rt]})
+                table.insert(effects, rt_eval)
+                if next(rt_post) then table.insert(effects, rt_post) end
+            end
+        end
+    end
+'''
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+for k=1, #G.jokers.cards do
+    --calculate the joker individual card effects
+    local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})
+    if eval then 
+        mod_percent = true
+        table.insert(effects, eval)
+    end
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+if next(effects) then
+    for k=1, #G.jokers.cards + #G.consumeables.cards do
+        local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
+        --calculate the joker individual card effects
+        local eval, post = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true})
+        if next(eval) then 
+            mod_percent = true
+            table.insert(effects, eval)
+            if next(post) then table.insert(effects, post) end
+            if eval.retriggers then
+                for rt = 1, #eval.retriggers do
+                    local rt_eval, rt_post = eval_card(_card, {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], individual = true, retrigger_joker = true})
+                    table.insert(effects, {eval.retriggers[rt]})
+                    table.insert(effects, rt_eval)
+                    if next(rt_post) then table.insert(effects, rt_post) end
+                end
+            end
+        end
+    end
+end
+'''
+## eval_card()
+# handle debuffed playing cards
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''
+function eval_card(card, context)
+    context = context or {}
+    local ret = {}
+'''
+position = 'at'
+match_indent = true
+payload = '''
+function eval_card(card, context)
+    if card.ability.set ~= 'Joker' and card.debuff then return {} end
+    context = context or {}
+    local ret = {}
+'''
+
+# built in config values
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''
+if context.cardarea == G.play then
+    local chips = card:get_chip_bonus()
+    if chips > 0 then 
+        ret.chips = chips
+    end
+
+    local mult = card:get_chip_mult()
+    if mult > 0 then 
+        ret.mult = mult
+    end
+
+    local x_mult = card:get_chip_x_mult(context)
+    if x_mult > 0 then 
+        ret.x_mult = x_mult
+    end
+
+    local p_dollars = card:get_p_dollars()
+    if p_dollars > 0 then 
+        ret.p_dollars = p_dollars
+    end
+'''
+match_indent = true
+position = "at"
+payload = """
+if context.cardarea == G.play and context.main_scoring then
+    ret.playing_card = {}
+    local chips = card:get_chip_bonus()
+    if chips then 
+        ret.playing_card.chips = chips
+    end
+
+    local mult = card:get_chip_mult()
+    if mult then 
+        ret.playing_card.mult = mult
+    end
+
+    local x_mult = card:get_chip_x_mult(context)
+    if x_mult > 0 then 
+        ret.playing_card.x_mult = x_mult
+    end
+
+    local p_dollars = card:get_p_dollars()
+    if p_dollars > 0 then 
+        ret.playing_card.p_dollars = p_dollars
+    end
+
+    -- TARGET: main scoring on played cards
+"""
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''
+if context.cardarea == G.hand then
+    local h_mult = card:get_chip_h_mult()
+    if h_mult > 0 then 
+        ret.h_mult = h_mult
+    end
+
+    local h_x_mult = card:get_chip_h_x_mult()
+    if h_x_mult > 0 then 
+        ret.x_mult = h_x_mult
+    end
+'''
+match_indent = true
+position = "at"
+payload = """
+if context.cardarea == G.hand and context.main_scoring then
+    ret.playing_card = {}
+    local h_mult = card:get_chip_h_mult()
+    if h_mult then 
+        ret.playing_card.h_mult = h_mult
+    end
+
+    local h_x_mult = card:get_chip_h_x_mult()
+    if h_x_mult > 0 then 
+        ret.playing_card.x_mult = h_x_mult
+    end
+
+    -- TARGET: main scoring on held cards
+"""
+
+# Add context.main_scoring to G.play and G.hand
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = {eval_card(scoring_hand[i], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, poker_hand = text})}"
+match_indent = true
+position = "at"
+payload = '''
+local effects = {eval_card(scoring_hand[i], {main_scoring = true, cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, poker_hand = text})}
+SMODS.calculate_quantum_enhancements(scoring_hand[i], effects, {main_scoring = true, cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, poker_hand = text})
+'''
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local effects = {eval_card(G.hand.cards[i], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})}"
+match_indent = true
+position = "at"
+payload = '''
+local effects = {eval_card(G.hand.cards[i], {main_scoring = true, cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})}
+SMODS.calculate_quantum_enhancements(G.hand.cards[i], effects, {main_scoring = true, cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})'''
+
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''
+local seals = card:calculate_seal(context)
+if seals then
+    ret.seals = seals
+end
+'''
+match_indent = true
+position = "at"
+payload = """
+if card.ability.set == 'Enhanced' then 
+    local enhancement = card:calculate_enhancement(context)
+    if enhancement then
+        ret.enhancement = enhancement
+    end
+end
+if card.edition then
+    local edition = card:calculate_edition(context)
+    if edition then
+        ret.edition = edition
+    end
+end
+if card.seal then
+    local seals = card:calculate_seal(context)
+    if seals then
+        ret.seals = seals
+    end
+end
+for k,v in pairs(SMODS.Stickers) do
+    local sticker = card:calculate_sticker(context, k)
+    if sticker then
+        ret[v] = sticker
+    end
+end
+
+-- TARGET: evaluate your own repetition effects
+"""
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "if context.cardarea == G.jokers or context.card == G.consumeables then"
+match_indent = true
+position = "before"
+payload = """
+if card.ability.set == 'Enhanced' then 
+    local enhancement = card:calculate_enhancement(context)
+    if enhancement then
+        ret.enhancement = enhancement
+    end
+end
+if card.edition then
+    local edition = card:calculate_edition(context)
+    if edition then
+        ret.edition = edition
+    end
+end
+if card.seal and not card.ability.extra_enhancement then
+    local seals = card:calculate_seal(context)
+    if seals then
+        ret.seals = seals
+    end
+end
+for k,v in pairs(SMODS.Stickers) do
+    local sticker = card:calculate_sticker(context, k)
+    if sticker then
+        ret[v] = sticker
+    end
+end
+
+-- TARGET: evaluate your own general effects
+"""
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''
+if context.cardarea == G.jokers or context.card == G.consumeables then
+    local jokers = nil
+    if context.edition then
+        jokers = card:get_edition(context)
+    elseif context.other_joker then
+        jokers = context.other_joker:calculate_joker(context)
+    else
+        jokers = card:calculate_joker(context)
+    end
+    if jokers then 
+        ret.jokers = jokers
+    end
+end
+
+return ret'''
+match_indent = true
+position = "at"
+payload = """
+local post_trig = {}
+if card.ability.set == 'Joker' or card.ability.consumeable then
+    local jokers, triggered = card:calculate_joker(context)
+    if jokers or triggered then 
+        ret.jokers = jokers
+        if not (context.retrigger_joker_check or context.retrigger_joker) then
+            local retriggers = SMODS.calculate_retriggers(card, context, ret)
+            if next(retriggers) then
+                ret.retriggers = retriggers
+            end
+        end
+        if not context.post_trigger and not context.retrigger_joker_check then
+            SMODS.calculate_context({blueprint_card = context.blueprint_card, post_trigger = true, other_joker = card, other_context = context, other_ret = ret}, percent, post_trig)
+        end
+    end
+end
+
+return ret, post_trig
+"""
+# patch card_eval_status_text to allow G.deck usage
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''
+elseif card.area == G.hand then'''
+match_indent = true
+position = "at"
+payload = """
+elseif card.area == G.hand or card.area == G.deck then
+"""
+# G.FUNCS.evaluate_play()
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+    j = j +1
+end'''
+match_indent = true
+position = "at"
+payload = '''   j = j + (effects.calculated and 1 or #reps)
+end
+G.hand.cards[i].extra_enhancements = nil'''
+
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+--calculate the card edition effects
+if effects[ii].edition then
+    hand_chips = mod_chips(hand_chips + (effects[ii].edition.chip_mod or 0))
+    mult = mult + (effects[ii].edition.mult_mod or 0)
+    mult = mod_mult(mult*(effects[ii].edition.x_mult_mod or 1))
+    update_hand_text({delay = 0}, {
+        chips = effects[ii].edition.chip_mod and hand_chips or nil,
+        mult = (effects[ii].edition.mult_mod or effects[ii].edition.x_mult_mod) and mult or nil,
+    })
+    card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, {
+        message = (effects[ii].edition.chip_mod and localize{type='variable',key='a_chips',vars={effects[ii].edition.chip_mod}}) or
+                (effects[ii].edition.mult_mod and localize{type='variable',key='a_mult',vars={effects[ii].edition.mult_mod}}) or
+                (effects[ii].edition.x_mult_mod and localize{type='variable',key='a_xmult',vars={effects[ii].edition.x_mult_mod}}),
+        chip_mod =  effects[ii].edition.chip_mod,
+        mult_mod =  effects[ii].edition.mult_mod,
+        x_mult_mod =  effects[ii].edition.x_mult_mod,
+        colour = G.C.DARK_EDITION,
+        edition = true})
+end
+'''
+match_indent = true
+position = "at"
+payload = ''
+
+## Remove base game calculations
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+        for ii = 1, #effects do
+        --If chips added, do chip add event and add the chips to the total
+        if effects[ii].chips then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            hand_chips = mod_chips(hand_chips + effects[ii].chips)
+            update_hand_text({delay = 0}, {chips = hand_chips})
+            card_eval_status_text(scoring_hand[i], 'chips', effects[ii].chips, percent)
+        end
+
+        --If mult added, do mult add event and add the mult to the total
+        if effects[ii].mult then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            mult = mod_mult(mult + effects[ii].mult)
+            update_hand_text({delay = 0}, {mult = mult})
+            card_eval_status_text(scoring_hand[i], 'mult', effects[ii].mult, percent)
+        end
+
+        --If play dollars added, add dollars to total
+        if effects[ii].p_dollars then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            ease_dollars(effects[ii].p_dollars)
+            card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].p_dollars, percent)
+        end
+
+        --If dollars added, add dollars to total
+        if effects[ii].dollars then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            ease_dollars(effects[ii].dollars)
+            card_eval_status_text(scoring_hand[i], 'dollars', effects[ii].dollars, percent)
+        end
+
+        --Any extra effects
+        if effects[ii].extra then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            local extras = {mult = false, hand_chips = false}
+            if effects[ii].extra.mult_mod then mult =mod_mult( mult + effects[ii].extra.mult_mod);extras.mult = true end
+            if effects[ii].extra.chip_mod then hand_chips = mod_chips(hand_chips + effects[ii].extra.chip_mod);extras.hand_chips = true end
+            if effects[ii].extra.swap then 
+                local old_mult = mult
+                mult = mod_mult(hand_chips)
+                hand_chips = mod_chips(old_mult)
+                extras.hand_chips = true; extras.mult = true
+            end
+            if effects[ii].extra.func then effects[ii].extra.func() end
+            update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult})
+            card_eval_status_text(scoring_hand[i], 'extra', nil, percent, nil, effects[ii].extra)
+        end
+
+        --If x_mult added, do mult add event and mult the mult to the total
+        if effects[ii].x_mult then 
+            if effects[ii].card then juice_card(effects[ii].card) end
+            mult = mod_mult(mult*effects[ii].x_mult)
+            update_hand_text({delay = 0}, {mult = mult})
+            card_eval_status_text(scoring_hand[i], 'x_mult', effects[ii].x_mult, percent)
+        end
+
+
+        end
+    end
+end
+'''
+match_indent = true
+position = "at"
+payload = '''
+        -- Base game calculation removed
+        SMODS.trigger_effects(effects, scoring_hand[i], percent)
+    end
+    scoring_hand[i].extra_enhancements = nil
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+for ii = 1, #effects do
+    --if this effect came from a joker
+    if effects[ii].card then
+        mod_percent = true
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = (function() effects[ii].card:juice_up(0.7);return true end)
+        }))
+    end
+
+    --If hold mult added, do hold mult add event and add the mult to the total
+
+    --If dollars added, add dollars to total
+    if effects[ii].dollars then 
+        ease_dollars(effects[ii].dollars)
+        card_eval_status_text(G.hand.cards[i], 'dollars', effects[ii].dollars, percent)
+    end
+
+    if effects[ii].h_mult then
+        mod_percent = true
+        mult = mod_mult(mult + effects[ii].h_mult)
+        update_hand_text({delay = 0}, {mult = mult})
+        card_eval_status_text(G.hand.cards[i], 'h_mult', effects[ii].h_mult, percent)
+    end
+
+    if effects[ii].x_mult then
+        mod_percent = true
+        mult = mod_mult(mult*effects[ii].x_mult)
+        update_hand_text({delay = 0}, {mult = mult})
+        card_eval_status_text(G.hand.cards[i], 'x_mult', effects[ii].x_mult, percent)
+    end
+
+    if effects[ii].message then
+        mod_percent = true
+        update_hand_text({delay = 0}, {mult = mult})
+        card_eval_status_text(G.hand.cards[i], 'extra', nil, percent, nil, effects[ii])
+    end
+end
+'''
+match_indent = true
+position = "at"
+payload = '''
+-- Base game calculation removed 2
+SMODS.trigger_effects(effects, G.hand.cards[i], percent)
+
+if reps[j] == 1 and effects.calculated then
+    SMODS.calculate_repetitions(G.hand.cards[i], {cardarea = G.hand, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = G.hand.cards[i], repetition = true, card_effects = effects}, reps)
+end
+'''
+# Joker Effects
+# Edition effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+--calculate the joker edition effects
+local edition_effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, edition = true})
+if edition_effects.jokers then
+    edition_effects.jokers.edition = true
+    if edition_effects.jokers.chip_mod then
+        hand_chips = mod_chips(hand_chips + edition_effects.jokers.chip_mod)
+        update_hand_text({delay = 0}, {chips = hand_chips})
+        card_eval_status_text(_card, 'jokers', nil, percent, nil, {
+            message = localize{type='variable',key='a_chips',vars={edition_effects.jokers.chip_mod}},
+            chip_mod =  edition_effects.jokers.chip_mod,
+            colour =  G.C.EDITION,
+            edition = true})
+    end
+    if edition_effects.jokers.mult_mod then
+        mult = mod_mult(mult + edition_effects.jokers.mult_mod)
+        update_hand_text({delay = 0}, {mult = mult})
+        card_eval_status_text(_card, 'jokers', nil, percent, nil, {
+            message = localize{type='variable',key='a_mult',vars={edition_effects.jokers.mult_mod}},
+            mult_mod =  edition_effects.jokers.mult_mod,
+            colour = G.C.DARK_EDITION,
+            edition = true})
+    end
+    percent = percent+percent_delta
+end'''
+match_indent = true
+position = "at"
+payload = '''
+local effects = {}
+-- remove base game joker edition calc
+local eval = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, edition = true})
+for key, effect in pairs(eval) do
+    if key == 'edition' then 
+        eval.smods = {edition = true, no_x = true}
+        effects[#effects+1] = eval
+    end
+end
+'''
+# Edition mult effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+if edition_effects.jokers then
+    if edition_effects.jokers.x_mult_mod then
+        mult = mod_mult(mult*edition_effects.jokers.x_mult_mod)
+        update_hand_text({delay = 0}, {mult = mult})
+        card_eval_status_text(_card, 'jokers', nil, percent, nil, {
+            message = localize{type='variable',key='a_xmult',vars={edition_effects.jokers.x_mult_mod}},
+            x_mult_mod =  edition_effects.jokers.x_mult_mod,
+            colour =  G.C.EDITION,
+            edition = true})
+    end
+    percent = percent+percent_delta
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- calculate edition multipliers
+for key, effect in pairs(eval) do
+    if key == 'edition' then
+        eval.smods = {edition = true}
+        effects[#effects+1] = eval
+    end
+end
+SMODS.trigger_effects(effects, _card, percent)'''
+# Joker effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+--calculate the joker effects
+local effects = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true})
+G.GAME.selected_back:trigger_effect({context = 'joker_main', joker =  _card, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})
+
+--Any Joker effects
+if effects.jokers then 
+    local extras = {mult = false, hand_chips = false}
+    if effects.jokers.mult_mod then mult = mod_mult(mult + effects.jokers.mult_mod);extras.mult = true end
+    if effects.jokers.chip_mod then hand_chips = mod_chips(hand_chips + effects.jokers.chip_mod);extras.hand_chips = true end
+    if effects.jokers.Xmult_mod then mult = mod_mult(mult*effects.jokers.Xmult_mod);extras.mult = true  end
+    update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult})
+    card_eval_status_text(_card, 'jokers', nil, percent, nil, effects.jokers)
+    percent = percent+percent_delta
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- Calculate context.joker_main
+local joker_eval, post = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true})
+if next(joker_eval) then
+    if joker_eval.edition then joker_eval.edition = {} end
+    table.insert(effects, joker_eval)
+    if next(post) then table.insert(effects, post) end
+    if joker_eval.retriggers then
+        for rt = 1, #joker_eval.retriggers do
+            local rt_eval, rt_post = eval_card(_card, {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, joker_main = true, retrigger_joker = true})
+            table.insert(effects, {joker_eval.retriggers[rt]})
+            table.insert(effects, rt_eval)
+            if next(rt_post) then table.insert(effects, rt_post) end
+        end
+    end
+end'''
+# Joker on Joker effects
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+--Joker on Joker effects
+for _, v in ipairs(G.jokers.cards) do
+    local effect = v:calculate_joker{full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card}
+    if effect then
+        local extras = {mult = false, hand_chips = false}
+        if effect.mult_mod then mult = mod_mult(mult + effect.mult_mod);extras.mult = true end
+        if effect.chip_mod then hand_chips = mod_chips(hand_chips + effect.chip_mod);extras.hand_chips = true end
+        if effect.Xmult_mod then mult = mod_mult(mult*effect.Xmult_mod);extras.mult = true  end
+        if extras.mult or extras.hand_chips then update_hand_text({delay = 0}, {chips = extras.hand_chips and hand_chips, mult = extras.mult and mult}) end
+        if extras.mult or extras.hand_chips then card_eval_status_text(v, 'jokers', nil, percent, nil, effect) end
+        percent = percent+percent_delta
+    end
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- Calculate context.other_joker effects
+for _, _joker in ipairs(G.jokers.cards) do
+    local joker_eval,post = eval_card(_joker, {full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card})
+    if next(joker_eval) then
+        if joker_eval.edition then joker_eval.edition = {} end
+        table.insert(effects, joker_eval)
+        if next(post) then table.insert(effects, post) end
+        if joker_eval.retriggers then
+            for rt = 1, #joker_eval.retriggers do
+                local rt_eval, rt_post = eval_card(_card, {full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_joker = _card, retrigger_joker = true})
+                table.insert(effects, {joker_eval.retriggers[rt]})
+                table.insert(effects, rt_eval)
+                if next(rt_post) then table.insert(effects, rt_post) end
+            end
+        end
+    end
+end'''
+
+## Fix other evaluations
+# Discarding cards
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+for j = 1, #G.jokers.cards do
+    local eval = nil
+    eval = G.jokers.cards[j]:calculate_joker({discard = true, other_card =  G.hand.highlighted[i], full_hand = G.hand.highlighted})
+    if eval then
+        if eval.remove then removed = true end
+        card_eval_status_text(G.jokers.cards[j], 'jokers', nil, 1, nil, eval)
+    end
+end'''
+match_indent = true
+position = "at"
+payload = '''
+local effects = {}
+SMODS.calculate_context({discard = true, other_card =  G.hand.highlighted[i], full_hand = G.hand.highlighted}, nil, effects)
+SMODS.trigger_effects(effects, G.hand.highlighted[i])
+for _, eval in pairs(effects) do
+    for key, eval2 in pairs(eval) do
+        if key == 'remove' or (type(eval2) == 'table' and eval2.remove) then removed = true end
+    end
+end'''
+
+# context.before
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+for i=1, #G.jokers.cards do
+    --calculate the joker effects
+    local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true})
+    if effects.jokers then
+        card_eval_status_text(G.jokers.cards[i], 'jokers', nil, percent, nil, effects.jokers)
+        percent = percent + percent_delta
+        if effects.jokers.level_up then
+            level_up_hand(G.jokers.cards[i], text)
+        end
+    end
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- context.before calculations
+SMODS.calculate_context({full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, before = true}, percent)
+
+-- TARGET: effects before scoring starts'''
+
+# context.final_scoring_step
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''local nu_chip, nu_mult = G.GAME.selected_back:trigger_effect{context = 'final_scoring_step', chips = hand_chips, mult = mult}'''
+match_indent = true
+position = "before"
+payload = '''
+-- context.final_scoring_step calculations
+SMODS.calculate_context({full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, final_scoring_step = true}, percent)
+
+-- TARGET: effects before deck final_scoring_step
+'''
+
+# context.destroying_card
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+for j = 1, #G.jokers.cards do
+    destroyed = G.jokers.cards[j]:calculate_joker({destroying_card = scoring_hand[i], full_hand = G.play.cards})
+    if destroyed then break end
+end
+
+if scoring_hand[i].ability.name == 'Glass Card' and not scoring_hand[i].debuff and pseudorandom('glass') < G.GAME.probabilities.normal/scoring_hand[i].ability.extra then 
+    destroyed = true
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- context.destroying_card calculations
+for j = 1, #G.jokers.cards do
+    local eval, post = eval_card(G.jokers.cards[j], {destroying_card = scoring_hand[i], full_hand = G.play.cards})
+    SMODS.trigger_effects({eval, post}, scoring_hand[i], percent)
+    if eval.jokers then destroyed = true end
+
+end
+
+if SMODS.has_enhancement(scoring_hand[i], 'm_glass') and not scoring_hand[i].debuff and pseudorandom('glass') < G.GAME.probabilities.normal/(scoring_hand[i].ability.name == 'Glass Card' and scoring_hand[i].ability.extra or G.P_CENTERS.m_glass.config.extra) then
+    destroyed = true
+end
+
+local eval, post = eval_card(scoring_hand[i], {destroying_card = scoring_hand[i], full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})
+local self_destroy = false
+for key, effect in pairs(eval) do
+    self_destroy = SMODS.calculate_effect(effect, scoring_hand[i], percent)
+end
+SMODS.trigger_effects({post}, scoring_hand[i], percent)
+if self_destroy then destroyed = true end
+
+-- TARGET: card destroyed when played
+'''
+
+# context.remove_playing_cards
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+for j=1, #G.jokers.cards do
+    eval_card(G.jokers.cards[j], {cardarea = G.jokers, remove_playing_cards = true, removed = cards_destroyed})
+end'''
+match_indent = true
+position = "at"
+payload = '''
+for i=1, #G.hand.cards do
+    local destroyed = nil
+
+    -- context.destroying_card calculations
+    for j = 1, #G.jokers.cards do
+        local eval, post = eval_card(G.jokers.cards[j], {destroying_card_hand = G.hand.cards[i], full_hand = G.play.cards})
+        local self_destroy = false
+        for key, effect in pairs(eval) do
+            if type(effect) == 'table' then
+                self_destroy = SMODS.calculate_effect(effect, G.play.cards[i], percent)
+            else
+                self_destroy = effect
+            end
+        end
+        SMODS.trigger_effects({post}, G.hand.cards[i], percent)
+        if self_destroy then destroyed = true end
+    end
+    
+    local eval, post = eval_card(G.hand.cards[i], {destroying_card_hand = G.hand.cards[i], full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands})
+    local self_destroy = false
+    for key, effect in pairs(eval) do
+        self_destroy = SMODS.calculate_effect(effect, G.hand.cards[i], percent)
+    end
+    SMODS.trigger_effects({post}, G.hand.cards[i], percent)
+    if self_destroy then destroyed = true end
+    
+    -- TARGET: card held destroyed when hand played
+
+    if destroyed then --
+        if SMODS.shatters(G.play.cards[i]) then
+            G.play.cards[i].shattered = true
+        else 
+            G.play.cards[i].destroyed = true
+        end 
+        cards_destroyed[#cards_destroyed+1] = G.play.cards[i]
+    end
+end
+
+-- TARGET: add different CardAreas for destroying checks
+
+-- context.remove_playing_cards calculations
+SMODS.calculate_context({scoring_hand = scoring_hand, remove_playing_cards = true, removed = cards_destroyed})
+
+-- TARGET: effects when cards are removed
+
+'''
+
+# context.remove_playing_cards from discard
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+for j=1, #G.jokers.cards do
+    eval_card(G.jokers.cards[j], {cardarea = G.jokers, remove_playing_cards = true, removed = destroyed_cards})
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- context.remove_playing_cards from discard
+SMODS.calculate_context({remove_playing_cards = true, removed = destroyed_cards})
+
+-- TARGET: effects after cards destroyed in discard'''
+
+
+# context.debuffed_hand
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+for i=1, #G.jokers.cards do
+            
+    --calculate the joker effects
+    local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, debuffed_hand = true})
+
+    --Any Joker effects
+    if effects.jokers then
+        card_eval_status_text(G.jokers.cards[i], 'jokers', nil, percent, nil, effects.jokers)
+        percent = percent+percent_delta
+    end
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- context.debuffed_hand calculations
+SMODS.calculate_context({full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, debuffed_hand = true}, percent)
+
+-- TARGET: effects after hand debuffed by blind'''
+
+# context.after
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+for i=1, #G.jokers.cards do
+    --calculate the joker after hand played effects
+    local effects = eval_card(G.jokers.cards[i], {cardarea = G.jokers, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true})
+    if effects.jokers then
+        card_eval_status_text(G.jokers.cards[i], 'jokers', nil, percent, nil, effects.jokers)
+        percent = percent + percent_delta
+    end
+end'''
+match_indent = true
+position = "at"
+payload = '''
+-- context.after calculations
+SMODS.calculate_context({full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, after = true}, percent)
+
+-- TARGET: effects after hand evaluation'''
+
+# calc_dollar_bonus call through consumeables
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    local ret = G.jokers.cards[i]:calculate_dollar_bonus()
+'''
+position = 'at'
+match_indent = true
+payload = '''
+for k=1, #G.jokers.cards + #G.consumeables.cards do
+    local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
+    local ret = _card:calculate_dollar_bonus()
+
+    -- TARGET: calc_dollar_bonus per card
+'''
+
+# context.end_of_round
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    local eval = nil
+    eval = G.jokers.cards[i]:calculate_joker({end_of_round = true, game_over = game_over})
+    if eval then
+        if eval.saved then
+            game_over = false
+        end
+        card_eval_status_text(G.jokers.cards[i], 'jokers', nil, nil, nil, eval)
+    end
+    G.jokers.cards[i]:calculate_rental()
+    G.jokers.cards[i]:calculate_perishable()
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+-- context.end_of_round calculations
+SMODS.saved = false
+SMODS.calculate_context({end_of_round = true, game_over = game_over}, percent)
+if SMODS.saved then game_over = false end
+-- TARGET: effects after hand evaluation
+'''
+
+# context.end_of_round individual effects
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+for k=1, #G.jokers.cards do
+    --calculate the joker individual card effects
+    local eval = G.jokers.cards[k]:calculate_joker({cardarea = G.hand, other_card = G.hand.cards[i], individual = true, end_of_round = true})
+    if eval then 
+        table.insert(effects, eval)
+    end
+end
+
+if reps[j] == 1 then 
+    --Check for hand doubling
+    --From Red seal
+    local eval = eval_card(G.hand.cards[i], {end_of_round = true,cardarea = G.hand, repetition = true, repetition_only = true})
+    if next(eval) and (next(effects[1]) or #effects > 1)  then 
+        for h = 1, eval.seals.repetitions do
+            reps[#reps+1] = eval
+        end
+    end
+
+    --from Jokers
+    for j=1, #G.jokers.cards do
+        --calculate the joker effects
+        local eval = eval_card(G.jokers.cards[j], {cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, end_of_round = true, card_effects = effects})
+        if next(eval) then 
+            for h  = 1, eval.jokers.repetitions do
+                reps[#reps+1] = eval
+            end
+        end
+    end
+end
+
+for ii = 1, #effects do
+    --if this effect came from a joker
+    if effects[ii].card then
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = (function() effects[ii].card:juice_up(0.7);return true end)
+        }))
+    end
+    
+    --If dollars
+    if effects[ii].h_dollars then 
+        ease_dollars(effects[ii].h_dollars)
+        card_eval_status_text(G.hand.cards[i], 'dollars', effects[ii].h_dollars, percent)
+    end
+
+    --Any extras
+    if effects[ii].extra then
+        card_eval_status_text(G.hand.cards[i], 'extra', nil, percent, nil, effects[ii].extra)
+    end
+end
+j = j + 1
+'''
+position = 'at'
+match_indent = true
+payload = '''
+-- context.end_of_round individual calculations
+for k=1, #G.jokers.cards + #G.consumeables.cards do
+    local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
+    --calculate the joker individual card effects
+    local eval, post = eval_card(_card, {cardarea = G.hand, other_card = G.hand.cards[i], individual = true, end_of_round = true})
+    if next(eval) then 
+        table.insert(effects, eval)
+    end
+    if next(post) then table.insert(effects, post) end
+end
+
+if reps[j] == 1 then 
+    reps = SMODS.calculate_repetitions(G.hand.cards[i], {cardarea = G.hand, other_card = G.hand.cards[i], repetition = true, end_of_round = true, card_effects = effects}, {})
+end
+
+SMODS.trigger_effects(effects, G.hand.cards[i], percent)
+j = j + (effects.calculated and 1 or #reps)
+
+-- TARGET: effects after hand evaluation
+'''
+
+# context.end_of_round individual effects
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+if reps[j] ~= 1 then card_eval_status_text((reps[j].jokers or reps[j].seals).card, 'jokers', nil, nil, nil, (reps[j].jokers or reps[j].seals)) end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+if reps[j] ~= 1 then
+    local _, eff = next(reps[j])
+    card_eval_status_text(eff.card, 'jokers', nil, nil, nil, eff)
+    percent = percent + 0.08
+end
+'''
+
+# context.setting_blind
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    G.jokers.cards[i]:calculate_joker({setting_blind = true, blind = G.GAME.round_resets.blind})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({setting_blind = true, blind = G.GAME.round_resets.blind})
+
+-- TARGET: setting_blind effects
+'''
+
+# context.pre_discard
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''
+for j = 1, #G.jokers.cards do
+    G.jokers.cards[j]:calculate_joker({pre_discard = true, full_hand = G.hand.highlighted, hook = hook})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({pre_discard = true, full_hand = G.hand.highlighted, hook = hook})
+
+-- TARGET: pre_discard
+'''
+
+# context.remove_playing_cards in consumeables
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    eval_card(G.jokers.cards[i], {remove_playing_cards = true, removed = destroyed_cards})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({remove_playing_cards = true, removed = destroyed_cards})
+'''
+
+# context.selling_self in cards
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''
+eval_card(self, {selling_self = true})
+'''
+position = 'at'
+match_indent = true
+payload = '''
+local eval, post = eval_card(self, {selling_self = true})
+SMODS.trigger_effects({eval, post}, self, percent)
+'''
+
+# context.open_booster
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    eval_card(G.jokers.cards[i], {open_booster = true, card = self})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({open_booster = true, card = self})
+'''
+
+# context.buying_card
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    eval_card(G.jokers.cards[i], {buying_card = true, card = self})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({buying_card = true, card = self})
+'''
+
+# context.first_hand_drawn
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''
+for i = 1, #G.hand.cards do
+    eval_card(G.hand.cards[i], {first_hand_drawn = true})
+end
+for i = 1, #G.jokers.cards do
+    eval_card(G.jokers.cards[i], {first_hand_drawn = true})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({first_hand_drawn = true})
+'''
+
+# context.using_consumeable
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    eval_card(G.jokers.cards[i], {using_consumeable = true, consumeable = card})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({using_consumeable = true, consumeable = card})
+'''
+
+# context.selling_card
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    if G.jokers.cards[i] ~= card then 
+        eval_card(G.jokers.cards[i], {selling_card = true, card = card})
+    end
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({selling_card = true, card = card})
+'''
+
+# context.buying_card
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''
+G.E_MANAGER:add_event(Event({func = function() eval_card(c1, {buying_card = true, card = c1}) return true end}))
+'''
+position = 'at'
+match_indent = true
+payload = '''
+G.E_MANAGER:add_event(Event({func = function()
+    local eval, post = eval_card(c1, {buying_card = true, card = c1})
+    SMODS.trigger_effects({eval, post}, c1, percent)
+    return true
+    end}))
+'''
+
+# context.buying_card
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    eval_card(G.jokers.cards[i], {buying_card = true, card = c1})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({buying_card = true, card = c1})
+'''
+
+# context.ending_shop
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    eval_card(G.jokers.cards[i], {ending_shop = true})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({ending_shop = true})
+'''
+
+# context.skipping_booster
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    eval_card(G.jokers.cards[i], {skipping_booster = true})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({skipping_booster = true})
+'''
+# context.skip_blind
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    eval_card(G.jokers.cards[i], {skip_blind = true})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({skip_blind = true})
+'''
+
+# context.reroll_shop
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''
+for i = 1, #G.jokers.cards do
+    eval_card(G.jokers.cards[i], {reroll_shop = true})
+end
+'''
+position = 'at'
+match_indent = true
+payload = '''
+SMODS.calculate_context({reroll_shop = true})
+'''
+
+# percent is global for use in SMODS.eval_this
+[[patches]]
+[patches.regex]
+target = 'functions/state_events.lua'
+pattern = '''local percent ='''
+position = 'at'
+payload = '''percent ='''
+
+# custom sounds in card_eval_status_text
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''if extra.edition then '''
+position = 'before'
+match_indent = true
+payload = '''sound = extra.sound or sound'''

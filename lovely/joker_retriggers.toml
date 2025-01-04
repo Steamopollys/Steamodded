@@ -1,0 +1,305 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+
+# Luchador
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''[ \t]*G\.GAME\.blind:disable\(\)
+(?<indent>[ \t]*)end'''
+position = "at"
+line_prepend = '$indent'
+payload = '''   G.GAME.blind:disable()
+    return nil, true
+end'''
+
+# Diet Cola
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*return true
+[ \t]*end\)
+[ \t]*\}\)\)
+(?<indent>[ \t]*)end
+'''
+position = "at"
+line_prepend = '$indent'
+payload = '''           return true
+       end)
+    }))
+    return nil, true
+end
+'''
+
+# Invisible Joker
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''[ \t]*if card\.ability\.invis_rounds then card\.ability\.invis_rounds = 0 end
+[ \t]*card:add_to_deck\(\)
+(?<indent>[ \t]*)G\.jokers:emplace\(card\)'''
+position = "after"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Campfire
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''localize\('k_upgrade_ex'\)\}\); return true
+[ \t]*end\}\)\)
+[ \t]*end
+(?<indent>[ \t]*)return'''
+position = "at"
+line_prepend = '$indent'
+payload = '''localize('k_upgrade_ex')}); return true
+   end}))
+end
+if self.ability.name == 'Campfire' and not context.blueprint then return nil, true end'''
+
+# Flash Card
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''[ \t]*G\.C\.MULT\}\)
+[ \t]*return true
+[ \t]*end\)\}\)\)
+(?<indent>[ \t]*)end'''
+position = "at"
+line_prepend = '$indent'
+payload = '''G.C.MULT})
+       return true
+   end)}))
+end
+if self.ability.name == 'Flash Card' and not context.blueprint then return nil, true end'''
+
+# Perkeo
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''[ \t]*card_eval_status_text\(context\.blueprint_card or self, 'extra', nil, nil, nil, \{message = localize\('k_duplicated_ex'\)\}\)
+(?<indent>[ \t]*)end'''
+position = "at"
+line_prepend = '$indent'
+payload = '''    card_eval_status_text(context.blueprint_card or self, 'extra', nil, nil, nil, {message = localize('k_duplicated_ex')})
+    return nil, true
+end'''
+
+# Throwback
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*return
+(?<indent>[ \t]*)elseif context\.skipping_booster'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Red Card
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*return
+(?<indent>[ \t]*)elseif context\.playing_card_added'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Hologram
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)elseif context\.first_hand_drawn'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Certificate
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'DNA' and not context\.blueprint'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Chicot
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Madness' '''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Madness
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Burglar' '''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Burglar
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Riff-raff' '''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Riff-raff
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Cartomancer' '''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Cartomancer
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Ceremonial Dagger' and not context.blueprint'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Ceremonial Dagger
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Marble Joker' '''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Marble Joker
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*return
+(?<indent>[ \t]*)elseif context.destroying_card'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Caino
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''[ \t]*func = function\(\) card_eval_status_text\(self, 'extra', nil, nil, nil, \{message = localize\{type = 'variable', key = 'a_xmult', vars = \{self\.ability\.caino_xmult\}\}\}\); return true
+(?<indent>[ \t]*)end\}\)\)'''
+position = "after"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Glass Joker
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''glass_cards\}\}\}\)
+[ \t]*return true
+[ \t]*end
+(?<indent>[ \t]*)\}\)\)'''
+position = "after"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*return
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Fortune Teller' and not context\.blueprint'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Fortune Teller
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)if self\.ability\.name == 'Constellation' and not context\.blueprint'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Constellation
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*return
+(?<indent>[ \t]*)elseif context.debuffed_hand'''
+position = "before"
+line_prepend = '$indent'
+payload = "nil, true"
+
+# Burnt Joker
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+(?<indent>[ \t]*)elseif context.discard'''
+position = "before"
+line_prepend = '$indent'
+payload = "return nil, true"
+
+# Faceless Joker
+[[patches]]
+[patches.regex]
+target = "card.lua"
+pattern = '''
+[ \t]*end
+[ \t]*end
+[ \t]*return
+(?<indent>[ \t]*)elseif context.end_of_round'''
+position = "before"
+line_prepend = '$indent'
+payload = "nil, true"
+
+# Yorick
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "self.ability.yorick_discards = self.ability.yorick_discards - 1"
+position = "after"
+match_indent = true
+payload = "return nil, true"

@@ -273,6 +273,7 @@ function SMODS.eval_this(_card, effects)
         if effects.message then
             card_eval_status_text(_card, 'jokers', nil, nil, nil, effects)
         end
+        percent = percent + 0.08
     end
 end
 
@@ -824,38 +825,82 @@ function time(func, ...)
     return 1000*(end_time-start_time)
 end
 
+function Card:calculate_sticker(context, key)
+    local sticker = SMODS.Stickers[key]
+    if self.ability[key] and type(sticker.calculate) == 'function' then
+        return sticker:calculate(self, context)
+    end
+end
+
+function Card:calculate_enhancement(context)
+    if self.debuff or self.ability.set ~= 'Enhanced' then return nil end
+    local center = self.config.center
+    if center.calculate and type(center.calculate) == 'function' then
+        local o = center:calculate(self, context)
+        if o then return o end
+    end
+end
+
 function SMODS.get_enhancements(card, extra_only)
+    if card.extra_enhancements then return card.extra_enhancements end
     local enhancements = {}
     if card.config.center.key ~= "c_base" and not extra_only then
         enhancements[card.config.center.key] = true
     end
-    if G.jokers and G.jokers.cards then
-        for i=1, #G.jokers.cards do
-            local eval = G.jokers.cards[i]:calculate_joker({other_card = card, check_enhancement = true, no_blueprint = true })
-            if eval then 
-                for k, _ in pairs(eval) do
-                    if G.P_CENTERS[k] then
-                        enhancements[k] = true
-                    end
+    local calc_return = {}
+    SMODS.calculate_context({other_card = card, check_enhancement = true, no_blueprint = true}, nil, calc_return)
+    for _, eval in pairs(calc_return) do
+        for key, eval2 in pairs(eval) do
+            if type(eval2) == 'table' then
+                for key2, _ in pairs(eval2) do
+                    if G.P_CENTERS[key2] then enhancements[key2] = true end
                 end
+            else
+                if G.P_CENTERS[key] then enhancements[key] = true end
             end
         end
     end
+
     if extra_only and enhancements[card.config.center.key] then
         enhancements[card.config.center.key] = nil
     end
+    card.extra_enhancements = enhancements
     return enhancements
 end
 
 function SMODS.has_enhancement(card, key)
     if card.config.center.key == key then return true end
-    if G.jokers and G.jokers.cards then
-        for i=1, #G.jokers.cards do
-            local eval = G.jokers.cards[i]:calculate_joker({other_card = card, check_enhancement = true, no_blueprint = true })
-            if eval and type(eval) == 'table' and eval[key] then return true end
+    local enhancements = SMODS.get_enhancements(card)
+    if enhancements[key] then return true end
+    return false
+end
+
+function SMODS.shatters(card)
+    local enhancements = SMODS.get_enhancements(card)
+    for key, _ in pairs(enhancements) do
+        if G.P_CENTERS[key].shatters or key == 'm_glass' then return true end
+    end
+end
+
+function SMODS.calculate_quantum_enhancements(card, effects, context)
+    context.extra_enhancement = true
+    local extra_enhancements = SMODS.get_enhancements(card, true)
+    local old_ability = copy_table(card.ability)
+    local old_center = card.config.center
+    local old_center_key = card.config.center_key
+    for k, _ in pairs(extra_enhancements) do
+        if G.P_CENTERS[k] then
+            card:set_ability(G.P_CENTERS[k])
+            card.ability.extra_enhancement = k
+            local eval = eval_card(card, context)
+            table.insert(effects, 1, eval)
         end
     end
-    return false
+    card.ability = old_ability
+    card.config.center = old_center
+    card.config.center_key = old_center_key
+    card:set_sprites(old_center)
+    context.extra_enhancement = nil
 end
 
 function SMODS.has_no_suit(card)
@@ -905,6 +950,270 @@ SMODS.find_mod = function(id)
         if v.mod.can_load then ret[#ret+1] = v.mod end
     end
     return ret
+end
+
+
+
+-- This function handles the calculation of each effect returned to evaluate play.
+-- Can easily be hooked to add more calculation effects ala Talisman
+SMODS.calculate_individual_effect = function(effect, scored_card, percent, key, amount, from_edition, no_x)
+    if (key == 'chips' or key == 'h_chips' or key == 'chip_mod') and amount and (not from_edition or no_x) then 
+        if effect.card then juice_card(effect.card) end
+        hand_chips = mod_chips(hand_chips + amount)
+        update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+        if not effect.remove_default_message then
+            if from_edition then
+                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = localize{type = 'variable', key = amount > 0 and 'a_chips' or 'a_chips_minus', vars = {amount}}, chip_mod = amount, colour = G.C.EDITION, edition = true})
+            else
+                if key ~= 'chip_mod' then
+                    if effect.chip_message then
+                        card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect.chip_message)
+                    else
+                        card_eval_status_text(scored_card, 'chips', amount, percent)
+                    end
+                end
+            end
+        end
+        return true
+    end
+
+    if (key == 'mult' or key == 'h_mult' or key == 'mult_mod') and amount and (not from_edition or no_x) then 
+        if effect.card then juice_card(effect.card) end
+        mult = mod_mult(mult + amount)
+        update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+        if not effect.remove_default_message then
+            if from_edition then
+                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = localize{type = 'variable', key = amount > 0 and 'a_mult' or 'a_mult_minus', vars = {amount}}, mult_mod = amount, colour = G.C.DARK_EDITION, edition = true})
+            else
+                if key ~= 'mult_mod' then 
+                    if effect.mult_message then
+                        card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect.mult_message)
+                    else
+                        card_eval_status_text(scored_card, 'mult', amount, percent)
+                    end
+                end
+            end
+        end
+        return true
+    end
+    
+    if (key == 'p_dollars' or key == 'dollars') and amount and (not from_edition or no_x) then 
+        if effect.card then juice_card(effect.card) end
+        ease_dollars(amount)
+        if not effect.remove_default_message then
+            if effect.dollar_message then
+                card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect.dollar_message)
+            else
+                card_eval_status_text(scored_card, 'dollars', amount, percent)
+            end
+        end
+        return true
+    end
+    
+    if (key == 'x_mult' or key == 'xmult' or key == 'x_mult_mod' or key == 'Xmult_mod') and amount ~= 1 and (not from_edition or not no_x) then 
+        if effect.card then juice_card(effect.card) end
+        mult = mod_mult(mult * amount)
+        update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+        if not effect.remove_default_message then
+            if from_edition then
+                card_eval_status_text(scored_card, 'jokers', nil, percent, nil, {message = localize{type='variable',key= amount > 0 and 'a_xmult' or 'a_xmult_minus',vars={amount}}, x_mult_mod =  amount, colour =  G.C.EDITION, edition = true})
+            else
+                if key ~= 'Xmult_mod' then
+                    if effect.xmult_message then
+                        card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect.xmult_message)
+                    else
+                        card_eval_status_text(scored_card, 'x_mult', amount, percent)
+                    end
+                end
+            end
+        end
+        return true
+    end
+
+    if key == 'message' and (not from_edition or no_x) then
+        card_eval_status_text(effect.card or effect.focus or scored_card, 'extra', nil, percent, nil, effect)
+        return true
+    end
+
+    if key == 'func' and (not from_edition or no_x) then
+        effect.func()
+        return true
+    end
+
+    if key == 'swap' and (not from_edition or no_x) then 
+        local old_mult = mult
+        mult = mod_mult(hand_chips)
+        hand_chips = mod_chips(old_mult)
+        update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
+        return true
+    end
+
+    if key == 'level_up' and (not from_edition or no_x) then
+        level_up_hand(scored_card, G.GAME.last_hand_played, effect.instant, type(amount) == 'number' and amount or 1)
+    end
+
+    if key == 'extra' and (not from_edition or no_x) then
+        local extra_calc = false
+        for key_ex, amount_ex in pairs(amount) do
+            extra_calc = SMODS.calculate_individual_effect(amount, scored_card, percent, key_ex, amount_ex)
+        end
+        return extra_calc
+    end
+
+    if key == 'saved' then
+        SMODS.saved = amount
+    end
+end
+
+-- Used to calculate a table of effects generated in evaluate_play
+SMODS.trigger_effects = function(effects, card, percent)
+    for i, effect_table in ipairs(effects) do
+        for key, effect in pairs(effect_table) do
+            if key ~= 'smods' then
+                if type(effect) == 'table' then
+                    local calc = SMODS.calculate_effect(effect, card, percent, effect_table.smods and effect_table.smods.edition, effect_table.smods and effect_table.smods.no_x)
+                    if calc then effects.calculated = true end
+                end
+            end
+        end
+    end
+end
+
+SMODS.calculate_effect = function(effect, scored_card, percent, from_edition, no_x)
+    local calculated = false
+    local message = false
+    for key, amount in pairs(effect) do
+        if key == 'message' then
+            message = true
+        elseif key == 'retrigger' then
+        else
+            calculated = SMODS.calculate_individual_effect(effect, scored_card, percent, key, amount, from_edition, no_x)
+            percent = (percent or 0)+0.08
+        end
+    end
+    if message then calculated = SMODS.calculate_individual_effect(effect, scored_card, percent, 'message', effect.message, from_edition, no_x) end
+    return calculated
+end
+
+SMODS.calculate_repetitions = function(card, context, reps)
+    -- From the card
+    context.repetition_only = true
+    local eval = eval_card(card, context)
+    for key, value in pairs(eval) do
+        if value.repetitions then
+            for h=1, value.repetitions do
+                value.card = value.card or card
+                reps[#reps+1] = {key = value}
+            end
+        end
+    end
+    context.repetition_only = false
+    --From jokers
+    for k=1, #G.jokers.cards + #G.consumeables.cards do
+        local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
+        --calculate the joker effects
+        local eval, post = eval_card(_card, context)
+        if next(post) then SMODS.trigger_effects(post, card, percent) end
+        local rt = eval and eval.retriggers and #eval.retriggers or 0
+        for key, value in pairs(eval) do
+            if value.repetitions and key ~= 'retriggers' then
+
+                for h=1, value.repetitions do
+                    value.card = value.card or _card
+                    reps[#reps+1] = {key = value}
+                    for i=1, rt do
+                        local rt_eval, rt_post = eval_card(_card, context)
+                        if next(rt_post) then SMODS.trigger_effects(rt_post, card, percent) end
+                        rt_eval.card = rt_eval.card or _card
+                        reps[#reps+1] = {key = value}
+                    end
+                end
+            end
+        end
+    end
+    return reps
+end
+
+SMODS.calculate_retriggers = function(card, context, _ret)
+    local retriggers = {}
+    for k=1, #G.jokers.cards + #G.consumeables.cards do
+        local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
+        local eval, post = eval_card(_card, {retrigger_joker_check = true, other_card = card, other_context = context, other_ret = _ret})
+        if next(post) then SMODS.trigger_effects(post, _card, percent) end
+        for key, value in pairs(eval) do
+            if value.repetitions then
+                for h=1, value.repetitions do
+                    value.retrigger_card = _card
+                    retriggers[#retriggers + 1] = value
+                end
+            end
+        end
+    end
+    return retriggers
+end
+
+function Card:calculate_edition(context)
+    if self.debuff then return end
+    if self.edition then
+        local edition = G.P_CENTERS[self.edition.key]
+        if edition.calculate and type(edition.calculate) == 'function' then
+            local o = edition:calculate(self, context)
+            if o then return o end
+        end
+    end
+end
+
+-- Used to calculate contexts across G.jokers, scoring_hand (if present), G.play and G.GAME.selected_back
+-- Hook this function to add different areas to MOST calculations
+function SMODS.calculate_context(context, percent, return_table)
+    context.cardarea = G.jokers
+    for k=1, #G.jokers.cards + #G.consumeables.cards do
+        local _card = G.jokers.cards[k] or G.consumeables.cards[k - #G.jokers.cards]
+        --calculate the joker effects
+        local effects = {eval_card(_card, context)}
+        if effects[1].retriggers then
+            context.retrigger_joker = true
+            for rt = 1, #effects[1].retriggers do
+                context.retrigger_joker = effects[1].retriggers[rt].retrigger_card
+                local rt_eval = eval_card(_card, context)
+                table.insert(effects, {effects[1].retriggers[rt]})
+                table.insert(effects, rt_eval)
+            end
+            context.retrigger_joker = false
+        end
+        if return_table then 
+            SMODS.merge_lists(return_table, effects)  
+        else
+            SMODS.trigger_effects(effects, _card, percent)
+        end
+    end
+    if context.scoring_hand then
+        context.cardarea = G.play
+        for i=1, #context.scoring_hand do
+            --calculate the played card effects
+            if return_table then 
+                return_table[#return_table+1] = eval_card(context.scoring_hand[i], context)
+                SMODS.calculate_quantum_enhancements(context.scoring_hand[i], return_table, context)
+            else
+                local effects = {eval_card(context.scoring_hand[i], context)}
+                SMODS.calculate_quantum_enhancements(context.scoring_hand[i], effects, context)
+                SMODS.trigger_effects(effects, context.scoring_hand[i], percent)
+            end
+        end
+    end
+    context.cardarea = G.hand
+    for i=1, #G.hand.cards do
+        --calculate the held card effects
+        if return_table then 
+            return_table[#return_table+1] = eval_card(G.hand.cards[i], context)    
+        else
+            local effects = {eval_card(G.hand.cards[i], context)}
+            SMODS.calculate_quantum_enhancements(G.hand.cards[i], effects, context)
+            SMODS.trigger_effects(effects, G.hand.cards[i], percent)
+        end
+    end
+    local effect = G.GAME.selected_back:trigger_effect(context)
+    if effect then SMODS.calculate_effect(effect, G.deck.cards[1], percent) end
 end
 
 -- this is for debugging
